@@ -37,10 +37,10 @@ quality_issue() {
   fi
 }
 
-has_disposition() {
-  local disposition_list=$1
+has_waiver() {
+  local waiver_list=$1
   local expected=$2
-  [[ $'\t'"$disposition_list"$'\t' == *$'\t'"$expected"$'\t'* ]]
+  [[ $'\t'"$waiver_list"$'\t' == *$'\t'"$expected"$'\t'* ]]
 }
 
 for command_name in rg pdfinfo pdftotext perl sed awk find sort mktemp; do
@@ -70,7 +70,7 @@ IFS=$'\x1f' read -r manifest_kind source_name translation_name require_complete_
   exit 1
 }
 
-while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acceptance_dispositions skip_reason paper_title quality_severity; do
+while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acceptance_waivers skip_reason paper_title quality_severity; do
   [[ "$manifest_kind" == "paper" ]] || {
     fail "validation manifest contains an invalid row"
     continue
@@ -199,7 +199,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
       if (( listing_status == 1 )); then
         quality_issue "$translation has deterministic source-listing errors: $listing_issues"
       elif (( listing_status == 3 )); then
-        if [[ "$reading_status" == "translated" ]] && has_disposition "$acceptance_dispositions" "listing-candidates-reviewed"; then
+        if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "listings"; then
           echo "REVIEWED-RISK: $translation Listing candidates were manually disposed in acceptance ledger"
         elif [[ "$reading_status" == "draft" ]]; then
           warn "$translation has Listing review candidates: $listing_issues"
@@ -220,7 +220,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     source_words=$(pdftotext -raw "$pdf" - 2>/dev/null | perl -CSD -ne 'last if /^\s*(?:\d+\.?\s+)?REFERENCES\s*$/i; $n += () = /\b[A-Za-z]+(?:[-'"'"'][A-Za-z]+)*\b/g; END { print $n + 0 }')
     translated_cjk=$(perl -CSD -ne 'last if /^##\s*(?:参考文献|References)\s*$/i; $n += () = /[\x{3400}-\x{9fff}]/g; END { print $n + 0 }' "$translation")
     if awk -v s="$source_words" -v t="$translated_cjk" 'BEGIN { exit !(s > 0 && t / s < 0.50) }'; then
-      if [[ "$reading_status" == "translated" ]] && has_disposition "$acceptance_dispositions" "abridgement-risk-reviewed"; then
+      if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "abridgement"; then
         echo "REVIEWED-RISK: $translation high mechanical abridgement candidate was manually disposed in acceptance ledger"
       elif [[ "$reading_status" == "draft" ]]; then
         warn "$translation has high mechanical abridgement risk: CJK/source-word ratio=$translated_cjk/$source_words (<0.50)"
@@ -228,7 +228,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
         fail "$translation has unresolved high mechanical abridgement risk (record disposition before acceptance): CJK/source-word ratio=$translated_cjk/$source_words (<0.50)"
       fi
     elif awk -v s="$source_words" -v t="$translated_cjk" 'BEGIN { exit !(s > 0 && t / s < 0.75) }'; then
-      if [[ "$reading_status" == "translated" ]] && has_disposition "$acceptance_dispositions" "abridgement-risk-reviewed"; then
+      if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "abridgement"; then
         echo "REVIEWED-RISK: $translation moderate mechanical abridgement candidate was manually disposed in acceptance ledger"
       elif [[ "$reading_status" == "draft" ]]; then
         warn "$translation has moderate abridgement risk: CJK/source-word ratio=$translated_cjk/$source_words (<0.75)"
@@ -251,7 +251,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     if (( resource_status == 1 )); then
       quality_issue "$translation has deterministic resource/reference errors: $resource_issues"
     elif (( resource_status == 3 )); then
-      if [[ "$reading_status" == "translated" ]] && has_disposition "$acceptance_dispositions" "resource-candidates-reviewed"; then
+      if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "resources"; then
         echo "REVIEWED-RISK: $translation resource candidates were manually disposed in acceptance ledger"
       elif [[ "$reading_status" == "draft" ]]; then
         warn "$translation has resource review candidates: $resource_issues"

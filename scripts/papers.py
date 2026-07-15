@@ -17,16 +17,23 @@ from urllib.parse import urlparse
 import yaml
 
 from project_config import (
-    ACCEPTANCE_BASE_DISPOSITION_CODES,
+    ACCEPTANCE_WAIVERS,
+    ALLOW_WHOLE_PAGE_IMAGES_IN_READING_PATH,
+    METADATA_FILE,
+    REQUIRE_COMPLETE_REFERENCES,
+    REVIEW_ACTIONS,
     SLUG_RE,
+    SOURCE_FILE,
+    TARGET_LANGUAGE,
+    TRANSLATION_FILE,
     configured_paths,
     effective_page_limit,
     load_acceptance_ledger,
-    load_paper_policy,
-    load_project_config,
+    load_project_policy,
     load_taxonomy,
     load_yaml,
     sha256_file,
+    skip_reason as configured_skip_reason,
 )
 from validation_policy import quality_issue_severity
 
@@ -88,10 +95,8 @@ def atomic_write_text(path: Path, content: str) -> None:
 
 
 def records() -> list[tuple[Path, dict[str, Any]]]:
-    config = load_project_config(ROOT)
-    metadata_name = configured_paths(ROOT, config)["metadata"].name
     result: list[tuple[Path, dict[str, Any]]] = []
-    for path in sorted(PAPERS.glob(f"*/*/{metadata_name}")):
+    for path in sorted(PAPERS.glob(f"*/*/{METADATA_FILE}")):
         result.append((path, load_yaml(path)))
     return result
 
@@ -176,10 +181,9 @@ def parse_translation_frontmatter(path: Path) -> dict[str, Any]:
 def validate(paper_id: str | None = None) -> int:
     errors: list[str] = []
     try:
-        project = load_project_config(ROOT)
         taxonomy = load_taxonomy(ROOT / "config/taxonomy.yaml")
-        paths = configured_paths(ROOT, project)
-        paper_policy = load_paper_policy(paths["paper_policy"])
+        paths = configured_paths(ROOT)
+        policy = load_project_policy(paths["policy"])
         acceptance = load_acceptance_ledger(paths["acceptance_ledger"])
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -187,7 +191,7 @@ def validate(paper_id: str | None = None) -> int:
 
     areas = set(taxonomy["areas"])
     allowed_topics = set(taxonomy["topics"])
-    target_language = project["project"]["target_language"]
+    target_language = TARGET_LANGUAGE
     metadata_name = paths["metadata"].name
     source_name = paths["source"].name
     translation_name = paths["translation"].name
@@ -309,9 +313,10 @@ def validate(paper_id: str | None = None) -> int:
                         "frontmatter must contain only canonical paper_id, title, language, and source",
                     )
 
-        if reading_status == "skipped" and slug not in paper_policy["skipped_reasons"]:
+        paper_skip_reason = configured_skip_reason(policy, slug)
+        if reading_status == "skipped" and not paper_skip_reason:
             add_error(errors, path, "reading_status=skipped requires a project-level skipped reason")
-        if reading_status != "skipped" and slug in paper_policy["skipped_reasons"]:
+        if reading_status != "skipped" and paper_skip_reason:
             add_error(errors, path, "project-level skipped reason exists but reading_status is not skipped")
 
         ledger_entry = acceptance["entries"].get(slug)
@@ -335,15 +340,10 @@ def validate(paper_id: str | None = None) -> int:
                 errors.append(f"duplicate paper id: {duplicate}")
 
         known_ids = set(ids)
-        for configured_id in sorted(paper_policy["page_limit_exceptions"]):
+        for configured_id in sorted(policy["papers"]):
             if configured_id not in known_ids:
                 errors.append(
-                    f"{paths['paper_policy'].relative_to(ROOT)}: unknown page-limit paper id: {configured_id}"
-                )
-        for configured_id in sorted(paper_policy["skipped_reasons"]):
-            if configured_id not in known_ids:
-                errors.append(
-                    f"{paths['paper_policy'].relative_to(ROOT)}: unknown skipped paper id: {configured_id}"
+                    f"{paths['policy'].relative_to(ROOT)}: unknown paper id: {configured_id}"
                 )
         for configured_id in sorted(acceptance["entries"]):
             if configured_id not in known_ids:
@@ -397,8 +397,7 @@ def catalog_rating(data: dict[str, Any]) -> str:
 
 
 def build_catalog() -> str:
-    project = load_project_config(ROOT)
-    paths = configured_paths(ROOT, project)
+    paths = configured_paths(ROOT)
     source_name = paths["source"].name
     translation_name = paths["translation"].name
     taxonomy = load_taxonomy(ROOT / "config/taxonomy.yaml")
@@ -438,6 +437,7 @@ def build_catalog() -> str:
 
     lines.extend(["", "## 按领域浏览"])
     area_order = {area: index for index, area in enumerate(taxonomy["areas"])}
+    topic_order = {topic: index for index, topic in enumerate(taxonomy["topics"])}
     loaded.sort(
         key=lambda item: (
             area_order[item[0].parent.parent.name],
@@ -464,7 +464,8 @@ def build_catalog() -> str:
         )
         for path, data in area_records:
             topic_labels = "、".join(
-                taxonomy["topics"][topic]["label_zh"] for topic in data["topics"]
+                taxonomy["topics"][topic]["label_zh"]
+                for topic in sorted(data["topics"], key=topic_order.__getitem__)
             )
             reading_target = catalog_reading_target(path, data, source_name, translation_name)
             title = data["title"].replace("|", "\\|")
@@ -495,9 +496,8 @@ def catalog(check: bool) -> int:
 
 
 def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str) -> int:
-    project = load_project_config(ROOT)
     taxonomy = load_taxonomy(ROOT / "config/taxonomy.yaml")
-    metadata_name = configured_paths(ROOT, project)["metadata"].name
+    metadata_name = METADATA_FILE
     if not SLUG_RE.fullmatch(paper_id):
         print("ERROR: --id must be a lowercase kebab-case slug.", file=sys.stderr)
         return 1
@@ -511,6 +511,7 @@ def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str
     if len(topics) != len(set(topics)):
         print("ERROR: duplicate --topic values are not allowed.", file=sys.stderr)
         return 1
+    topic_order = {topic: index for index, topic in enumerate(taxonomy["topics"])}
     parsed_url = urlparse(url.strip())
     if not title.strip() or parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
         print("ERROR: --title and --url must be non-empty.", file=sys.stderr)
@@ -527,7 +528,7 @@ def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str
         "authors": [],
         "year": None,
         "source_url": url.strip(),
-        "topics": topics,
+        "topics": sorted(topics, key=topic_order.__getitem__),
         "reading_status": "unavailable",
     }
     target.mkdir(parents=True)
@@ -541,40 +542,37 @@ def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str
 
 def config_value(key: str, paper_id: str | None) -> int:
     try:
-        project = load_project_config(ROOT)
-        paths = configured_paths(ROOT, project)
-        paper_policy = load_paper_policy(paths["paper_policy"])
+        paths = configured_paths(ROOT)
+        policy = load_project_policy(paths["policy"])
         acceptance = load_acceptance_ledger(paths["acceptance_ledger"])
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     values: dict[str, Any] = {
-        "max_source_pages": project["translation_policy"]["max_source_pages"],
-        "require_complete_references": project["translation_policy"]["require_complete_references"],
-        "allow_whole_page_images_in_reading_path": project["translation_policy"][
-            "allow_whole_page_images_in_reading_path"
-        ],
-        "source_pdf": project["project"]["source_pdf"],
-        "translation_file": project["project"]["translation_file"],
+        "max_source_pages": policy["default_max_source_pages"],
+        "require_complete_references": REQUIRE_COMPLETE_REFERENCES,
+        "allow_whole_page_images_in_reading_path": ALLOW_WHOLE_PAGE_IMAGES_IN_READING_PATH,
+        "source_pdf": SOURCE_FILE,
+        "translation_file": TRANSLATION_FILE,
     }
     if key == "paper_page_limit":
         if not paper_id:
             print("ERROR: --paper-id is required for paper_page_limit", file=sys.stderr)
             return 1
-        print(effective_page_limit(project, paper_policy, paper_id))
+        print(effective_page_limit(policy, paper_id))
         return 0
     if key == "skip_reason":
         if not paper_id:
             print("ERROR: --paper-id is required for skip_reason", file=sys.stderr)
             return 1
-        print(paper_policy["skipped_reasons"].get(paper_id, ""))
+        print(configured_skip_reason(policy, paper_id))
         return 0
-    if key == "acceptance_dispositions":
+    if key == "acceptance_waivers":
         if not paper_id:
-            print("ERROR: --paper-id is required for acceptance_dispositions", file=sys.stderr)
+            print("ERROR: --paper-id is required for acceptance_waivers", file=sys.stderr)
             return 1
         entry = acceptance["entries"].get(paper_id)
-        print("\t".join(entry["risk_disposition"]) if entry else "")
+        print("\t".join(entry.get("waivers", [])) if entry else "")
         return 0
     if key == "paper_title":
         if not paper_id:
@@ -602,9 +600,8 @@ def validation_manifest(paper_id: str | None) -> int:
     """Emit one validated, delimiter-safe snapshot for the shell deep validator."""
 
     try:
-        project = load_project_config(ROOT)
-        paths = configured_paths(ROOT, project)
-        paper_policy = load_paper_policy(paths["paper_policy"])
+        paths = configured_paths(ROOT)
+        policy = load_project_policy(paths["policy"])
         acceptance = load_acceptance_ledger(paths["acceptance_ledger"])
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -618,14 +615,13 @@ def validation_manifest(paper_id: str | None) -> int:
         print(VALIDATION_FIELD_SEPARATOR.join(fields))
         return True
 
-    policy = project["translation_policy"]
     if not emit(
         [
             "config",
             paths["source"].name,
             paths["translation"].name,
-            str(policy["require_complete_references"]).lower(),
-            str(policy["allow_whole_page_images_in_reading_path"]).lower(),
+            str(REQUIRE_COMPLETE_REFERENCES).lower(),
+            str(ALLOW_WHOLE_PAGE_IMAGES_IN_READING_PATH).lower(),
         ]
     ):
         return 1
@@ -649,7 +645,7 @@ def validation_manifest(paper_id: str | None) -> int:
             )
             return 1
         entry = acceptance["entries"].get(slug)
-        dispositions = "\t".join(entry["risk_disposition"]) if entry else ""
+        waivers = "\t".join(entry.get("waivers", [])) if entry else ""
         severity = (
             quality_issue_severity(reading_status)
             if reading_status in {"draft", "translated"}
@@ -659,9 +655,9 @@ def validation_manifest(paper_id: str | None) -> int:
             "paper",
             path.parent.relative_to(ROOT).as_posix(),
             reading_status,
-            str(effective_page_limit(project, paper_policy, slug)),
-            dispositions,
-            paper_policy["skipped_reasons"].get(slug, ""),
+            str(effective_page_limit(policy, slug)),
+            waivers,
+            configured_skip_reason(policy, slug),
             title,
             severity,
         ]
@@ -705,10 +701,9 @@ def acceptance_preflight(paper_id: str) -> tuple[bool, str]:
     return True, "\n".join(output)
 
 
-def accept_record(paper_id: str, version: str, risk_disposition: list[str]) -> int:
+def accept_record(paper_id: str, review_action: str, waivers: list[str]) -> int:
     try:
-        project = load_project_config(ROOT)
-        paths = configured_paths(ROOT, project)
+        paths = configured_paths(ROOT)
         ledger = load_acceptance_ledger(paths["acceptance_ledger"])
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -730,17 +725,17 @@ def accept_record(paper_id: str, version: str, risk_disposition: list[str]) -> i
     if not source.is_file() or not translation.is_file():
         print("ERROR: acceptance requires source.pdf and translation.md", file=sys.stderr)
         return 1
-    if not version.strip() or not risk_disposition:
-        print("ERROR: acceptance requires --version and at least one --risk-disposition", file=sys.stderr)
-        return 1
-    dispositions = list(dict.fromkeys(item.strip() for item in risk_disposition if item.strip()))
-    if not dispositions:
-        print("ERROR: risk dispositions must be non-empty strings", file=sys.stderr)
-        return 1
-    if not ACCEPTANCE_BASE_DISPOSITION_CODES.intersection(dispositions):
+    if review_action not in REVIEW_ACTIONS:
         print(
-            "ERROR: risk dispositions require one controlled base acceptance code: "
-            + ", ".join(sorted(ACCEPTANCE_BASE_DISPOSITION_CODES)),
+            "ERROR: review action must be one of: " + ", ".join(sorted(REVIEW_ACTIONS)),
+            file=sys.stderr,
+        )
+        return 1
+    normalized_waivers = list(dict.fromkeys(item.strip() for item in waivers if item.strip()))
+    unknown_waivers = set(normalized_waivers) - ACCEPTANCE_WAIVERS
+    if unknown_waivers:
+        print(
+            "ERROR: unknown acceptance waivers: " + ", ".join(sorted(unknown_waivers)),
             file=sys.stderr,
         )
         return 1
@@ -750,9 +745,10 @@ def accept_record(paper_id: str, version: str, risk_disposition: list[str]) -> i
     ledger["entries"][paper_id] = {
         "source_sha256": sha256_file(source),
         "translation_sha256": sha256_file(translation),
-        "accepted_version": version.strip(),
-        "risk_disposition": dispositions,
+        "review_action": review_action,
     }
+    if normalized_waivers:
+        ledger["entries"][paper_id]["waivers"] = normalized_waivers
     data["reading_status"] = "translated"
 
     try:
@@ -815,8 +811,8 @@ def main() -> int:
     new_parser.add_argument("--url", required=True, help="authoritative source URL")
     accept_parser = subparsers.add_parser("accept", help="record hashes after manual review and set translated")
     accept_parser.add_argument("--id", required=True, dest="paper_id")
-    accept_parser.add_argument("--version", required=True)
-    accept_parser.add_argument("--risk-disposition", action="append", required=True)
+    accept_parser.add_argument("--review-action", required=True, choices=sorted(REVIEW_ACTIONS))
+    accept_parser.add_argument("--waiver", action="append", default=[], choices=sorted(ACCEPTANCE_WAIVERS))
     args = parser.parse_args()
 
     if args.command == "validate":
@@ -830,7 +826,7 @@ def main() -> int:
     if args.command == "catalog":
         return catalog(args.check)
     if args.command == "accept":
-        return accept_record(args.paper_id, args.version, args.risk_disposition)
+        return accept_record(args.paper_id, args.review_action, args.waiver)
     return new_record(args.id, args.title, args.area, args.topics, args.url)
 
 

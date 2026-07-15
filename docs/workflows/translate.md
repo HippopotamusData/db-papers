@@ -6,7 +6,7 @@
 
 ## 成功标准
 
-- 缺少原文时保持 `unavailable`；页数超限时使用 `skipped` 并停止。只有用户显式授权后，才能在 `config/paper-policy.yaml` 为单篇记录更高上限和原因。
+- 缺少原文时保持 `unavailable`；页数超限时使用 `skipped` 并停止。只有用户显式授权后，才能在 `config/policy.yaml` 为单篇记录更高上限和授权依据。
 - 开始形成译文后使用 `draft`。
 - `translation.md` 以 `templates/translation.md` 的 YAML frontmatter 开头；`paper_id` 与目录名一致，`title` 与 `paper.yaml` 一致，`language` 固定为 `zh-CN`，`source` 固定为 `source.pdf`。
 - `translation.md` 覆盖原文全部实质章节、公式、图表、算法、代码、附录和完整参考文献。

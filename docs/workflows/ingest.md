@@ -12,7 +12,7 @@
 - 成功取得且验证 PDF 时保存为 `source.pdf`，状态改为 `source_only`。
 - 未取得 PDF 时不创建占位文件，保持 `reading_status: unavailable`。
 - `make check` 通过且目录已重新生成。
-- 若当前策略跳过该论文，在 `config/paper-policy.yaml` 记录 reason code；不要把原因塞进 `paper.yaml`。
+- 若当前策略跳过该论文，在 `config/policy.yaml` 的对应 paper ID 下记录 `skip_reason`；不要把原因塞进 `paper.yaml`。
 
 可先用脚手架创建最小记录：
 

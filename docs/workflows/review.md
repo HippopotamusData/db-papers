@@ -1,54 +1,44 @@
 # 工作流：译文审阅、修复与验收
 
-## 目标
+## 目标与权限
 
-用 `source.pdf` 判断现有译文是否达到全文翻译标准。默认的 audit/review 只读；只有用户明确授权 review-and-repair 或 accept 时，才能修复正文、修改状态或写入验收账本。
+用 `source.pdf` 判断现有译文是否达到全文翻译标准。默认 audit/review 只读；只有用户明确授权 review-and-repair 或 accept 时，才能修复论文资产、修改状态或写入验收账本。
 
-## 两种模式
-
-- **audit/review（默认）**：逐节核对并报告证据，不改 `translation.md`、`paper.yaml`、资源或账本。即使发现严重问题，也只报告建议的 `translated -> draft` 迁移。
-- **review-and-repair/accept（需明确写授权）**：先把未通过或正在实质修改的论文置为 `draft`，完成证据支持的修复，再逐节验收；通过后用 `python3 scripts/papers.py accept` 在单一命令中记录哈希、稳定验收版本和风险处置，并迁移到 `translated`。命令只接受 `draft`，先执行全库确定性元数据与标题一致性检查，再执行目标论文的深度门禁并复核最终哈希；任一步失败会回滚账本和状态。
+- **audit/review**：逐节核对并报告证据，不落盘；严重问题只建议 `translated -> draft`。
+- **review-and-repair/accept**：先将实质修改或未通过论文置为 `draft`，修复并逐节验收；通过后用单一 accept 命令记录哈希、审阅动作和必要 waivers，并迁移到 `translated`。命令只接受 `draft`，失败会回滚账本和状态。
 
 ## 成功标准
 
-- 逐节核对摘要、正文、结论、附录、图、表、公式、算法、代码和参考文献。
-- 在写模式中，漏译、摘要化、数值错误、错位图表、断链和过程残留均已修复，或状态保持 `draft`。
-- 机械覆盖信号只用于扩大抽查，不以字符数替代内容判断。
-- audit/review 不改状态；写模式通过时使用 `translated`，未通过时使用 `draft`。
-- `translated` 的 `config/acceptance.yaml` 条目与当前 `source.pdf`、`translation.md` SHA-256 完全一致，并记录风险候选如何处置。
+- 摘要、正文、结论、附录、图、表、公式、算法、代码和参考文献均已对照原文。
+- 漏译、摘要化、数值错误、错位资源、断链和过程残留已修复，或状态保持 `draft`。
+- 机械覆盖信号只扩大人工抽查；确定性错误不能被 waiver 豁免。
+- `translated` 的账本哈希与当前 `source.pdf`、`translation.md` 完全一致。
 - `make check` 通过。
 
-## 验收账本处置码
+## 验收记录
 
-`risk_disposition` 至少记录一种实际完成的验收动作。常用基础码为 `section-review-complete`、`new-full-translation-reviewed`、`priority-repair-reviewed`；仅迁移既有已验收状态且没有重新作语义声明时使用 `legacy-accepted-status-migrated`，读者标题的纯机械迁移可另记 `header-policy-normalized`。
+`review_action` 必须从下列单一动作中选择：
 
-机械候选只有在人工回到 PDF 处置后才能记录下列码：
+- `section-review`：现有完整译文已逐节审阅；
+- `full-translation-review`：新全文译文已交叉审阅；
+- `repair-review`：实质修复后的译文已复审；
+- `legacy-migration`：仅迁移既有已验收状态，不作新的语义声明。
 
-- `abridgement-risk-reviewed`：低字符比例候选已逐页、逐节核对，不存在相应摘要化缺口，或缺口已修复。
-- `resource-candidates-reviewed`：Figure、Table、Algorithm、Listing、公式、未编号代码或孤儿资产候选已逐项核对。
-- `listing-candidates-reviewed`：短 Listing、token 重叠等非确定性候选已与原文代码逐项核对。
+只有机械候选已回到 PDF 逐项处置后，才能按需添加 `--waiver abridgement`、`--waiver resources` 或 `--waiver listings`。没有对应候选时不记录 waiver；所有动作和 waiver 都由 CLI 与 schema 严格校验。
 
-这些字符串是校验器识别的精确处置码；不得用 `not-...`、笼统的“已看过”或仅为消除告警而填写。确定性错误不能靠处置码豁免。
+```bash
+python3 scripts/papers.py accept \
+  --id <paper-id> \
+  --review-action <section-review|full-translation-review|repair-review|legacy-migration> \
+  [--waiver <abridgement|resources|listings>]
+```
 
 ## 审校证据
 
-以本地 PDF 为正文真相。对双栏参考文献按栏读取；对图表、复杂公式和版面依赖内容做视觉检查；对实验表格抽查标题、单位、数值和结论是否对应。
+以本地 PDF 为正文真相。旧日志、当前状态、译文长度或脚本绿灯都不能单独证明完整；详细过程通过 Git 历史追溯，不写入阅读元数据或验收账本。
 
-旧审校日志、当前状态、译文长度或脚本绿灯都不能单独证明全文完整。审校过程不写进 `paper.yaml`；当前验收身份与风险处置写入项目级账本，需要更详细追溯时使用 Git 历史。
-
-## 正式资源审校
-
-- 可以用 PDF 文本提取和编号扫描建立 Figure、Table、Algorithm、Listing/代码清单候选清单，但不得把它们当作事实。双栏抽取会把小节号、页码或相邻正文拼成伪编号；浮动体也会打乱提取顺序。候选项必须回到渲染页视觉确认后，才能据此新增、删除或改号。
-- 资源的正确位置由所属小节、首次实质讨论和引用关系决定，不由编号是否单调或图片在 PDF 页面上的浮动位置决定。移动时整体移动引导语、编号、图注、表格数据或图片链接，确保阅读路径中只保留一个表示。
-- 检查现有裁图时不能只验证链接存在。还要核对坐标轴、单位、图例、标签、箭头、节点、子图边界和必要文字；重裁只保留正式资源，不带正文残片、页眉页脚或整页版面。
-- 以图片原始分辨率检查四条边，并在译文正常阅读宽度下确认最小标签、图例和坐标仍可辨。文字、坐标轴、箭头或数据图形触边时，必须回到 `source.pdf` 渲染页核对；双栏或同页多浮动体要逐图独立确认，避免把相邻资源、图注或正文串入裁框。
-- 译文已在 Markdown 中承载图注时，位图排除原文 `Figure N` 图注，但保留 `(a)/(b)` 等子图标签和图内标题。清晰度不足时从 PDF 高分辨率渲染页按正式资源边界重裁并保留少量安全留白，不放大旧低清图片；像素尺寸只作候选信号，最终以正常阅读宽度下可读为准。
-- 如果原 Figure 或 Algorithm 本质是代码、SQL 或伪代码，可以完整转写为 fenced code block，但仍须保留原编号和图注，不再并列保留裁切不全的重复截图。
-- 无论是否编号，Listing/代码清单的交叉引用或执行过程摘要都不等于资源正文。逐项确认原编号（如有）、标题（如有）和完整代码块在译文中恰有一个对应表示，并确认译文没有用自拟的简化实现替换原文；机械检查可以阻止接受明显缺口，但修复时仍须回到渲染页确认内容边界和所属小节。
-- 原文标题、正文交叉引用或编号自相矛盾时，以可见标题和资源内容为证据，保留能够确认的事实并报告冲突，不创造缺失对象。未引用资产也不是遗漏或冗余的充分证据；先判断它是否属于阅读路径外的旧审校产物，再决定是否需要处理。
-
-收尾时逐篇确认每个正式资源在译文中恰有一个完整表示，并检查图片可解码、链接有效、同篇无重复引用。机械编号或覆盖率信号仍只用于扩大视觉抽查，不能替代语义判断。
+资源审校遵循 `docs/translation-policy.md`，并额外确认：双栏抽取顺序正确；图像坐标轴、图例、标签和边界可读；表格数字、单位和结论对应；每个正式资源恰有一个完整表示。编号扫描只生成候选，新增、删除、移动或重裁资源前必须回到渲染页确认。
 
 ## 停止条件
 
-audit/review 在证据报告完成时停止，不落盘。review-and-repair/accept 在译文通过并更新账本，或发现无法在当前范围可靠修复时停止；后一种情况保留 `draft`，在任务汇报中列出具体章节或资源缺口。
+audit/review 在证据报告完成时停止。写模式在译文通过并更新账本，或发现无法在当前范围可靠修复时停止；后一种情况保留 `draft` 并报告具体缺口。
