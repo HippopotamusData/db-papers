@@ -1131,3 +1131,11 @@ entries:
       - new-full-translation-reviewed
       - resource-candidates-reviewed
       - listing-candidates-reviewed
+  dbaiops-reasoning-llm-database-operation-maintenance-knowledge-graphs:
+    source_sha256: 36ba56d8fb0e90309c5cbea1a4c4b300e71ad2425e7b8de4434f07f6d102231c
+    translation_sha256: e9fc80b5f62c1b72dacb4bd63b3ac16b5ae4ae62a5fbc79494f0fc17976e65bf
+    accepted_version: 2026-07-15-figure-01-crop-repair-v1
+    risk_disposition:
+      - priority-repair-reviewed
+      - resource-candidates-reviewed
+      - listing-candidates-reviewed

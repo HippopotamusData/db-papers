@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：133
-- 已验收译文：127
+- 论文记录：134
+- 已验收译文：128
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -25,7 +25,7 @@
 | 流处理 (`streaming`) | 6 |
 | 可靠性与测试 (`reliability-and-testing`) | 4 |
 | 专用数据库 (`specialized-databases`) | 8 |
-| AI 与数据系统 (`ai-and-data`) | 5 |
+| AI 与数据系统 (`ai-and-data`) | 6 |
 
 ## 按领域浏览
 
@@ -207,12 +207,13 @@
 | [SPANN: Highly-efficient Billion-scale Approximate Nearest Neighbor Search](papers/specialized-databases/spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search/translation.md) | 向量检索、索引、面向 AI 的数据系统 | 2021 | 4.0 | translated | [原文](https://proceedings.neurips.cc/paper/2021/hash/299dc35e747eb77177d9cea10a802da2-Abstract.html) |
 | [VBASE: Unifying Online Vector Similarity Search and Relational Queries via Relaxed Monotonicity](papers/specialized-databases/vbase-unifying-vector-search-relational-queries/translation.md) | 查询优化、向量检索、面向 AI 的数据系统 | 2023 | 3.5 | translated | [原文](https://www.usenix.org/conference/osdi23/presentation/zhang-qianxi) |
 
-### AI 与数据系统 (`ai-and-data`，5 篇)
+### AI 与数据系统 (`ai-and-data`，6 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
 | [Can Foundation Models Wrangle Your Data?](papers/ai-and-data/can-foundation-models-wrangle-your-data/translation.md) | 语言模型与数据、AI 优化数据库 | 2022 | 3.5 | translated | [原文](https://www.vldb.org/pvldb/vol16/p738-narayan.pdf) |
 | [Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs](papers/ai-and-data/bird-can-llm-already-serve-as-a-database-interface/translation.md) | 语言模型与数据、面向 AI 的数据系统 | 2023 | 4.0 | translated | [原文](https://proceedings.neurips.cc/paper_files/paper/2023/hash/83fc8fab1710363050bbd1d4b8cc0021-Abstract-Datasets_and_Benchmarks.html) |
+| [DBAIOps: A Reasoning LLM-Enhanced Database Operation and Maintenance System using Knowledge Graphs](papers/ai-and-data/dbaiops-reasoning-llm-database-operation-maintenance-knowledge-graphs/translation.md) | AI 优化数据库、语言模型与数据 | 2026 | 3.0 | translated | [原文](https://www.vldb.org/pvldb/vol19/p1319-zhou.pdf) |
 | [Language Models Enable Simple Systems for Generating Structured Views of Heterogeneous Data Lakes](papers/ai-and-data/language-models-enable-structured-views-heterogeneous-data-lakes/translation.md) | 语言模型与数据、面向 AI 的数据系统 | 2023 | 3.5 | translated | [原文](https://doi.org/10.14778/3626292.3626294) |
 | [Palimpzest: Optimizing AI-Powered Analytics with Declarative Query Processing](papers/ai-and-data/palimpzest-optimizing-ai-powered-analytics-declarative-query-processing/translation.md) | 查询优化、语言模型与数据、面向 AI 的数据系统 | 2025 | 2.5 | translated | [原文](https://www.vldb.org/cidrdb/2025/palimpzest-optimizing-ai-powered-analytics-with-declarative-query-processing.html) |
 | [Text-to-SQL Empowered by Large Language Models: A Benchmark Evaluation](papers/ai-and-data/text-to-sql-empowered-by-large-language-models-benchmark-evaluation/translation.md) | 语言模型与数据、面向 AI 的数据系统 | 2024 | 4.0 | translated | [原文](https://doi.org/10.14778/3641204.3641221) |
@@ -221,5 +222,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 133 | 0 |
-| 发表年份 | 133 | 0 |
+| 作者 | 134 | 0 |
+| 发表年份 | 134 | 0 |

@@ -1,0 +1,23 @@
+title: 'DBAIOps: A Reasoning LLM-Enhanced Database Operation and Maintenance System using Knowledge Graphs'
+authors:
+  - Wei Zhou
+  - Peng Sun
+  - Xuanhe Zhou
+  - Qianglei Zang
+  - Ji Xu
+  - Tieying Zhang
+  - Guoliang Li
+  - Fan Wu
+year: 2026
+source_url: https://www.vldb.org/pvldb/vol19/p1319-zhou.pdf
+topics:
+  - ai-for-databases
+  - language-models-for-data
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 1
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 3
+  reader_payoff: 4
