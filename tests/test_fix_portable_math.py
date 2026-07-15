@@ -70,6 +70,18 @@ class FixPortableMathTests(unittest.TestCase):
             with self.subTest(source=source):
                 self.assertEqual(safe_fix_text(source), source)
 
+    def test_safety_assertion_rejects_visible_token_splits(self) -> None:
+        for source in ("F1@$k$", "Top-$k$", "**$x$-label**"):
+            with self.subTest(source=source):
+                opening = source.index("$")
+                fixed = source[:opening] + " " + source[opening:]
+                with self.assertRaisesRegex(
+                    ValueError, "split a visible label or detach emphasis"
+                ):
+                    fix_portable_math._assert_safe(
+                        source, fixed, [(opening, " ")]
+                    )
+
     def test_does_not_guess_after_unicode_symbols_or_fullwidth_open_paren(self) -> None:
         for source in ("参数（$x$）", "α$x$", "∈$S$", "😀$z$"):
             with self.subTest(source=source):

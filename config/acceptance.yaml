@@ -424,7 +424,7 @@ entries:
     review_action: full-translation-review
   palimpzest-optimizing-ai-powered-analytics-declarative-query-processing:
     source_sha256: ae71e50cb2b22c7ba9ef3e5243c407c669bca7f82ebbb41eb54ceca3aedab385
-    translation_sha256: 7cc18e3272d5d53d0aec36181002602a77de4752b90774548e5fda6e9384d9bf
+    translation_sha256: c75657f9c32f620efb8e77ab5fff85c85000978fb0b56eda6379dfed3e0a37df
     review_action: repair-review
   can-foundation-models-wrangle-your-data:
     source_sha256: 5fd860d3c245002cb1fd4544f75667d4bdc9897a0fdba8e88f3bc9cd6ca381a0
@@ -432,7 +432,7 @@ entries:
     review_action: repair-review
   language-models-enable-structured-views-heterogeneous-data-lakes:
     source_sha256: a25c20861028dc5197745c7b5f7c2c28b100b3edff768ae339072091a0de7d8d
-    translation_sha256: 1ab822b5408736071f0555fa6395933c974a38a20e181ecbb10adcb6852649f5
+    translation_sha256: 9c172bbde9c83552588eb115eebdbc3302fd94997a5c6900e8a5aed692db469d
     review_action: repair-review
   bird-can-llm-already-serve-as-a-database-interface:
     source_sha256: d0cc68992e8c5b7354c906f901638680170a5ebf40376c52e9aa3069c99fc9eb
@@ -459,7 +459,7 @@ entries:
       - resources
   a-relational-model-of-data-for-large-shared-data-banks:
     source_sha256: fa2579f427a4da68466ef159a3ae0c3c1fe4eafec60f73c9f2f40378a65d8ef9
-    translation_sha256: c0170022fd6f3a65414f037c94f560a3805e4193695167321c1c9d4f751c7863
+    translation_sha256: 3d6db306849024847f66a5e3ba822b0a9a2636650cd835b05b83e49f5cdc9b29
     review_action: repair-review
   access-path-selection-relational-database-management-system:
     source_sha256: b9a5f26b06914256b27c262a64d5f40cbfe2311efa71c0ad7f2a220ff25ed663
@@ -473,7 +473,7 @@ entries:
     review_action: repair-review
   balsa-learning-a-query-optimizer-without-expert-demonstrations:
     source_sha256: adffe4b310b061c1da403d9d2dfdbf78cfde56884978143cc5f44ce9efe1f0c8
-    translation_sha256: 8852fa384fb6474de1241b37ed492829c9b8535946a2a0a1fe433b0f8de1eae7
+    translation_sha256: 923374537a9f9aed357b485b1017ffa71108be7bb596f0bf89306e9f2ccb239e
     review_action: repair-review
   bao-making-learned-query-optimization-practical:
     source_sha256: 7ffe17799d73e5c637254b24ee4b824bd813e92e2b75ab48697e168662bc7721

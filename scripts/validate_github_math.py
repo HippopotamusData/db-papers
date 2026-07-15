@@ -569,6 +569,17 @@ def _safe_closing_boundary(line: str, index: int) -> bool:
     return ASCII_WORD_RE.fullmatch(line[index + 1]) is None
 
 
+def _ends_with_strong_close(markdown: str) -> bool:
+    tokens = MARKDOWN.parseInline(markdown)
+    children = tokens[0].children if tokens else None
+    meaningful = [
+        child
+        for child in children or []
+        if child.type != "text" or child.content
+    ]
+    return bool(meaningful and meaningful[-1].type == "strong_close")
+
+
 def _unescaped_dollars(line: str) -> list[int]:
     return [
         index
@@ -802,6 +813,9 @@ def _parse_math(text: str) -> tuple[list[MathFragment], list[MathIssue]]:
         for pair_start in range(0, len(dollars) - 1, 2):
             opening = dollars[pair_start]
             closing = dollars[pair_start + 1]
+            boundary = opening
+            while boundary > 0 and line[boundary - 1] == " ":
+                boundary -= 1
             payload = line[opening + 1 : closing]
             if not payload or payload[0].isspace() or payload[-1].isspace():
                 issues.append(
@@ -818,6 +832,34 @@ def _parse_math(text: str) -> tuple[list[MathFragment], list[MathIssue]]:
                         offset + opening,
                         "GHM005",
                         f"unsafe inline-math opening after {previous!r}; use an ASCII space before $ or rewrite the phrase",
+                    )
+                )
+            elif (
+                boundary < opening
+                and boundary >= 2
+                and line[boundary - 1] in {"@", "-"}
+                and line[boundary - 2].isascii()
+                and line[boundary - 2].isalnum()
+            ):
+                issues.append(
+                    MathIssue(
+                        offset + opening,
+                        "GHM027",
+                        "a visible space split an ASCII joined label before math; keep the complete label in one formula",
+                    )
+                )
+            elif (
+                boundary < opening
+                and boundary >= 2
+                and line[boundary - 2 : boundary] == "**"
+                and not _escaped(line, boundary - 2)
+                and not _ends_with_strong_close(line[:boundary])
+            ):
+                issues.append(
+                    MathIssue(
+                        offset + opening,
+                        "GHM028",
+                        "a visible space detached math from an opening strong-emphasis marker; restore **$...$** or rewrite the label",
                     )
                 )
             if not _safe_closing_boundary(line, closing):

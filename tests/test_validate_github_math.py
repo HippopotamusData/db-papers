@@ -58,6 +58,22 @@ Top-$k$，F1@$n$。
     def test_rejects_inline_math_before_ascii_identifier(self) -> None:
         self.assertEqual(self.codes(r"算法 $k$NN。"), ["GHM005"])
 
+    def test_rejects_visible_space_inserted_into_joined_label(self) -> None:
+        text = "指标 F1@ $k$，候选 Top-  $n$，列表项：\n- $x$。"
+        self.assertEqual(self.codes(text), ["GHM027", "GHM027"])
+        self.assertEqual(
+            self.codes(r"指标 $\text{F1@}k$，候选 $\text{Top-}n$。"), []
+        )
+
+    def test_rejects_space_that_detaches_opening_strong_marker(self) -> None:
+        text = "文本 ** $x$-标签**；另一处 **  $y$-标签**。"
+        self.assertEqual(self.codes(text), ["GHM028", "GHM028"])
+        self.assertEqual(self.codes(r"文本 **$\theta$-推导**。"), [])
+        self.assertEqual(
+            self.codes(r"literal \** then **标签。**  $\theta$ 保持独立。"),
+            [],
+        )
+
     def test_rejects_non_space_opening_boundaries_but_accepts_ascii_paren(self) -> None:
         text = "逗号,$x$；冒号:$y$；制表符\t$z$；括号 ($w$)。\n"
         self.assertEqual(self.codes(text), ["GHM005", "GHM005", "GHM005"])

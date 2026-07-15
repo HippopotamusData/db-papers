@@ -40,6 +40,17 @@ def _can_insert_boundary_space(previous: str) -> bool:
     )
 
 
+def _would_change_visible_token(text: str, opening: int) -> bool:
+    joined_label = (
+        opening >= 2
+        and text[opening - 1] in {"@", "-"}
+        and text[opening - 2].isascii()
+        and text[opening - 2].isalnum()
+    )
+    detached_emphasis = opening >= 2 and text[opening - 2 : opening] == "**"
+    return joined_label or detached_emphasis
+
+
 def _safe_edits(text: str) -> list[tuple[int, str]]:
     excluded_lines = nonportable_math_lines(text)
     edits: list[tuple[int, str]] = []
@@ -50,7 +61,11 @@ def _safe_edits(text: str) -> list[tuple[int, str]]:
         if opening <= 0 or _line_number(text, opening) in excluded_lines:
             continue
         previous = text[opening - 1]
-        if previous not in {" ", "("} and _can_insert_boundary_space(previous):
+        if (
+            previous not in {" ", "("}
+            and _can_insert_boundary_space(previous)
+            and not _would_change_visible_token(text, opening)
+        ):
             edits.append((opening, " "))
     return edits
 
@@ -84,6 +99,11 @@ def _markdown_signature(text: str) -> list[tuple[str, int, str, str]]:
 
 
 def _assert_safe(original: str, fixed: str, edits: list[tuple[int, str]]) -> None:
+    if any(
+        insertion == " " and _would_change_visible_token(original, offset)
+        for offset, insertion in edits
+    ):
+        raise ValueError("safe fix would split a visible label or detach emphasis")
     if fixed != _apply_edits(original, edits):
         raise ValueError("safe fix changed bytes outside its declared insertions")
     if _payload_signature(original) != _payload_signature(fixed):
