@@ -187,7 +187,7 @@ $$
 Yuval Filmus [8] 解出了上述递推关系，使我们能够研究快速排序相对于最优情形 $p=\frac12$ 的减速程度。他得到：
 
 $$
-\lim_{n\to\infty}\frac{T(n,p)}{T(n,\frac12)}=\frac{1}{H(p)},
+\lim _ {n\to\infty}\frac{T(n,p)}{T(n,\frac12)}=\frac{1}{H(p)},
 $$
 
 其中 $H$ 是 Shannon 二元熵函数：

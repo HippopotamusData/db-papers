@@ -409,7 +409,7 @@ s = 1 - \frac{\text{通过谓词的元组数}}{\text{元组总数}}.
 \tag{5}
 $$
 
-令 c<sub>max</sub> 和 c<sub>min</sub> 分别为 c 的最大值和最小值。若假设取值均匀分布在 c<sub>max</sub> 与 c<sub>min</sub> 之间，则选择率可计算为 $s = 1 - \frac{p2-p1}{c_{max}-c_{min}}$。为了生成指定选择率 s 的样例查询，先粗略按此公式逼近该选择率，再手工调整 p1 或 p2，最终得到所需查询。
+令 c<sub>max</sub> 和 c<sub>min</sub> 分别为 c 的最大值和最小值。若假设取值均匀分布在 c<sub>max</sub> 与 c<sub>min</sub> 之间，则选择率可计算为 $s = 1 - \frac{p2-p1}{c _ {max}-c _ {min}}$。为了生成指定选择率 s 的样例查询，先粗略按此公式逼近该选择率，再手工调整 p1 或 p2，最终得到所需查询。
 
 ### 6.2 VGPQ
 

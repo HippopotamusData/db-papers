@@ -275,7 +275,7 @@ $$
 cluster 均值会随时间向近期样本漂移。若 `c_j` 是第 j 个 cluster 的代表查询，`c_0` 是初始均值，老样本权重为 `w`，加入 `s` 个样本后当前均值为：
 
 $$
-c_j = (1-w)^s c_0 + w \sum_{i=1}^{s}(1-w)^{s-i}Q_i
+c_j = (1-w)^s c_0 + w \sum _ {i=1}^{s}(1-w)^{s-i}Q_i
 $$
 
 权重 `w` 控制算法遗忘旧查询样本的速度。每轮时间复杂度为 `O(mnk)`，空间复杂度为 `O(n(m+k))`，比朴素分区算法更高效。得到 representative queries 后，系统用贪心算法生成表布局：按 cluster 权重降序遍历 representative queries，把该查询访问的属性组合到同一 tile，直到所有属性都分配到某个 tile。

@@ -142,9 +142,9 @@ $$
 若存在排列 $\pi$，使得
 
 $$
-d_{\mathrm{final}}
-= T_{\pi(n)} \circ T_{\pi(n-1)} \circ \cdots \circ
-T_{\pi(2)} \circ T_{\pi(1)}(d_{\mathrm{initial}}),
+d _ {\mathrm{final}}
+= T _ {\pi(n)} \circ T _ {\pi(n-1)} \circ \cdots \circ
+T _ {\pi(2)} \circ T _ {\pi(1)}(d _ {\mathrm{initial}}),
 \tag{1}
 $$
 
@@ -301,7 +301,7 @@ $$
 则树深至多为
 
 $$
-1+\log_{100}\frac{N+1}{2}\lt{}5.
+1+\log _ {100}\frac{N+1}{2}\lt{}5.
 $$
 
 在树的每一层，一次插入至多读取或写入一个已有节点。因此，读集合与写集合都不超过 4 页，尽管这棵树可容纳近两亿个关键字。验证时间只与并发事务数及这些很小的集合有关。
@@ -331,9 +331,9 @@ $$
 $$
 \begin{aligned}
 p_C
-  &= \sum_{1\le i\le d}p_s(i)p_I(i)\\
+  &= \sum _ {1\le i\le d}p_s(i)p_I(i)\\
   &\lt{} \frac{1}{n}\left(1-\frac{2}{m+1}\right)
-     \sum_{1\le i\le d}
+     \sum _ {1\le i\le d}
      \left(\frac{2m}{m+1}\right)^{i-1}.
 \end{aligned}
 $$

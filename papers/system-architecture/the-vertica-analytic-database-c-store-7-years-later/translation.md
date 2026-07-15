@@ -136,7 +136,7 @@ $$
 $$
 
 $$
-\frac{(N-2) \cdot CMAX}{N} \le expr \lt{} \frac{(N-1) \cdot CMAX}{N} \Rightarrow Node_{N-1}
+\frac{(N-2) \cdot CMAX}{N} \le expr \lt{} \frac{(N-1) \cdot CMAX}{N} \Rightarrow Node _ {N-1}
 $$
 
 $$

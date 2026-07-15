@@ -259,11 +259,11 @@ HOS 的关键挑战是在多租户场景中保证查询级 SLO，例如大规模
 给定 SG，它在一个时间区间中分配给 ECs 的 CPU time 受两个因素影响：（1）其 share；（2）上一时间区间中已占用的 CPU time。令 `ECshare_i` 表示 EC i 的 share，用 `ECshare_avg_i` 表示 EC i 在某时间区间中的实际 share，SG i 的实际 share 是其 ECs share 之和：
 
 $$
-ECshare\char"005F{}avg_i = ECshare_i \times \frac{\Delta T_{run}}{\Delta T_{run} + \Delta T_{spd} + \Delta T_{blk}}
+ECshare\char"005F{}avg_i = ECshare_i \times \frac{\Delta T _ {run}}{\Delta T _ {run} + \Delta T _ {spd} + \Delta T _ {blk}}
 $$
 
 $$
-SGshare\char"005F{}avg_i = \sum_{j=1}^{N} ECshare\char"005F{}avg_j
+SGshare\char"005F{}avg_i = \sum _ {j=1}^{N} ECshare\char"005F{}avg_j
 $$
 
 其中 `Delta T_run`、`Delta T_spd` 和 `Delta T_blk` 分别表示 EC i 处于 runnable、suspended 和 blocking 状态的时间区间。

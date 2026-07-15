@@ -239,13 +239,13 @@ Q2: SELECT V.s
 设在 `T2.a` 唯一键上 seek 的查找代价为 `C_J = 1`，哈希表执行 `GROUP BY` 的每行平均代价为 `C_G = 1`。如果不考虑分布，也就是假设整个查询本地执行，则：
 
 $$
-Cost_{Q1}=R_1 C_J + R_1 S_J C_G
+Cost _ {Q1}=R_1 C_J + R_1 S_J C_G
           = 200000 C_J + 20000 C_G
           = 220000
 $$
 
 $$
-Cost_{Q2}=R_1 C_G + R_1 S_G C_J
+Cost _ {Q2}=R_1 C_G + R_1 S_G C_J
           = 200000 C_G + 50000 C_J
           = 250000
 $$
@@ -259,13 +259,13 @@ $$
 若执行 reshuffle 的平均代价（包含网络和哈希计算）为 `C_R = 3`，则：
 
 $$
-Cost_{Q1}=R_1 C_R + R_1 C_J + R_1 S_J C_G
+Cost _ {Q1}=R_1 C_R + R_1 C_J + R_1 S_J C_G
           = 200000(C_R+C_J)+20000 C_G
           = 620000
 $$
 
 $$
-Cost_{Q2}=R_1 C_G + R_1 S_G C_R + R_1 S_G C_J
+Cost _ {Q2}=R_1 C_G + R_1 S_G C_R + R_1 S_G C_J
           = 200000C_G+50000(C_R+C_J)
           = 400000
 $$

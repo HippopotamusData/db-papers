@@ -1,0 +1,7 @@
+{
+  "name": "db-papers-maintainer-tools",
+  "private": true,
+  "devDependencies": {
+    "mathjax": "4.1.3"
+  }
+}

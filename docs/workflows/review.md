@@ -42,7 +42,7 @@ python3 scripts/papers.py accept \
 
 资源审校遵循 `docs/translation-policy.md`，并额外确认：双栏抽取顺序正确；图像坐标轴、图例、标签和边界可读；表格数字、单位和结论对应；每个正式资源恰有一个完整表示。编号扫描只生成候选，新增、删除、移动或重裁资源前必须回到渲染页确认。
 
-全库公式规则或迁移器变更还必须按 `docs/workflows/maintain.md` 使用 VS Code 同版 KaTeX 与 GitHub Markdown API 核验全部公式。单篇普通审校仍以仓库内的静态门禁为必跑项；外部渲染核验不加入离线 `make check`。
+任何变更译文在验收前都必须按 `docs/portable-math-maintainers.md` 运行限定文件范围的 GitHub Markdown 公式节点审计；全库公式规则或安全修复器变更运行全库审计，并在推送后的真实 GitHub 文件页检查最终显示。仓库内的静态门禁和锁定版本 MathJax 结构门禁同样必跑；VS Code/KaTeX 仅为可选诊断，外部核验不加入离线 `make check`，由 CI 对变更译文重复执行。
 
 ## 停止条件
 

@@ -64,18 +64,18 @@ Stanford University；Numbers Station
 我们关注实体匹配（entity matching，EM）、错误检测（error detection，ED）和数据插补（data imputation，DI），并描述这些任务的设定。记结构化数据集为 $D$，包含 $n$ 个条目；每个条目由 $m$ 个属性—值对组成。对条目 $e_i \in D$，有：
 
 $$
-e_i = \lbrace{}e_{i,j}\rbrace{}\relax_{1 \le j \le m}, \qquad e_{i,j}=\lbrace{}\mathrm{attr}\relax_j,\mathrm{val}\relax_j\rbrace{}.
+e_i = \lbrace{}e _ {i,j}\rbrace _ {1 \le j \le m}, \qquad e _ {i,j}=\lbrace{}\mathrm{attr} _ j,\mathrm{val} _ j\rbrace{}.
 $$
 
 **实体匹配。** EM 的目标是在不同数据集中匹配实体，即人、地点和事物等现实世界对象。形式化地说，给定两个结构化数据集 $(D,D')$ 以及条目对 $e,e'\in D\times D'$，目标是预测这些条目是否表示同一实体。该问题通常作为分类问题求解；现实世界的 EM 系统通常会先用分块启发式规则去除明显不匹配的条目对。
 
 过去十年间，EM 得到了广泛研究（综述见 [77]），方法大体分为三类：基于规则、基于众包 [36, 96]，以及基于 ML/DL [49, 74]。近来，依赖 PLM [57] 的方法已经成为该任务的 SoTA。
 
-**错误检测。** ED 是数据清洗流水线的重要步骤。给定条目 $e$，目标是找出值 $\mathrm{val}\relax_j$ 存在错误的属性 $j$。该任务被表述为分类问题：对给定的 $e$，预测 $\mathrm{val}\relax_j$ 是否正确。
+**错误检测。** ED 是数据清洗流水线的重要步骤。给定条目 $e$，目标是找出值 $\mathrm{val} _ j$ 存在错误的属性 $j$。该任务被表述为分类问题：对给定的 $e$，预测 $\mathrm{val} _ j$ 是否正确。
 
 ED 在学术界和工业界都得到了广泛研究 [7]，Trifacta [6] 和 Tamr [5] 等商业产品也已取得成功。传统 ED 系统高度依赖基于规则的算法，通过函数依赖或知识库强制实施数据约束 [23, 24, 26]。此外还有模式约束 [24, 45]、异常值检测 [28]、记录去重 [89] 等基于统计的方法。近期研究还开发了用于 ED 的 SoTA ML 模型 [41]。
 
-**数据插补。** DI 是修复脏数据源的关键步骤。给定一个缺少属性值 $\lbrace{}\mathrm{attr}\relax_j,\mathrm{NULL}\rbrace{}$ 的条目 $e$，目标是推断缺失值。缺失值的全部可能取值事先未知。
+**数据插补。** DI 是修复脏数据源的关键步骤。给定一个缺少属性值 $\lbrace{}\mathrm{attr} _ j,\mathrm{NULL}\rbrace{}$ 的条目 $e$，目标是推断缺失值。缺失值的全部可能取值事先未知。
 
 既有 DI 工作可分为基于聚类和/或统计 [70]、基于生成模型 [35]、基于 ML/DL [17, 72] 以及基于表格数据预训练 [30] 的方法；需要插补训练集中未出现过的值时，这些方法会遇到困难 [72]。
 
@@ -100,7 +100,7 @@ ED 在学术界和工业界都得到了广泛研究 [7]，Trifacta [6] 和 Tamr 
 给定结构化数据集，我们先把一个条目转换成文本。具体来说，对条目 $e$，沿用既有工作 [57]，把属性值和条目序列化为：
 
 $$
-\mathrm{serialize}(e) \coloneqq \mathrm{attr}\relax_1:\mathrm{val}\relax_1\ \ldots\ \mathrm{attr}\relax_m:\mathrm{val}\relax_m
+\mathrm{serialize}(e) \coloneqq \mathrm{attr} _ 1:\mathrm{val} _ 1\ \ldots\ \mathrm{attr} _ m:\mathrm{val} _ m
 $$
 
 若属性值为 `NULL`，则序列化为空字符串。根据任务和数据集，序列化只覆盖与任务相关的属性子集。基础模型可能对提示格式和所用的具体序列化方式很敏感 [105]。第 4.3 节研究其对属性子集选择的敏感性。

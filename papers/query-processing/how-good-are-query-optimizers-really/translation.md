@@ -94,7 +94,7 @@ PostgreSQL 的优化器遵循传统教材架构。它用动态规划枚举连接
 连接结果大小使用以下公式估计：
 
 $$
-|T_1 \bowtie_{x=y} T_2| =
+|T_1 \bowtie _ {x=y} T_2| =
 \frac{|T_1||T_2|}{\max(dom(x), dom(y))}
 $$
 
@@ -113,16 +113,16 @@ PostgreSQL 查询引擎接受物理算子计划，并用 Volcano 风格解释执
 例如链式查询：
 
 $$
-\sigma_{x=5}(A) \bowtie_{A.bid=B.id} B \bowtie_{B.cid=C.id} C
+\sigma _ {x=5}(A) \bowtie _ {A.bid=B.id} B \bowtie _ {B.cid=C.id} C
 $$
 
 其中间结果包括：
 
 $$
-\sigma_{x=5}(A),
-\sigma_{x=5}(A) \bowtie B,
+\sigma _ {x=5}(A),
+\sigma _ {x=5}(A) \bowtie B,
 B \bowtie C,
-\sigma_{x=5}(A) \bowtie B \bowtie C
+\sigma _ {x=5}(A) \bowtie B \bowtie C
 $$
 
 外键索引和索引嵌套循环连接还会引入额外中间结果大小。例如，如果 `A.bid` 上有非唯一索引，还需要估计 `A \bowtie B` 和 `A \bowtie B \bowtie C`，因为选择条件 `A.x = 5` 只能在从 `A.bid` 索引取回所有匹配元组之后应用。
@@ -260,7 +260,7 @@ PostgreSQL 文档指出，确定理想代价变量没有明确方法，最好把
 直觉上，图 8 中的直线对应理想代价模型：更昂贵查询总被赋予更高代价。我们将偏离这条线解释为代价模型预测误差。对查询 `Q`，使用绝对百分比误差：
 
 $$
-\epsilon(Q)=\frac{|T_{real}(Q)-T_{pred}(Q)|}{T_{real}(Q)}
+\epsilon(Q)=\frac{|T _ {real}(Q)-T _ {pred}(Q)|}{T _ {real}(Q)}
 $$
 
 其中 `T_real` 是观测运行时间，`T_pred` 是线性模型预测运行时间。使用 PostgreSQL 默认代价模型和真实基数时，代价模型中位误差为 38%。
@@ -280,11 +280,11 @@ $$
 PostgreSQL 代价模型相当复杂。这种复杂性应当反映影响查询执行的各类因素，例如磁盘 seek/read 速度和 CPU 处理成本。为判断这种复杂性在主内存场景下是否真的必要，我们将其与一个非常简单的代价函数 `C_mm` 比较。该函数面向主内存场景，不建模 I/O 成本，只统计查询执行过程中通过每个算子的元组数：
 
 $$
-C_{mm}(T)=
+C _ {mm}(T)=
 \begin{cases}
 \tau \cdot |R| & \text{if } T=R \lor T=\sigma(R) \\
-|T| + C_{mm}(T_1)+C_{mm}(T_2) & \text{if } T=T_1 \bowtie_{HJ} T_2 \\
-C_{mm}(T_1)+\lambda\cdot|T_1|\cdot \max(\frac{|T_1 \bowtie R|}{|T_1|},1) & \text{if } T=T_1 \bowtie_{INL} T_2,\ T_2=R \lor T_2=\sigma(R)
+|T| + C _ {mm}(T_1)+C _ {mm}(T_2) & \text{if } T=T_1 \bowtie _ {HJ} T_2 \\
+C _ {mm}(T_1)+\lambda\cdot|T_1|\cdot \max(\frac{|T_1 \bowtie R|}{|T_1|},1) & \text{if } T=T_1 \bowtie _ {INL} T_2,\ T_2=R \lor T_2=\sigma(R)
 \end{cases}
 $$
 

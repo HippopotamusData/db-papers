@@ -289,7 +289,7 @@ return true
 最终至少有 `floor(t/s)` 个满 block，partial block 使用 `t mod s` 个 slot。令 `p` 为最终 partial block，`F/E` 为最终满/空 block 集合，移动守恒关系为：
 
 $$
-|Gap'\relax_p|+\sum_{f\in F}|Gap_f|=|Filled'\relax_p|+\sum_{e\in E}|Filled_e|
+|Gap' _ p|+\sum _ {f\in F}|Gap_f|=|Filled' _ p|+\sum _ {e\in E}|Filled_e|
 $$
 
 由此可得该贪心算法相对最优至多多移动 `t mod s` 个元组。

@@ -3,6 +3,7 @@ tmp_prepare_*.py
 __pycache__/
 *.py[cod]
 .venv/
+node_modules/
 .DS_Store
 
 # Non-deliverable notes and source unpacking scratch space.

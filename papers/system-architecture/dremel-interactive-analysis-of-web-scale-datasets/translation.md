@@ -70,7 +70,7 @@ SELECT TOP(signal1, 100), COUNT(*) FROM t;
 Dremel 的数据模型来源于分布式系统上下文中的 Protocol Buffers [21]，在 Google 内广泛使用，也有开源实现。模型基于强类型嵌套记录，其抽象语法为：
 
 $$
-\tau = dom \mid \langle A_1 : \tau[\ast{}|?], \ldots, A_n : \tau[\ast{}|?] \rangle
+\tau = dom \mid \langle A_1 : \tau[\ast|?], \ldots, A_n : \tau[\ast|?] \rangle
 $$
 
 其中 $\tau$ 是原子类型或记录类型。`dom` 中的原子类型包括 integer、floating point number、string 等。记录由一个或多个字段组成。记录中字段 $i$ 具有名称 $A_i$，并可带一个可选 multiplicity label。Repeated field (`*`) 可以在记录中出现多次，并被解释为值列表；字段在记录中出现的顺序是有意义的。Optional field (`?`) 可以从记录中缺失。否则，字段是 required，即必须恰好出现一次。

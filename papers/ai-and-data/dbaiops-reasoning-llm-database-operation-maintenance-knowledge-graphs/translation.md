@@ -205,7 +205,7 @@ $$
 
 如算法 1 所示，DBAIOps 分三个步骤系统构建 ExperienceGraph。数据来自多种来源，包括 Oracle 数据库的 15,000 份官方 MOS（My Oracle Support）异常报告 [6]。
 
-1. **图元数据初始化。** 对每个异常案例 $a_i\in A$，我们在提示中给出图定义，使用多个 LLM 从文档实体中提取初始图顶点 $V_{\mathrm{raw}}$（指标、经验和标签顶点）及边 $E_{\mathrm{raw}}$。为提高稳健性，系统通过多数投票聚合多个 LLM 的输出。随后，我们使用统计式多指标关系（第 5.1 节）构建异常模型顶点 $v_{\mathrm{anomaly}}$，作为中心诊断入口。数据库专家从该顶点开始验证图，并围绕它组织其余元素：（a）把相关指标和经验顶点连接到 $v_{\mathrm{anomaly}}$；（b）在存在 Python 脚本时添加工具顶点，以提供多条诊断路径；（c）使用标签顶点对每个顶点分类。最终，经过验证的顶点 $V_{\mathrm{valid}}$ 和边 $E_{\mathrm{valid}}$ 构成图 $G$。
+1. **图元数据初始化。** 对每个异常案例 $a_i\in A$，我们在提示中给出图定义，使用多个 LLM 从文档实体中提取初始图顶点 $V _ {\mathrm{raw}}$（指标、经验和标签顶点）及边 $E _ {\mathrm{raw}}$。为提高稳健性，系统通过多数投票聚合多个 LLM 的输出。随后，我们使用统计式多指标关系（第 5.1 节）构建异常模型顶点 $v _ {\mathrm{anomaly}}$，作为中心诊断入口。数据库专家从该顶点开始验证图，并围绕它组织其余元素：（a）把相关指标和经验顶点连接到 $v _ {\mathrm{anomaly}}$；（b）在存在 Python 脚本时添加工具顶点，以提供多条诊断路径；（c）使用标签顶点对每个顶点分类。最终，经过验证的顶点 $V _ {\mathrm{valid}}$ 和边 $E _ {\mathrm{valid}}$ 构成图 $G$。
 2. **图实现。** 经过验证的图 $G$ 由 $MapToCypher(G)$ 转换成可执行 Cypher 查询并存入 Neo4j，以便在线诊断时高效遍历。为了通过公共标签共享知识，同时消除重复构建工作，我们为每个顶点进一步添加相应数据库标识，为全部 25 种受支持数据库构建统一图。
 3. **图丰富。** 我们使用启发式策略自动增强图连通性，在具有相同标签或同义标签的顶点之间添加边：
 
@@ -213,7 +213,7 @@ $$
 E \leftarrow E \cup \lbrace{}(v_i,v_j)\mid SameTag(v_i,v_j)\lor SynonymTag(v_i,v_j)\rbrace{}
 $$
 
-这会关联不同 $v_{\mathrm{anomaly}}$ 的相关子图，显著扩展图的诊断覆盖率。例如，系统可以从几十个 Oracle 异常模型生成 300,000 多条边。
+这会关联不同 $v _ {\mathrm{anomaly}}$ 的相关子图，显著扩展图的诊断覆盖率。例如，系统可以从几十个 Oracle 异常模型生成 300,000 多条边。
 
 **示例 4.2。** 如图 3 所示，日志文件同步异常的图分三个阶段系统构建。首先，DBAIOps 使用 LLM 从 My Oracle Support 文档 [6] 中提取原始图实体，包括经验顶点（例如“……表示存在风险……”）和指标顶点（“I/O 延迟”）。随后，数据库专家验证提取的原始图，构建触发条件为“等待时间 > 10 ms”的中心异常模型顶点，并确认它与其他顶点的关系。经过验证的图被转换成可执行 Cypher 查询，持久化到 Neo4j 图数据库，以支持高效在线检索。最后，系统在语义等价标签值的顶点之间建立同义边，自动丰富图，从而把 LOG FILE SYNC 异常模型与其他 I/O 相关异常有效连接起来。
 
@@ -245,36 +245,36 @@ $$
 
 **指标—异常相关。** 为有效捕获指标与异常的关系，DBAIOps 开发了一组异常模型。每个模型根据不同的多指标模式或单指标纵向比较，捕获一种特定数据库异常。不同于依赖阈值、检测准确率有限的典型方法，这些异常模型：（1）同时利用已有运维经验和多指标分析；（2）由基础元素构成。如函数 1 所示，构建过程包含四个关键步骤。
 
-1. **选择相关指标。** 给定异常案例 $a_i$，我们首先使用多个 LLM 提取初始自然语言描述 $Desc_{a_i}$，以及可能与该异常相关的候选指标集合 $M_{a_i}$。为提高稳健性，我们使用 LLM-as-a-Judge 技术 [26] 促成多数投票机制，聚合不同 LLM 的输出。随后，由具有丰富维护经验的数据库专家验证这些初步结果，得到精炼描述 $Desc^{valid}\relax_{a_i}$ 和经过验证、具有因果相关性的指标集合 $M^{valid}\relax_{a_i}\subseteq M_{a_i}$。
-2. **转换选定指标。** 每个经过验证的指标 $m\in M^{valid}\relax_{a_i}$ 都通过函数 $\Phi$ 转换，以突出特定异常模式。令 $\mathbf{m}=[m_1,m_2,\ldots,m_T]$ 表示一个指标在 $T$ 个时间步上的时间序列， $\mathbf{r}=[r_1,r_2,\ldots,r_T]$ 表示参考时间序列，则：
+1. **选择相关指标。** 给定异常案例 $a_i$，我们首先使用多个 LLM 提取初始自然语言描述 $Desc _ {a_i}$，以及可能与该异常相关的候选指标集合 $M _ {a_i}$。为提高稳健性，我们使用 LLM-as-a-Judge 技术 [26] 促成多数投票机制，聚合不同 LLM 的输出。随后，由具有丰富维护经验的数据库专家验证这些初步结果，得到精炼描述 $Desc^{valid} _ {a_i}$ 和经过验证、具有因果相关性的指标集合 $M^{valid} _ {a_i}\subseteq M _ {a_i}$。
+2. **转换选定指标。** 每个经过验证的指标 $m\in M^{valid} _ {a_i}$ 都通过函数 $\Phi$ 转换，以突出特定异常模式。令 $\mathbf{m}=[m_1,m_2,\ldots,m_T]$ 表示一个指标在 $T$ 个时间步上的时间序列， $\mathbf{r}=[r_1,r_2,\ldots,r_T]$ 表示参考时间序列，则：
 
 $$
 \Phi(\mathbf{m})=
 \begin{cases}
-\Phi_{\mathrm{iden}}(\mathbf{m})=\mathbf{m}, & \text{恒等变换}\\
-\Phi_{\mathrm{shape}}(\mathbf{m},\mathbf{r})=DTW(\mathbf{m},\mathbf{r}), & \text{形状相似度}\\
-\Phi_{\mathrm{cate}}(\mathbf{m})=Classify(\mathbf{m}), & \text{类别变换}
+\Phi _ {\mathrm{iden}}(\mathbf{m})=\mathbf{m}, & \text{恒等变换}\\
+\Phi _ {\mathrm{shape}}(\mathbf{m},\mathbf{r})=DTW(\mathbf{m},\mathbf{r}), & \text{形状相似度}\\
+\Phi _ {\mathrm{cate}}(\mathbf{m})=Classify(\mathbf{m}), & \text{类别变换}
 \end{cases}
 $$
 
- $\Phi_{\mathrm{iden}}$ 返回原始时间序列值； $\Phi_{\mathrm{shape}}$ 使用动态时间规整（DTW）度量时间序列 $\mathbf{m}$ 与参考序列 $\mathbf{r}$ 的形状相似度，从而捕获存在时间扭曲时的波形相似性； $\Phi_{\mathrm{cate}}$ 根据专家定义的规则把指标映射到离散类别标签集合，实现多级异常刻画。转换后指标集合为：
+ $\Phi _ {\mathrm{iden}}$ 返回原始时间序列值； $\Phi _ {\mathrm{shape}}$ 使用动态时间规整（DTW）度量时间序列 $\mathbf{m}$ 与参考序列 $\mathbf{r}$ 的形状相似度，从而捕获存在时间扭曲时的波形相似性； $\Phi _ {\mathrm{cate}}$ 根据专家定义的规则把指标映射到离散类别标签集合，实现多级异常刻画。转换后指标集合为：
 
 $$
-M'=\lbrace{}\Phi(m)\mid m\in M^{valid}\relax_{a_i}\rbrace{}
+M'=\lbrace{}\Phi(m)\mid m\in M^{valid} _ {a_i}\rbrace{}
 $$
 
-3. **构建检测函数。** 系统根据转换后的指标构建析取范式（DNF）检测函数 $f_{\mathrm{detect}}$。该函数包含异常检测方程，使用作用于系统指标和统计模式（趋势）的可配置逻辑表达式。对于每个 $m'\in M'$，系统定义一个表达式 $condition_i$，通常将 $m'$ 与类别或阈值 $\theta$ 比较。这些阈值最初由领域专家设置，之后通过第 6.1 节介绍的自适应检测函数（ADF）自动精炼。条件也可以是复合条件，通过合取（AND）和析取（OR）组合多个指标。总体检测函数为：
+3. **构建检测函数。** 系统根据转换后的指标构建析取范式（DNF）检测函数 $f _ {\mathrm{detect}}$。该函数包含异常检测方程，使用作用于系统指标和统计模式（趋势）的可配置逻辑表达式。对于每个 $m'\in M'$，系统定义一个表达式 $condition_i$，通常将 $m'$ 与类别或阈值 $\theta$ 比较。这些阈值最初由领域专家设置，之后通过第 6.1 节介绍的自适应检测函数（ADF）自动精炼。条件也可以是复合条件，通过合取（AND）和析取（OR）组合多个指标。总体检测函数为：
 
 $$
-f_{\mathrm{detect}}=condition_1\lor condition_2\lor\cdots\lor condition_n
+f _ {\mathrm{detect}}=condition_1\lor condition_2\lor\cdots\lor condition_n
 $$
 
-当 $f_{\mathrm{detect}}$ 中至少一个条件为真时，触发异常。
+当 $f _ {\mathrm{detect}}$ 中至少一个条件为真时，触发异常。
 
 4. **构建异常模型。** 最终异常模型被封装成顶点：
 
 $$
-v_{\mathrm{anomaly}}=\langle Desc^{valid}\relax_{a_i},M',f_{\mathrm{detect}}\rangle
+v _ {\mathrm{anomaly}}=\langle Desc^{valid} _ {a_i},M',f _ {\mathrm{detect}}\rangle
 $$
 
 它整合经过验证的异常描述、转换后的指标和 DNF 检测逻辑，在图模型中形成完整且可执行的异常表示。
@@ -299,18 +299,18 @@ $$
 15  return v_anomaly
 ```
 
-**示例 5.1。** 构建 LOG_FILE_SYNC 异常模型时，首先由多个 LLM 给出初始描述“日志文件同步等待延迟”和候选指标。通过多数投票和专家验证，系统得到精确描述和经过验证的指标 average_wait_time。该指标通过 $\Phi_{\mathrm{iden}}$ 保留原始值，并通过 $\Phi_{\mathrm{cate}}$ 把 10 分钟趋势归入“急剧上升”等类别。这些转换后的指标构成 DNF 检测函数：
+**示例 5.1。** 构建 LOG_FILE_SYNC 异常模型时，首先由多个 LLM 给出初始描述“日志文件同步等待延迟”和候选指标。通过多数投票和专家验证，系统得到精确描述和经过验证的指标 average_wait_time。该指标通过 $\Phi _ {\mathrm{iden}}$ 保留原始值，并通过 $\Phi _ {\mathrm{cate}}$ 把 10 分钟趋势归入“急剧上升”等类别。这些转换后的指标构成 DNF 检测函数：
 
 $$
-f_{\mathrm{detect}}=(METRIC_{\mathrm{raw}}\gt{}60ms)\lor
-((Trend_{10min}=sharp\ rise)\land(METRIC_{\mathrm{raw}}\gt{}6ms))
+f _ {\mathrm{detect}}=(METRIC _ {\mathrm{raw}}\gt{}60ms)\lor
+((Trend _ {10min}=sharp\ rise)\land(METRIC _ {\mathrm{raw}}\gt{}6ms))
 $$
 
 其中阈值最初由专家设置，之后自动精炼。完整模型封装为：
 
 $$
-v_{\mathrm{trigger}}=\langle Desc^{valid}\relax_{a_i},
-\lbrace{}METRIC_{\mathrm{raw}},Trend_{10min}\rbrace{},f_{\mathrm{detect}}\rangle
+v _ {\mathrm{trigger}}=\langle Desc^{valid} _ {a_i},
+\lbrace{}METRIC _ {\mathrm{raw}},Trend _ {10min}\rbrace{},f _ {\mathrm{detect}}\rangle
 $$
 
 由此得到整合了验证描述、转换指标和检测逻辑的可执行异常表示。
@@ -319,8 +319,8 @@ $$
 
 许多关键数据库异常来自看似无关指标之间的复杂交互，而不是单个阈值违规 [47, 51]。这些隐藏关系解释了传统监控遗漏的性能问题。为了系统捕获这些细微连接，DBAIOps 使用三种机制揭示不同指标之间的隐式相关性。
 
-1. **通过标签连接子图。** DBAIOps 使用 $G$ 中的标签顶点，通过边创建函数 $SameTag(v_i,v_j)$ 和 $SynonymTag(v_i,v_j)$ 自动连接彼此断开的子图。例如，系统按语义等价关系连接“Physical Read”和“Disk Read”顶点，从不同 $v_{\mathrm{anomaly}}$ 动态形成未被显式预定义的隐式相关路径。
-2. **时间序列相似性分析。** DBAIOps 检测同步波动模式，即使指标来自看似无关的不同领域，也能发现隐藏依赖。系统使用动态时间规整（DTW）[36] 判断波形相似度，并使用互相关判断一个指标领先还是滞后于另一个。例如，当“Log file sync wait time”和“Disk I/O latency”的模式通过 $\Phi_{\mathrm{shape}}$ 对齐时，系统会发现两者之间此前被忽略的联系。
+1. **通过标签连接子图。** DBAIOps 使用 $G$ 中的标签顶点，通过边创建函数 $SameTag(v_i,v_j)$ 和 $SynonymTag(v_i,v_j)$ 自动连接彼此断开的子图。例如，系统按语义等价关系连接“Physical Read”和“Disk Read”顶点，从不同 $v _ {\mathrm{anomaly}}$ 动态形成未被显式预定义的隐式相关路径。
+2. **时间序列相似性分析。** DBAIOps 检测同步波动模式，即使指标来自看似无关的不同领域，也能发现隐藏依赖。系统使用动态时间规整（DTW）[36] 判断波形相似度，并使用互相关判断一个指标领先还是滞后于另一个。例如，当“Log file sync wait time”和“Disk I/O latency”的模式通过 $\Phi _ {\mathrm{shape}}$ 对齐时，系统会发现两者之间此前被忽略的联系。
 3. **两阶段图探索。** DBAIOps 使用系统化发现过程：首先遍历图中的相邻顶点以扩大搜索范围，再通过统计分析滤除无关指标，只保留具有显著异常模式的指标作为有效隐式相关项。下一节将详细说明该机制如何提高诊断覆盖率。
 
 ## 6 场景感知异常诊断
@@ -335,7 +335,7 @@ $$
 
 真实场景中的异常很少彼此孤立：一个异常模型中的性能问题可能同时触发或加剧另一个模型中的问题。但是，LOG_FILE_SYNC 和 REDO_ALLOCATION 等不同异常模型在初始化后的图中可能只有松散连接，所共享的经验也稀疏且碎片化，例如并发相关的等待事件。为此，我们提出自动图探索机制，动态发现并连接不同异常模型中相关的经验片段。如图 5 所示，该机制包含两个主要阶段。
 
-1. **图推断与邻近发现。** 给定完整图 $G$，DBAIOps 使用图查询语言 Cypher 进行推断，启动图探索。系统从检测函数取值为真的异常模型顶点 $v_{\mathrm{anomaly}}$ 出发，遍历相连的顶点和边，收集并聚合相关诊断信息。探索沿相关边到达指标顶点以执行统计分析，并沿包含边到达经验顶点以收集诊断知识。同义边通过连接不同子图中语义等价的标签顶点来增强图探索，将碎片化经验关联起来以处理复杂根因。在 $k$ 跳范围内迭代之后，系统得到边密度更高的已探索图 $G'$（ $|E'|\gt{}|E|$），为复杂异常形成连通性更强的结构。
+1. **图推断与邻近发现。** 给定完整图 $G$，DBAIOps 使用图查询语言 Cypher 进行推断，启动图探索。系统从检测函数取值为真的异常模型顶点 $v _ {\mathrm{anomaly}}$ 出发，遍历相连的顶点和边，收集并聚合相关诊断信息。探索沿相关边到达指标顶点以执行统计分析，并沿包含边到达经验顶点以收集诊断知识。同义边通过连接不同子图中语义等价的标签顶点来增强图探索，将碎片化经验关联起来以处理复杂根因。在 $k$ 跳范围内迭代之后，系统得到边密度更高的已探索图 $G'$（ $|E'|\gt{}|E|$），为复杂异常形成连通性更强的结构。
 2. **基于统计的图裁剪。** 获取已探索图 $G'$ 上的指标后，DBAIOps 使用自适应检测函数（ADF）评估收集的指标是否表现出异常模式，并据此裁剪图。对包含 $T$ 个时间步的指标序列 $\mathbf{m}=[m_1,m_2,\ldots,m_T]$，ADF 分五步执行。
 
 **步骤 1：波动性计算。** 首先计算标准差 $\sigma(\mathbf{m})$，度量指标序列的波动幅度。然后计算系数：
@@ -354,10 +354,10 @@ $$
 
  $B_t$ 可以纳入刻画已知运行模式的参数化因素。
 
-**步骤 3：调整状态函数。** 我们引入状态函数 $F_{\mathrm{state}}(m_t,B_t)$，判断 $m_t$ 与基线的接近程度：
+**步骤 3：调整状态函数。** 我们引入状态函数 $F _ {\mathrm{state}}(m_t,B_t)$，判断 $m_t$ 与基线的接近程度：
 
 $$
-F_{\mathrm{state}}(m_t,B_t)=
+F _ {\mathrm{state}}(m_t,B_t)=
 \begin{cases}
 1-\frac{D}{\sigma}, & m_t\text{ 接近 }B_t\\
 \frac{D}{\sigma}, & \text{其他情况}
@@ -377,7 +377,7 @@ $$
 **步骤 5：加权状态评估。** 最终异常分数为：
 
 $$
-S=w_1\cdot\sigma(\mathbf{m})+w_2\cdot F_{\mathrm{state}}(m_t,B_t)
+S=w_1\cdot\sigma(\mathbf{m})+w_2\cdot F _ {\mathrm{state}}(m_t,B_t)
 $$
 
 图探索根据该分数裁剪：如果 $S$ 超过环境阈值，则把指标标记为异常，并沿相关边继续探索；否则在当前顶点终止，从而保证只在异常区域进行高效遍历。
