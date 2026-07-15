@@ -3,10 +3,11 @@ entries:
   instant-loading-main-memory-databases:
     source_sha256: a6afe57301174545961f8af38110c682aaa59a8c19e362d0a24792beec160a8c
     translation_sha256: b12f2a3f7719228e07525a0acb4598da281f7c09824a69dbbe23fd2a8538ed61
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
+      - resource-candidates-reviewed
   speculative-distributed-csv-data-parsing-big-data-analytics:
     source_sha256: 5a0f37d3b54c439029c411bc61183dfdada62191095d94fa355d5434188fc5ef
     translation_sha256: 765e78578a9fd4145325bc1e2d717b07469c7434972d4c225005d59c6c42da74
@@ -43,7 +44,7 @@ entries:
   adaptive-execution-compiled-queries:
     source_sha256: 22c52605219990006a75f88477ccf41103a078776bbfe385e2635d81212dd658
     translation_sha256: 96b9219ec7f95a0cfb999f91618bc061b07332937d26a4c6b75e98f1d7d895d0
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
@@ -62,7 +63,7 @@ entries:
   apache-calcite-a-foundational-framework-for-optimized-query-processing-over-heterogeneous-data-sources:
     source_sha256: f95d42f2cbf92edf32f5c8eb4a20f42c51b8368a27243f1a57903197e74443bd
     translation_sha256: bf1bcc28aff8e29bafbcb38cbdb5a4e38927984951d7302c42effc1b44e98435
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
@@ -89,7 +90,7 @@ entries:
   compiled-and-vectorized-queries-afraid-to-ask:
     source_sha256: 8653fde533a0120eb564a467879ed69a60e9d87a71173f79fa8d10568c310101
     translation_sha256: 38e0e829f89c9282549bea089f2d061fcffeaae7a8904675cb7e43a9e35491f9
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
@@ -107,7 +108,7 @@ entries:
   efficiently-compiling-efficient-query-plans-modern-hardware:
     source_sha256: 7e3f5001d09f13b1a5dbc6d1756b7d2dbe1db0f023f14817d02226b00c09726c
     translation_sha256: bf0bf7d0aeaae99dc022146a1e6d8360f636e2f50d09ff66e705de842e77db56
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
@@ -151,10 +152,12 @@ entries:
   impala-a-modern-open-source-sql-engine-for-hadoop:
     source_sha256: 2c77c4e0109320de87f7443d73fe3aba6e05b4b675c6751dc6fa534b8f054083
     translation_sha256: 837a1e649dee87952c234264ff74b1d3140079b6f7640bd93a93e565f998e97a
-    accepted_version: 2026-07-14-acceptance-ledger-migration-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
+      - resource-candidates-reviewed
+      - priority-repair-reviewed
   interleaved-multi-vectorizing:
     source_sha256: d4d9b252de8818dd9367f71bd547a3f09274b313d2ec5dc796287b7d8cd1ca56
     translation_sha256: b8c4e61505a565925e6d43b71b2b1c65e8097221c412e829c82a5cd632c87baa
@@ -195,7 +198,7 @@ entries:
   monetdb-x100-hyper-pipelining-query-execution:
     source_sha256: c509153c876aee8706e298d43e2fa93ade2696cc3102643b439af0f508bb52fc
     translation_sha256: be7652c177da80a775ca687570c0e4b6e428c92731491f88b05f8649cec02551
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-image-crop-repair-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
@@ -214,11 +217,12 @@ entries:
   optimization-common-table-expressions-mpp:
     source_sha256: e90868b0b23142926fe29a88f234424f9c36be0af10ec025d2771d7d21b20e8b
     translation_sha256: 3e30f18e02e83d98ea51f5efcb82c983c7e484ef7f2ed644fda1f8976ed96fbe
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
       - priority-repair-reviewed
+      - resource-candidates-reviewed
   optimizing-queries-partitioned-tables-mpp:
     source_sha256: 01ccff8bda42e7c71f52a8b01b22668cdddd4196c5e0b72519e79d53fc3b8d73
     translation_sha256: 67e37d81f46a6a024d5fe4ce25eae77997d99e53e003fde37936e86c87f29754
@@ -281,7 +285,7 @@ entries:
   rethinking-simd-vectorization-in-memory-databases:
     source_sha256: 811555dd47d391723c5a573377e2c471110898991ab74a31ac6f10d37372dab7
     translation_sha256: 907c432cead1398c5a6b2982248bb6d1b56caca9ce12e1bad475da76203198c1
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
@@ -307,7 +311,7 @@ entries:
   spark-sql-relational-data-processing-in-spark:
     source_sha256: f4307d15e3290bc4e2ac32a223741795f0a22c8f23c5b5ab20dca4784c5713d2
     translation_sha256: 96c5aff704a0b269d879ea951da24b8cdeb2106c534e8fe0864b3067af12bf8d
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
@@ -382,19 +386,21 @@ entries:
   druid-a-real-time-analytical-data-store:
     source_sha256: dc1b1db149e5408ccc66cc5198a4cc3b5fead34d1d69157c3b708159934dc17b
     translation_sha256: 12703a6ef1a82a3068d1305ecd9bbc560d8970d56a54535c6b6a570857b04ac6
-    accepted_version: 2026-07-14-section-review-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
       - resource-candidates-reviewed
+      - priority-repair-reviewed
   pinot-realtime-olap-for-530-million-users:
     source_sha256: 17b7e856c5bea94d95b3fcdd0be9bc59a5b90a4ae5d647c115f228d86537f243
     translation_sha256: a3b6d900ebfb2c27eb08f1295c5b2d539659f8659938de2fd870108285a5498b
-    accepted_version: 2026-07-14-section-review-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
       - resource-candidates-reviewed
+      - priority-repair-reviewed
   ceph-a-scalable-high-performance-distributed-file-system:
     source_sha256: eab91f421b111e44d31f0c0108a5e2168da0699ccf9e1f4db23312259b3ccf6f
     translation_sha256: 97345712cad583efdc29d098d7d3b47f519ef55d881d46c69baa8d04910c58ba
@@ -406,15 +412,16 @@ entries:
   cfs-a-distributed-file-system-for-large-scale-container-platforms:
     source_sha256: 28cfa1adced7f83c98efe0947006c5d111142c827c99976aa5a2c02ca41880c5
     translation_sha256: 4870f4db412f54177e0309ff2c5e663b636370d107f4bb82ef73c16d2dac33d1
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
       - abridgement-risk-reviewed
+      - resource-candidates-reviewed
   data-blocks-hybrid-oltp-olap-compressed-storage-vectorization-compilation:
     source_sha256: a53fd0f7152b06c8d0482ec0fbcc6df09e6323396c3231f66400f8b7e41dd2c4
     translation_sha256: 4c065b2ab6155e3a05458db93204e283ff8bb2bb9d9f28521e2021aba23b5be0
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
@@ -423,7 +430,7 @@ entries:
   facebook-tectonic-filesystem-efficiency-from-exascale:
     source_sha256: 18e1ab6268ae8cb1c45f2a6d99967163632701c334c03e2b19c110902618e783
     translation_sha256: 7c864ab3814f223e34fbc27372d22295ed057208218fad1919878181e2ee4e8a
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
@@ -432,19 +439,21 @@ entries:
   kudu-storage-for-fast-analytics-on-fast-data:
     source_sha256: fef225bde3408de13152cd31af34ee07c0d3d6643deaa0ec4efe6db156af9001
     translation_sha256: 3c0e9dbd145256655c95969d85b66b10083b6425483c4429a1f437c1856f8bd4
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
       - priority-repair-reviewed
+      - resource-candidates-reviewed
   pax-cache-friendly-hybrid-storage:
     source_sha256: ea9eccdae45400b9857e928ae9c0054ce97276ebbce69bbb151fd13ecb87f871
     translation_sha256: 6964a77f69348b285e09106b97828d3648337b9de4011c963e54fc153d05b06c
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
       - priority-repair-reviewed
+      - resource-candidates-reviewed
   tile-row-store:
     source_sha256: 0ee87d390df57c6c422dbd6522c949e24dac5b3e4933e558163e218e0a2d1220
     translation_sha256: a29982b0296471fbc93c4a2d61e3bf67bab5d03e8679b1caf55f9c002028bdf8
@@ -489,18 +498,20 @@ entries:
   alibaba-hologres-a-cloud-native-service-for-hybrid-serving-analytical-processing:
     source_sha256: 547c216c7bda32e373e540db845e0c21f03fae5e5e9a38c0b3a77e66c2be8155
     translation_sha256: 7e59aede3d58acd1650ac071d40da53b348db097c57fc6badbaa5b7745c80d4b
-    accepted_version: 2026-07-14-priority-repair-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
+      - resource-candidates-reviewed
   amazon-redshift-and-the-case-for-simpler-data-warehouses:
     source_sha256: b43d0445af872959aacf9a5d94a44797f7b66f86d3b92c8ccfaf255679736dc5
     translation_sha256: bf5dc18b3566bf35cdad85735d1adb529d9fcd50155ea042a15ed5af1a9ee064
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
       - priority-repair-reviewed
+      - resource-candidates-reviewed
   analyticdb-real-time-olap-database-system-at-alibaba-cloud:
     source_sha256: ae093def9e959d52907f22a3bae659d7e82fc87d1ba227bcf830bed93a0fce12
     translation_sha256: 0d93b2c8873e36ebb526e9e73b73b04220aa7a128b04aa46cf1d86ae37d6aa78
@@ -513,7 +524,7 @@ entries:
   big-metadata-when-metadata-is-big-data:
     source_sha256: 35bda2cd483f7fc6c64b1d6eaa8509ad30eb009e62f1396660b0288aa437285f
     translation_sha256: 8710b32ef7e84c411be0ee924b78531d2a6816b8adda7d7dcf8e710d750e7265
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
@@ -537,11 +548,12 @@ entries:
   data-warehousing-in-the-cloud-amazon-redshift-vs-microsoft-azure-sql:
     source_sha256: b007a9dce28dd220c0fa3932faabdc369fca288255d4794ca6180c3ba781fc36
     translation_sha256: 8fec21ed2cc1c1efc0b6525e995f3d135e706bc05a1f3cc2e6dd532292a987bb
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
       - priority-repair-reviewed
+      - resource-candidates-reviewed
   db2-with-blu-acceleration-so-much-more-than-just-a-column-store:
     source_sha256: 5d3106da72932c1c61f76d6e9afd2ef8bca1f495c7b249d9649c9d9c44203b0a
     translation_sha256: b23ea5272819a41785132ea74cea5c3fd35ae3a7ceee3428de8c8bff971e262f
@@ -554,7 +566,7 @@ entries:
   dremel-interactive-analysis-of-web-scale-datasets:
     source_sha256: 1cde13e72f37da3444f89f001150a92ab30dd8921e8a4bd0cc773d9ff631c405
     translation_sha256: 1a693d5bdbc58c0cec7e995fff574813940c79543efb725129b8acfd95063353
-    accepted_version: 2026-07-14-image-crop-repair-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
@@ -563,10 +575,11 @@ entries:
   f1-query-declarative-querying-at-scale:
     source_sha256: 3a1321464f7982a983ec9fbc250d8af84608664c3f8f3e608e4b491f8e592608
     translation_sha256: 4e7528bf9781a1bb2dd17d92aa916233e739c15ab95377659643840fa29b55c3
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
+      - resource-candidates-reviewed
   hawq-a-massively-parallel-processing-sql-engine-in-hadoop:
     source_sha256: daef7735562a245bd486e6784f268375c92a1c36dc85b47eee32ebaec6e61d42
     translation_sha256: 8be3ab46e6b008c93c5b326b1058e6bb9c2aa0357d03f9c4f7fb5c2bd6e03a51
@@ -580,15 +593,16 @@ entries:
   napa-powering-scalable-data-warehousing-with-robust-query-performance-at-google:
     source_sha256: d13af9093017aa67f41f3d135a13751534df23aa982e195ddc878ed11a96b5ef
     translation_sha256: 76e5bef3d9a152d257dca327a0f3639471b7294dad2772ef670bef0592d881f4
-    accepted_version: 2026-07-14-section-review-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
       - resource-candidates-reviewed
+      - priority-repair-reviewed
   procella-unifying-serving-and-analytical-data-at-youtube:
     source_sha256: 0c32369959d97e3013adba127d312d87a3a27a910d7f5e92a38b567396715a89
     translation_sha256: f35d8531151d9625fd51b1244b644ca6be1e5361eaf03462c868ab03568c78c9
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
@@ -597,10 +611,12 @@ entries:
   resilient-distributed-datasets-a-fault-tolerant-abstraction-for-in-memory-cluster-computing:
     source_sha256: 64bf8651757c0696b5fc75cdcbed117f82e0f70396744b537c53c5530d4938a2
     translation_sha256: dd91d91ae41e98657d08bb121b15a75544eec85146a5d76c56a74e975f0fa33e
-    accepted_version: 2026-07-14-acceptance-ledger-migration-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
+      - resource-candidates-reviewed
+      - priority-repair-reviewed
   starling-scalable-query-engine-cloud-function-services:
     source_sha256: a0dd40436c85e4888fe326b318aa9edc5eb6ecd1aa4aeed4f472e4126b239b7b
     translation_sha256: 94b6b68510f2315221d5fc387738530f0d0167b5e4cc7d4505e8247e8394db65
@@ -613,19 +629,21 @@ entries:
   the-snowflake-elastic-data-warehouse:
     source_sha256: b635081104c3647561a476ab5947f5782b2a5c4be5af43b48cea90dba1b9e332
     translation_sha256: 087786b7b846bbbc6d7173ba61012149252ec87babbb04c4c95578737768b151
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
       - priority-repair-reviewed
+      - resource-candidates-reviewed
   the-vertica-analytic-database-c-store-7-years-later:
     source_sha256: 465fc9fda11c53409c1f419fff92216371e6c3106fec6d115723146f29cdad2c
     translation_sha256: e1f156fd01c533ddf5aadfa9706ff23f3ef7e2678c63b1e19ee7de6e34a3eff6
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - legacy-accepted-status-migrated
       - header-policy-normalized
       - priority-repair-reviewed
+      - resource-candidates-reviewed
   what-serverless-computing-is-and-should-become:
     source_sha256: 12d8cdb8e553ace5a9b8f975c4ed6cb6bc777ce8877eb6f1d5bf13aa42109090
     translation_sha256: 4750c4764b0ee47ba553b0b84be29807216f7776498dc5ee6c11d45246013e42
@@ -638,7 +656,7 @@ entries:
   foundationdb-a-distributed-unbundled-transactional-key-value-store:
     source_sha256: ce786e9965dbc04f3e5ae1d57d6a895ee2dafb1b89f8f9c82355502895562b26
     translation_sha256: bc51fa847e4d5c7be09a1539b5ad87184cb2995a0ddd6914c5fba9fdf4eee4c4
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - header-policy-normalized
@@ -647,7 +665,7 @@ entries:
   mainlining-databases-fast-transactional-workloads-universal-columnar-data-file-formats:
     source_sha256: d51a476467c4719f380f94693d0bffa8f65465495f104f37987e254bea49079b
     translation_sha256: 4abf3e1c30816a1f9e7a6ad9e970e4f21cd2abebebc9e97128fadb843dbdf70b
-    accepted_version: 2026-07-15-narrative-voice-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - priority-repair-reviewed
       - header-policy-normalized
@@ -844,7 +862,7 @@ entries:
   analyticdb-v-hybrid-analytical-engine-query-fusion:
     source_sha256: dda12150823c2ffc83eaa4b218f638df3ec1ac5f45fae5bfe740cbd6cced9686
     translation_sha256: 71cad37188202783e38916647dec97aee1c4287bf84ec08383130e30bd49ce17
-    accepted_version: 2026-07-14-narrative-voice-repair-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - new-full-translation-reviewed
@@ -976,7 +994,7 @@ entries:
   design-and-implementation-of-ingres:
     source_sha256: cc6fe1c62f0cd18a77007d3842124e0cd4fc28d2f5582769c2cb5466e4da1e20
     translation_sha256: 0efdf15caa1236149055eef7dfb41c88346d004a91937c73e882fe981880d548
-    accepted_version: 2026-07-14-narrative-voice-repair-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - new-full-translation-reviewed
@@ -1033,7 +1051,7 @@ entries:
   notions-consistency-predicate-locks-database-system:
     source_sha256: 384dffdf87f32a8dab68bce791f476c5dd1b16b9a0c8ffd174cab009e278ceba
     translation_sha256: ecc39af006d60aaa86ce77a556a19bc1b1fba3b337cd328ba015ee74265a9aa2
-    accepted_version: 2026-07-14-narrative-voice-repair-v1
+    accepted_version: 2026-07-15-repository-image-quality-audit-v1
     risk_disposition:
       - section-review-complete
       - new-full-translation-reviewed
