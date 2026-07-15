@@ -4,16 +4,24 @@
 
 Maintain a reader-first archive of database papers, complete Chinese translations, and direct reading-value ratings. Keep per-paper metadata minimal, use verifiable evidence, and never invent missing facts.
 
-## Sources of truth
+## Authority by information type
 
-Use this order when facts conflict:
+Resolve conflicts only within the same information type:
 
-1. The user's current scope and explicit overrides.
-2. The paper's `source.pdf` for paper content.
-3. The paper directory for its ID and primary area.
-4. The paper's `paper.yaml` for title, authors, year, source URL, topics, reading status, and an optional rating.
-5. Versioned files under `config/` for project policy, controlled terms, per-paper policy exceptions, and acceptance hashes.
-6. Active documents under `docs/`; use Git history for superseded policy and past review evidence.
+| Information | Authority |
+| --- | --- |
+| Paper content, numbers, formulas, and citations | `source.pdf` |
+| Paper ID and primary area | Directory path |
+| Title, authors, year, source URL, topics, reading status, and rating | `paper.yaml` |
+| Page policy, per-paper exceptions, and skip reasons | `config/policy.yaml` |
+| Controlled areas and topics | `config/taxonomy.yaml` |
+| Current accepted hashes, review action, and waivers | `config/acceptance.yaml` |
+| Config schemas and controlled codes | `scripts/project_config.py` |
+| Operation scope and write authority | The user's current request and the Autonomy section below |
+| Current procedures | Active documents under `docs/` |
+| Superseded policy and detailed review history | Git history |
+
+User scope controls what may be changed; it does not override facts stated by the paper.
 
 ## Task routing
 
@@ -35,7 +43,7 @@ Before acting, read only the document or documents listed for the task:
 ## Global invariants
 
 - One paper lives at `papers/<primary-area>/<paper-id>/`; the path supplies the paper ID and primary area.
-- `paper.yaml` follows the contract in `docs/workflows/metadata.md`; topics come only from `config/taxonomy.yaml`.
+- `paper.yaml` follows the contract in `docs/workflows/metadata.md`; topics are an unordered set drawn only from `config/taxonomy.yaml`.
 - File names are fixed: `source.pdf`, `translation.md`, and optional `assets/`.
 - Do not infer missing authors, publication years, paper content, experimental results, or citations.
 - Ratings follow `docs/workflows/rating.md` and measure the paper, not its translation or availability.
@@ -65,4 +73,4 @@ Before finishing an integrated repository change, run `make check` and `make dif
 
 ## Completion report
 
-Lead with the outcome. Include changed paper IDs or project files, final ratings, validation results, and unresolved reading or rating-evidence gaps. `reading_status: translated` means the translation is accepted for reading; otherwise use `draft`.
+Lead with the outcome. Include applicable changed paper IDs or project files, final ratings, validation results, and unresolved evidence gaps. Use `translated` only when acceptance hashes match; choose every other status from the lifecycle table in `docs/workflows/metadata.md`.

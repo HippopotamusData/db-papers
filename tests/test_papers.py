@@ -31,15 +31,13 @@ class PapersTests(unittest.TestCase):
         root = Path(temporary.name)
         (root / "config").mkdir()
         (root / "papers/query-processing/sample-paper").mkdir(parents=True)
-        (root / "config/project.yaml").write_text(
-            (REPO_ROOT / "config/project.yaml").read_text(encoding="utf-8"), encoding="utf-8"
-        )
-        (root / "config/taxonomy.yaml").write_text(
-            "schema_version: 1\nareas:\n  query-processing:\n    label_zh: 查询处理\n    description: 测试。\ntopics:\n  query-execution:\n    label_zh: 查询执行\n",
+        (root / "config/policy.yaml").write_text(
+            "schema_version: 1\ndefault_max_source_pages: 60\npapers: {}\n",
             encoding="utf-8",
         )
-        (root / "config/paper-policy.yaml").write_text(
-            "schema_version: 1\npage_limit_exceptions: {}\nskipped_reasons: {}\n", encoding="utf-8"
+        (root / "config/taxonomy.yaml").write_text(
+            "schema_version: 1\nareas:\n  query-processing:\n    label_zh: 查询处理\n    description: 测试。\ntopics:\n  query-execution:\n    label_zh: 查询执行\n    description: 测试。\n  cloud-native:\n    label_zh: 云原生\n    description: 测试。\n",
+            encoding="utf-8",
         )
         paper = root / "papers/query-processing/sample-paper"
         metadata = {
@@ -63,11 +61,11 @@ class PapersTests(unittest.TestCase):
             entries["sample-paper"] = {
                 "source_sha256": sha256(paper / "source.pdf"),
                 "translation_sha256": sha256(paper / "translation.md"),
-                "accepted_version": "test-v1",
-                "risk_disposition": ["section-review-complete"],
+                "review_action": "section-review",
+                "waivers": ["resources"],
             }
         (root / "config/acceptance.yaml").write_text(
-            yaml.safe_dump({"schema_version": 1, "entries": entries}, sort_keys=False), encoding="utf-8"
+            yaml.safe_dump({"schema_version": 2, "entries": entries}, sort_keys=False), encoding="utf-8"
         )
         return root
 
@@ -103,7 +101,7 @@ class PapersTests(unittest.TestCase):
     def test_translated_paper_without_ledger_entry_is_rejected(self) -> None:
         root = self.make_root("translated")
         ledger_path = root / "config/acceptance.yaml"
-        ledger_path.write_text("schema_version: 1\nentries: {}\n", encoding="utf-8")
+        ledger_path.write_text("schema_version: 2\nentries: {}\n", encoding="utf-8")
         with self.globals_patch(root), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(papers.validate(), 1)
 
@@ -142,9 +140,7 @@ class PapersTests(unittest.TestCase):
         with self.globals_patch(root), patch.object(
             papers, "acceptance_preflight", return_value=(True, "")
         ):
-            result = papers.accept_record(
-                "sample-paper", "test-review-v2", ["section-review-complete"]
-            )
+            result = papers.accept_record("sample-paper", "section-review", ["resources"])
         self.assertEqual(result, 0)
         metadata = yaml.safe_load(
             (root / "papers/query-processing/sample-paper/paper.yaml").read_text(encoding="utf-8")
@@ -155,6 +151,20 @@ class PapersTests(unittest.TestCase):
             ledger["entries"]["sample-paper"]["translation_sha256"],
             sha256(root / "papers/query-processing/sample-paper/translation.md"),
         )
+
+    def test_accept_rejects_legacy_migration_as_runtime_action(self) -> None:
+        root = self.make_root("draft")
+        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        ledger_path = root / "config/acceptance.yaml"
+        original_metadata = metadata_path.read_text(encoding="utf-8")
+        original_ledger = ledger_path.read_text(encoding="utf-8")
+        stderr = io.StringIO()
+        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
+            result = papers.accept_record("sample-paper", "legacy-migration", [])
+        self.assertEqual(result, 1)
+        self.assertIn("runtime review action", stderr.getvalue())
+        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
+        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
 
     def test_acceptance_preflight_failure_rolls_back_ledger_and_status(self) -> None:
         root = self.make_root("draft")
@@ -167,9 +177,7 @@ class PapersTests(unittest.TestCase):
             "acceptance_preflight",
             return_value=(False, "ERROR: missing standard translator note"),
         ), contextlib.redirect_stderr(io.StringIO()):
-            result = papers.accept_record(
-                "sample-paper", "test-review-v2", ["section-review-complete"]
-            )
+            result = papers.accept_record("sample-paper", "section-review", [])
         self.assertEqual(result, 1)
         self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
         self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
@@ -194,9 +202,7 @@ class PapersTests(unittest.TestCase):
         ledger_path = root / "config/acceptance.yaml"
         original_ledger = ledger_path.read_text(encoding="utf-8")
         with self.globals_patch(root), contextlib.redirect_stderr(io.StringIO()):
-            result = papers.accept_record(
-                "sample-paper", "bypass", ["section-review-complete"]
-            )
+            result = papers.accept_record("sample-paper", "section-review", [])
         self.assertEqual(result, 1)
         self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
 
@@ -219,9 +225,7 @@ class PapersTests(unittest.TestCase):
         with self.globals_patch(root), patch.object(
             papers, "atomic_write_text", side_effect=fail_metadata_once
         ), contextlib.redirect_stderr(io.StringIO()):
-            result = papers.accept_record(
-                "sample-paper", "test-review-v2", ["section-review-complete"]
-            )
+            result = papers.accept_record("sample-paper", "section-review", [])
         self.assertEqual(result, 1)
         self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
         self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
@@ -236,6 +240,16 @@ class PapersTests(unittest.TestCase):
         self.assertIn("| — | source_only |", catalog)
         self.assertIn("[原文](https://example.com/paper)", catalog)
         self.assertIn("papers/query-processing/sample-paper/source.pdf", catalog)
+
+    def test_catalog_uses_taxonomy_order_for_unordered_topics(self) -> None:
+        root = self.make_root("source_only")
+        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
+        metadata["topics"] = ["cloud-native", "query-execution"]
+        metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8")
+        with self.globals_patch(root):
+            catalog = papers.build_catalog()
+        self.assertIn("查询执行、云原生", catalog)
 
     def test_valid_rating_is_accepted_and_catalog_shows_only_score(self) -> None:
         root = self.make_root("source_only")
@@ -312,11 +326,12 @@ class PapersTests(unittest.TestCase):
 
     def test_config_command_exposes_named_page_limit_exception(self) -> None:
         root = self.make_root("source_only")
-        policy_path = root / "config/paper-policy.yaml"
+        policy_path = root / "config/policy.yaml"
         policy_path.write_text(
-            "schema_version: 1\npage_limit_exceptions:\n"
-            "  sample-paper:\n    max_pages: 80\n    reason: explicit test override\n"
-            "skipped_reasons: {}\n",
+            "schema_version: 1\ndefault_max_source_pages: 60\npapers:\n"
+            "  sample-paper:\n"
+            "    max_source_pages: 80\n"
+            "    authorization: explicit test override\n",
             encoding="utf-8",
         )
         stdout = io.StringIO()
@@ -324,7 +339,7 @@ class PapersTests(unittest.TestCase):
             self.assertEqual(papers.config_value("paper_page_limit", "sample-paper"), 0)
         self.assertEqual(stdout.getvalue().strip(), "80")
 
-    def test_validation_manifest_batches_config_and_paper_policy(self) -> None:
+    def test_validation_manifest_batches_policy_and_acceptance_waivers(self) -> None:
         root = self.make_root("translated")
         stdout = io.StringIO()
         with self.globals_patch(root), contextlib.redirect_stdout(stdout):
@@ -338,7 +353,7 @@ class PapersTests(unittest.TestCase):
             rows[1][0:4],
             ["paper", "papers/query-processing/sample-paper", "translated", "60"],
         )
-        self.assertEqual(rows[1][4], "section-review-complete")
+        self.assertEqual(rows[1][4], "resources")
         self.assertEqual(rows[1][6:], ["Sample Paper", "error"])
 
     def test_new_record_uses_safe_defaults_matching_template(self) -> None:

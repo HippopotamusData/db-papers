@@ -1,0 +1,17 @@
+schema_version: 1
+default_max_source_pages: 60
+
+# 只有单篇例外或跳过原因进入这里；固定文件名、目标语言和质量底线不是配置开关。
+papers:
+  aries-transaction-recovery-method:
+    skip_reason: over-page-limit
+  architecture-of-a-database-system:
+    skip_reason: over-page-limit
+  balancing-vectorized-query-execution-bandwidth-optimized-storage:
+    skip_reason: over-page-limit
+  design-implementation-modern-column-oriented-database-systems:
+    skip_reason: over-page-limit
+  efficiency-columbia-query-optimizer:
+    skip_reason: over-page-limit
+  main-memory-database-systems:
+    skip_reason: over-page-limit

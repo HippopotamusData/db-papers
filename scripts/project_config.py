@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Load and validate the versioned project, paper-policy, and acceptance files."""
+"""Load and validate versioned policy, taxonomy, and acceptance records."""
 
 from __future__ import annotations
 
@@ -11,10 +11,15 @@ from typing import Any
 import yaml
 
 
-PROJECT_SCHEMA_VERSION = 2
-PAPER_POLICY_SCHEMA_VERSION = 1
-ACCEPTANCE_SCHEMA_VERSION = 1
+POLICY_SCHEMA_VERSION = 1
+ACCEPTANCE_SCHEMA_VERSION = 2
 TAXONOMY_SCHEMA_VERSION = 1
+METADATA_FILE = "paper.yaml"
+SOURCE_FILE = "source.pdf"
+TRANSLATION_FILE = "translation.md"
+TARGET_LANGUAGE = "zh-CN"
+REQUIRE_COMPLETE_REFERENCES = True
+ALLOW_WHOLE_PAGE_IMAGES_IN_READING_PATH = False
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 SKIP_REASON_CODES = {
@@ -22,11 +27,17 @@ SKIP_REASON_CODES = {
     "out-of-scope",
     "explicit-user-skip",
 }
-ACCEPTANCE_BASE_DISPOSITION_CODES = {
-    "section-review-complete",
-    "new-full-translation-reviewed",
-    "priority-repair-reviewed",
-    "legacy-accepted-status-migrated",
+REVIEW_ACTIONS = {
+    "section-review",
+    "full-translation-review",
+    "repair-review",
+    "legacy-migration",
+}
+RUNTIME_REVIEW_ACTIONS = REVIEW_ACTIONS - {"legacy-migration"}
+ACCEPTANCE_WAIVERS = {
+    "abridgement",
+    "listings",
+    "resources",
 }
 
 
@@ -64,71 +75,55 @@ def _nonempty_string(value: Any, label: str) -> str:
     return value
 
 
-def _boolean(value: Any, label: str) -> bool:
-    if not isinstance(value, bool):
-        raise ValueError(f"{label} must be a boolean")
-    return value
-
-
 def _schema_version(value: Any, expected: int, label: str) -> None:
     if type(value) is not int or value != expected:
         raise ValueError(f"{label} must be integer {expected}, got {value!r}")
 
 
-def load_project_config(root: Path) -> dict[str, Any]:
-    path = root / "config/project.yaml"
+def load_project_policy(path: Path) -> dict[str, Any]:
     data = load_yaml(path)
-    _exact_keys(data, {"schema_version", "project", "translation_policy", "records"}, str(path))
-    _schema_version(data["schema_version"], PROJECT_SCHEMA_VERSION, f"{path}: schema_version")
+    _exact_keys(data, {"schema_version", "default_max_source_pages", "papers"}, str(path))
+    _schema_version(data["schema_version"], POLICY_SCHEMA_VERSION, f"{path}: schema_version")
 
-    project = _mapping(data["project"], f"{path}: project")
-    _exact_keys(
-        project,
-        {
-            "target_language",
-            "canonical_metadata",
-            "source_pdf",
-            "translation_file",
-        },
-        f"{path}: project",
-    )
-    for key in ("target_language",):
-        _nonempty_string(project[key], f"{path}: project.{key}")
-    fixed_names = {
-        "canonical_metadata": "paper.yaml",
-        "source_pdf": "source.pdf",
-        "translation_file": "translation.md",
-    }
-    for key, expected in fixed_names.items():
-        value = _nonempty_string(project[key], f"{path}: project.{key}")
-        if value != expected:
-            raise ValueError(f"{path}: project.{key} must be {expected!r}")
-
-    policy = _mapping(data["translation_policy"], f"{path}: translation_policy")
-    _exact_keys(
-        policy,
-        {
-            "max_source_pages",
-            "require_complete_references",
-            "allow_whole_page_images_in_reading_path",
-        },
-        f"{path}: translation_policy",
-    )
-    pages = policy["max_source_pages"]
+    pages = data["default_max_source_pages"]
     if isinstance(pages, bool) or not isinstance(pages, int) or pages < 1:
-        raise ValueError(f"{path}: translation_policy.max_source_pages must be a positive integer")
-    _boolean(policy["require_complete_references"], f"{path}: translation_policy.require_complete_references")
-    _boolean(
-        policy["allow_whole_page_images_in_reading_path"],
-        f"{path}: translation_policy.allow_whole_page_images_in_reading_path",
-    )
+        raise ValueError(f"{path}: default_max_source_pages must be a positive integer")
 
-    records = _mapping(data["records"], f"{path}: records")
-    _exact_keys(records, {"paper_policy", "acceptance_ledger"}, f"{path}: records")
-    for key in ("paper_policy", "acceptance_ledger"):
-        relative = Path(_nonempty_string(records[key], f"{path}: records.{key}"))
-        if relative.is_absolute() or ".." in relative.parts:
-            raise ValueError(f"{path}: records.{key} must be a repository-relative path")
+    papers = _mapping(data["papers"], f"{path}: papers")
+    for paper_id, record in papers.items():
+        if not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id):
+            raise ValueError(f"{path}: invalid policy paper id: {paper_id!r}")
+        record = _mapping(record, f"{path}: papers.{paper_id}")
+        allowed = {"max_source_pages", "authorization", "skip_reason"}
+        unknown = record.keys() - allowed
+        if unknown:
+            raise ValueError(
+                f"{path}: papers.{paper_id}: unknown keys: {', '.join(sorted(unknown))}"
+            )
+        if not record:
+            raise ValueError(f"{path}: papers.{paper_id} must not be empty")
+
+        has_limit = "max_source_pages" in record
+        has_authorization = "authorization" in record
+        if has_limit != has_authorization:
+            raise ValueError(
+                f"{path}: papers.{paper_id} page-limit override requires max_source_pages and authorization"
+            )
+        if has_limit:
+            override = record["max_source_pages"]
+            if isinstance(override, bool) or not isinstance(override, int) or override <= pages:
+                raise ValueError(
+                    f"{path}: papers.{paper_id}.max_source_pages must exceed the default limit"
+                )
+            _nonempty_string(record["authorization"], f"{path}: papers.{paper_id}.authorization")
+
+        if "skip_reason" in record:
+            reason = record["skip_reason"]
+            if not isinstance(reason, str) or reason not in SKIP_REASON_CODES:
+                raise ValueError(
+                    f"{path}: papers.{paper_id}.skip_reason must be one of "
+                    + ", ".join(sorted(SKIP_REASON_CODES))
+                )
     return data
 
 
@@ -151,49 +146,20 @@ def load_taxonomy(path: Path) -> dict[str, Any]:
         if not isinstance(topic, str) or not SLUG_RE.fullmatch(topic):
             raise ValueError(f"{path}: invalid topic id: {topic!r}")
         details = _mapping(details, f"{path}: topics.{topic}")
-        _exact_keys(details, {"label_zh"}, f"{path}: topics.{topic}")
+        _exact_keys(details, {"label_zh", "description"}, f"{path}: topics.{topic}")
         _nonempty_string(details["label_zh"], f"{path}: topics.{topic}.label_zh")
+        _nonempty_string(details["description"], f"{path}: topics.{topic}.description")
     return data
 
 
-def configured_paths(root: Path, config: dict[str, Any]) -> dict[str, Path]:
-    project = config["project"]
-    records = config["records"]
+def configured_paths(root: Path) -> dict[str, Path]:
     return {
-        "metadata": Path(project["canonical_metadata"]),
-        "source": Path(project["source_pdf"]),
-        "translation": Path(project["translation_file"]),
-        "paper_policy": root / records["paper_policy"],
-        "acceptance_ledger": root / records["acceptance_ledger"],
+        "metadata": Path(METADATA_FILE),
+        "source": Path(SOURCE_FILE),
+        "translation": Path(TRANSLATION_FILE),
+        "policy": root / "config/policy.yaml",
+        "acceptance_ledger": root / "config/acceptance.yaml",
     }
-
-
-def load_paper_policy(path: Path) -> dict[str, Any]:
-    data = load_yaml(path)
-    _exact_keys(data, {"schema_version", "page_limit_exceptions", "skipped_reasons"}, str(path))
-    _schema_version(
-        data["schema_version"], PAPER_POLICY_SCHEMA_VERSION, f"{path}: schema_version"
-    )
-    exceptions = _mapping(data["page_limit_exceptions"], f"{path}: page_limit_exceptions")
-    for paper_id, record in exceptions.items():
-        if not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id):
-            raise ValueError(f"{path}: invalid page-limit paper id: {paper_id!r}")
-        record = _mapping(record, f"{path}: page_limit_exceptions.{paper_id}")
-        _exact_keys(record, {"max_pages", "reason"}, f"{path}: page_limit_exceptions.{paper_id}")
-        max_pages = record["max_pages"]
-        if isinstance(max_pages, bool) or not isinstance(max_pages, int) or max_pages < 1:
-            raise ValueError(f"{path}: page_limit_exceptions.{paper_id}.max_pages must be a positive integer")
-        _nonempty_string(record["reason"], f"{path}: page_limit_exceptions.{paper_id}.reason")
-
-    reasons = _mapping(data["skipped_reasons"], f"{path}: skipped_reasons")
-    for paper_id, reason in reasons.items():
-        if not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id):
-            raise ValueError(f"{path}: invalid skipped paper id: {paper_id!r}")
-        if reason not in SKIP_REASON_CODES:
-            raise ValueError(
-                f"{path}: skipped_reasons.{paper_id} must be one of {', '.join(sorted(SKIP_REASON_CODES))}"
-            )
-    return data
 
 
 def load_acceptance_ledger(path: Path) -> dict[str, Any]:
@@ -207,29 +173,41 @@ def load_acceptance_ledger(path: Path) -> dict[str, Any]:
         if not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id):
             raise ValueError(f"{path}: invalid acceptance paper id: {paper_id!r}")
         entry = _mapping(entry, f"{path}: entries.{paper_id}")
-        _exact_keys(
-            entry,
-            {"source_sha256", "translation_sha256", "accepted_version", "risk_disposition"},
-            f"{path}: entries.{paper_id}",
-        )
+        required = {"source_sha256", "translation_sha256", "review_action"}
+        allowed = required | {"waivers"}
+        missing = required - entry.keys()
+        unknown = entry.keys() - allowed
+        messages: list[str] = []
+        if missing:
+            messages.append(f"missing keys: {', '.join(sorted(missing))}")
+        if unknown:
+            messages.append(f"unknown keys: {', '.join(sorted(unknown))}")
+        if messages:
+            raise ValueError(f"{path}: entries.{paper_id}: {'; '.join(messages)}")
         for key in ("source_sha256", "translation_sha256"):
             if not isinstance(entry[key], str) or not SHA256_RE.fullmatch(entry[key]):
                 raise ValueError(f"{path}: entries.{paper_id}.{key} must be a lowercase SHA-256 digest")
-        _nonempty_string(entry["accepted_version"], f"{path}: entries.{paper_id}.accepted_version")
-        dispositions = entry["risk_disposition"]
+        review_action = entry["review_action"]
+        if not isinstance(review_action, str) or review_action not in REVIEW_ACTIONS:
+            raise ValueError(
+                f"{path}: entries.{paper_id}.review_action must be one of "
+                + ", ".join(sorted(REVIEW_ACTIONS))
+            )
+        waivers = entry.get("waivers", [])
         if (
-            not isinstance(dispositions, list)
-            or not dispositions
-            or any(not isinstance(item, str) or not item.strip() for item in dispositions)
+            not isinstance(waivers, list)
+            or any(not isinstance(item, str) or not item.strip() for item in waivers)
         ):
             raise ValueError(
-                f"{path}: entries.{paper_id}.risk_disposition must be a non-empty string list"
+                f"{path}: entries.{paper_id}.waivers must be a string list"
             )
-        if len(dispositions) != len(set(dispositions)):
-            raise ValueError(f"{path}: entries.{paper_id}.risk_disposition contains duplicates")
-        if not ACCEPTANCE_BASE_DISPOSITION_CODES.intersection(dispositions):
+        if len(waivers) != len(set(waivers)):
+            raise ValueError(f"{path}: entries.{paper_id}.waivers contains duplicates")
+        unknown_waivers = set(waivers) - ACCEPTANCE_WAIVERS
+        if unknown_waivers:
             raise ValueError(
-                f"{path}: entries.{paper_id}.risk_disposition requires one controlled base acceptance code"
+                f"{path}: entries.{paper_id}.waivers contains unknown values: "
+                + ", ".join(sorted(unknown_waivers))
             )
     return data
 
@@ -242,10 +220,10 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def effective_page_limit(
-    project_config: dict[str, Any], paper_policy: dict[str, Any], paper_id: str
-) -> int:
-    exception = paper_policy["page_limit_exceptions"].get(paper_id)
-    if exception:
-        return exception["max_pages"]
-    return project_config["translation_policy"]["max_source_pages"]
+def effective_page_limit(policy: dict[str, Any], paper_id: str) -> int:
+    paper_policy = policy["papers"].get(paper_id, {})
+    return paper_policy.get("max_source_pages", policy["default_max_source_pages"])
+
+
+def skip_reason(policy: dict[str, Any], paper_id: str) -> str:
+    return policy["papers"].get(paper_id, {}).get("skip_reason", "")

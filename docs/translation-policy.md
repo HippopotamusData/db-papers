@@ -7,7 +7,7 @@
 ## 进入条件
 
 - 仅使用论文目录中的可读 `source.pdf` 作为正文证据。
-- PDF 页数不得超过 `config/project.yaml` 的全文翻译上限，除非用户明确覆盖该策略。
+- PDF 页数不得超过 `config/policy.yaml` 的全文翻译上限，除非其中已有用户明确授权的单篇例外。
 - 已有 `reading_status: translated` 时，不无故重译。
 - 缺失原文时使用 `unavailable`；页数超限或当前策略不翻译时使用 `skipped`，不猜正文。
 
@@ -33,4 +33,4 @@
 
 字符数和中英文比例用于发现摘要化风险，不能替代逐节核对。机械风险信号保留在校验输出中，不进入单篇阅读元数据。
 
-未完成逐节验收时使用 `reading_status: draft`；该状态允许校验器把 TODO、低覆盖、表格、Listing 和资源缺口报告为 warning。验收完成后由 review/accept 记录源文/译文哈希、稳定验收标识和风险处置，再改为 `translated`；这些缺口在 `translated` 中是硬失败。机械候选只扩大人工复审范围，不构成语义完整性证明。
+未完成逐节验收时使用 `reading_status: draft`；该状态允许校验器把 TODO、低覆盖、表格、Listing 和资源缺口报告为 warning。验收完成后由 review/accept 记录源文/译文哈希、审阅动作和必要 waivers，再改为 `translated`；这些缺口在 `translated` 中是硬失败。机械候选只扩大人工复审范围，不构成语义完整性证明。
