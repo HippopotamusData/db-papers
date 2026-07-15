@@ -19,6 +19,7 @@ profile_paths=(
   package.json
   pyproject.toml
   scripts/audit_changed_math.sh
+  scripts/fix_portable_math.py
   scripts/render_mathjax.cjs
   scripts/validate_github_math.py
   scripts/verify_math_rendering.py
