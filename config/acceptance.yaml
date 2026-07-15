@@ -1059,3 +1059,57 @@ entries:
       - resource-candidates-reviewed
       - listing-candidates-reviewed
       - priority-repair-reviewed
+  winmagic-subquery-elimination-window-aggregation:
+    source_sha256: 28e9ca56045e590aec793b4d7a192e8f25cafc0a0bce6e14b14767b590a88466
+    translation_sha256: 0f1a7c880816ba55bfd8533423514dc19b3846d7522d23e2d4018cf1946f92a2
+    accepted_version: 2026-07-15-new-ingest-batch-v1
+    risk_disposition:
+      - section-review-complete
+      - new-full-translation-reviewed
+      - resource-candidates-reviewed
+      - listing-candidates-reviewed
+  optimizing-queries-using-materialized-views:
+    source_sha256: 673e937f12537c091039b546403d07ce666065afb95b5403bbabf3a3bec50800
+    translation_sha256: f22a887e7d47093f51bcc4d702ecbd1b630373ed4a2006f4813515af4d67783c
+    accepted_version: 2026-07-15-new-ingest-batch-v1
+    risk_disposition:
+      - section-review-complete
+      - new-full-translation-reviewed
+      - resource-candidates-reviewed
+      - listing-candidates-reviewed
+  dbtoaster-higher-order-delta-processing:
+    source_sha256: c4c41637dd80ecdd7df2ab44dc5249a16089bba220063ca5d7cbae14727fc649
+    translation_sha256: 31a05c5a3a77a312db39ee401585f0fae4707643d2a3fd2d75d25ba486a2735f
+    accepted_version: 2026-07-15-new-ingest-batch-v1
+    risk_disposition:
+      - section-review-complete
+      - new-full-translation-reviewed
+      - resource-candidates-reviewed
+      - listing-candidates-reviewed
+  merge-path-visually-intuitive-parallel-merging:
+    source_sha256: c2d2c0301c47cab5c47e63117f61b412bafa3166b0cfbab47e768f1f1c491dc7
+    translation_sha256: 7acc4207b19ac5afa769aa5ea6e05071a4f57a468206fda8e1dae3f8e9469a03
+    accepted_version: 2026-07-15-new-ingest-batch-v1
+    risk_disposition:
+      - section-review-complete
+      - new-full-translation-reviewed
+      - resource-candidates-reviewed
+      - listing-candidates-reviewed
+  pattern-defeating-quicksort:
+    source_sha256: c4aeba28e43e7742df3b546d3ef8de65c93b7729e3fc2293397d03173a212795
+    translation_sha256: e60a816183da8ae1a9a7d97f625d8cc20ac0cf9ebd2966e38ff69a59e12aa17b
+    accepted_version: 2026-07-15-new-ingest-batch-v1
+    risk_disposition:
+      - section-review-complete
+      - new-full-translation-reviewed
+      - resource-candidates-reviewed
+      - listing-candidates-reviewed
+  improving-unnesting-of-complex-queries:
+    source_sha256: f2cd2b5472fe2b212d2e82838ea6394ebea09b6db99e21d38b6074c26d6a7218
+    translation_sha256: d2f13a5cf82af688be4a48af2f2224a5c67fce0a5f77651440f190303306419d
+    accepted_version: 2026-07-15-new-full-translation-v1
+    risk_disposition:
+      - section-review-complete
+      - new-full-translation-reviewed
+      - resource-candidates-reviewed
+      - listing-candidates-reviewed

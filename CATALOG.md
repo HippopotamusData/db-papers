@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：127
-- 已验收译文：121
+- 论文记录：133
+- 已验收译文：127
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -17,12 +17,12 @@
 | --- | ---: |
 | 基础与综述 (`foundations`) | 2 |
 | 系统架构 (`system-architecture`) | 23 |
-| 查询处理 (`query-processing`) | 47 |
+| 查询处理 (`query-processing`) | 52 |
 | 存储 (`storage`) | 18 |
 | 事务与并发控制 (`transactions`) | 7 |
 | 分布式数据库 (`distributed-databases`) | 6 |
 | 数据集成 (`data-integration`) | 2 |
-| 流处理 (`streaming`) | 5 |
+| 流处理 (`streaming`) | 6 |
 | 可靠性与测试 (`reliability-and-testing`) | 4 |
 | 专用数据库 (`specialized-databases`) | 8 |
 | AI 与数据系统 (`ai-and-data`) | 5 |
@@ -64,7 +64,7 @@
 | [The Vertica Analytic Database: C-Store 7 Years Later](papers/system-architecture/the-vertica-analytic-database-c-store-7-years-later/translation.md) | 数据库系统设计 | 2012 | 4.0 | translated | [原文](https://vldb.org/pvldb/vol5/p1790_andrewlamb_vldb2012.pdf) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](https://dl.acm.org/doi/pdf/10.1145/3406011) |
 
-### 查询处理 (`query-processing`，47 篇)
+### 查询处理 (`query-processing`，52 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
@@ -87,17 +87,21 @@
 | [Generating code for holistic query evaluation](papers/query-processing/generating-code-holistic-query-evaluation/translation.md) | 查询编译 | 2010 | 3.5 | translated | [原文](https://doi.org/10.1109/ICDE.2010.5447892) |
 | [How Good Are Query Optimizers, Really?](papers/query-processing/how-good-are-query-optimizers-really/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](http://www.vldb.org/pvldb/vol9/p204-leis.pdf) |
 | [Impala: A Modern, Open-Source SQL Engine for Hadoop](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/translation.md) | 查询执行 | 2015 | 4.0 | translated | [原文](http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf) |
+| [Improving Unnesting of Complex Queries](papers/query-processing/improving-unnesting-of-complex-queries/translation.md) | 查询优化 | 2025 | 3.5 | translated | [原文](https://portal.fis.tum.de/en/publications/improving-unnesting-of-complex-queries/) |
 | [Interleaved Multi-Vectorizing](papers/query-processing/interleaved-multi-vectorizing/translation.md) | 向量化执行 | 2019 | 3.0 | translated | [原文](http://www.vldb.org/pvldb/vol13/p226-fang.pdf) |
 | [Learned Cardinalities: Estimating Correlated Joins with Deep Learning](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/translation.md) | 查询优化、基数估计、AI 优化数据库 | 2019 | 4.0 | translated | [原文](https://vldb.org/cidrdb/2019/learned-cardinalities-estimating-correlated-joins-with-deep-learning.html) |
 | [LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation](papers/query-processing/llvm-compilation-framework-lifelong-program-analysis-transformation/translation.md) | 查询编译 | 2003 | 4.5 | translated | [原文](https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf) |
 | [Low-Latency Compilation of SQL Queries to Machine Code](papers/query-processing/low-latency-compilation-sql-queries-machine-code/translation.md) | 查询编译 | 2021 | 2.5 | translated | [原文](https://vldb.org/pvldb/vol14/p2691-funke.pdf) |
+| [Merge Path - A Visually Intuitive Approach to Parallel Merging](papers/query-processing/merge-path-visually-intuitive-parallel-merging/translation.md) | 查询执行 | 2014 | 4.0 | translated | [原文](https://arxiv.org/abs/1406.2628) |
 | [MonetDB/X100: Hyper-Pipelining Query Execution](papers/query-processing/monetdb-x100-hyper-pipelining-query-execution/translation.md) | 向量化执行 | 2005 | 5.0 | translated | [原文](https://www.cidrdb.org/cidr2005/papers/P19.pdf) |
 | [Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age](papers/query-processing/morsel-driven-parallelism/translation.md) | 查询执行 | 2014 | 4.5 | translated | [原文](https://doi.org/10.1145/2588555.2610507) |
 | [Neo: A Learned Query Optimizer](papers/query-processing/neo-a-learned-query-optimizer/translation.md) | 查询优化、AI 优化数据库 | 2019 | 4.0 | translated | [原文](https://www.vldb.org/pvldb/vol12/p1705-marcus.pdf) |
 | [NeuroCard: One Cardinality Estimator for All Tables](papers/query-processing/neurocard-one-cardinality-estimator-for-all-tables/translation.md) | 基数估计、AI 优化数据库 | 2021 | 3.5 | translated | [原文](https://doi.org/10.14778/3421424.3421432) |
 | [Optimization of Common Table Expressions in MPP Database Systems](papers/query-processing/optimization-common-table-expressions-mpp/translation.md) | 查询优化 | 2015 | 3.5 | translated | [原文](http://www.vldb.org/pvldb/vol8/p1704-elhelw.pdf) |
 | [Optimizing Queries over Partitioned Tables in MPP Systems](papers/query-processing/optimizing-queries-partitioned-tables-mpp/translation.md) | 查询优化 | 2014 | 3.5 | translated | [原文](https://d1fto35gcfffzn.cloudfront.net/big-data/white-paper/OptimizingQueriesOverPartitionedTablesInMPPSystems.pdf) |
+| [Optimizing Queries Using Materialized Views: A Practical, Scalable Solution](papers/query-processing/optimizing-queries-using-materialized-views/translation.md) | 查询优化 | 2001 | 4.0 | translated | [原文](https://doi.org/10.1145/375663.375706) |
 | [Orca: A Modular Query Optimizer Architecture for Big Data](papers/query-processing/orca-modular-query-optimizer-architecture-big-data/translation.md) | 查询优化 | 2014 | 4.5 | translated | [原文](https://doi.org/10.1145/2588555.2595637) |
+| [Pattern-defeating Quicksort](papers/query-processing/pattern-defeating-quicksort/translation.md) | 查询执行 | 2021 | 4.0 | translated | [原文](https://arxiv.org/abs/2106.05123) |
 | [Permutable Compiled Queries: Dynamically Adapting Compiled Queries without Recompiling](papers/query-processing/permutable-compiled-queries-dynamically-adapting-without-recompiling/translation.md) | 查询编译 | 2021 | 3.0 | translated | [原文](https://db.cs.cmu.edu/papers/2020/p101-menon.pdf) |
 | [Photon: A Fast Query Engine for Lakehouse Systems](papers/query-processing/photon-fast-query-engine-lakehouse-systems/translation.md) | 查询执行、向量化执行、云原生、湖仓一体 | 2022 | 4.0 | translated | [原文](https://doi.org/10.1145/3514221.3526054) |
 | [Presto: SQL on Everything](papers/query-processing/presto-sql-on-everything/translation.md) | 查询执行、数据联邦 | 2019 | 4.5 | translated | [原文](https://trino.io/Presto_SQL_on_Everything.pdf) |
@@ -115,6 +119,7 @@
 | [Unnesting Arbitrary Queries](papers/query-processing/unnesting-arbitrary-queries/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](https://portal.fis.tum.de/en/publications/unnesting-arbitrary-queries/) |
 | [Vectorization vs. Compilation in Query Execution](papers/query-processing/vectorization-vs-compilation-query-execution/translation.md) | 向量化执行 | 2011 | 4.0 | translated | [原文](https://ir.cwi.nl/pub/18550) |
 | [Velox: Meta’s Unified Execution Engine](papers/query-processing/velox-metas-unified-execution-engine/translation.md) | 查询执行、向量化执行、面向 AI 的数据系统 | 2022 | 4.5 | translated | [原文](https://doi.org/10.14778/3554821.3554829) |
+| [WinMagic: Subquery Elimination Using Window Aggregation](papers/query-processing/winmagic-subquery-elimination-window-aggregation/translation.md) | 查询优化 | 2003 | 3.0 | translated | [原文](https://doi.org/10.1145/872757.872840) |
 
 ### 存储 (`storage`，18 篇)
 
@@ -169,12 +174,13 @@
 | [Instant Loading for Main Memory Databases](papers/data-integration/instant-loading-main-memory-databases/translation.md) | 数据导入 | 2013 | 3.5 | translated | [原文](https://www.vldb.org/pvldb/vol6/p1702-muehlbauer.pdf) |
 | [Speculative Distributed CSV Data Parsing for Big Data Analytics](papers/data-integration/speculative-distributed-csv-data-parsing-big-data-analytics/translation.md) | 数据导入 | 2019 | 3.5 | translated | [原文](https://www.microsoft.com/en-us/research/publication/speculative-distributed-csv-data-parsing-for-big-data-analytics/) |
 
-### 流处理 (`streaming`，5 篇)
+### 流处理 (`streaming`，6 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
 | [Apache Flink™: Stream and Batch Processing in a Single Engine](papers/streaming/apache-flink-stream-and-batch-processing-in-a-single-engine/translation.md) | 流处理 | 2015 | 4.5 | translated | [原文](http://sites.computer.org/debull/A15dec/p28.pdf) |
 | [Aurora: A New Model and Architecture for Data Stream Management](papers/streaming/aurora-new-model-architecture-data-stream-management/translation.md) | 流处理 | 2003 | 4.5 | translated | [原文](https://cs.brown.edu/research/aurora/publications.html) |
+| [DBToaster: Higher-order Delta Processing for Dynamic, Frequently Fresh Views](papers/streaming/dbtoaster-higher-order-delta-processing/translation.md) | 流处理 | 2012 | 4.0 | translated | [原文](https://doi.org/10.14778/2336664.2336670) |
 | [SnappyData: A Unified Cluster for Streaming,Transactions, and Interactive Analytics](papers/streaming/snappydata-unified-cluster-for-streaming-transactions-and-interactive-analytics/translation.md) | 流处理、事务处理 | 2017 | 3.5 | translated | [原文](https://web.eecs.umich.edu/~mozafari/php/data/uploads/cidr_2017.pdf) |
 | [The CQL Continuous Query Language: Semantic Foundations and Query Execution](papers/streaming/cql-continuous-query-language/translation.md) | 流处理 | 2006 | 4.5 | translated | [原文](https://cs.stanford.edu/people/widom/pubs.html) |
 | [The Dataflow Model: A Practical Approach to Balancing Correctness, Latency, and Cost in Massive-Scale, Unbounded, Out-of-Order Data Processing](papers/streaming/dataflow-model-balancing-correctness-latency-cost/translation.md) | 流处理 | 2015 | 5.0 | translated | [原文](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf) |
@@ -215,5 +221,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 127 | 0 |
-| 发表年份 | 127 | 0 |
+| 作者 | 133 | 0 |
+| 发表年份 | 133 | 0 |

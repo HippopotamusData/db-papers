@@ -39,6 +39,7 @@ Before acting, read only the document or documents listed for the task:
 - File names are fixed: `source.pdf`, `translation.md`, and optional `assets/`.
 - Do not infer missing authors, publication years, paper content, experimental results, or citations.
 - Ratings follow `docs/workflows/rating.md` and measure the paper, not its translation or availability.
+- Full processing of a newly added paper includes rating after translation acceptance; do not call the paper complete while its rating is missing unless the evidence gap is reported as a blocker.
 - Do not translate a missing PDF or a PDF over the configured page limit without an explicit user override.
 - Do not regenerate an accepted translation merely to change wording; make evidence-backed, scoped repairs.
 - Preserve complete references, formulas, tables, algorithms, code, and semantically necessary figures. Whole-page screenshots and QA residue do not belong in the reading path.
@@ -46,7 +47,7 @@ Before acting, read only the document or documents listed for the task:
 
 ## Autonomy
 
-For audit/review, explanation, diagnosis, rule design, or planning requests, inspect relevant files and report without modifying papers. Only explicit rating authorization may write `rating`; only `review-and-repair`, `accept`, or another explicit change authorization may edit a reviewed paper or its status. For change, build, fix, translate, rate, or archive requests, make in-scope local edits and run non-destructive validation. Ask before external publication, destructive cleanup, acquiring paid material, or materially expanding scope.
+For audit/review, explanation, diagnosis, rule design, or planning requests, inspect relevant files and report without modifying papers. Full processing of a newly added paper carries standing authorization to write its evidence-backed `rating` after acceptance; rating an existing paper outside that lifecycle still requires an explicitly named scope. Only `review-and-repair`, `accept`, or another explicit change authorization may edit a reviewed paper or its status. For change, build, fix, translate, rate, or archive requests, make in-scope local edits and run non-destructive validation. Ask before external publication, destructive cleanup, acquiring paid material, or materially expanding scope.
 
 ## Commands
 
@@ -64,4 +65,4 @@ Before finishing an integrated repository change, run `make check` and `make dif
 
 ## Completion report
 
-Lead with the outcome. Include changed paper IDs or project files, validation results, and unresolved reading gaps. `reading_status: translated` means the translation is accepted for reading; otherwise use `draft`.
+Lead with the outcome. Include changed paper IDs or project files, final ratings, validation results, and unresolved reading or rating-evidence gaps. `reading_status: translated` means the translation is accepted for reading; otherwise use `draft`.

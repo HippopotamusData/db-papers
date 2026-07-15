@@ -1,0 +1,16 @@
+title: 'Optimizing Queries Using Materialized Views: A Practical, Scalable Solution'
+authors:
+  - Jonathan Goldstein
+  - Per-Åke Larson
+year: 2001
+source_url: https://doi.org/10.1145/375663.375706
+topics:
+  - query-optimization
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

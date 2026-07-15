@@ -8,9 +8,11 @@
 
 - 缺少原文时保持 `unavailable`；页数超限时使用 `skipped` 并停止。只有用户显式授权后，才能在 `config/paper-policy.yaml` 为单篇记录更高上限和原因。
 - 开始形成译文后使用 `draft`。
+- `translation.md` 以 `templates/translation.md` 的 YAML frontmatter 开头；`paper_id` 与目录名一致，`title` 与 `paper.yaml` 一致，`language` 固定为 `zh-CN`，`source` 固定为 `source.pdf`。
 - `translation.md` 覆盖原文全部实质章节、公式、图表、算法、代码、附录和完整参考文献。
 - 图表资源精确裁剪、链接有效、位置正确，主阅读路径无整页截图和工作残留。
 - 逐节对照通过后由 review/accept 写入验收账本并把 `reading_status` 改为 `translated`。
+- 新论文的完整处理在 accept 后继续执行 `docs/workflows/rating.md`；评分写入并重新生成目录后才进入最终提交。
 - `make check` 通过。
 
 ## 约束

@@ -1,0 +1,18 @@
+title: 'DBToaster: Higher-order Delta Processing for Dynamic, Frequently Fresh Views'
+authors:
+  - Yanif Ahmad
+  - Oliver Kennedy
+  - Christoph Koch
+  - Milos Nikolic
+year: 2012
+source_url: https://doi.org/10.14778/2336664.2336670
+topics:
+  - stream-processing
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4
