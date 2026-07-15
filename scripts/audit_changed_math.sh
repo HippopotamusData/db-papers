@@ -9,8 +9,10 @@ fi
 
 base=$1
 PYTHON=${PYTHON:-python3}
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 files=()
 profile_paths=(
+  .github/workflows/github-math-audit.yml
   .github/workflows/check.yml
   Makefile
   docs/portable-math-maintainers.md
@@ -45,4 +47,8 @@ if (( ${#files[@]} == 0 )); then
   exit 0
 fi
 
-"$PYTHON" scripts/verify_math_rendering.py --github "${files[@]}"
+audit_args=(--github)
+if [[ ${AUDIT_UNTRUSTED_DATA:-0} == 1 ]]; then
+  audit_args+=(--unchecked-input)
+fi
+"$PYTHON" "$script_dir/verify_math_rendering.py" "${audit_args[@]}" "${files[@]}"

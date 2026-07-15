@@ -1,0 +1,74 @@
+name: github-math-audit
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-math-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      # pull_request_target deliberately checks out only the trusted default branch.
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install trusted audit dependencies
+        run: |
+          python -m pip install --upgrade "pip>=25.1"
+          python -m pip install --group dev
+      - name: Prepare Markdown data tree
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          FETCH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request_target" ]; then
+            FETCH_AUTH=$(printf 'x-access-token:%s' "$FETCH_TOKEN" | base64 | tr -d '\n')
+            GIT_CONFIG_COUNT=1 \
+              GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+              GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $FETCH_AUTH" \
+              git fetch --no-tags origin "pull/$PR_NUMBER/head:refs/remotes/pull/$PR_NUMBER/head"
+            unset FETCH_AUTH FETCH_TOKEN
+            FETCHED_SHA=$(git rev-parse "refs/remotes/pull/$PR_NUMBER/head")
+            if [ "$FETCHED_SHA" != "$PR_HEAD_SHA" ]; then
+              echo "::error::PR head moved after this workflow was queued; refusing a stale audit."
+              exit 1
+            fi
+            TARGET_ROOT="$RUNNER_TEMP/pr-head"
+            git worktree add --detach "$TARGET_ROOT" "$PR_HEAD_SHA"
+            AUDIT_BASE="$PR_BASE_SHA"
+          else
+            TARGET_ROOT="$GITHUB_WORKSPACE"
+            if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE_SHA^{commit}"; then
+              AUDIT_BASE="$BEFORE_SHA"
+            else
+              AUDIT_BASE="HEAD^"
+            fi
+          fi
+          echo "TARGET_ROOT=$TARGET_ROOT" >> "$GITHUB_ENV"
+          echo "AUDIT_BASE=$AUDIT_BASE" >> "$GITHUB_ENV"
+      - name: Audit GitHub math with trusted code
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AUDIT_UNTRUSTED_DATA: "1"
+        run: |
+          cd "$TARGET_ROOT"
+          PYTHON=python "$GITHUB_WORKSPACE/scripts/audit_changed_math.sh" "$AUDIT_BASE"

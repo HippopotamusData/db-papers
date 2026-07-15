@@ -13,7 +13,11 @@ import sys
 import time
 from pathlib import Path
 
-from validate_github_math import MathExpression, extract_math_expressions
+from validate_github_math import (
+    MathExpression,
+    extract_math_expressions,
+    extract_math_expressions_unchecked,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,12 +32,20 @@ def _line(text: str, offset: int) -> int:
 
 def _load_expressions(
     paths: list[Path],
+    *,
+    validate: bool = True,
 ) -> tuple[list[dict[str, object]], dict[Path, tuple[str, list[MathExpression]]]]:
     serialized: list[dict[str, object]] = []
     by_path: dict[Path, tuple[str, list[MathExpression]]] = {}
     for path in paths:
+        if path.is_symlink() or not path.is_file():
+            raise OSError(f"refusing a symlink or non-regular input: {path}")
         text = path.read_text(encoding="utf-8")
-        expressions = extract_math_expressions(text)
+        expressions = (
+            extract_math_expressions(text)
+            if validate
+            else extract_math_expressions_unchecked(text)
+        )
         by_path[path] = (text, expressions)
         for expression in expressions:
             serialized.append(
@@ -191,14 +203,27 @@ def main() -> int:
     parser.add_argument("--katex-module", type=Path)
     parser.add_argument("--github", action="store_true")
     parser.add_argument(
+        "--unchecked-input",
+        action="store_true",
+        help="extract fixed dollar delimiters without trusting the target tree's TeX profile",
+    )
+    parser.add_argument(
         "--github-context", default="HippopotamusData/db-papers"
     )
     args = parser.parse_args()
     if args.mathjax_module is None and args.katex_module is None and not args.github:
         parser.error("select --mathjax-module, --katex-module, and/or --github")
+    if args.unchecked_input and (
+        not args.github
+        or args.mathjax_module is not None
+        or args.katex_module is not None
+    ):
+        parser.error("--unchecked-input is limited to the GitHub node audit")
 
     try:
-        serialized, by_path = _load_expressions(args.paths)
+        serialized, by_path = _load_expressions(
+            args.paths, validate=not args.unchecked_input
+        )
         failures: list[str] = []
         if args.mathjax_module is not None:
             failures.extend(_verify_mathjax(serialized, args.mathjax_module))

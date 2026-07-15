@@ -859,6 +859,18 @@ def extract_math_expressions(text: str) -> list[MathExpression]:
     if issues:
         raise ValueError("portable math validation must succeed before extraction")
 
+    return extract_math_expressions_unchecked(text)
+
+
+def extract_math_expressions_unchecked(text: str) -> list[MathExpression]:
+    """Extract canonical dollar-delimited expressions without trusting TeX policy."""
+
+    _, boundary_issues = _parse_math(text)
+    boundary_issues.extend(_alternative_delimiter_issues(text))
+    boundary_issues.extend(_markdown_container_issues(text))
+    if boundary_issues:
+        raise ValueError("trusted Markdown math boundary validation failed")
+
     visible, _ = _markdown_visible(text)
     expressions: list[MathExpression] = []
     display_start: int | None = None
@@ -889,7 +901,7 @@ def extract_math_expressions(text: str) -> list[MathExpression]:
             continue
 
         dollars = _unescaped_dollars(line)
-        for pair_start in range(0, len(dollars), 2):
+        for pair_start in range(0, len(dollars) - 1, 2):
             opening = dollars[pair_start]
             closing = dollars[pair_start + 1]
             expressions.append(

@@ -71,6 +71,8 @@ make math-audit-katex KATEX_MODULE='/path/to/katex'
 
 GitHub 的链接化和 Markdown 规则会随上下文组合，无法靠静态规则穷举。每个变更译文在验收或提交前必须运行限定 `FILES` 的 GitHub Markdown API 审计；CI 根据 Git diff 重复这项检查。公式 profile、扫描器、审计器、MathJax 锁或工作流发生变化时，CI 自动升级为全库审计；全库迁移也运行不带 `FILES` 的审计。
 
+普通 `pull_request` 检查不接收 API token。带只读 token 的外部审计由默认分支上的受信任脚本运行；PR worktree 只作为 Markdown 数据读取，禁止执行其中的脚本、依赖或配置，并拒绝符号链接和非普通输入。该审计只信任仓库既定的 `$`/`$$` 边界提取，不信任 PR 自己修改的 TeX allowlist；PR 内的新静态规则仍由无 token 的普通 CI 验证。
+
 GitHub Markdown API 审计证明 GitHub 为每个公式创建节点且未改写载荷；它不执行网页端最终渲染。因此 profile 或全库迁移发生变化时，还必须在推送后的真实 GitHub 文件页检查错误提示。KaTeX 失败不能单独成为改写数学语义的理由。
 
 ## 变更要求

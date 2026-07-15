@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -11,6 +12,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from validate_github_math import MathExpression  # noqa: E402
 from verify_math_rendering import (  # noqa: E402
     _github_sequence_failures,
+    _load_expressions,
     _normalized_actual_renderer_text,
     _normalized_expected_renderer_text,
     _verify_mathjax,
@@ -89,6 +91,30 @@ class VerifyMathRenderingTests(unittest.TestCase):
             _normalized_expected_renderer_text(expression),
             _normalized_actual_renderer_text("$x&amp;amp;=y$"),
         )
+
+    def test_unchecked_loader_uses_only_trusted_dollar_boundaries(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "translation.md"
+            path.write_text(r"正文 $x\notARealCommand$。", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                _load_expressions([path])
+            serialized, _ = _load_expressions([path], validate=False)
+            self.assertEqual(serialized[0]["text"], r"x\notARealCommand")
+
+            for invalid in ("正文 $x。", "正文\n$$\nx=1\n"):
+                with self.subTest(invalid=invalid):
+                    path.write_text(invalid, encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, "boundary validation"):
+                        _load_expressions([path], validate=False)
+
+    def test_loader_rejects_symlink_input(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "target.md"
+            link = Path(directory) / "translation.md"
+            target.write_text("正文 $x$。", encoding="utf-8")
+            link.symlink_to(target)
+            with self.assertRaisesRegex(OSError, "symlink"):
+                _load_expressions([link], validate=False)
 
 
 if __name__ == "__main__":
