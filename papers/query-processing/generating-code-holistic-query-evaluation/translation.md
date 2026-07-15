@@ -233,7 +233,7 @@ Aggregation 使用 group directory 把多维 grouping key 映射为一维 aggreg
 一般地，若 `M_i[v]` 是第 `i` 个属性值 `v` 的 id，group `(v_1,...,v_n)` 映射为：
 
 $$
-\operatorname{offset}(v_1,\ldots,v_n)=\sum_{i=1}^{n}\left(M_i[v_i]\prod_{j=i+1}^{n}|M_j|\right).
+\mathrm{offset}(v_1,\ldots,v_n)=\sum_{i=1}^{n}\left(M_i[v_i]\prod_{j=i+1}^{n}|M_j|\right).
 $$
 
 每个 aggregate function 维护长度为 $\prod_i |M_i|$ 的数组。每条 tuple 查目录得到 offset，再更新对应 aggregate slot。Group 识别和 aggregate expression 都内联，编译器可复用寄存器、消除公共算术并避免 stack interaction。

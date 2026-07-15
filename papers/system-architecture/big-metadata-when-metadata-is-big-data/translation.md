@@ -656,8 +656,8 @@ NOT _ST_INTERSECTS(
 当块中某变量的所有值相同，即 `min(x) = max(x)`，或全为 NULL 时，会出现一个特殊情况。此时可以计算 `P(min(x))` 和 `P(NULL)`，并检查结果是否为 `FALSE` 或 NULL；两者都会消除行：
 
 ```math
-F(C_X) = (\operatorname{NOT}\ P(C_X))
-\lor (P(C_X)\ \operatorname{IS\ NULL})
+F(C_X) = (\mathrm{NOT}\ P(C_X))
+\lor (P(C_X)\ \mathrm{IS\ NULL})
 \land min(x) = max(x)
 ```
 

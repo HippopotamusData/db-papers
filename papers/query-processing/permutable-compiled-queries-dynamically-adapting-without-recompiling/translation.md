@@ -143,10 +143,10 @@ fun p2(v:*Vec) {
 过滤因子的 rank 按选择率和单元组开销计算：
 
 $$
-\operatorname{rank}(p)=\frac{1-s_p}{c_p}
+\mathrm{rank}(p)=\frac{1-s_p}{c_p}
 $$
 
-其中 \(s_p\) 是谓词 \(p\) 的选择率，\(c_p\) 是该谓词的单元组求值成本。若不采样，就按当前顺序 short-circuit；若重采样，每个 predicate 必须在全部输入上执行以得到真实选择率和调用时间，产生冗余工作。Profile 存入内存统计表，policy 结合 rank 重排。因此 sampling policy 必须在快速响应 skew 与额外工作间平衡。
+其中 $s_p$ 是谓词 $p$ 的选择率，$c_p$ 是该谓词的单元组求值成本。若不采样，就按当前顺序 short-circuit；若重采样，每个 predicate 必须在全部输入上执行以得到真实选择率和调用时间，产生冗余工作。Profile 存入内存统计表，policy 结合 rank 重排。因此 sampling policy 必须在快速响应 skew 与额外工作间平衡。
 
 ### 4.2 自适应聚合
 

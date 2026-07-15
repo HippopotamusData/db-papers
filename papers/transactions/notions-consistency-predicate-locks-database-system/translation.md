@@ -96,12 +96,12 @@ $$
 
 如果满足下列条件，就称事务在第 $i$ 步之前一直锁定实体 $e$：
 
-存在某个 $j \le i$，使得 $a_j = \operatorname{lock}$ 且 $e_j = e$； (2a)
+存在某个 $j \le i$，使得 $a_j = \mathrm{lock}$ 且 $e_j = e$； (2a)
 
 并且不存在满足 $j < k < i$ 的 $k$，使得
 
 $$
-a_k = \operatorname{unlock}\quad\text{且}\quad e_k = e.
+a_k = \mathrm{unlock}\quad\text{且}\quad e_k = e.
 $$
 
 (2b)
@@ -110,10 +110,10 @@ $$
 
 对每个步骤 $i = 1,\ldots,n$， (3a)
 
-- 如果 $a_i = \operatorname{lock}$，则直到第 $i-1$ 步，$T$ 尚未锁定 $e_i$；
-- 如果 $a_i \ne \operatorname{lock}$，则直到第 $i$ 步，$T$ 一直锁定 $e_i$；
+- 如果 $a_i = \mathrm{lock}$，则直到第 $i-1$ 步，$T$ 尚未锁定 $e_i$；
+- 如果 $a_i \ne \mathrm{lock}$，则直到第 $i$ 步，$T$ 一直锁定 $e_i$；
 
-并且在第 $n$ 步，$T$ 只仍然锁定 $e_n$，且 $a_n = \operatorname{unlock}$。 (3b)
+并且在第 $n$ 步，$T$ 只仍然锁定 $e_n$，且 $a_n = \mathrm{unlock}$。 (3b)
 
 图 2 给出了图 1 中事务 $T_1$ 的两个良构版本。
 
@@ -201,9 +201,9 @@ $$
 
 我们希望进一步刻画哪些非串行调度是一致的。为此，需要考察每个步骤中的加锁和解锁动作。如果在调度 $S$ 的第 $k$ 步之前事务 $T$ 一直锁定实体 $e$，则满足：
 
-存在 $j \le k$，使得 $S(j)=(T,\operatorname{lock},e)$； (7a)
+存在 $j \le k$，使得 $S(j)=(T,\mathrm{lock},e)$； (7a)
 
-并且不存在 $j'$ 满足 $j<j'<k$ 且 $S(j')=(T,\operatorname{unlock},e)$。 (7b)
+并且不存在 $j'$ 满足 $j<j'<k$ 且 $S(j')=(T,\mathrm{unlock},e)$。 (7b)
 
 如果对所有 $k$，当 $S(k)=(T,a,e)$ 且在第 $k$ 步之前 $e$ 一直被 $T$ 锁定时，$e$ 没有在第 $k$ 步之前被任何其他事务锁定，就称调度 $S$ 是合法的。合法调度遵守以下锁协议：事务试图锁定一个已经被锁定的实体时必须等待。调度给出了事务处理过程的历史。可以把处理过程想象成调度器在每个时刻从所有未完成事务的下一步骤集合中选择一个事务步骤。这个调度器允许在空闲实体上执行加锁动作，但绝不会选择已锁实体上的加锁动作。这样的调度器只会产生合法调度，因为它绝不选择在已经锁定的实体上运行加锁步骤。
 
@@ -216,7 +216,7 @@ $$
 为证明这一点，考虑任意非良构事务 $T_1=((T_1,a_i,e_i))_{i=1}^{n}$。那么对某个步骤 $k$，$T_1$ 在第 $k$ 步之前没有一直锁定 $e_k$。考虑一个良构的两阶段事务
 
 $$
-T_2=((T_2,\operatorname{lock},e_k),(T_2,\operatorname{read},e_k),(T_2,\operatorname{write},e_k),(T_2,\operatorname{unlock},e_k)).
+T_2=((T_2,\mathrm{lock},e_k),(T_2,\mathrm{read},e_k),(T_2,\mathrm{write},e_k),(T_2,\mathrm{unlock},e_k)).
 $$
 
 调度
@@ -237,9 +237,9 @@ $$
 
 $$
 \begin{aligned}
-i<j &\Rightarrow a_i \ne \operatorname{unlock},\\
-i=j &\Rightarrow a_i = \operatorname{unlock},\\
-i>j &\Rightarrow a_i \ne \operatorname{lock},
+i<j &\Rightarrow a_i \ne \mathrm{unlock},\\
+i=j &\Rightarrow a_i = \mathrm{unlock},\\
+i>j &\Rightarrow a_i \ne \mathrm{lock},
 \end{aligned}
 $$
 
@@ -262,7 +262,7 @@ $$
 首先，为每个事务 $T_i$ 定义整数 $SHRINK(T_i)$，它是在 $S$ 中 $T_i$ 第一次解锁某个实体的步骤编号：
 
 $$
-SHRINK(T_i)=\min\{j\mid S(j)=(T_i,\operatorname{unlock},e)\text{，其中 }e\text{ 为某个实体}\}.
+SHRINK(T_i)=\min\{j\mid S(j)=(T_i,\mathrm{unlock},e)\text{，其中 }e\text{ 为某个实体}\}.
 $$
 
 如果每个事务 $T_i$ 都非空，那么由于每个 $T_i$ 都是良构的，$SHRINK(T_i)$ 定义良好。
@@ -273,7 +273,7 @@ $$
 S=(\ldots,(T_1,a_i,e),\ldots,(T_2,a_j,e),\ldots),
 $$
 
-并且对 $i$ 与 $j$ 之间的任意整数 $k$，$e_k\ne e$。因为 $S$ 合法，直到 $S$ 的第 $i$ 步，$e$ 只能被 $T_1$ 锁定；又因为 $T_2$ 良构，直到 $S$ 的第 $j$ 步，$e$ 只能被 $T_2$ 锁定。所以 $a_i=\operatorname{unlock}$ 且 $a_j=\operatorname{lock}$。这立即意味着 $SHRINK(T_1)\le i$。由于 $T_2$ 是两阶段的，在 $S$ 的第 $j$ 步之前 $T_2$ 不会解锁，因此 $SHRINK(T_2)>j$。
+并且对 $i$ 与 $j$ 之间的任意整数 $k$，$e_k\ne e$。因为 $S$ 合法，直到 $S$ 的第 $i$ 步，$e$ 只能被 $T_1$ 锁定；又因为 $T_2$ 良构，直到 $S$ 的第 $j$ 步，$e$ 只能被 $T_2$ 锁定。所以 $a_i=\mathrm{unlock}$ 且 $a_j=\mathrm{lock}$。这立即意味着 $SHRINK(T_1)\le i$。由于 $T_2$ 是两阶段的，在 $S$ 的第 $j$ 步之前 $T_2$ 不会解锁，因此 $SHRINK(T_2)>j$。
 
 于是，如果 $T_1<T_2$，就有 $SHRINK(T_1)<SHRINK(T_2)$。这蕴含性质 (6b)，从而 $<$ 可以扩展成 $T$ 上的全序 $\ll$。
 

@@ -514,7 +514,7 @@ $$
 L=i_1,i_2,\ldots,i_k,\qquad M=j_1,j_2,\ldots,j_k,
 $$
 
-其中 $k\le\operatorname{degree}(R)$ 且 $k\le\operatorname{degree}(S)$。以 $S$ 对 $R$ 作 $L,M$ 限制，记作 $R_{L\mid M}S$，它是 $R$ 的最大子集 $R'$，满足：
+其中 $k\le\mathrm{degree}(R)$ 且 $k\le\mathrm{degree}(S)$。以 $S$ 对 $R$ 作 $L,M$ 限制，记作 $R_{L\mid M}S$，它是 $R$ 的最大子集 $R'$，满足：
 
 $$
 \pi_L(R')=\pi_M(S).

@@ -81,13 +81,13 @@ $$
 
 多数图式 ANNS 算法按如下方式工作：索引构建期间，根据数据集 $P$ 的几何性质构建图 $G=(P,E)$。搜索时，对于查询向量 $x_q$，在 $G$ 上采用算法 1 这类自然的贪心或 best-first 遍历。从某个指定点 $s \in P$ 出发，沿图遍历并逐步靠近 $x_q$。
 
-研究者已经广泛探讨如何构造稀疏图，使 $\operatorname{GreedySearch}(s,x_q,k,L)$ 对任意查询都能快速收敛到近似最近邻。至少当查询接近数据点时，保证该性质的一个充分条件是所谓的稀疏邻域图（sparse neighborhood graph，SNG），它由 [5] 提出[^3]。
+研究者已经广泛探讨如何构造稀疏图，使 $\mathrm{GreedySearch}(s,x_q,k,L)$ 对任意查询都能快速收敛到近似最近邻。至少当查询接近数据点时，保证该性质的一个充分条件是所谓的稀疏邻域图（sparse neighborhood graph，SNG），它由 [5] 提出[^3]。
 
-在 SNG 中，每个点 $p$ 的出邻居按如下方式确定：初始化集合 $S=P\setminus\{p\}$。只要 $S\neq\varnothing$，就从 $p$ 向 $p^*$ 添加一条有向边，其中 $p^*$ 是 $S$ 中距 $p$ 最近的点；然后从 $S$ 中删除所有满足 $d(p,p')>d(p^*,p')$ 的点 $p'$。很容易看出，从任意 $s\in P$ 出发运行 $\operatorname{GreedySearch}(s,x_p,1,1)$，对每个基础点 $p\in P$ 都会收敛到 $p$。
+在 SNG 中，每个点 $p$ 的出邻居按如下方式确定：初始化集合 $S=P\setminus\{p\}$。只要 $S\neq\varnothing$，就从 $p$ 向 $p^*$ 添加一条有向边，其中 $p^*$ 是 $S$ 中距 $p$ 最近的点；然后从 $S$ 中删除所有满足 $d(p,p')>d(p^*,p')$ 的点 $p'$。很容易看出，从任意 $s\in P$ 出发运行 $\mathrm{GreedySearch}(s,x_p,1,1)$，对每个基础点 $p\in P$ 都会收敛到 $p$。
 
 原则上这种构造非常理想，但即使对中等规模数据集也不可行，因为运行时间为 $\widetilde{O}(n^2)$。基于这一思路，一系列工作设计了更实用、能够良好近似 SNG 的算法 [21, 13]。然而，它们本质上都在逼近 SNG 性质，因此很难灵活控制输出图的直径与密度。
 
-**算法 1：** $\operatorname{GreedySearch}(s,x_q,k,L)$。
+**算法 1：** $\mathrm{GreedySearch}(s,x_q,k,L)$。
 
 ```text
 输入：带起点 s 的图 G、查询 x_q、结果大小 k、搜索列表大小 L >= k
@@ -103,7 +103,7 @@ begin
   return [ℒ 中距 x_q 最近的 k 个点；𝒱]
 ```
 
-**算法 2：** $\operatorname{RobustPrune}(p,\mathcal{V},\alpha,R)$。
+**算法 2：** $\mathrm{RobustPrune}(p,\mathcal{V},\alpha,R)$。
 
 ```text
 输入：图 G、点 p ∈ P、候选集 𝒱、距离阈值 α >= 1、度数上界 R
@@ -126,15 +126,15 @@ begin
 
 如前所述，满足 SNG 性质的图都很适合 GreedySearch 搜索过程；但这类图的直径可能很大。例如，如果点在一维实数轴上呈线性排列，那么满足 SNG 性质的是直径为 $O(n)$ 的线图：每个点连接到左右两个邻居，端点只连接一个。若把这类图存储在磁盘上，算法 1 沿搜索路径访问顶点时，为取得其邻居需要进行许多轮顺序磁盘读取。
 
-为解决该问题，我们希望沿搜索路径经过每个节点时，到查询的距离都按乘法因子 $\alpha>1$ 缩小，而不是像 SNG 性质那样仅要求距离下降。考虑一种有向图，其中每个点 $p$ 的出邻居由算法 2 的 $\operatorname{RobustPrune}(p,\mathcal{V},\alpha,R)$ 过程确定。注意，如果每个 $p\in P$ 的出邻居都由 $\operatorname{RobustPrune}(p,P\setminus\{p\},\alpha,n-1)$ 决定，那么只要 $\alpha>1$，从任意 $s$ 开始的 $\operatorname{GreedySearch}(s,p,1,1)$ 都会在对数步数内收敛到 $p\in P$。然而，这会使索引构建运行时间达到 $\widetilde{O}(n^2)$。因此，Vamana 继承 [21, 13] 的思路，用一个经过谨慎选择且远少于 $n-1$ 个节点的 $\mathcal{V}$ 调用 $\operatorname{RobustPrune}(p,\mathcal{V},\alpha,R)$，以改善索引构建时间。
+为解决该问题，我们希望沿搜索路径经过每个节点时，到查询的距离都按乘法因子 $\alpha>1$ 缩小，而不是像 SNG 性质那样仅要求距离下降。考虑一种有向图，其中每个点 $p$ 的出邻居由算法 2 的 $\mathrm{RobustPrune}(p,\mathcal{V},\alpha,R)$ 过程确定。注意，如果每个 $p\in P$ 的出邻居都由 $\mathrm{RobustPrune}(p,P\setminus\{p\},\alpha,n-1)$ 决定，那么只要 $\alpha>1$，从任意 $s$ 开始的 $\mathrm{GreedySearch}(s,p,1,1)$ 都会在对数步数内收敛到 $p\in P$。然而，这会使索引构建运行时间达到 $\widetilde{O}(n^2)$。因此，Vamana 继承 [21, 13] 的思路，用一个经过谨慎选择且远少于 $n-1$ 个节点的 $\mathcal{V}$ 调用 $\mathrm{RobustPrune}(p,\mathcal{V},\alpha,R)$，以改善索引构建时间。
 
 ### 2.3 Vamana 索引算法
 
 Vamana 以迭代方式构造有向图 $G$。初始化时，每个顶点随机选择 $R$ 个出邻居。注意，当 $R>\log n$ 时图的连通性很好，但随机连接不能保证 GreedySearch 收敛到优质结果。接下来，令 $s$ 表示数据集 $P$ 的 medoid，它将作为搜索算法的起点。
 
-随后，算法按随机顺序遍历 $P$ 中全部点。处理每个 $p\in P$ 时，都会更新图，使 $\operatorname{GreedySearch}(s,x_p,1,L)$ 更容易收敛到 $p$。具体而言，在对应点 $p$ 的迭代中，Vamana 先在当前图 $G$ 上运行 $\operatorname{GreedySearch}(s,x_p,1,L)$，并把 $\mathcal{V}_p$ 设为该搜索访问过的全部点。然后执行 $\operatorname{RobustPrune}(p,\mathcal{V}_p,\alpha,R)$，确定 $p$ 的新出邻居。
+随后，算法按随机顺序遍历 $P$ 中全部点。处理每个 $p\in P$ 时，都会更新图，使 $\mathrm{GreedySearch}(s,x_p,1,L)$ 更容易收敛到 $p$。具体而言，在对应点 $p$ 的迭代中，Vamana 先在当前图 $G$ 上运行 $\mathrm{GreedySearch}(s,x_p,1,L)$，并把 $\mathcal{V}_p$ 设为该搜索访问过的全部点。然后执行 $\mathrm{RobustPrune}(p,\mathcal{V}_p,\alpha,R)$，确定 $p$ 的新出邻居。
 
-接着，Vamana 对所有 $p'\in N_{\mathrm{out}}(p)$ 添加反向边 $(p',p)$，从而连接搜索路径上访问过的顶点与 $p$，使更新后的图更适合 $\operatorname{GreedySearch}(s,x_p,1,L)$ 收敛到 $p$。不过，添加 $(p',p)$ 形式的反向边可能使 $p'$ 违反度数约束。因此，只要任一顶点 $p'$ 的出度超过阈值 $R$，就对其现有出邻居集合 $N_{\mathrm{out}}(p')$ 运行 $\operatorname{RobustPrune}(p',N_{\mathrm{out}}(p'),\alpha,R)$ 来修改图。
+接着，Vamana 对所有 $p'\in N_{\mathrm{out}}(p)$ 添加反向边 $(p',p)$，从而连接搜索路径上访问过的顶点与 $p$，使更新后的图更适合 $\mathrm{GreedySearch}(s,x_p,1,L)$ 收敛到 $p$。不过，添加 $(p',p)$ 形式的反向边可能使 $p'$ 违反度数约束。因此，只要任一顶点 $p'$ 的出度超过阈值 $R$，就对其现有出邻居集合 $N_{\mathrm{out}}(p')$ 运行 $\mathrm{RobustPrune}(p',N_{\mathrm{out}}(p'),\alpha,R)$ 来修改图。
 
 随着算法推进，图会持续变得更适合 GreedySearch，搜索也会更快。完整算法对数据集执行两遍：第一遍使用 $\alpha=1$，第二遍使用用户定义的 $\alpha\ge 1$。观察表明，第二遍会生成更好的图；若两遍都使用用户定义的 $\alpha$，索引算法反而更慢，因为第一遍会计算出平均度更高、处理耗时更长的图。
 
@@ -164,9 +164,9 @@ begin
 
 ### 2.4 Vamana 与 HNSW [21]、NSG [13] 的比较
 
-从高层看，Vamana 与 HNSW、NSG 这两种流行 ANNS 算法相当相似。三者都遍历数据集 $P$，并使用 $\operatorname{GreedySearch}(s,x_p,1,L)$ 与 $\operatorname{RobustPrune}(p,\mathcal{V},\alpha,R)$ 的结果确定 $p$ 的邻居。不过，它们之间存在若干重要区别。
+从高层看，Vamana 与 HNSW、NSG 这两种流行 ANNS 算法相当相似。三者都遍历数据集 $P$，并使用 $\mathrm{GreedySearch}(s,x_p,1,L)$ 与 $\mathrm{RobustPrune}(p,\mathcal{V},\alpha,R)$ 的结果确定 $p$ 的邻居。不过，它们之间存在若干重要区别。
 
-最关键的是，HNSW 与 NSG 都没有可调参数 $\alpha$，隐式使用 $\alpha=1$；这是 Vamana 能在图度数与直径之间取得更好权衡的主要原因。其次，HNSW 把剪枝过程的候选集 $\mathcal{V}$ 设为 $\operatorname{GreedySearch}(s,p,1,L)$ 最终输出的 $L$ 个候选结果，而 Vamana 与 NSG 则把 $\mathcal{V}$ 设为 GreedySearch 访问过的全部顶点。直观上，这有助于 Vamana 与 NSG 添加长程边；HNSW 只会向附近点添加局部边，因此还要在数据集的一系列嵌套样本上额外构建图层次结构。
+最关键的是，HNSW 与 NSG 都没有可调参数 $\alpha$，隐式使用 $\alpha=1$；这是 Vamana 能在图度数与直径之间取得更好权衡的主要原因。其次，HNSW 把剪枝过程的候选集 $\mathcal{V}$ 设为 $\mathrm{GreedySearch}(s,p,1,L)$ 最终输出的 $L$ 个候选结果，而 Vamana 与 NSG 则把 $\mathcal{V}$ 设为 GreedySearch 访问过的全部顶点。直观上，这有助于 Vamana 与 NSG 添加长程边；HNSW 只会向附近点添加局部边，因此还要在数据集的一系列嵌套样本上额外构建图层次结构。
 
 下一项差异在初始图：NSG 的起始图是数据集上的近似 K 最近邻图，构建时消耗大量时间和内存；HNSW 与 Vamana 的初始化更简单，前者从空图开始，后者从随机图开始。观察表明，从随机图开始会比从空图开始生成质量更好的图。最后，Vamana 对数据集执行两遍，HNSW 与 NSG 都只执行一遍；这样设计是因为观察表明，第二遍会改善图质量。
 
