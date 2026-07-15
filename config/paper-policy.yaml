@@ -1,0 +1,13 @@
+schema_version: 1
+
+# 单篇页数例外只能由用户显式授权。键为 paper ID；max_pages 是该篇的上限。
+page_limit_exceptions: {}
+
+# skipped 的原因属于项目策略，不进入六字段 paper.yaml。
+skipped_reasons:
+  aries-transaction-recovery-method: over-page-limit
+  architecture-of-a-database-system: over-page-limit
+  balancing-vectorized-query-execution-bandwidth-optimized-storage: over-page-limit
+  design-implementation-modern-column-oriented-database-systems: over-page-limit
+  efficiency-columbia-query-optimizer: over-page-limit
+  main-memory-database-systems: over-page-limit

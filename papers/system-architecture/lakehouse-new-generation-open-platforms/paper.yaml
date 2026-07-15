@@ -1,0 +1,21 @@
+title: 'Lakehouse: A New Generation of Open Platforms that Unify Data Warehousing and Advanced Analytics'
+authors:
+  - Michael Armbrust
+  - Ali Ghodsi
+  - Reynold Xin
+  - Matei Zaharia
+year: 2021
+source_url: https://www.vldb.org/cidrdb/2021/lakehouse-a-new-generation-of-open-platforms-that-unify-data-warehousing-and-advanced-analytics.html
+topics:
+  - database-system-design
+  - cloud-native
+  - lakehouse
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 4
+  reader_payoff: 5

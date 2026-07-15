@@ -1,0 +1,25 @@
+title: 'CFS: A Distributed File System for Large Scale Container Platforms'
+authors:
+  - Haifeng Liu
+  - Wei Ding
+  - Yuan Chen
+  - Weilong Guo
+  - Shuoran Liu
+  - Tianpeng Li
+  - Mofei Zhang
+  - Jianxing Zhao
+  - Hongyin Zhu
+  - Zhengyi Zhu
+year: 2019
+source_url: https://arxiv.org/pdf/1911.03001.pdf
+topics:
+  - distributed-storage
+  - file-system
+reading_status: translated
+rating:
+  score: 2.5
+  influence_breadth: 2
+  technical_value: 3
+  practical_diffusion: 2
+  durability: 3
+  reader_payoff: 3

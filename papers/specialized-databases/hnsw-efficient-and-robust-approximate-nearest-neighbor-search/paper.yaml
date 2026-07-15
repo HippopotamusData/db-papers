@@ -1,0 +1,18 @@
+title: Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs
+authors:
+  - Yu. A. Malkov
+  - D. A. Yashunin
+year: 2020
+source_url: https://doi.org/10.1109/TPAMI.2018.2889473
+topics:
+  - vector-search
+  - indexing
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 4

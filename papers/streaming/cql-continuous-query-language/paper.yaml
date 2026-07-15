@@ -1,0 +1,17 @@
+title: 'The CQL Continuous Query Language: Semantic Foundations and Query Execution'
+authors:
+  - Arvind Arasu
+  - Shivnath Babu
+  - Jennifer Widom
+year: 2006
+source_url: https://cs.stanford.edu/people/widom/pubs.html
+topics:
+  - stream-processing
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

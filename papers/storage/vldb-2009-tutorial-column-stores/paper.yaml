@@ -1,0 +1,17 @@
+title: 'Tutorial: Column oriented Database Systems'
+authors:
+  - Daniel J. Abadi
+  - Peter A. Boncz
+  - Stavros Harizopoulos
+year: 2009
+source_url: https://www.vldb.org/pvldb/vol2/vldb09-tutorial6.pdf
+topics:
+  - storage-engine
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 3
+  technical_value: 3
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

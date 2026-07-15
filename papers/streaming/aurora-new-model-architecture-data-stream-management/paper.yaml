@@ -1,0 +1,23 @@
+title: 'Aurora: A New Model and Architecture for Data Stream Management'
+authors:
+  - Daniel J. Abadi
+  - Don Carney
+  - Uğur Çetintemel
+  - Mitch Cherniack
+  - Christian Convey
+  - Sangdon Lee
+  - Michael Stonebraker
+  - Nesime Tatbul
+  - Stanley B. Zdonik
+year: 2003
+source_url: https://cs.brown.edu/research/aurora/publications.html
+topics:
+  - stream-processing
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

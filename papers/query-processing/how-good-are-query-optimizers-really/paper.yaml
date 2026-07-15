@@ -1,0 +1,20 @@
+title: How Good Are Query Optimizers, Really?
+authors:
+  - Viktor Leis
+  - Andrey Gubichev
+  - Atanas Mirchev
+  - Peter Boncz
+  - Alfons Kemper
+  - Thomas Neumann
+year: 2015
+source_url: http://www.vldb.org/pvldb/vol9/p204-leis.pdf
+topics:
+  - query-optimization
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 5

@@ -1,0 +1,23 @@
+tmp/
+tmp_prepare_*.py
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+
+# Non-deliverable notes and source unpacking scratch space.
+**/reading_notes.md
+**/rework_removed_rough_crops.txt
+**/arxiv_source_tmp/
+
+# Review-only page screenshots and visual inspection artifacts.
+papers/**/assets/page-*.png
+papers/**/assets/original-page*.png
+papers/**/assets/extracted-page*.png
+papers/**/assets/*contact*.png
+papers/**/assets/*candidate*.png
+papers/**/assets/*debug*.png
+papers/**/assets/*inspect*.png
+papers/**/assets/*manifest*
+papers/**/assets/*grid*.png
+papers/**/assets/__*.png

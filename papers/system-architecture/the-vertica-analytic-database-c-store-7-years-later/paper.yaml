@@ -1,0 +1,21 @@
+title: 'The Vertica Analytic Database: C-Store 7 Years Later'
+authors:
+  - Andrew Lamb
+  - Matt Fuller
+  - Ramakrishna Varadarajan
+  - Nga Tran
+  - Ben Vandiver
+  - Lyric Doshi
+  - Chuck Bear
+year: 2012
+source_url: https://vldb.org/pvldb/vol5/p1790_andrewlamb_vldb2012.pdf
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 4

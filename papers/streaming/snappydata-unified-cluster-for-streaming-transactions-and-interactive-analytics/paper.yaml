@@ -1,0 +1,22 @@
+title: 'SnappyData: A Unified Cluster for Streaming,Transactions, and Interactive Analytics'
+authors:
+  - Barzan Mozafari
+  - Jags Ramnarayan
+  - Sudhir Menon
+  - Yogesh Mahajan
+  - Soubhik Chakraborty
+  - Hemant Bhanawat
+  - Kishor Bachhav
+year: 2017
+source_url: https://web.eecs.umich.edu/~mozafari/php/data/uploads/cidr_2017.pdf
+topics:
+  - stream-processing
+  - transaction-processing
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 3
+  reader_payoff: 3

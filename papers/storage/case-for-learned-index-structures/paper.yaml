@@ -1,0 +1,20 @@
+title: The Case for Learned Index Structures
+authors:
+  - Tim Kraska
+  - Alex Beutel
+  - Ed H. Chi
+  - Jeffrey Dean
+  - Neoklis Polyzotis
+year: 2018
+source_url: https://research.google/pubs/the-case-for-learned-index-structures/
+topics:
+  - indexing
+  - ai-for-databases
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

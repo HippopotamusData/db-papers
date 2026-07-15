@@ -1,0 +1,16 @@
+title: Automated SQL Query Generation for Systematic Testing of Database Engines
+authors:
+  - Shadi Abdul Khalek
+  - Sarfraz Khurshid
+year: 2010
+source_url: https://doi.org/10.1145/1858996.1859063
+topics:
+  - database-testing
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 3
+  reader_payoff: 3

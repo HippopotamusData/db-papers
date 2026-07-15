@@ -1,0 +1,19 @@
+title: The Log-Structured Merge-Tree (LSM-Tree)
+authors:
+  - Patrick O'Neil
+  - Edward Cheng
+  - Dieter Gawlick
+  - Elizabeth O'Neil
+year: 1996
+source_url: https://doi.org/10.1007/s002360050048
+topics:
+  - storage-engine
+  - indexing
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

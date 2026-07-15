@@ -1,0 +1,32 @@
+title: 'CockroachDB: The Resilient Geo-Distributed SQL Database'
+authors:
+  - Rebecca Taft
+  - Irfan Sharif
+  - Andrei Matei
+  - Nathan VanBenschoten
+  - Jordan Lewis
+  - Tobias Grieger
+  - Kai Niemi
+  - Andy Woods
+  - Anne Birzin
+  - Raphael Poss
+  - Paul Bardea
+  - Amruta Ranade
+  - Ben Darnell
+  - Bram Gruneir
+  - Justin Jaffray
+  - Lucy Zhang
+  - Peter Mattis
+year: 2020
+source_url: https://cdn2.hubspot.net/hubfs/1753393/guides/White%20Paper%20%7C%20CockroachDB%20The%20Resilient%20Geo-Distributed%20SQL%20Database%20%28SIGMOD%202020%29.pdf
+topics:
+  - distributed-sql
+  - transaction-processing
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4

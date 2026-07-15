@@ -1,0 +1,92 @@
+schema_version: 1
+
+# 一级领域决定物理目录。它应当稳定、互斥，并描述论文的主要研究对象。
+areas:
+  foundations:
+    label_zh: 基础与综述
+    description: 数据库领域基础知识、总览和跨领域综述。
+  system-architecture:
+    label_zh: 系统架构
+    description: 完整数据库系统、云数据库、系统组件协同与工程架构。
+  query-processing:
+    label_zh: 查询处理
+    description: 查询优化、执行、编译、向量化和运行时自适应。
+  storage:
+    label_zh: 存储
+    description: 存储引擎、数据布局、文件系统、索引和介质感知设计。
+  transactions:
+    label_zh: 事务与并发控制
+    description: 事务、并发控制、恢复、一致性和隔离级别。
+  distributed-databases:
+    label_zh: 分布式数据库
+    description: 复制、分片、共识、地理分布和分布式事务。
+  data-integration:
+    label_zh: 数据集成
+    description: 数据导入、ETL、连接器、格式解析和数据交换。
+  streaming:
+    label_zh: 流处理
+    description: 流式计算、增量计算、事件时间和流批一体。
+  reliability-and-testing:
+    label_zh: 可靠性与测试
+    description: 数据库测试、验证、可观测性、故障注入和质量保障。
+  specialized-databases:
+    label_zh: 专用数据库
+    description: 图、时序、向量、空间、科学数据等专用数据系统。
+  ai-and-data:
+    label_zh: AI 与数据系统
+    description: AI 与数据管理的交叉系统、语言模型数据交互与 AI 工作负载。
+
+# topics 是可多选的受控词表。新增词前先修改本文件，避免同义标签漂移。
+topics:
+  database-overview:
+    label_zh: 数据库总览
+  database-system-design:
+    label_zh: 数据库系统设计
+  cloud-native:
+    label_zh: 云原生
+  query-optimization:
+    label_zh: 查询优化
+  query-execution:
+    label_zh: 查询执行
+  query-compilation:
+    label_zh: 查询编译
+  vectorized-execution:
+    label_zh: 向量化执行
+  storage-engine:
+    label_zh: 存储引擎
+  data-loading:
+    label_zh: 数据导入
+  database-testing:
+    label_zh: 数据库测试
+  analytical-database:
+    label_zh: 分析型数据库
+  data-federation:
+    label_zh: 数据联邦
+  distributed-sql:
+    label_zh: 分布式 SQL
+  distributed-storage:
+    label_zh: 分布式存储
+  file-system:
+    label_zh: 文件系统
+  stream-processing:
+    label_zh: 流处理
+  transaction-processing:
+    label_zh: 事务处理
+  relational-model:
+    label_zh: 关系模型
+  indexing:
+    label_zh: 索引
+  concurrency-control:
+    label_zh: 并发控制
+  cardinality-estimation:
+    label_zh: 基数估计
+  ai-for-databases:
+    label_zh: AI 优化数据库
+  databases-for-ai:
+    label_zh: 面向 AI 的数据系统
+  language-models-for-data:
+    label_zh: 语言模型与数据
+  vector-search:
+    label_zh: 向量检索
+  lakehouse:
+    label_zh: 湖仓一体

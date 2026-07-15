@@ -1,0 +1,34 @@
+title: 'Mesa: Geo-Replicated, Near Real-Time, Scalable Data Warehousing'
+authors:
+  - Ashish Gupta
+  - Fan Yang
+  - Jason Govig
+  - Adam Kirsch
+  - Kelvin Chan
+  - Kevin Lai
+  - Shuo Wu
+  - Sandeep Govind Dhoot
+  - Abhilash Rajesh Kumar
+  - Ankur Agiwal
+  - Sanjay Bhansali
+  - Mingsheng Hong
+  - Jamie Cameron
+  - Masood Siddiqi
+  - David Jones
+  - Jeff Shute
+  - Andrey Gubarev
+  - Shivakumar Venkataraman
+  - Divyakant Agrawal
+year: 2014
+source_url: https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/42851.pdf
+topics:
+  - analytical-database
+  - distributed-storage
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

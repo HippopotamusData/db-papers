@@ -1,0 +1,25 @@
+title: 'Pinot: Realtime OLAP for 530 Million Users'
+authors:
+  - Jean-François Im
+  - Kishore Gopalakrishna
+  - Subbu Subramaniam
+  - Mayank Shrivastava
+  - Adwait Tumbde
+  - Xiaotian Jiang
+  - Jennifer Dai
+  - Seunghyun Lee
+  - Neha Pawar
+  - Jialiang Li
+  - Ravi Aringunram
+year: 2018
+source_url: https://cwiki.apache.org/confluence/download/attachments/103092375/Pinot.pdf?version=1&modificationDate=1571428741000&api=v2
+topics:
+  - analytical-database
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 4

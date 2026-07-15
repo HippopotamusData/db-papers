@@ -1,0 +1,32 @@
+title: Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs
+authors:
+  - Jinyang Li
+  - Binyuan Hui
+  - Ge Qu
+  - Jiaxi Yang
+  - Binhua Li
+  - Bowen Li
+  - Bailin Wang
+  - Bowen Qin
+  - Ruiying Geng
+  - Nan Huo
+  - Xuanhe Zhou
+  - Chenhao Ma
+  - Guoliang Li
+  - Kevin C.C. Chang
+  - Fei Huang
+  - Reynold Cheng
+  - Yongbin Li
+year: 2023
+source_url: https://proceedings.neurips.cc/paper_files/paper/2023/hash/83fc8fab1710363050bbd1d4b8cc0021-Abstract-Datasets_and_Benchmarks.html
+topics:
+  - language-models-for-data
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 4
+  reader_payoff: 4

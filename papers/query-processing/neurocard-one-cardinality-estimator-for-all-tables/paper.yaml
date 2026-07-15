@@ -1,0 +1,22 @@
+title: 'NeuroCard: One Cardinality Estimator for All Tables'
+authors:
+  - Zongheng Yang
+  - Amog Kamsetty
+  - Sifei Luan
+  - Eric Liang
+  - Yan Duan
+  - Xi Chen
+  - Ion Stoica
+year: 2021
+source_url: https://doi.org/10.14778/3421424.3421432
+topics:
+  - cardinality-estimation
+  - ai-for-databases
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

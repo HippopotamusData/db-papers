@@ -1,0 +1,19 @@
+title: 'ARIES: A Transaction Recovery Method Supporting Fine-Granularity Locking and Partial Rollbacks Using Write-Ahead Logging'
+authors:
+  - C. Mohan
+  - Don Haderle
+  - Bruce Lindsay
+  - Hamid Pirahesh
+  - Peter Schwarz
+year: 1992
+source_url: https://research.ibm.com/publications/aries-a-transaction-recovery-method-supporting-fine-granularity-locking-and-partial-rollbacks-using-write-ahead-logging
+topics:
+  - transaction-processing
+reading_status: skipped
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

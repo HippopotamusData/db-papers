@@ -1,0 +1,17 @@
+title: On Optimistic Methods for Concurrency Control
+authors:
+  - H. T. Kung
+  - John T. Robinson
+year: 1981
+source_url: https://doi.org/10.1145/319566.319567
+topics:
+  - transaction-processing
+  - concurrency-control
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

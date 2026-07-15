@@ -1,0 +1,23 @@
+title: 'Neo: A Learned Query Optimizer'
+authors:
+  - Ryan Marcus
+  - Parimarjan Negi
+  - Hongzi Mao
+  - Chi Zhang
+  - Mohammad Alizadeh
+  - Tim Kraska
+  - Olga Papaemmanouil
+  - Nesime Tatbul
+year: 2019
+source_url: https://www.vldb.org/pvldb/vol12/p1705-marcus.pdf
+topics:
+  - query-optimization
+  - ai-for-databases
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

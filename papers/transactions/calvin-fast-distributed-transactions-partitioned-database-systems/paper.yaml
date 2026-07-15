@@ -1,0 +1,21 @@
+title: 'Calvin: Fast Distributed Transactions for Partitioned Database Systems'
+authors:
+  - Alexander Thomson
+  - Thaddeus Diamond
+  - Shu-Chun Weng
+  - Kun Ren
+  - Philip Shao
+  - Daniel J. Abadi
+year: 2012
+source_url: https://doi.org/10.1145/2213836.2213838
+topics:
+  - transaction-processing
+  - concurrency-control
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5

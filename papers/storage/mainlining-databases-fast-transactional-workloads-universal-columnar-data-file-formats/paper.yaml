@@ -1,0 +1,20 @@
+title: 'Mainlining Databases: Supporting Fast Transactional Workloads on Universal Columnar Data File Formats'
+authors:
+  - Tianyu Li
+  - Matthew Butrovich
+  - Amadou Ngom
+  - Wan Shen Lim
+  - Wes McKinney
+  - Andrew Pavlo
+year: 2021
+source_url: https://db.cs.cmu.edu/papers/2020/p534-li.pdf
+topics:
+  - storage-engine
+reading_status: translated
+rating:
+  score: 2.5
+  influence_breadth: 2
+  technical_value: 3
+  practical_diffusion: 1
+  durability: 3
+  reader_payoff: 3

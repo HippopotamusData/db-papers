@@ -1,0 +1,22 @@
+title: Language Models Enable Simple Systems for Generating Structured Views of Heterogeneous Data Lakes
+authors:
+  - Simran Arora
+  - Brandon Yang
+  - Sabri Eyuboglu
+  - Avanika Narayan
+  - Andrew Hojel
+  - Immanuel Trummer
+  - Christopher Ré
+year: 2023
+source_url: https://doi.org/10.14778/3626292.3626294
+topics:
+  - language-models-for-data
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

@@ -1,0 +1,20 @@
+title: Main Memory Database Systems
+authors:
+  - Franz Faerber
+  - Alfons Kemper
+  - Per-Åke Larson
+  - Justin Levandoski
+  - Thomas Neumann
+  - Andrew Pavlo
+year: 2016
+source_url: http://justinlevandoski.org/papers/fnt-mmdb.pdf
+topics:
+  - storage-engine
+reading_status: skipped
+rating:
+  score: 3.5
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 5

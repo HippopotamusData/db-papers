@@ -1,0 +1,27 @@
+title: 'Palimpzest: Optimizing AI-Powered Analytics with Declarative Query Processing'
+authors:
+  - Chunwei Liu
+  - Matthew Russo
+  - Michael Cafarella
+  - Lei Cao
+  - Peter Baile Chen
+  - Zui Chen
+  - Michael Franklin
+  - Tim Kraska
+  - Samuel Madden
+  - Rana Shahout
+  - Gerardo Vitagliano
+year: 2025
+source_url: https://www.vldb.org/cidrdb/2025/palimpzest-optimizing-ai-powered-analytics-with-declarative-query-processing.html
+topics:
+  - query-optimization
+  - language-models-for-data
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 2.5
+  influence_breadth: 2
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 2
+  reader_payoff: 4

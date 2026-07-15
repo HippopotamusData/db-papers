@@ -1,0 +1,26 @@
+title: 'Presto: SQL on Everything'
+authors:
+  - Raghav Sethi
+  - Martin Traverso
+  - Dain Sundstrom
+  - David Phillips
+  - Wenlei Xie
+  - Yutian Sun
+  - Nezih Yigitbasi
+  - Haozhun Jin
+  - Eric Hwang
+  - Nileema Shingte
+  - Christopher Berner
+year: 2019
+source_url: https://trino.io/Presto_SQL_on_Everything.pdf
+topics:
+  - query-execution
+  - data-federation
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

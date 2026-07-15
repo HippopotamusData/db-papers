@@ -1,0 +1,16 @@
+title: Adaptive Optimization of Very Large Join Queries
+authors:
+  - Thomas Neumann
+  - Bernhard Radke
+year: 2018
+source_url: https://db.in.tum.de/~radke/papers/hugejoins.pdf
+topics:
+  - query-optimization
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4

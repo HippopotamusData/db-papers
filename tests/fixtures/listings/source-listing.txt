@@ -1,0 +1,9 @@
+The vectorized probe loop is shown below.
+
+for (auto tuple : input) {
+    if (tuple.key == key) {
+        return tuple.value;
+    }
+}
+
+Listing 1: Vectorized hash-table probe loop

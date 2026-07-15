@@ -1,0 +1,37 @@
+title: 'Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores'
+authors:
+  - Michael Armbrust
+  - Tathagata Das
+  - Liwen Sun
+  - Burak Yavuz
+  - Shixiong Zhu
+  - Mukul Murthy
+  - Joseph Torres
+  - Herman van Hovell
+  - Adrian Ionescu
+  - Alicja Łuszczak
+  - Michał Świtakowski
+  - Michał Szafrański
+  - Xiao Li
+  - Takuya Ueshin
+  - Mostafa Mokhtar
+  - Peter Boncz
+  - Ali Ghodsi
+  - Sameer Paranjpye
+  - Pieter Senster
+  - Reynold Xin
+  - Matei Zaharia
+year: 2020
+source_url: https://doi.org/10.14778/3415478.3415560
+topics:
+  - storage-engine
+  - cloud-native
+  - lakehouse
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 4
+  reader_payoff: 5

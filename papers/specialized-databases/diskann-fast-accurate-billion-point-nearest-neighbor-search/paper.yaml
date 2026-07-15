@@ -1,0 +1,21 @@
+title: 'DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node'
+authors:
+  - Suhas Jayaram Subramanya
+  - Fnu Devvrit
+  - Harsha Vardhan Simhadri
+  - Ravishankar Krishnawamy
+  - Rohan Kadekodi
+year: 2019
+source_url: https://papers.nips.cc/paper_files/paper/2019/hash/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Abstract.html
+topics:
+  - vector-search
+  - indexing
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 4

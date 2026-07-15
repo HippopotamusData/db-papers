@@ -1,0 +1,18 @@
+title: 'Starling: A Scalable Query Engine on Cloud Function Services'
+authors:
+  - Matthew Perron
+  - Raul Castro Fernandez
+  - David DeWitt
+  - Samuel Madden
+year: 2019
+source_url: https://arxiv.org/pdf/1911.11727.pdf
+topics:
+  - cloud-native
+reading_status: translated
+rating:
+  score: 2.5
+  influence_breadth: 2
+  technical_value: 4
+  practical_diffusion: 1
+  durability: 3
+  reader_payoff: 3

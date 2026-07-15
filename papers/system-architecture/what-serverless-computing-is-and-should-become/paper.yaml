@@ -1,0 +1,23 @@
+title: 'What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing'
+authors:
+  - Johann Schleier-Smith
+  - Vikram Sreekanti
+  - Anurag Khandelwal
+  - Joao Carreira
+  - Neeraja J. Yadwadkar
+  - Raluca Ada Popa
+  - Joseph E. Gonzalez
+  - Ion Stoica
+  - David A. Patterson
+year: 2021
+source_url: https://dl.acm.org/doi/pdf/10.1145/3406011
+topics:
+  - cloud-native
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 4
+  reader_payoff: 5

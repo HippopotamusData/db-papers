@@ -1,0 +1,29 @@
+title: 'System R: Relational Approach to Database Management'
+authors:
+  - Morton M. Astrahan
+  - Mike W. Blasgen
+  - Donald D. Chamberlin
+  - Kapali P. Eswaran
+  - Jim Gray
+  - Patricia P. Griffiths
+  - W. Frank King III
+  - Raymond A. Lorie
+  - Paul R. McJones
+  - James W. Mehl
+  - Gianfranco R. Putzolu
+  - Irving L. Traiger
+  - Bradford W. Wade
+  - Vera Watson
+year: 1976
+source_url: https://research.ibm.com/publications/system-r-relational-approach-to-database-management
+topics:
+  - database-system-design
+  - relational-model
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

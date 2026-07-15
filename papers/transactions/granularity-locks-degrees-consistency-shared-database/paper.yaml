@@ -1,0 +1,19 @@
+title: Granularity of Locks and Degrees of Consistency in a Shared Data Base
+authors:
+  - Jim Gray
+  - Raymond A. Lorie
+  - Gianfranco R. Putzolu
+  - Irving L. Traiger
+year: 1976
+source_url: https://www.seas.upenn.edu/~zives/05s/cis650/papers/granularity-locks.pdf
+topics:
+  - transaction-processing
+  - concurrency-control
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

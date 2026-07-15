@@ -1,0 +1,16 @@
+title: The Design of POSTGRES
+authors:
+  - Michael Stonebraker
+  - Lawrence A. Rowe
+year: 1985
+source_url: https://www2.eecs.berkeley.edu/Pubs/TechRpts/1985/602.html
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

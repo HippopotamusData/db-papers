@@ -1,0 +1,19 @@
+title: Can Foundation Models Wrangle Your Data?
+authors:
+  - Avanika Narayan
+  - Ines Chami
+  - Laurel Orr
+  - Christopher Ré
+year: 2022
+source_url: https://www.vldb.org/pvldb/vol16/p738-narayan.pdf
+topics:
+  - language-models-for-data
+  - ai-for-databases
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

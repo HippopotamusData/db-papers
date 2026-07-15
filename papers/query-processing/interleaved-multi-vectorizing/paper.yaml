@@ -1,0 +1,17 @@
+title: Interleaved Multi-Vectorizing
+authors:
+  - Zhuhe Fang
+  - Beilei Zheng
+  - Chuliang Weng
+year: 2019
+source_url: http://www.vldb.org/pvldb/vol13/p226-fang.pdf
+topics:
+  - vectorized-execution
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 3

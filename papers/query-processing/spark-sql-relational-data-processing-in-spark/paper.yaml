@@ -1,0 +1,25 @@
+title: 'Spark SQL: Relational Data Processing in Spark'
+authors:
+  - Michael Armbrust
+  - Reynold S. Xin
+  - Cheng Lian
+  - Yin Huai
+  - Davies Liu
+  - Joseph K. Bradley
+  - Xiangrui Meng
+  - Tomer Kaftan
+  - Michael J. Franklin
+  - Ali Ghodsi
+  - Matei Zaharia
+year: 2015
+source_url: https://cs.stanford.edu/~matei/papers/2015/sigmod_spark_sql.pdf
+topics:
+  - query-execution
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5

@@ -1,0 +1,38 @@
+title: 'Milvus: A Purpose-Built Vector Data Management System'
+authors:
+  - Jianguo Wang
+  - Xiaomeng Yi
+  - Rentong Guo
+  - Hai Jin
+  - Peng Xu
+  - Shengjun Li
+  - Xiangyu Wang
+  - Xiangzhou Guo
+  - Chengming Li
+  - Xiaohai Xu
+  - Kun Yu
+  - Yuxing Yuan
+  - Yinghao Zou
+  - Jiquan Long
+  - Yudong Cai
+  - Zhenxiang Li
+  - Zhifeng Zhang
+  - Yihua Mo
+  - Jun Gu
+  - Ruiyi Jiang
+  - Yi Wei
+  - Charles Xie
+year: 2021
+source_url: https://doi.org/10.1145/3448016.3457550
+topics:
+  - database-system-design
+  - vector-search
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 4
+  reader_payoff: 4

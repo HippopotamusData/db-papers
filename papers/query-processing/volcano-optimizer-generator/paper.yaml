@@ -1,0 +1,16 @@
+title: 'The Volcano Optimizer Generator: Extensibility and Efficient Search'
+authors:
+  - Goetz Graefe
+  - William J. McKenna
+year: 1993
+source_url: https://doi.org/10.1109/ICDE.1993.344061
+topics:
+  - query-optimization
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 5

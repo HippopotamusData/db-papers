@@ -1,0 +1,17 @@
+title: Rethinking SIMD Vectorization for In-Memory Databases
+authors:
+  - Orestis Polychroniou
+  - Arun Raghavan
+  - Kenneth A. Ross
+year: 2015
+source_url: http://www.cs.columbia.edu/~orestis/sigmod15.pdf
+topics:
+  - vectorized-execution
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4

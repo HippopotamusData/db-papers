@@ -1,0 +1,16 @@
+title: 'LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation'
+authors:
+  - Chris Lattner
+  - Vikram Adve
+year: 2003
+source_url: https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf
+topics:
+  - query-compilation
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 3

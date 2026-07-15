@@ -1,0 +1,21 @@
+title: Amazon Redshift and the Case for Simpler Data Warehouses
+authors:
+  - Anurag Gupta
+  - Deepak Agarwal
+  - Derek Tan
+  - Jakub Kulesza
+  - Rahul Pathak
+  - Stefano Stefani
+  - Vidhya Srinivasan
+year: 2015
+source_url: https://www.amazon.science/publications/amazon-redshift-and-the-case-for-simpler-data-warehouses
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 4

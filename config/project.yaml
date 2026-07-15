@@ -1,0 +1,15 @@
+schema_version: 2
+project:
+  target_language: zh-CN
+  canonical_metadata: paper.yaml
+  source_pdf: source.pdf
+  translation_file: translation.md
+
+translation_policy:
+  max_source_pages: 60
+  require_complete_references: true
+  allow_whole_page_images_in_reading_path: false
+
+records:
+  paper_policy: config/paper-policy.yaml
+  acceptance_ledger: config/acceptance.yaml

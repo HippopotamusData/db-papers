@@ -1,0 +1,44 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  archive-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y make perl poppler-utils ripgrep
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade "pip>=25.1"
+          python -m pip install --group dev
+      - name: Check maintainer environment
+        run: make doctor
+      - name: Run tests
+        run: make test
+      - name: Validate archive and generated catalog
+        run: make check
+      - name: Check whitespace
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            git diff --check "origin/$BASE_REF...HEAD"
+          elif [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE_SHA^{commit}"; then
+            git diff --check "$BEFORE_SHA..$CURRENT_SHA"
+          else
+            git show --check --format= HEAD
+          fi

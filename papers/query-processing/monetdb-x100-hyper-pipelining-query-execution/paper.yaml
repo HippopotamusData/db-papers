@@ -1,0 +1,17 @@
+title: 'MonetDB/X100: Hyper-Pipelining Query Execution'
+authors:
+  - Peter Boncz
+  - Marcin Żukowski
+  - Niels Nes
+year: 2005
+source_url: https://www.cidrdb.org/cidr2005/papers/P19.pdf
+topics:
+  - vectorized-execution
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

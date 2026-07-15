@@ -1,0 +1,19 @@
+title: The Notions of Consistency and Predicate Locks in a Database System
+authors:
+  - Kapali P. Eswaran
+  - Jim Gray
+  - Raymond A. Lorie
+  - Irving L. Traiger
+year: 1976
+source_url: https://research.ibm.com/publications/the-notions-of-consistency-and-predicate-locks-in-a-database-system
+topics:
+  - transaction-processing
+  - concurrency-control
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 5

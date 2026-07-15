@@ -1,0 +1,50 @@
+title: 'F1 Query: Declarative Querying at Scale'
+authors:
+  - Bart Samwel
+  - John Cieslewicz
+  - Ben Handy
+  - Jason Govig
+  - Petros Venetis
+  - Chanjun Yang
+  - Keith Peters
+  - Jeff Shute
+  - Daniel Tenedorio
+  - Himani Apte
+  - Felix Weigel
+  - David Wilhite
+  - Jiacheng Yang
+  - Jun Xu
+  - Jiexing Li
+  - Zhan Yuan
+  - Craig Chasseur
+  - Qiang Zeng
+  - Ian Rae
+  - Anurag Biyani
+  - Andrew Harn
+  - Yang Xia
+  - Andrey Gubichev
+  - Amr El-Helw
+  - Orri Erling
+  - Zhepeng Yan
+  - Mohan Yang
+  - Yiqun Wei
+  - Thanh Do
+  - Colin Zheng
+  - Goetz Graefe
+  - Somayeh Sardashti
+  - Ahmed M. Aly
+  - Divy Agrawal
+  - Ashish Gupta
+  - Shiv Venkataraman
+year: 2018
+source_url: http://www.vldb.org/pvldb/vol11/p1835-samwel.pdf
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 4

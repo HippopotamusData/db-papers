@@ -1,0 +1,16 @@
+title: Towards Practical Vectorized Analytical Query Engines
+authors:
+  - Orestis Polychroniou
+  - Kenneth A. Ross
+year: 2019
+source_url: https://dl.acm.org/doi/pdf/10.1145/3329785.3329928
+topics:
+  - vectorized-execution
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 3

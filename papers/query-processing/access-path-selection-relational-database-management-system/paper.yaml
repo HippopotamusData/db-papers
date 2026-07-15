@@ -1,0 +1,19 @@
+title: Access Path Selection in a Relational Database Management System
+authors:
+  - Patricia G. Selinger
+  - Morton M. Astrahan
+  - Donald D. Chamberlin
+  - Raymond A. Lorie
+  - Thomas G. Price
+year: 1979
+source_url: https://research.ibm.com/publications/access-path-selection-in-a-relational-database-management-system
+topics:
+  - query-optimization
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

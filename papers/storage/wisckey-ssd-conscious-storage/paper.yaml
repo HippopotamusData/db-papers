@@ -1,0 +1,18 @@
+title: 'WiscKey: Separating Keys from Values in SSD-conscious Storage'
+authors:
+  - Lanyue Lu
+  - Thanumalayan Sankaranarayana Pillai
+  - Andrea C. Arpaci-Dusseau
+  - Remzi H. Arpaci-Dusseau
+year: 2016
+source_url: https://www.usenix.org/conference/fast16/technical-sessions/presentation/lu
+topics:
+  - storage-engine
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

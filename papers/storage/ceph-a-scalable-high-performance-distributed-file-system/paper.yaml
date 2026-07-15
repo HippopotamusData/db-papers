@@ -1,0 +1,20 @@
+title: 'Ceph: A Scalable, High-Performance Distributed File System'
+authors:
+  - Sage A. Weil
+  - Scott A. Brandt
+  - Ethan L. Miller
+  - Darrell D. E. Long
+  - Carlos Maltzahn
+year: 2006
+source_url: https://www.usenix.org/legacy/events/osdi06/tech/full_papers/weil/weil.pdf
+topics:
+  - distributed-storage
+  - file-system
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 4

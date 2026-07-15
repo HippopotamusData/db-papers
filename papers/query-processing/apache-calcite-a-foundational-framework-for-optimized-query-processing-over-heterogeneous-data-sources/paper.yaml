@@ -1,0 +1,20 @@
+title: 'Apache Calcite: A Foundational Framework for Optimized Query Processing Over Heterogeneous Data Sources'
+authors:
+  - Edmon Begoli
+  - Jesús Camacho-Rodríguez
+  - Julian Hyde
+  - Michael J. Mior
+  - Daniel Lemire
+year: 2018
+source_url: https://arxiv.org/pdf/1802.10233.pdf
+topics:
+  - query-optimization
+  - data-federation
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

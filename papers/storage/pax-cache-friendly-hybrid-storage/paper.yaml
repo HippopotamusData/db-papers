@@ -1,0 +1,18 @@
+title: Weaving Relations for Cache Performance
+authors:
+  - Anastassia Ailamaki
+  - David J. DeWitt
+  - Mark D. Hill
+  - Marios Skounakis
+year: 2001
+source_url: https://www.vldb.org/conf/2001/P169.pdf
+topics:
+  - storage-engine
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5

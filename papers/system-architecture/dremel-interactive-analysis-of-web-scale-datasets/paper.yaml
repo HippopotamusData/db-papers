@@ -1,0 +1,21 @@
+title: 'Dremel: Interactive Analysis of Web-Scale Datasets'
+authors:
+  - Sergey Melnik
+  - Andrey Gubarev
+  - Jing Jing Long
+  - Geoffrey Romer
+  - Shiva Shivakumar
+  - Matt Tolton
+  - Theo Vassilakis
+year: 2010
+source_url: https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/36632.pdf
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

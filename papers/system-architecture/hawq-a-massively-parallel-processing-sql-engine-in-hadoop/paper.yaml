@@ -1,0 +1,25 @@
+title: 'HAWQ: A Massively Parallel Processing SQL Engine in Hadoop'
+authors:
+  - Lei Chang
+  - Zhanwei Wang
+  - Tao Ma
+  - Lirong Jian
+  - Lili Ma
+  - Alon Goldshuv
+  - Luke Lonergan
+  - Jeffrey Cohen
+  - Caleb Welton
+  - Gavin Sherry
+  - Milind Bhandarkar
+year: 2014
+source_url: https://doi.org/10.1145/2588555.2595636
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 2
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 3
+  reader_payoff: 3

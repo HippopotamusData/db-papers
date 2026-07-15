@@ -1,0 +1,32 @@
+title: The Snowflake Elastic Data Warehouse
+authors:
+  - Benoit Dageville
+  - Thierry Cruanes
+  - Marcin Zukowski
+  - Vadim Antonov
+  - Artin Avanes
+  - Jon Bock
+  - Jonathan Claybaugh
+  - Daniel Engovatov
+  - Martin Hentschel
+  - Jiansheng Huang
+  - Allison W. Lee
+  - Ashish Motivala
+  - Abdul Q. Munir
+  - Steven Pelley
+  - Peter Povinec
+  - Greg Rahn
+  - Spyridon Triantafyllis
+  - Philipp Unterbrunner
+year: 2016
+source_url: https://doi.org/10.1145/2882903.2903741
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

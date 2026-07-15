@@ -1,0 +1,20 @@
+title: Speedy Transactions in Multicore In-Memory Databases
+authors:
+  - Stephen Tu
+  - Wenting Zheng
+  - Eddie Kohler
+  - Barbara Liskov
+  - Samuel Madden
+year: 2013
+source_url: https://people.csail.mit.edu/stephentu/papers/silo.pdf
+topics:
+  - transaction-processing
+  - concurrency-control
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 5

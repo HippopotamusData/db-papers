@@ -1,0 +1,40 @@
+title: 'Photon: A Fast Query Engine for Lakehouse Systems'
+authors:
+  - Alexander Behm
+  - Shoumik Palkar
+  - Utkarsh Agarwal
+  - Timothy Armstrong
+  - David Cashman
+  - Ankur Dave
+  - Todd Greenstein
+  - Shant Hovsepian
+  - Ryan Johnson
+  - Arvind Sai Krishnan
+  - Paul Leventis
+  - Ala Luszczak
+  - Prashanth Menon
+  - Mostafa Mokhtar
+  - Gene Pang
+  - Sameer Paranjpye
+  - Greg Rahn
+  - Bart Samwel
+  - Tom van Bussel
+  - Herman van Hovell
+  - Maryann Xue
+  - Reynold Xin
+  - Matei Zaharia
+year: 2022
+source_url: https://doi.org/10.1145/3514221.3526054
+topics:
+  - query-execution
+  - vectorized-execution
+  - cloud-native
+  - lakehouse
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4

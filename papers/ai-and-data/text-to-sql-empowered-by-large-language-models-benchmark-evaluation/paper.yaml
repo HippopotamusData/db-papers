@@ -1,0 +1,22 @@
+title: 'Text-to-SQL Empowered by Large Language Models: A Benchmark Evaluation'
+authors:
+  - Dawei Gao
+  - Haibin Wang
+  - Yaliang Li
+  - Xiuyu Sun
+  - Yichen Qian
+  - Bolin Ding
+  - Jingren Zhou
+year: 2024
+source_url: https://doi.org/10.14778/3641204.3641221
+topics:
+  - language-models-for-data
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 3
+  reader_payoff: 4

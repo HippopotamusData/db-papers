@@ -1,0 +1,17 @@
+title: 'DuckDB: an Embeddable Analytical Database'
+authors:
+  - Mark Raasveldt
+  - Hannes Mühleisen
+year: 2019
+source_url: https://duckdb.org/library/duckdb/
+topics:
+  - database-system-design
+  - analytical-database
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 4
+  reader_payoff: 4

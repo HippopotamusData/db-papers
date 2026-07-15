@@ -1,0 +1,19 @@
+title: The Design and Implementation of Modern Column-Oriented Database Systems
+authors:
+  - Daniel Abadi
+  - Peter Boncz
+  - Stavros Harizopoulos
+  - Stratos Idreos
+  - Samuel Madden
+year: 2012
+source_url: https://stratos.seas.harvard.edu/files/stratos/files/columnstoresfntdbs.pdf
+topics:
+  - storage-engine
+reading_status: skipped
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 5
+  reader_payoff: 5

@@ -1,0 +1,37 @@
+title: 'Impala: A Modern, Open-Source SQL Engine for Hadoop'
+authors:
+  - Marcel Kornacker
+  - Alexander Behm
+  - Victor Bittorf
+  - Taras Bobrovytsky
+  - Casey Ching
+  - Alan Choi
+  - Justin Erickson
+  - Martin Grund
+  - Daniel Hecht
+  - Matthew Jacobs
+  - Ishaan Joshi
+  - Lenni Kuff
+  - Dileep Kumar
+  - Alex Leblang
+  - Nong Li
+  - Ippokratis Pandis
+  - Henry Robinson
+  - David Rorke
+  - Silvius Rus
+  - John Russell
+  - Dimitris Tsirogiannis
+  - Skye Wanderman-Milne
+  - Michael Yoder
+year: 2015
+source_url: http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf
+topics:
+  - query-execution
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

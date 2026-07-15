@@ -1,0 +1,25 @@
+title: 'X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing'
+authors:
+  - Gui Huang
+  - Xuntao Cheng
+  - Jianying Wang
+  - Yujie Wang
+  - Dengcheng He
+  - Tieying Zhang
+  - Feifei Li
+  - Sheng Wang
+  - Wei Cao
+  - Qiang Li
+year: 2019
+source_url: https://www.cs.utah.edu/~lifeifei/papers/sigmod-xengine.pdf
+topics:
+  - storage-engine
+  - transaction-processing
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4

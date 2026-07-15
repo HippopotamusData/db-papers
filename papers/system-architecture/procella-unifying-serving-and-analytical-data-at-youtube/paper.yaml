@@ -1,0 +1,36 @@
+title: 'Procella: Unifying serving and analytical data at YouTube'
+authors:
+  - Biswapesh Chattopadhyay
+  - Priyam Dutta
+  - Weiran Liu
+  - Ott Tinn
+  - Andrew Mccormick
+  - Aniket Mokashi
+  - Paul Harvey
+  - Hector Gonzalez
+  - David Lomax
+  - Sagar Mittal
+  - Roee Ebenstein
+  - Nikita Mikhaylin
+  - Hung-ching Lee
+  - Xiaoyan Zhao
+  - Tony Xu
+  - Luis Perez
+  - Farhad Shahmohammadi
+  - Tran Bui
+  - Neil McKay
+  - Selcuk Aya
+  - Vera Lychagina
+  - Brett Elliott
+year: 2019
+source_url: http://www.vldb.org/pvldb/vol12/p2022-chattopadhyay.pdf
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 4

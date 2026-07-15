@@ -1,0 +1,20 @@
+title: 'Apache Flink™: Stream and Batch Processing in a Single Engine'
+authors:
+  - Paris Carbone
+  - Stephan Ewen
+  - Seif Haridi
+  - Asterios Katsifodimos
+  - Volker Markl
+  - Kostas Tzoumas
+year: 2015
+source_url: http://sites.computer.org/debull/A15dec/p28.pdf
+topics:
+  - stream-processing
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 4

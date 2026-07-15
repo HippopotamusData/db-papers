@@ -1,0 +1,16 @@
+title: The Ubiquitous B-Tree
+authors:
+  - Douglas Comer
+year: 1979
+source_url: https://doi.org/10.1145/356770.356776
+topics:
+  - storage-engine
+  - indexing
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 5

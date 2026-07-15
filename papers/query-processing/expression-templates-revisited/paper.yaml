@@ -1,0 +1,18 @@
+title: 'Expression Templates Revisited: A Performance Analysis of the Current ET Methodology'
+authors:
+  - Klaus Iglberger
+  - Georg Hager
+  - Jan Treibig
+  - Ulrich Rüde
+year: 2011
+source_url: https://arxiv.org/pdf/1104.1729.pdf
+topics:
+  - query-execution
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 4
+  reader_payoff: 2

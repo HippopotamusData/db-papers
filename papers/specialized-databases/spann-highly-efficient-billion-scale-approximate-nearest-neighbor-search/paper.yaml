@@ -1,0 +1,24 @@
+title: 'SPANN: Highly-efficient Billion-scale Approximate Nearest Neighbor Search'
+authors:
+  - Qi Chen
+  - Bing Zhao
+  - Haidong Wang
+  - Mingqin Li
+  - Chuanjie Liu
+  - Zengzhong Li
+  - Mao Yang
+  - Jingdong Wang
+year: 2021
+source_url: https://proceedings.neurips.cc/paper/2021/hash/299dc35e747eb77177d9cea10a802da2-Abstract.html
+topics:
+  - vector-search
+  - indexing
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 4
+  reader_payoff: 4

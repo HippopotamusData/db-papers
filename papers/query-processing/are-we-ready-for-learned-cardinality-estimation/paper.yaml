@@ -1,0 +1,20 @@
+title: Are We Ready For Learned Cardinality Estimation?
+authors:
+  - Xiaoying Wang
+  - Changbo Qu
+  - Weiyuan Wu
+  - Jiannan Wang
+  - Qingqing Zhou
+year: 2021
+source_url: https://doi.org/10.14778/3461535.3461552
+topics:
+  - cardinality-estimation
+  - ai-for-databases
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

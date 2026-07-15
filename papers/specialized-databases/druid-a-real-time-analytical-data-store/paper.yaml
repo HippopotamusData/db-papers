@@ -1,0 +1,20 @@
+title: 'Druid: A Real-time Analytical Data Store'
+authors:
+  - Fangjin Yang
+  - Eric Tschetter
+  - Xavier Léauté
+  - Nelson Ray
+  - Gian Merlino
+  - Deep Ganguli
+year: 2014
+source_url: http://static.druid.io/docs/druid.pdf
+topics:
+  - analytical-database
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 4

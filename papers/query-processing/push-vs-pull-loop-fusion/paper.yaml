@@ -1,0 +1,17 @@
+title: Push vs. Pull-Based Loop Fusion in Query Engines
+authors:
+  - Amir Shaikhha
+  - Mohammad Dashti
+  - Christoph Koch
+year: 2016
+source_url: https://arxiv.org/abs/1610.09166
+topics:
+  - query-execution
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

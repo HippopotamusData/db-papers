@@ -1,0 +1,20 @@
+title: Optimizing Queries over Partitioned Tables in MPP Systems
+authors:
+  - Lyublena Antova
+  - Amr El-Helw
+  - Mohamed A. Soliman
+  - Zhongxian Gu
+  - Michalis Petropoulos
+  - Florian Waas
+year: 2014
+source_url: https://d1fto35gcfffzn.cloudfront.net/big-data/white-paper/OptimizingQueriesOverPartitionedTablesInMPPSystems.pdf
+topics:
+  - query-optimization
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4

@@ -1,0 +1,22 @@
+title: 'Learned Cardinalities: Estimating Correlated Joins with Deep Learning'
+authors:
+  - Andreas Kipf
+  - Thomas Kipf
+  - Bernhard Radke
+  - Viktor Leis
+  - Peter Boncz
+  - Alfons Kemper
+year: 2019
+source_url: https://vldb.org/cidrdb/2019/learned-cardinalities-estimating-correlated-joins-with-deep-learning.html
+topics:
+  - query-optimization
+  - cardinality-estimation
+  - ai-for-databases
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 4

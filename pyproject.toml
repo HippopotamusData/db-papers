@@ -1,0 +1,5 @@
+[dependency-groups]
+dev = [
+    "PyYAML>=6.0,<7",
+    "Pillow>=10,<13",
+]

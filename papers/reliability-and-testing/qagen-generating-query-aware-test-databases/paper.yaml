@@ -1,0 +1,18 @@
+title: 'QAGen: Generating Query-Aware Test Databases'
+authors:
+  - Carsten Binnig
+  - Donald Kossmann
+  - Eric Lo
+  - M. Tamer Özsu
+year: 2007
+source_url: https://cs.uwaterloo.ca/~tozsu/publications/other/sigmod07-final.pdf
+topics:
+  - database-testing
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 3

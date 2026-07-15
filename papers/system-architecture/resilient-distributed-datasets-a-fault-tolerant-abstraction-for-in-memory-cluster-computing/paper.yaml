@@ -1,0 +1,23 @@
+title: 'Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing'
+authors:
+  - Matei Zaharia
+  - Mosharaf Chowdhury
+  - Tathagata Das
+  - Ankur Dave
+  - Justin Ma
+  - Murphy McCauley
+  - Michael J. Franklin
+  - Scott Shenker
+  - Ion Stoica
+year: 2012
+source_url: http://people.csail.mit.edu/matei/papers/2012/nsdi_spark.pdf
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

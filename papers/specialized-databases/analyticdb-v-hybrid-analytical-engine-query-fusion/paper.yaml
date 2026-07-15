@@ -1,0 +1,24 @@
+title: 'AnalyticDB-V: A Hybrid Analytical Engine Towards Query Fusion for Structured and Unstructured Data'
+authors:
+  - Chuangxian Wei
+  - Bin Wu
+  - Sheng Wang
+  - Renjie Lou
+  - Chaoqun Zhan
+  - Feifei Li
+  - Yuanzhe Cai
+year: 2020
+source_url: https://doi.org/10.14778/3415478.3415541
+topics:
+  - analytical-database
+  - query-optimization
+  - vector-search
+  - databases-for-ai
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 4
+  reader_payoff: 3

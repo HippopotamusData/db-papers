@@ -1,0 +1,17 @@
+title: Architecture of a Database System
+authors:
+  - Joseph M. Hellerstein
+  - Michael Stonebraker
+  - James Hamilton
+year: 2007
+source_url: https://dsf.berkeley.edu/papers/fntdb07-architecture.pdf
+topics:
+  - database-overview
+reading_status: skipped
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 5

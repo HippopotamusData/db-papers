@@ -1,0 +1,58 @@
+title: 'Napa: Powering Scalable Data Warehousing with Robust Query Performance at Google'
+authors:
+  - Ankur Agiwal
+  - Kevin Lai
+  - Gokul Nath Babu Manoharan
+  - Indrajit Roy
+  - Jagan Sankaranarayanan
+  - Hao Zhang
+  - Tao Zou
+  - Min Chen
+  - Zongchang (Jim) Chen
+  - Ming Dai
+  - Thanh Do
+  - Haoyu Gao
+  - Haoyan Geng
+  - Raman Grover
+  - Bo Huang
+  - Yanlai Huang
+  - Zhi (Adam) Li
+  - Jianyi Liang
+  - Tao Lin
+  - Li Liu
+  - Yao Liu
+  - Xi Mao
+  - Yalan (Maya) Meng
+  - Prashant Mishra
+  - Jay Patel
+  - Rajesh S. R.
+  - Vijayshankar Raman
+  - Sourashis Roy
+  - Mayank Singh Shishodia
+  - Tianhang Sun
+  - Ye (Justin) Tang
+  - Junichi Tatemura
+  - Sagar Trehan
+  - Ramkumar Vadali
+  - Prasanna Venkatasubramanian
+  - Gensheng Zhang
+  - Kefei Zhang
+  - Yupu Zhang
+  - Zeleng Zhuang
+  - Goetz Graefe
+  - Divyakant Agrawal
+  - Jeff Naughton
+  - Sujata Kosalge
+  - Hakan Hacıgümüş
+year: 2021
+source_url: http://vldb.org/pvldb/vol14/p2986-sankaranarayanan.pdf
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4

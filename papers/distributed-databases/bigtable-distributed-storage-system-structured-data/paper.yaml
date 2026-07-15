@@ -1,0 +1,24 @@
+title: 'Bigtable: A Distributed Storage System for Structured Data'
+authors:
+  - Fay Chang
+  - Jeffrey Dean
+  - Sanjay Ghemawat
+  - Wilson C. Hsieh
+  - Deborah A. Wallach
+  - Mike Burrows
+  - Tushar Chandra
+  - Andrew Fikes
+  - Robert E. Gruber
+year: 2006
+source_url: https://research.google/pubs/bigtable-a-distributed-storage-system-for-structured-data/
+topics:
+  - distributed-storage
+  - storage-engine
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

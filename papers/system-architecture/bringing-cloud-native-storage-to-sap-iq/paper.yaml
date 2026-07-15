@@ -1,0 +1,22 @@
+title: Bringing Cloud-Native Storage to SAP IQ
+authors:
+  - Mohammed Abouzour
+  - Güneş Aluç
+  - Ivan T. Bowman
+  - Xi Deng
+  - Nandan Marathe
+  - Sagar Ranadive
+  - Muhammed Sharique
+  - John C. Smirnios
+year: 2021
+source_url: https://dl.acm.org/doi/abs/10.1145/3448016.3457563
+topics:
+  - cloud-native
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 2
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 3

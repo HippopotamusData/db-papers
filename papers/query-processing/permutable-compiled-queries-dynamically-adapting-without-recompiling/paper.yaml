@@ -1,0 +1,19 @@
+title: 'Permutable Compiled Queries: Dynamically Adapting Compiled Queries without Recompiling'
+authors:
+  - Prashanth Menon
+  - Amadou Ngom
+  - Lin Ma
+  - Todd C. Mowry
+  - Andrew Pavlo
+year: 2021
+source_url: https://db.cs.cmu.edu/papers/2020/p101-menon.pdf
+topics:
+  - query-compilation
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 4
+  reader_payoff: 3

@@ -1,0 +1,26 @@
+title: 'The Dataflow Model: A Practical Approach to Balancing Correctness, Latency, and Cost in Massive-Scale, Unbounded,
+  Out-of-Order Data Processing'
+authors:
+  - Tyler Akidau
+  - Robert Bradshaw
+  - Craig Chambers
+  - Slava Chernyak
+  - Rafael J. Fernández-Moctezuma
+  - Reuven Lax
+  - Sam McVeety
+  - Daniel Mills
+  - Frances Perry
+  - Eric Schmidt
+  - Sam Whittle
+year: 2015
+source_url: https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf
+topics:
+  - stream-processing
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

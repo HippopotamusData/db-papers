@@ -1,0 +1,16 @@
+title: Low-Latency Compilation of SQL Queries to Machine Code
+authors:
+  - Henning Funke
+  - Jens Teubner
+year: 2021
+source_url: https://vldb.org/pvldb/vol14/p2691-funke.pdf
+topics:
+  - query-compilation
+reading_status: translated
+rating:
+  score: 2.5
+  influence_breadth: 2
+  technical_value: 3
+  practical_diffusion: 2
+  durability: 3
+  reader_payoff: 3
