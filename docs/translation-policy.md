@@ -27,18 +27,36 @@
 - 参考文献按原编号完整恢复为结构化列表，不使用“详见原文”或摘要列表代替。
 - 最终阅读路径不得包含 TODO、contact sheet、候选裁图、覆盖索引、返工日志、自检表或“人工确认后通过”等过程残留。
 
-## GitHub 公式语法
+## 可移植公式语法
 
-译文以 GitHub Markdown 的 MathJax 渲染结果为公式兼容基线；GitBook 不是验收目标。为了减少渲染器差异，按以下规则书写：
+译文只使用 GitHub、GitBook 与 VS Code Markdown 预览的共同子集。Markdown 先于数学渲染器处理源文本；“KaTeX 能解析”不等于“Markdown 会把该文本交给 KaTeX”。按以下规则书写：
 
-- 普通行内公式使用 `$...$`。内容会与 Markdown 语法冲突或包含字面量美元符号时，使用 GitHub 的 ``$`...`$`` 形式，并把公式内的字面量美元符号写成 `\$`。
-- 块级公式优先把起止 `$$` 各放在独立行。GitHub 官方支持的 `math` fenced block 也可使用；不得改写为 `latex`、`tex` 或波浪线 math fence。
-- 不使用 `\(...\)` 或 `\[...\]`，GitHub 不把它们作为 Markdown 数学分隔符。`equation`、`aligned` 等环境必须放在上述块级数学分隔符内部。
-- 优先使用 `\min`、`\max`、`\log`、`\exp` 等内建算子。GitHub 会拒绝 `\operatorname`；没有内建命令的自定义名称写成 `\mathrm{Name}`，自然语言注释才使用 `\text{...}`。
-- 不在译文中用 `\def`、`\newcommand`、`\DeclareMathOperator`、`\require` 等命令定义宏或改变渲染器配置；公式应当自包含。
-- 原文公式编号使用 `\tag{n}` 保留，并保持正文引用一致；语法迁移不得改动变量、上下标、运算关系、数值或编号。
+- 行内公式只使用 `$...$`。起始 `$` 只能位于逻辑行首、ASCII 空格或 ASCII 左括号后；中文正文统一写成 `变量 $x$`、`相应地， $\Delta_S$`。结束 `$` 后可直接接中文标点，但不得紧贴 ASCII 字母、数字或 `_`；完整标识符应放在同一公式中。
+- 不用更换中文括号来规避边界问题。混合括注优先改写为普通句子；纯数学括号可写成 `($x$)`。不写 `（$x$）`、`（相应地，$x$）`、`Top-$k$` 或 `$k$NN`。
+- 块级公式的两个 `$$` 各自独占一行。顶层公式不缩进；列表项中的公式必须整块退出列表缩进。块引用可使用前缀一致的 `> $$`。不得使用单行 `$$...$$`。
+- 不使用 GitHub 专有的 ``$`...`$``，不使用 `math`、`latex` 或 `tex` fenced block，也不使用 `\(...\)` 或 `\[...\]`。`aligned`、`cases` 等环境放在独立 `$$` 块内。
+- 公式不放在 Markdown 脚注定义、整段斜体或图片 alt 文本中。含公式的注释直接写入普通正文；图片 alt 使用纯文本，正式公式放在图注中。
+- 字面美元符号写成 `\$`。公式中不使用会被 Markdown 吞掉的 `\_`、`\{`、`\}`、`\,`、`\;`、`\!`、`\#`、`\%` 或 `\|`；分别改为结构化下标、`\lbrace`/`\rbrace`、`\thinspace`/`\thickspace`/`\negthinspace`、`\char"0023{}`、`\char"0025{}` 和 `\Vert`。字面 snake_case 优先移到代码跨度；必须保留在公式中时，字面下划线使用 `\char"005F{}`。
+- 公式中的原始 `<`、`>` 和 `*` 分别写成 `\lt`、`\gt` 和 `\ast`。Markdown 可把紧跟右花括号等标点的 `_` 当成强调符；必须保留此种下标顺序时，在 `_` 前写无输出的 `\relax`。仅表示方法名后缀的 P/S/O 下标可用 Unicode `ₚ`/`ₛ`/`ₒ`。
+- Markdown 表格中的公式不得含原始 `|`，绝对值使用 `\lvert`/`\rvert`，条件符使用 `\mid`。GitHub 还会抑制含连续字面 `select` 的公式；必须在公式中保留该单词时，用无输出空组打断为 `selec{}t`。
+- 优先使用 `\min`、`\max`、`\log`、`\exp` 等内建算子。GitHub 拒绝 `\operatorname`；没有内建命令的名称使用 `\mathrm{Name}`，自然语言注释才使用 `\text{...}`。不用 `\def`、`\newcommand`、`\DeclareMathOperator`、`\require` 等命令改变渲染器配置，不引用未定义的自定义命令。
+- TeX 命令只写一个反斜杠，例如 `\Delta_S`；`\\` 只用作块级公式内部的显式换行。原文公式编号使用 `\tag{n}` 保留。语法迁移不得改动变量、上下标、运算关系、数值或编号。
 
-`scripts/validate_github_math.py` 是已知不兼容写法的静态门禁，不替代公式语义审校。GitHub 出现新的确定性渲染错误时，先添加回归用例和明确替代规则，再迁移存量译文。
+`scripts/validate_github_math.py` 对上述子集执行硬门禁，`draft` 也不允许确定性渲染错误。`make normalize-math` 只做语义不变的机械迁移，`make check` 会用 `normalize-math-check` 防止可自动修正的写法回流。这些检查不替代公式语义审校。
+
+当修改全局规则、大批量迁移公式，或发现新的平台差异时，还要执行实际渲染审计：
+
+```bash
+# KATEX_MODULE 指向待验证 VS Code 所使用的 KaTeX 模块目录
+find papers -mindepth 3 -maxdepth 3 -name translation.md -exec \
+  .venv/bin/python scripts/verify_math_rendering.py --katex-module "$KATEX_MODULE" {} +
+
+# 需要已登录 gh 和网络；逐文件比对 GitHub 实际产生的 math-renderer 节点及 TeX 文本
+find papers -mindepth 3 -maxdepth 3 -name translation.md -exec \
+  .venv/bin/python scripts/verify_math_rendering.py --github {} +
+```
+
+任何平台出现新的确定性渲染错误时，先添加最小回归用例和明确替代规则，再迁移存量译文。
 
 ## 审校要求
 

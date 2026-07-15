@@ -127,19 +127,19 @@ LSM-tree 的优势来自两个相乘的因素：多页块 I/O 的单位成本 `C
 考虑大小为 `S` MB、访问率为 `H` IOPS 的数据。若以磁盘容量和磁盘臂 I/O 能力中较大的需求配置磁盘，其成本为：
 
 $$
-COST_D = \max(S\,COST_d,\; H\,COST_P).
+COST_D = \max(S\thinspace{}COST_d,\thickspace{} H\thinspace{}COST_P).
 $$
 
 若数据缓存在内存中，仍须在磁盘保留一份，成本为：
 
 $$
-COST_B = S\,COST_m + S\,COST_d.
+COST_B = S\thinspace{}COST_m + S\thinspace{}COST_d.
 $$
 
 因此总成本取两种方案中的较小者：
 
 $$
-COST_{TOT}=\min\left(\max(S\,COST_d,H\,COST_P),\;S\,COST_m+S\,COST_d\right).
+COST_{TOT}=\min\left(\max(S\thinspace{}COST_d,H\thinspace{}COST_P),\thickspace{}S\thinspace{}COST_m+S\thinspace{}COST_d\right).
 $$
 
 把单位数据访问率 `H/S` 称为数据的**温度**。冻结点和沸点分别为：
@@ -151,7 +151,7 @@ $$
 以 1995 年的典型值为例：内存每 MB 100 美元，磁盘介质每 MB 1 美元；随机 I/O 能力的成本为每 IOPS 25 美元，多页块 I/O 能力为每 IOPS 2.5 美元。于是 `T_f=0.04`、`T_b=4` 次 I/O/秒/MB。对于 4 KB 页，按沸点换算的经济缓冲引用间隔为：
 
 $$
-\tau=\frac{1}{\text{page-size}\cdot T_b}=62.5\text{ 秒}。
+\tau=\frac{1}{\text{page-size}\cdot T_b}=62.5\text{ 秒}
 $$
 
 ![图 3：访问成本与数据温度的关系](assets/figure-3-1-temperature.png)

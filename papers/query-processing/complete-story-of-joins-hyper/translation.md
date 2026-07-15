@@ -47,8 +47,8 @@ $$
 它使用谓词 $p$ 计算关系 $T_1$ 和 $T_2$ 中所有匹配条目的组合。大多数 SQL 查询都会用到它，但在存在相关子查询时，这一定义并不充分。子查询必须对外层查询的每个元组求值，因此定义依赖连接（dependent join）为：
 
 $$
-T_1 \Join^{dep}_p T_2 :=
-\{t_1 \circ t_2 \mid t_1 \in T_1 \land t_2 \in T_2(t_1) \land p(t_1 \circ t_2)\}
+T_1 \Join^{dep}\relax_p T_2 :=
+\lbrace{}t_1 \circ t_2 \mid t_1 \in T_1 \land t_2 \in T_2(t_1) \land p(t_1 \circ t_2)\rbrace{}
 $$
 
 其中，右侧输入会针对左侧输入的每个元组求值。按照约定，只有右侧可以依赖左侧，左侧不能依赖右侧。用 $A(T)$ 表示表达式 $T$ 产生的属性，用 $F(T)$ 表示表达式 $T$ 中出现的自由变量。为了求值依赖连接，必须满足 $F(T_2) \subseteq A(T_1)$，也就是说 $T_2$ 需要的属性必须由 $T_1$ 产生。依赖连接及其变换规则构成 HyPer 去嵌套技术的基础，该技术已在此前 BTW 论文中描述 [NK15]。
@@ -56,24 +56,24 @@ $$
 此外还有半连接、反半连接、左外连接和全外连接：
 
 $$
-T_1 \ltimes_p T_2 := \{t_1 \mid t_1 \in T_1 \land \exists t_2 \in T_2: p(t_1 \circ t_2)\}
+T_1 \ltimes_p T_2 := \lbrace{}t_1 \mid t_1 \in T_1 \land \exists t_2 \in T_2: p(t_1 \circ t_2)\rbrace{}
 $$
 
 $$
-T_1 \bar{\ltimes}_p T_2 := \{t_1 \mid t_1 \in T_1 \land \nexists t_2 \in T_2: p(t_1 \circ t_2)\}
+T_1 \bar{\ltimes}\relax_p T_2 := \lbrace{}t_1 \mid t_1 \in T_1 \land \nexists t_2 \in T_2: p(t_1 \circ t_2)\rbrace{}
 $$
 
 $$
-T_1 \leftouterjoin_p T_2 :=
+T_1 \mathbin{\Join_{\mathrm{left}}}\relax_p T_2 :=
 (T_1 \Join_p T_2) \cup
-\{t_1 \circ (a:\mathrm{null})_{a \in A(T_2)} \mid t_1 \in (T_1 \bar{\ltimes}_p T_2)\}
+\lbrace{}t_1 \circ (a:\mathrm{null})\relax_{a \in A(T_2)} \mid t_1 \in (T_1 \bar{\ltimes}\relax_p T_2)\rbrace{}
 $$
 
 $$
-T_1 \fullouterjoin_p T_2 :=
+T_1 \mathbin{\Join_{\mathrm{full}}}\relax_p T_2 :=
 (T_1 \Join_p T_2)
-\cup \{t_1 \circ (a:\mathrm{null})_{a \in A(T_2)} \mid t_1 \in (T_1 \bar{\ltimes}_p T_2)\}
-\cup \{(a:\mathrm{null})_{a \in A(T_1)} \circ t_2 \mid t_2 \in (T_2 \bar{\ltimes}_p T_1)\}
+\cup \lbrace{}t_1 \circ (a:\mathrm{null})\relax_{a \in A(T_2)} \mid t_1 \in (T_1 \bar{\ltimes}\relax_p T_2)\rbrace{}
+\cup \lbrace{}(a:\mathrm{null})\relax_{a \in A(T_1)} \circ t_2 \mid t_2 \in (T_2 \bar{\ltimes}\relax_p T_1)\rbrace{}
 $$
 
 这些连接变体也都有对应的依赖连接版本，其定义与依赖内连接类似。
@@ -82,8 +82,8 @@ $$
 
 $$
 \Gamma_{A; a:f}(e) :=
-\{x \circ (a:f(y)) \mid x \in \Pi_A(e) \land
-y = \{z \mid z \in e \land \forall a \in A: x.a = z.a\}\}
+\lbrace{}x \circ (a:f(y)) \mid x \in \Pi_A(e) \land
+y = \lbrace{}z \mid z \in e \land \forall a \in A: x.a = z.a\rbrace{}\rbrace{}
 $$
 
 它按照属性集合 $A$ 对输入 $e$ 分组，并计算一个或多个聚合函数以产生聚合属性。如果 $A$ 为空，则只产生一个聚合元组，这对应 SQL 中缺失 `GROUP BY` 子句的情形。
@@ -129,7 +129,7 @@ from Professors,
 这里的子查询依赖外层连接，因此不能使用笛卡尔积。相关子查询必须通过依赖连接加入：
 
 $$
-Professors \Join^{dep}_{true}
+Professors \Join^{dep}\relax_{true}
 \Gamma_{\emptyset,total:sum(ECTS)}
 (\sigma_{PersId=Lecturer}(Courses))
 $$
@@ -157,7 +157,7 @@ $$
 T_1 \Join^1_p T_2 :=
 \begin{cases}
 \text{runtime error}, & \text{if some } t_1 \in T_1 \text{ has more than one matching } t_2 \in T_2 \\
-T_1 \leftouterjoin_p T_2, & \text{otherwise}
+T_1 \mathbin{\Join_{\mathrm{left}}}\relax_p T_2, & \text{otherwise}
 \end{cases}
 $$
 
@@ -195,15 +195,15 @@ where exists (select *
 本文引入标记连接，它创建一个新属性，用于标记某个元组是否具有连接伙伴：
 
 $$
-T_1 \Join^{M:m}_p T_2 :=
-\{t_1 \circ (m:(\exists t_2 \in T_2: p(t_1 \circ t_2))) \mid t_1 \in T_1\}
+T_1 \Join^{M:m}\relax_p T_2 :=
+\lbrace{}t_1 \circ (m:(\exists t_2 \in T_2: p(t_1 \circ t_2))) \mid t_1 \in T_1\rbrace{}
 $$
 
 使用标记连接，可以把上述查询翻译成相对普通的连接查询：
 
 $$
 \sigma_{m \lor Sabbatical}
-(Professors \Join^{M:m}_{PersId=Lecturer} Courses)
+(Professors \Join^{M:m}\relax_{PersId=Lecturer} Courses)
 $$
 
 如果标记只用于合取谓词，查询优化器通常可以把标记连接转换成半连接或反半连接。但一般情况下不能这样做，例如析取会阻止这种转换。即便如此，标记连接仍然可以高效求值，使用哈希时通常是 $O(n)$，因此引入该算子不会给查询优化器造成问题。
@@ -221,7 +221,7 @@ from Courses c1
 可以直接翻译成标记连接：
 
 $$
-Courses\ c1 \Join^{M:someEqual}_{c1.ECTS=c2.ECTS}
+Courses\ c1 \Join^{M:someEqual}\relax_{c1.ECTS=c2.ECTS}
 \sigma_{c2.Lecturer=123}(Courses\ c2)
 $$
 
@@ -285,7 +285,7 @@ where p.PersId = a.Boss
 
 $$
 (\sigma_{m \lor Sabbatical}
-(Professors \Join^{M:m}_{PersId=Lecturer} Courses))
+(Professors \Join^{M:m}\relax_{PersId=Lecturer} Courses))
 \Join_{PersId=Boss} Assistants
 $$
 
@@ -513,10 +513,10 @@ for each r in H
 
 ### 5.7 非等值连接（Non-Equi Joins）
 
-等值连接最常见，但并不是唯一的连接类型。一般而言，连接谓词可以是任意表达式，而这并不总能用哈希连接求值。在讨论一般情形前，先考虑“近似”等值连接，例如 $R_{a=b \land c>d} S$。这类谓词有一个等值部分，可以用哈希连接求值，而且通常应该这样做。但对非等值部分必须小心处理。对内连接，可以拆分谓词：
+等值连接最常见，但并不是唯一的连接类型。一般而言，连接谓词可以是任意表达式，而这并不总能用哈希连接求值。在讨论一般情形前，先考虑“近似”等值连接，例如 $R_{a=b \land c\gt{}d} S$。这类谓词有一个等值部分，可以用哈希连接求值，而且通常应该这样做。但对非等值部分必须小心处理。对内连接，可以拆分谓词：
 
 $$
-R_{a=b \land c>d} S \equiv \sigma_{c>d}(R_{a=b} S)
+R_{a=b \land c\gt{}d} S \equiv \sigma_{c\gt{}d}(R_{a=b} S)
 $$
 
 这很容易回答。但对外连接等情形，这种拆分是不正确的，额外限制必须在连接过程中直接求值，以避免错误结果。对于 HyPer 这类编译型数据库系统 [Ne11]，这种组合求值很自然；但 Vectorwise [ZB12] 之类系统需要额外逻辑，才能在哈希连接中求值任意表达式。注意，连接条件的非等值部分也可能返回 `NULL`，这对标记连接相关；如果当前标记为 `FALSE`，该结果会产生 `NULL` 标记。

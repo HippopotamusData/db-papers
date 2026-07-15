@@ -160,9 +160,9 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
   github_math_issues=$("$PYTHON" scripts/validate_github_math.py "$translation")
   github_math_status=$?
   if (( github_math_status == 1 )); then
-    quality_issue "$translation contains GitHub-incompatible math syntax: $github_math_issues"
+    fail "$translation contains non-portable math syntax: $github_math_issues"
   elif (( github_math_status != 0 )); then
-    fail "$translation GitHub math validation failed (exit=$github_math_status)"
+    fail "$translation portable math validation failed (exit=$github_math_status)"
   fi
 
   h1=$(awk '/^# /{print; exit}' "$translation")

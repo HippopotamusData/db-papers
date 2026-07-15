@@ -25,7 +25,7 @@
 
 `make doctor` 检查项目所需工具及版本。维护环境需要 Python 3.11+、pip 25.1+ 和 `pyproject.toml` 的 `dev` dependency group、GNU Make 3.81+、ripgrep、Poppler（`pdfinfo`、`pdftotext`、`pdftoppm`）、Perl 5.30+，以及兼容 POSIX 选项的 `sed`、`awk`、`find`、`sort`、`mktemp`。
 
-macOS 可执行 `brew install make ripgrep poppler perl`，再执行 `python3 -m pip install --upgrade "pip>=25.1"` 和 `python3 -m pip install --group dev`。读者可见标题约定变化时使用 `make normalize-headers` 做机械迁移；`make check` 会检查规范标题和译者说明。
+macOS 可执行 `brew install make ripgrep poppler perl`，再执行 `python3 -m pip install --upgrade "pip>=25.1"` 和 `python3 -m pip install --group dev`。读者可见标题约定变化时使用 `make normalize-headers` 做机械迁移；可移植公式规则变化时使用 `make normalize-math`。`make check` 会同时检查规范标题、译者说明和公式规范化漂移。
 
 ## 验证
 
@@ -36,3 +36,5 @@ make check
 make deep-check  # 修改校验器或全局翻译策略时
 make diff-check
 ```
+
+公式校验器或全局公式策略变更还应按 `docs/translation-policy.md` 执行 VS Code 同版 KaTeX 与 GitHub Markdown API 实际渲染审计。外部审计依赖本机 VS Code 运行时、已登录的 `gh` 和网络，因此不纳入无网络的 `make check`；审计结果必须在完成报告中明确列出。

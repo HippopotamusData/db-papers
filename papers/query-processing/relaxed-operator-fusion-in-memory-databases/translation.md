@@ -218,7 +218,7 @@ $$
 2^n
 $$
 
-在 AVX2 256-bit register 处理 8 个 4-byte 整数时，$n=8$，共有 $2^8=256$ 个 mask。每个 mask 存储 8-byte permutation，因此表大小为：
+在 AVX2 256-bit register 处理 8 个 4-byte 整数时， $n=8$，共有 $2^8=256$ 个 mask。每个 mask 存储 8-byte permutation，因此表大小为：
 
 $$
 2^8 \times 8 = 2\text{KB}

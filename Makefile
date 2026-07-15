@@ -1,6 +1,6 @@
 PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 
-.PHONY: catalog catalog-check metadata-check normalize-headers normalize-headers-check validate deep-validate paper-check diff-check test doctor check deep-check
+.PHONY: catalog catalog-check metadata-check normalize-headers normalize-headers-check normalize-math normalize-math-check validate deep-validate paper-check diff-check test doctor check deep-check
 
 catalog:
 	$(PYTHON) scripts/papers.py catalog
@@ -16,6 +16,12 @@ normalize-headers:
 
 normalize-headers-check:
 	$(PYTHON) scripts/normalize_translation_headers.py --check
+
+normalize-math:
+	find papers -mindepth 3 -maxdepth 3 -name translation.md -exec $(PYTHON) scripts/normalize_portable_math.py {} +
+
+normalize-math-check:
+	find papers -mindepth 3 -maxdepth 3 -name translation.md -exec $(PYTHON) scripts/normalize_portable_math.py --check {} +
 
 validate:
 	PYTHON=$(PYTHON) bash scripts/validate_translations.sh
@@ -36,6 +42,6 @@ test:
 doctor:
 	PYTHON=$(PYTHON) bash scripts/doctor.sh
 
-check: test validate catalog-check normalize-headers-check
+check: test validate catalog-check normalize-headers-check normalize-math-check
 
-deep-check: test deep-validate catalog-check normalize-headers-check
+deep-check: test deep-validate catalog-check normalize-headers-check normalize-math-check

@@ -246,7 +246,7 @@ WHERE insertion_epoch > t_lastmove(Sr)
 
 若不存在这种 cover，说明 Sr 某些 tuple 已在远端站点移入 RS。虽然仍可查询远端，但若不取回整个 RS 并与本地 RS segment 求差，就难以识别目标 tuple，代价显然很高。
 
-若这种情况常见，可让 tuple mover 为每个移动 tuple 记录：其在 RS 中的 storage key，以及它移出 WS 前的 storage key 和 epoch number。日志可截断到所有站点 WS 中最老 tuple 的时间戳，因为更早 tuple 不会再需恢复。恢复站点可结合远端 WS segment S 与 tuple-mover log 执行上述查询，即使 $t_{\mathrm{lastmove}}(S) > t_{\mathrm{lastmove}}(S_r)$。
+若这种情况常见，可让 tuple mover 为每个移动 tuple 记录：其在 RS 中的 storage key，以及它移出 WS 前的 storage key 和 epoch number。日志可截断到所有站点 WS 中最老 tuple 的时间戳，因为更早 tuple 不会再需恢复。恢复站点可结合远端 WS segment S 与 tuple-mover log 执行上述查询，即使 $t_{\mathrm{lastmove}}(S) \gt{} t_{\mathrm{lastmove}}(S_r)$。
 
 站点 r 还需重建本地存储、由 Sr 充当 sender 的 join-index WS 部分。只需查询远端 receivers；对方生成 tuple 时计算 join index，并将对应 WS partition 连同恢复列传回。
 

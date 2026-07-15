@@ -78,7 +78,7 @@ write amplification 指写到底层存储设备的数据量与用户请求写入
 read amplification 有两个来源。第一，查找一个 key-value pair 时，LevelDB 可能需要检查多层。最坏情况下，需要检查 `L0` 的 8 个文件，以及其他 6 层各一个文件，共 14 个文件。第二，在 SSTable 内查找 key-value pair 时，还需读取 index block、bloom-filter blocks 和 data block。以 1KB key-value pair 为例，可能需要读 16KB index block、4KB bloom filter block 和 4KB data block，总计 24KB。若乘以最坏 14 个 SSTable 文件，read amplification 可达 336。
 
 $$
-\text{Read amplification}_{\text{worst}} = 24 \times 14 = 336
+\text{Read amplification}\relax_{\text{worst}} = 24 \times 14 = 336
 $$
 
 ![图 2：LevelDB 在 1GB 与 100GB 数据库上的写放大与读放大。](assets/figures/figure-02-write-read-amplification.png)
@@ -167,7 +167,7 @@ WiscKey 可配置为周期性启动垃圾回收，也可在触发后持续运行
 $$
 \langle b_1 b_2 b_3 \ldots b_n \rangle
 \xrightarrow{\text{append } \langle b_{n+1} b_{n+2} \ldots b_{n+m}\rangle}
-\langle b_1 b_2 b_3 \ldots b_n b_{n+1} b_{n+2} \ldots b_{n+x}\rangle,\quad x < m
+\langle b_1 b_2 b_3 \ldots b_n b_{n+1} b_{n+2} \ldots b_{n+x}\rangle,\quad x \lt{} m
 $$
 
 查询 key-value pair 时，如果 key 在 LSM-tree 中找不到，WiscKey 与传统 LSM-tree 行为相同：即使 value 在崩溃前写入过 vLog，也会在之后垃圾回收。若 key 能在 LSM-tree 中找到，WiscKey 还会验证 value address 是否落在 vLog 当前有效范围内，并验证读出的 value 是否对应查询 key。如果验证失败，WiscKey 假定 value 在崩溃中丢失，从 LSM-tree 删除该 key，并告知用户 key not found。每个 vLog value 的 header 包含对应 key，因此验证 key 与 value 是否匹配很直接；必要时也可在 header 中加入 magic number 或 checksum。

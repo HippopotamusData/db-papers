@@ -93,10 +93,10 @@ PostgreSQL 的优化器遵循传统教材架构。它用动态规划枚举连接
 
 连接结果大小使用以下公式估计：
 
-```math
+$$
 |T_1 \bowtie_{x=y} T_2| =
 \frac{|T_1||T_2|}{\max(dom(x), dom(y))}
-```
+$$
 
 其中 `T1` 和 `T2` 是任意表达式，`dom(x)` 是属性 `x` 的域基数，即 `x` 的不同值数量。这是连接基数估计的主要输入。总结起来，PostgreSQL 的基数估计器基于以下假设：
 
@@ -112,18 +112,18 @@ PostgreSQL 查询引擎接受物理算子计划，并用 Volcano 风格解释执
 
 例如链式查询：
 
-```math
+$$
 \sigma_{x=5}(A) \bowtie_{A.bid=B.id} B \bowtie_{B.cid=C.id} C
-```
+$$
 
 其中间结果包括：
 
-```math
+$$
 \sigma_{x=5}(A),
 \sigma_{x=5}(A) \bowtie B,
 B \bowtie C,
 \sigma_{x=5}(A) \bowtie B \bowtie C
-```
+$$
 
 外键索引和索引嵌套循环连接还会引入额外中间结果大小。例如，如果 `A.bid` 上有非唯一索引，还需要估计 `A \bowtie B` 和 `A \bowtie B \bowtie C`，因为选择条件 `A.x = 5` 只能在从 `A.bid` 索引取回所有匹配元组之后应用。
 
@@ -259,9 +259,9 @@ PostgreSQL 文档指出，确定理想代价变量没有明确方法，最好把
 
 直觉上，图 8 中的直线对应理想代价模型：更昂贵查询总被赋予更高代价。我们将偏离这条线解释为代价模型预测误差。对查询 `Q`，使用绝对百分比误差：
 
-```math
+$$
 \epsilon(Q)=\frac{|T_{real}(Q)-T_{pred}(Q)|}{T_{real}(Q)}
-```
+$$
 
 其中 `T_real` 是观测运行时间，`T_pred` 是线性模型预测运行时间。使用 PostgreSQL 默认代价模型和真实基数时，代价模型中位误差为 38%。
 
@@ -279,14 +279,14 @@ PostgreSQL 文档指出，确定理想代价变量没有明确方法，最好把
 
 PostgreSQL 代价模型相当复杂。这种复杂性应当反映影响查询执行的各类因素，例如磁盘 seek/read 速度和 CPU 处理成本。为判断这种复杂性在主内存场景下是否真的必要，我们将其与一个非常简单的代价函数 `C_mm` 比较。该函数面向主内存场景，不建模 I/O 成本，只统计查询执行过程中通过每个算子的元组数：
 
-```math
+$$
 C_{mm}(T)=
 \begin{cases}
 \tau \cdot |R| & \text{if } T=R \lor T=\sigma(R) \\
 |T| + C_{mm}(T_1)+C_{mm}(T_2) & \text{if } T=T_1 \bowtie_{HJ} T_2 \\
 C_{mm}(T_1)+\lambda\cdot|T_1|\cdot \max(\frac{|T_1 \bowtie R|}{|T_1|},1) & \text{if } T=T_1 \bowtie_{INL} T_2,\ T_2=R \lor T_2=\sigma(R)
 \end{cases}
-```
+$$
 
 其中 `R` 是基关系，`tau <= 1` 是相对连接折扣表扫描成本的参数。该代价函数区分哈希连接（HJ）和索引嵌套循环连接（INL）：后者扫描 `T1`，并在 `R` 上索引查找，避免全表扫描 `R`。当索引嵌套循环右侧有选择条件时，函数考虑基表索引中的元组查找数量，并基本从代价计算中丢弃选择条件。对索引嵌套循环，我们用常数 `lambda >= 1` 近似索引查找比哈希表查找贵多少，具体设置为 `lambda = 2`、`tau = 0.2`。和前文实验一样，当 inner relation 不是索引查找时禁用嵌套循环连接。
 
