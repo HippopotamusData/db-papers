@@ -152,6 +152,20 @@ class PapersTests(unittest.TestCase):
             sha256(root / "papers/query-processing/sample-paper/translation.md"),
         )
 
+    def test_accept_rejects_legacy_migration_as_runtime_action(self) -> None:
+        root = self.make_root("draft")
+        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        ledger_path = root / "config/acceptance.yaml"
+        original_metadata = metadata_path.read_text(encoding="utf-8")
+        original_ledger = ledger_path.read_text(encoding="utf-8")
+        stderr = io.StringIO()
+        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
+            result = papers.accept_record("sample-paper", "legacy-migration", [])
+        self.assertEqual(result, 1)
+        self.assertIn("runtime review action", stderr.getvalue())
+        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
+        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
+
     def test_acceptance_preflight_failure_rolls_back_ledger_and_status(self) -> None:
         root = self.make_root("draft")
         metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"

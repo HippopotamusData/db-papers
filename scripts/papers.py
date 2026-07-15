@@ -21,7 +21,7 @@ from project_config import (
     ALLOW_WHOLE_PAGE_IMAGES_IN_READING_PATH,
     METADATA_FILE,
     REQUIRE_COMPLETE_REFERENCES,
-    REVIEW_ACTIONS,
+    RUNTIME_REVIEW_ACTIONS,
     SLUG_RE,
     SOURCE_FILE,
     TARGET_LANGUAGE,
@@ -725,9 +725,10 @@ def accept_record(paper_id: str, review_action: str, waivers: list[str]) -> int:
     if not source.is_file() or not translation.is_file():
         print("ERROR: acceptance requires source.pdf and translation.md", file=sys.stderr)
         return 1
-    if review_action not in REVIEW_ACTIONS:
+    if review_action not in RUNTIME_REVIEW_ACTIONS:
         print(
-            "ERROR: review action must be one of: " + ", ".join(sorted(REVIEW_ACTIONS)),
+            "ERROR: runtime review action must be one of: "
+            + ", ".join(sorted(RUNTIME_REVIEW_ACTIONS)),
             file=sys.stderr,
         )
         return 1
@@ -811,7 +812,9 @@ def main() -> int:
     new_parser.add_argument("--url", required=True, help="authoritative source URL")
     accept_parser = subparsers.add_parser("accept", help="record hashes after manual review and set translated")
     accept_parser.add_argument("--id", required=True, dest="paper_id")
-    accept_parser.add_argument("--review-action", required=True, choices=sorted(REVIEW_ACTIONS))
+    accept_parser.add_argument(
+        "--review-action", required=True, choices=sorted(RUNTIME_REVIEW_ACTIONS)
+    )
     accept_parser.add_argument("--waiver", action="append", default=[], choices=sorted(ACCEPTANCE_WAIVERS))
     args = parser.parse_args()
 

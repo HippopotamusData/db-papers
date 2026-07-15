@@ -33,6 +33,7 @@ REVIEW_ACTIONS = {
     "repair-review",
     "legacy-migration",
 }
+RUNTIME_REVIEW_ACTIONS = REVIEW_ACTIONS - {"legacy-migration"}
 ACCEPTANCE_WAIVERS = {
     "abridgement",
     "listings",

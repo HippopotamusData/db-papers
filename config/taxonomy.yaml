@@ -1,5 +1,6 @@
 schema_version: 1
 
+# areas 和 topics 的声明顺序决定目录展示顺序；不要按键名字母排序。
 # 一级领域决定物理目录。它应当稳定、互斥，并描述论文的主要研究对象。
 areas:
   foundations:

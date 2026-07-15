@@ -4,16 +4,24 @@
 
 Maintain a reader-first archive of database papers, complete Chinese translations, and direct reading-value ratings. Keep per-paper metadata minimal, use verifiable evidence, and never invent missing facts.
 
-## Sources of truth
+## Authority by information type
 
-Use this order when facts conflict:
+Resolve conflicts only within the same information type:
 
-1. The user's current scope and explicit overrides.
-2. The paper's `source.pdf` for paper content.
-3. The paper directory for its ID and primary area.
-4. The paper's `paper.yaml` for title, authors, year, source URL, topics, reading status, and an optional rating.
-5. Versioned values under `config/`; `scripts/project_config.py` defines their schemas and controlled codes.
-6. Active documents under `docs/`; use Git history for superseded policy and detailed review history.
+| Information | Authority |
+| --- | --- |
+| Paper content, numbers, formulas, and citations | `source.pdf` |
+| Paper ID and primary area | Directory path |
+| Title, authors, year, source URL, topics, reading status, and rating | `paper.yaml` |
+| Page policy, per-paper exceptions, and skip reasons | `config/policy.yaml` |
+| Controlled areas and topics | `config/taxonomy.yaml` |
+| Current accepted hashes, review action, and waivers | `config/acceptance.yaml` |
+| Config schemas and controlled codes | `scripts/project_config.py` |
+| Operation scope and write authority | The user's current request and the Autonomy section below |
+| Current procedures | Active documents under `docs/` |
+| Superseded policy and detailed review history | Git history |
+
+User scope controls what may be changed; it does not override facts stated by the paper.
 
 ## Task routing
 
@@ -26,7 +34,8 @@ Before acting, read only the document or documents listed for the task:
 | Score a paper's reading value | `docs/workflows/rating.md` |
 | Create or repair a translation | `docs/workflows/translate.md`, `docs/translation-policy.md` |
 | Coordinate a Codex translation batch with direct subagents | `docs/workflows/batch-translate.md`, `docs/translation-policy.md` |
-| Audit, repair, or accept a translation | `docs/workflows/review.md`, `docs/translation-policy.md` |
+| Audit/review a translation (read-only by default) | `docs/workflows/review.md`, `docs/translation-policy.md` |
+| Review-and-repair or accept a translation (explicit write authorization) | `docs/workflows/review.md`, `docs/translation-policy.md` |
 | Change required metadata fields | `docs/workflows/maintain.md`, `docs/workflows/metadata.md` |
 | Change rating structure | `docs/workflows/maintain.md`, `docs/workflows/rating.md` |
 | Change taxonomy, scripts, generated catalog, or maintainer environment | `docs/workflows/maintain.md` |

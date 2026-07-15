@@ -3,6 +3,7 @@
 set -uo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+source "$ROOT/scripts/acceptance_waivers.sh"
 cd "$ROOT"
 PYTHON=${PYTHON:-python3}
 target_paper_id=${PAPER_ID:-}
@@ -37,10 +38,12 @@ quality_issue() {
   fi
 }
 
-has_waiver() {
-  local waiver_list=$1
-  local expected=$2
-  [[ $'\t'"$waiver_list"$'\t' == *$'\t'"$expected"$'\t'* ]]
+record_observed_waiver() {
+  local waiver=$1
+  if ! has_waiver "$observed_acceptance_waivers" "$waiver"; then
+    [[ -z "$observed_acceptance_waivers" ]] || observed_acceptance_waivers+=$'\t'
+    observed_acceptance_waivers+="$waiver"
+  fi
 }
 
 for command_name in rg pdfinfo pdftotext perl sed awk find sort mktemp; do
@@ -79,6 +82,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
   record_count=$((record_count + 1))
   pdf="$dir/$source_name"
   translation="$dir/$translation_name"
+  observed_acceptance_waivers=""
 
   case "$reading_status" in
     unavailable)
@@ -199,6 +203,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
       if (( listing_status == 1 )); then
         quality_issue "$translation has deterministic source-listing errors: $listing_issues"
       elif (( listing_status == 3 )); then
+        record_observed_waiver "listings"
         if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "listings"; then
           echo "REVIEWED-RISK: $translation Listing candidates were manually disposed in acceptance ledger"
         elif [[ "$reading_status" == "draft" ]]; then
@@ -220,6 +225,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     source_words=$(pdftotext -raw "$pdf" - 2>/dev/null | perl -CSD -ne 'last if /^\s*(?:\d+\.?\s+)?REFERENCES\s*$/i; $n += () = /\b[A-Za-z]+(?:[-'"'"'][A-Za-z]+)*\b/g; END { print $n + 0 }')
     translated_cjk=$(perl -CSD -ne 'last if /^##\s*(?:参考文献|References)\s*$/i; $n += () = /[\x{3400}-\x{9fff}]/g; END { print $n + 0 }' "$translation")
     if awk -v s="$source_words" -v t="$translated_cjk" 'BEGIN { exit !(s > 0 && t / s < 0.50) }'; then
+      record_observed_waiver "abridgement"
       if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "abridgement"; then
         echo "REVIEWED-RISK: $translation high mechanical abridgement candidate was manually disposed in acceptance ledger"
       elif [[ "$reading_status" == "draft" ]]; then
@@ -228,6 +234,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
         fail "$translation has unresolved high mechanical abridgement risk (record disposition before acceptance): CJK/source-word ratio=$translated_cjk/$source_words (<0.50)"
       fi
     elif awk -v s="$source_words" -v t="$translated_cjk" 'BEGIN { exit !(s > 0 && t / s < 0.75) }'; then
+      record_observed_waiver "abridgement"
       if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "abridgement"; then
         echo "REVIEWED-RISK: $translation moderate mechanical abridgement candidate was manually disposed in acceptance ledger"
       elif [[ "$reading_status" == "draft" ]]; then
@@ -251,6 +258,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     if (( resource_status == 1 )); then
       quality_issue "$translation has deterministic resource/reference errors: $resource_issues"
     elif (( resource_status == 3 )); then
+      record_observed_waiver "resources"
       if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "resources"; then
         echo "REVIEWED-RISK: $translation resource candidates were manually disposed in acceptance ledger"
       elif [[ "$reading_status" == "draft" ]]; then
@@ -260,6 +268,18 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
       fi
     elif (( resource_status != 0 )); then
       fail "$translation resource validation failed (exit=$resource_status): $resource_issues"
+    fi
+  fi
+  if [[ "$reading_status" == "translated" ]]; then
+    # Candidate branches above report missing waivers with evidence; this set
+    # comparison enforces the reverse direction and rejects stale waivers.
+    waiver_mismatches=$(compare_acceptance_waivers "$acceptance_waivers" "$observed_acceptance_waivers")
+    waiver_match_status=$?
+    if (( waiver_match_status != 0 )); then
+      while IFS= read -r waiver_mismatch; do
+        [[ "$waiver_mismatch" == unused:* ]] || continue
+        fail "$translation records unused acceptance waiver ${waiver_mismatch#unused:}; no matching current mechanical candidate"
+      done <<< "$waiver_mismatches"
     fi
   fi
   rm -f "$source_text"

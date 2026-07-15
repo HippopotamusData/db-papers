@@ -21,17 +21,20 @@
 
 - `section-review`：现有完整译文已逐节审阅；
 - `full-translation-review`：新全文译文已交叉审阅；
-- `repair-review`：实质修复后的译文已复审；
-- `legacy-migration`：仅迁移既有已验收状态，不作新的语义声明。
+- `repair-review`：实质修复后的译文已复审。
 
-只有机械候选已回到 PDF 逐项处置后，才能按需添加 `--waiver abridgement`、`--waiver resources` 或 `--waiver listings`。没有对应候选时不记录 waiver；所有动作和 waiver 都由 CLI 与 schema 严格校验。
+`legacy-migration` 只兼容读取 schema v1 迁移来的历史条目，普通 `accept` 不接受该值，也不能用它验收新的文件哈希。
+
+只有机械候选已回到 PDF 逐项处置后，才能按需添加 `--waiver abridgement`、`--waiver resources` 或 `--waiver listings`。深度校验要求记录的 waiver 与当前候选逐项相等：候选缺 waiver 或 waiver 没有对应候选都会失败；确定性错误始终失败。
 
 ```bash
 python3 scripts/papers.py accept \
   --id <paper-id> \
-  --review-action <section-review|full-translation-review|repair-review|legacy-migration> \
+  --review-action <section-review|full-translation-review|repair-review> \
   [--waiver <abridgement|resources|listings>]
 ```
+
+`config/acceptance.yaml` 是每篇论文当前已验收版本的快照，不是事件日志；重新验收会替换旧条目，详细审校过程由 Git 历史保存。
 
 ## 审校证据
 
