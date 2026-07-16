@@ -17,6 +17,7 @@ from validate_github_math import (
     MathExpression,
     extract_math_expressions,
     extract_math_expressions_unchecked,
+    github_renderer_payload,
 )
 
 
@@ -52,7 +53,7 @@ def _load_expressions(
                 {
                     "path": str(path),
                     "line": _line(text, expression.offset),
-                    "text": expression.text,
+                    "text": github_renderer_payload(expression.text),
                     "display": expression.display,
                 }
             )
@@ -98,9 +99,10 @@ def _verify_mathjax(
 
 
 def _expected_renderer_text(expression: MathExpression) -> str:
+    payload = github_renderer_payload(expression.text)
     if expression.display:
-        return f"$$\n{expression.text}\n$$"
-    return f"${expression.text}$"
+        return f"$$\n{payload}\n$$"
+    return f"${payload}$"
 
 
 def _normalized_renderer_whitespace(value: str) -> str:

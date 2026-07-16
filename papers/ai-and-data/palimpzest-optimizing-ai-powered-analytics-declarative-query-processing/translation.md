@@ -122,8 +122,8 @@ PALIMPZEST 支持的逻辑关系算子见表 1。图 2 没有展示 `groupby`、
 
 | 算子 | 定义 | 算子 | 定义 |
 | --- | --- | --- | --- |
-| 投影（Project） | $\pi(\text{rel.}, \text{cols})$ | 分组（Group by） | $\Gamma(\text{rel.}, \text{group\char"005F{}cond.}, \text{agg.})$ |
-| 选择（Select） | $\sigma(\text{rel.}, \text{predicate})$ | 转换（Convert） | $\chi(\text{rel.}, \text{schema\char"005F{}a}, \text{schema\char"005F{}b})$ |
+| 投影（Project） | $\pi(\text{rel.}, \text{cols})$ | 分组（Group by） | $\Gamma(\text{rel.}, \text{group\\_cond.}, \text{agg.})$ |
+| 选择（Select） | $\sigma(\text{rel.}, \text{predicate})$ | 转换（Convert） | $\chi(\text{rel.}, \text{schema\\_a}, \text{schema\\_b})$ |
 | 限制（Limit） | $L(\text{rel.}, \text{limit})$ | 聚合（Aggregate） | $\alpha(\text{rel.}, \text{func})$ |
 
 **Convert。** `Convert` 算子把一个模式为 A 的有类型数据对象转换成模式为 B 的新对象，方法是计算模式 B 中存在、但模式 A 中没有显式存在的字段集合。`convert` 的一种物理实现使用 LLM：系统把模式 A 的字段作为键值对组织进提示词，同时加入用户提供的字段描述，再要求 LLM 为模式 B 生成输出字段。

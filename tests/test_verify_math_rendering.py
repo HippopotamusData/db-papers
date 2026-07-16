@@ -92,6 +92,21 @@ class VerifyMathRenderingTests(unittest.TestCase):
             _normalized_actual_renderer_text("$x&amp;amp;=y$"),
         )
 
+    def test_github_expected_payload_consumes_one_literal_escape(self) -> None:
+        expression = MathExpression(0, r"l\\_partkey=5\\%,serial\\#", False)
+        self.assertEqual(
+            _normalized_expected_renderer_text(expression),
+            r"$l\_partkey=5\%,serial\#$",
+        )
+
+    def test_loader_sends_github_payload_to_local_mathjax(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "translation.md"
+            path.write_text(r"正文 $l\\_partkey=5\\%,serial\\#$。", encoding="utf-8")
+            serialized, _ = _load_expressions([path])
+            self.assertEqual(serialized[0]["text"], r"l\_partkey=5\%,serial\#")
+            self.assertEqual(_verify_mathjax(serialized, self.mathjax), [])
+
     def test_unchecked_loader_uses_only_trusted_dollar_boundaries(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "translation.md"

@@ -35,6 +35,7 @@
 - **只用通用分隔符。** 行内公式写成 `$...$`；块公式的两个 `$$` 各自独占一行。不要使用数学代码围栏、`\(...\)`、`\[...\]` 或 GitHub 专有的反引号分隔形式。
 - **让公式成为独立的 Markdown 元素。** 不要把公式放进代码跨度、斜体、链接文字、脚注定义或图片 alt。公式与正文、标点或 Markdown 标记相邻时，按工具诊断添加 ASCII 空格或改写句子；不要自行发明兼容技巧。
 - **表格公式不用 ASCII 管道符。** 公式内不写 `|` 或 `\|`；根据原义人工选择绝对值、范数或关系符号。无法判断含义时停止并报告。
+- **字面标点使用 GitHub 可传递的 TeX 转义。** 公式中确需显示字面 `_`、`%` 或 `#` 时，Markdown 源码分别写成 `\\_`、`\\%` 或 `\\#`，使 GitHub 预处理后交给公式渲染器的是标准 `\_`、`\%` 或 `\#`。不要使用 `\char` 编码。
 - **只写自包含的 TeX，让工具判定兼容性。** 不定义宏、不更改渲染器设置，也不自行使用字符编码、拆词或空节点等兼容技巧。提交前运行 `make math-check`；对变更译文运行 `make math-audit-github FILES='path/to/translation.md'`。只有工具明确给出安全候选时，才可显式运行 `make fix-math FILES='path/to/translation.md'`。
 
 静态兼容错误在 `draft` 和 `translated` 状态下都直接失败。规则编号、GitHub 原因、安全修复边界和外部审计步骤见 `docs/portable-math-maintainers.md`；这些检查不替代公式语义审校。VS Code、Obsidian、Typora、GitLab 等阅读器属于 best-effort 兼容对象，不得以它们的限制为由改坏原公式。

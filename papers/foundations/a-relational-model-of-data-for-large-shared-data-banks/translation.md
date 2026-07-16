@@ -556,13 +556,13 @@ R  (s  p  j)     S  (p  j)     R'  (s  p  j)
 第一个例子中的关系集合只含以下关系：
 
 $$
-employee(serial\char"0023{},name,manager\char"0023{},managername),
+employee(serial\\#,name,manager\\#,managername),
 $$
 
 其中 `serial#` 是主键，`manager#` 是外键。用 $\Delta_t$ 表示活动域，并假设在所有时刻 $t$ 都有：
 
 $$
-\Delta_t(manager\char"0023{})\subset\Delta_t(serial\char"0023{})
+\Delta_t(manager\\#)\subset\Delta_t(serial\\#)
 $$
 
 以及
@@ -580,7 +580,7 @@ $$
 第二个例子中的关系集合包括：描述供应商、以 `s#` 为主键的关系 $S$；描述部门、以 `d#` 为主键的关系 $D$；描述项目、以 `j#` 为主键的关系 $J$；以及下列关系：
 
 $$
-P(s\char"0023{},d\char"0023{},\ldots),\qquad Q(s\char"0023{},j\char"0023{},\ldots),\qquad R(d\char"0023{},j\char"0023{},\ldots),
+P(s\\#,d\\#,\ldots),\qquad Q(s\\#,j\\#,\ldots),\qquad R(d\\#,j\\#,\ldots),
 $$
 
 其中每个省略号都表示 `s#`、`d#`、`j#` 以外的域。假设已知下述条件 $C$ 与时间无关：当且仅当供应商 $s$ 向分配给部门 $d$ 的某个项目 $j$ 供货（关系 $Q$ 与关系 $R$）时，供应商 $s$ 才向部门 $d$ 供货（关系 $P$）。于是可以写出：
