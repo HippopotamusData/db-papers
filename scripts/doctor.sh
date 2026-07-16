@@ -96,6 +96,7 @@ import PIL
 import yaml
 
 markdown_it_version = version("markdown-it-py")
+mdurl_version = version("mdurl")
 
 
 def major_minor(version: str) -> tuple[int, int]:
@@ -107,14 +108,17 @@ if not ((6, 0) <= major_minor(yaml.__version__) < (7, 0)):
     raise SystemExit(f"ERROR: PyYAML >=6.0,<7 is required (found {yaml.__version__})")
 if not ((10, 0) <= major_minor(PIL.__version__) < (13, 0)):
     raise SystemExit(f"ERROR: Pillow >=10,<13 is required (found {PIL.__version__})")
-if not ((4, 2) <= major_minor(markdown_it_version) < (5, 0)):
+if markdown_it_version != "4.2.0":
     raise SystemExit(
-        f"ERROR: markdown-it-py >=4.2,<5 is required (found {markdown_it_version})"
+        f"ERROR: markdown-it-py 4.2.0 is required (found {markdown_it_version})"
     )
+if mdurl_version != "0.1.2":
+    raise SystemExit(f"ERROR: mdurl 0.1.2 is required (found {mdurl_version})")
 
 print(f"PyYAML: {yaml.__version__}")
 print(f"Pillow: {PIL.__version__}")
 print(f"markdown-it-py: {markdown_it_version}")
+print(f"mdurl: {mdurl_version}")
 PY
 fi
 

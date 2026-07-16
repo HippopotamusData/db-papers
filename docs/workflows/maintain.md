@@ -23,7 +23,7 @@
 
 ## 环境准备
 
-`make doctor` 检查项目所需工具及版本。维护环境需要 Python 3.11+、pip 25.1+ 和 `pyproject.toml` 的 `dev` dependency group（含 `markdown-it-py`、PyYAML、Pillow）、Node.js 与 npm、`package-lock.json` 锁定的 MathJax、GNU Make 3.81+、ripgrep、Poppler（`pdfinfo`、`pdftotext`、`pdftoppm`）、Perl 5.30+，以及兼容 POSIX 选项的 `sed`、`awk`、`find`、`sort`、`mktemp`。
+`make doctor` 检查项目所需工具及版本。维护环境需要 Python 3.11+、pip 25.1+ 和 `pyproject.toml` 的 `dev` dependency group（其中 Markdown 解析器及其 URL 依赖锁定精确版本，另含 PyYAML、Pillow）、Node.js 与 npm、`package-lock.json` 锁定的 MathJax、GNU Make 3.81+、ripgrep、Poppler（`pdfinfo`、`pdftotext`、`pdftoppm`）、Perl 5.30+，以及兼容 POSIX 选项的 `sed`、`awk`、`find`、`sort`、`mktemp`。
 
 macOS 可执行 `brew install make ripgrep poppler perl node`，再执行 `python3 -m pip install --upgrade "pip>=25.1"`、`python3 -m pip install --group dev` 和 `npm ci`。读者可见标题约定变化时使用 `make normalize-headers` 做机械迁移。公式修复必须按 `docs/portable-math-maintainers.md` 限定文件范围，并显式运行 `make fix-math FILES='...'`；`make check` 只读，不修改译文。
 

@@ -243,6 +243,46 @@ y &= 2
         text = "名称 | 范围\n--- | ---\nD | $|D|$\n"
         self.assertEqual(self.codes(text), ["GHM012", "GHM012"])
 
+    def test_rejects_raw_pipe_in_table_header_math(self) -> None:
+        cases = [
+            "A | $|D|$ | B\n--- | --- | ---\n",
+            "| A | $|D|$ | B |\n| --- | --- | --- |\n",
+            "> A | $|D|$ | B\n> --- | --- | ---\n",
+            "- A | $|D|$ | B\n  --- | --- | ---\n",
+            "$|D|$\n| --- |\n",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), ["GHM012", "GHM012"])
+
+    def test_rejects_raw_pipe_after_pipe_free_table_body_rows(self) -> None:
+        cases = [
+            "| A |\n| --- |\n$|D|$\n",
+            "| A |\n| --- |\nplain\n$|D|$\n",
+            "A | B\n--- | ---\nplain\n$|D|$\n",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), ["GHM012", "GHM012"])
+
+    def test_rejects_display_math_that_github_treats_as_table_rows(self) -> None:
+        text = "A | B\n--- | ---\nplain\n$$\nx = y\n$$\n"
+        self.assertEqual(self.codes(text), ["GHM007", "GHM007"])
+
+    def test_table_body_stops_at_new_markdown_block(self) -> None:
+        cases = [
+            "A | B\n--- | ---\nplain\n# Heading $|D|$\n",
+            "A | B\n--- | ---\nplain\n- Item $|D|$\n",
+            "A | B\n--- | ---\nplain\n> Quote $|D|$\n",
+            "A | B\n--- | ---\nplain\n---\nnext $|D|$\n",
+            "- A | B\n  --- | ---\n  plain\n- Item $|D|$\n",
+            "1. A | B\n   --- | ---\n   plain\n2. Item $|D|$\n",
+            "- Outer\n\n  - A | B\n    --- | ---\n    plain\n  - Item $|D|$\n",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), [])
+
     def test_pipe_row_without_delimiter_is_not_a_table(self) -> None:
         self.assertEqual(self.codes("名称 | $|D|$ | 说明\n"), [])
 

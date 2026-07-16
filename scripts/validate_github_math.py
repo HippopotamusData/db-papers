@@ -616,17 +616,57 @@ def _unescaped_pipes(text: str) -> list[int]:
     ]
 
 
-def _table_cells(line: str) -> tuple[tuple[int, int], list[str]] | None:
+def _inline_math_pairs(text: str) -> list[tuple[int, int]]:
+    """Return same-line dollar pairs when no display delimiter is present."""
+
+    dollars = _unescaped_dollars(text)
+    if any(
+        index + 1 < len(text) and text[index + 1] == "$"
+        for index in dollars
+    ):
+        return []
+    return [
+        (dollars[pair_start], dollars[pair_start + 1])
+        for pair_start in range(0, len(dollars) - 1, 2)
+    ]
+
+
+def _mask_inline_math_payloads(text: str) -> str:
+    """Mask paired inline-math payloads while preserving source offsets.
+
+    GFM discovers tables before it creates math nodes, so a raw pipe inside a
+    header formula can make an intended table disappear. Header discovery uses
+    this masked view, then the validator inspects the original payload and
+    emits GHM012 for every raw pipe.
+    """
+
+    chars = list(text)
+    for opening, closing in _inline_math_pairs(text):
+        _mask_range(chars, opening + 1, closing)
+    return "".join(chars)
+
+
+def _table_cells(
+    line: str,
+    *,
+    mask_math: bool = False,
+    allow_single_cell: bool = False,
+) -> tuple[tuple[int, int], list[str]] | None:
     """Split a GFM table candidate on unescaped pipes.
 
     Leading and trailing pipes are optional in GFM. Inline code has already
-    been masked before this helper is called, so pipes inside code spans do not
-    affect table discovery.
+    been masked before this helper is called. Header discovery may additionally
+    mask paired inline-math payloads so raw pipes cannot hide an intended table
+    from GHM012; body rows retain their original pipes.
     """
 
     context, content = _table_content(line)
+    if mask_math:
+        content = _mask_inline_math_payloads(content)
     pipes = _unescaped_pipes(content)
     if not pipes:
+        if allow_single_cell and content.strip():
+            return context, [content.strip()]
         return None
 
     cells: list[str] = []
@@ -666,13 +706,36 @@ def _table_row_offsets(visible: str) -> set[int]:
         starts.append(offset)
         offset += len(line)
 
+    terminating_lines = {
+        token.map[0]
+        for token in MARKDOWN.parse(visible)
+        if token.map is not None
+        and token.type
+        in {
+            "blockquote_open",
+            "bullet_list_open",
+            "code_block",
+            "fence",
+            "heading_open",
+            "html_block",
+            "list_item_open",
+            "ordered_list_open",
+        }
+    }
+
     rows: set[int] = set()
     for index, line in enumerate(lines):
         if index == 0 or not _is_table_delimiter(line):
             continue
         delimiter_parts = _table_cells(line)
         header = lines[index - 1]
-        header_parts = _table_cells(header)
+        header_parts = _table_cells(
+            header,
+            mask_math=True,
+            allow_single_cell=bool(
+                delimiter_parts and len(delimiter_parts[1]) == 1
+            ),
+        )
         if (
             not header.strip()
             or delimiter_parts is None
@@ -685,11 +748,15 @@ def _table_row_offsets(visible: str) -> set[int]:
         body = index + 1
         while body < len(lines):
             candidate = lines[body]
-            candidate_parts = _table_cells(candidate)
+            candidate_context, candidate_content = _table_content(candidate)
             if (
                 not candidate.strip()
-                or candidate_parts is None
-                or candidate_parts[0] != delimiter_parts[0]
+                or candidate_context != delimiter_parts[0]
+                or body in terminating_lines
+                or re.fullmatch(
+                    r"(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,}",
+                    candidate_content,
+                )
             ):
                 break
             rows.add(starts[body])
@@ -709,6 +776,16 @@ def _parse_math(text: str) -> tuple[list[MathFragment], list[MathIssue]]:
     for line in visible.splitlines(keepends=True):
         delimiter = DISPLAY_DELIMITER_RE.match(line)
         if delimiter:
+            if offset in table_rows:
+                issues.append(
+                    MathIssue(
+                        offset + delimiter.start(),
+                        "GHM007",
+                        "display math is not parsed inside a Markdown table; use an inline formula or move the block outside the table",
+                    )
+                )
+                offset += len(line)
+                continue
             prefix = delimiter.group("prefix")
             quote_depth = prefix.count(">")
             if ">" not in prefix and prefix:
@@ -810,9 +887,7 @@ def _parse_math(text: str) -> tuple[list[MathFragment], list[MathIssue]]:
             )
 
         table_row = offset in table_rows
-        for pair_start in range(0, len(dollars) - 1, 2):
-            opening = dollars[pair_start]
-            closing = dollars[pair_start + 1]
+        for opening, closing in _inline_math_pairs(line):
             boundary = opening
             while boundary > 0 and line[boundary - 1] == " ":
                 boundary -= 1
