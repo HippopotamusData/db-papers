@@ -203,6 +203,16 @@ y &= 2
             with self.subTest(text=text):
                 self.assertEqual(self.codes(text), [])
 
+    def test_rejects_code_spans_inside_display_math(self) -> None:
+        cases = [
+            "$$\nx `literal` y\n$$\n",
+            "$$\nx `literal\ny` z\n$$\n",
+            "> $$\n> x ``literal`` y\n> $$\n",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), ["GHM021"])
+
     def test_rejects_unsupported_math_fence_names(self) -> None:
         text = "```latex\nx=1\n```\n\n~~~math\ny=2\n~~~\n"
         self.assertEqual(self.codes(text), ["GHM004", "GHM004"])

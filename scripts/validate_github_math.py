@@ -206,6 +206,7 @@ def _mask_inline_code(
     """Mask CommonMark code spans, including multiline and exact tick runs."""
 
     issues: list[MathIssue] = []
+    math_payload_ranges = _math_payload_ranges("".join(chars))
     cursor = 0
     while cursor < len(chars):
         if chars[cursor] != "`" or _escaped(chars, cursor):
@@ -236,6 +237,19 @@ def _mask_inline_code(
             _mask_range(chars, cursor - 1, closing_end + 1)
             cursor = closing_end + 1
         else:
+            if any(
+                start <= cursor and closing_end <= end
+                for start, end in math_payload_ranges
+            ) and not _range_inside_inline_math(
+                chars, cursor, closing_end
+            ):
+                issues.append(
+                    MathIssue(
+                        cursor,
+                        "GHM021",
+                        "raw backticks inside display math are consumed as a Markdown code span; use a standard TeX command after checking the notation",
+                    )
+                )
             line_start = text.rfind("\n", 0, cursor) + 1
             line_end = text.find("\n", closing_end)
             if line_end < 0:
