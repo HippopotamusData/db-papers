@@ -60,7 +60,9 @@ PORTABLE_COMMANDS = frozenset(
 )
 PORTABLE_ENVIRONMENTS = frozenset({"aligned", "cases"})
 MARKDOWN = MarkdownIt("commonmark", {"html": True})
-HTML_CODE_TAG_RE = re.compile(r"</?(?:code|pre)\b[^>]*>", re.IGNORECASE)
+HTML_CODE_TAG_RE = re.compile(
+    r"</?(?P<tag>code|pre)\b[^>]*>", re.IGNORECASE
+)
 FOOTNOTE_START_RE = re.compile(
     r"^ {0,3}(?:(?:[-+*]|\d{1,9}[.)])[ \t]+)?\[\^[^]\r\n]+\]:"
 )
@@ -153,7 +155,14 @@ def _mask_block_code(text: str) -> tuple[list[str], list[MathIssue]]:
             _mask_range(chars, start, end)
         elif token.type == "html_block":
             lowered = token.content.lstrip().lower()
-            if not lowered.startswith(("<pre", "<code")) and (
+            if lowered.startswith(("<pre", "<code")):
+                # Markdown block tokens cover complete physical lines, even
+                # when a code/pre container closes before trailing Markdown.
+                # Mask only the actual container so later prose math is still
+                # validated.
+                chars[start:end] = _mask_inline_html_code(list(text[start:end]))
+                continue
+            if (
                 INLINE_MATH_CANDIDATE_RE.search(token.content)
                 or DISPLAY_MATH_CANDIDATE_RE.search(token.content)
             ):
@@ -179,7 +188,9 @@ def _tick_run(chars: list[str], start: int) -> int:
 def _find_exact_tick_close(chars: list[str], start: int, length: int) -> int | None:
     cursor = start
     while cursor < len(chars):
-        if chars[cursor] != "`" or _escaped(chars, cursor):
+        # Backslashes are literal after a CommonMark code span has opened, so
+        # they cannot escape a candidate closing backtick run.
+        if chars[cursor] != "`":
             cursor += 1
             continue
         run_length = _tick_run(chars, cursor)
@@ -257,29 +268,40 @@ def _mask_inline_html_code(chars: list[str]) -> list[str]:
 
     visible = "".join(chars)
     math_payload_ranges = _math_payload_ranges(visible)
-    opened: int | None = None
+    stack: list[tuple[str, int]] = []
     for match in HTML_CODE_TAG_RE.finditer(visible):
+        tag = match.group()
+        tag_name = match.group("tag").lower()
+        closing = tag.lstrip().startswith("</")
+        self_closing = tag.rstrip().endswith("/>")
+        if stack:
+            if closing:
+                if stack[-1][0] != tag_name:
+                    continue
+                outer_start = stack[0][1]
+                stack.pop()
+                if not stack:
+                    _mask_range(chars, outer_start, match.end())
+            elif not self_closing:
+                stack.append((tag_name, match.start()))
+            continue
         # A raw HTML tag inside inline or display math is part of the TeX
         # payload, not a Markdown code container. Keep it visible so the math
         # parser rejects the HTML-sensitive angle brackets instead of
         # validating a sanitized expression.
-        if any(
+        if _range_inside_inline_math(
+            chars, match.start(), match.end()
+        ) or any(
             start <= match.start() and match.end() <= end
             for start, end in math_payload_ranges
         ):
             continue
-        tag = match.group()
-        closing = tag.lstrip().startswith("</")
-        self_closing = tag.rstrip().endswith("/>")
         if self_closing:
             continue
-        if not closing and opened is None:
-            opened = match.start()
-        elif closing and opened is not None:
-            _mask_range(chars, opened, match.end())
-            opened = None
-    if opened is not None:
-        _mask_range(chars, opened, len(chars))
+        if not closing:
+            stack.append((tag_name, match.start()))
+    if stack:
+        _mask_range(chars, stack[0][1], len(chars))
     return chars
 
 
@@ -377,7 +399,15 @@ def _mask_link_destinations(
         cursor = closing
 
     visible = "".join(chars)
+    math_payload_ranges = _math_payload_ranges(visible)
     for match in re.finditer(r"<(?:https?://|mailto:)[^>\r\n]*>", visible, re.IGNORECASE):
+        if _range_inside_inline_math(
+            chars, match.start(), match.end()
+        ) or any(
+            start <= match.start() and match.end() <= end
+            for start, end in math_payload_ranges
+        ):
+            continue
         _mask_range(chars, match.start(), match.end())
 
     line_starts: list[int] = []

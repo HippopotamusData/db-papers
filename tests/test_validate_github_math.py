@@ -197,6 +197,12 @@ y &= 2
 """
         self.assertEqual(self.codes(text), [])
 
+    def test_backslash_does_not_escape_code_span_closing_ticks(self) -> None:
+        cases = ["`literal $x$\\`\n", "``literal $x$\\``\n"]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), [])
+
     def test_rejects_unsupported_math_fence_names(self) -> None:
         text = "```latex\nx=1\n```\n\n~~~math\ny=2\n~~~\n"
         self.assertEqual(self.codes(text), ["GHM004", "GHM004"])
@@ -344,6 +350,29 @@ y &= 2
         text = r"正文 $\text{https://example.com}$、 $user@example.com$ 与 $@octocat$。"
         self.assertEqual(self.codes(text), ["GHM022", "GHM022", "GHM022"])
 
+    def test_rejects_angle_bracket_autolinks_inside_math(self) -> None:
+        cases = [
+            r"正文 $x<https://e.test>y$。",
+            "A | $x<https://e.test>y$\n--- | ---\n",
+            "$$\nx<https://e.test>y\n$$\n",
+            "> $$\n> x<https://e.test>y\n> $$\n",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(
+                    self.codes(text), ["GHM011", "GHM022", "GHM011"]
+                )
+
+    def test_rejects_angle_autolinks_with_internal_dollars_in_math(self) -> None:
+        cases = [
+            r"正文 $x<https://e.test/$>z$。",
+            r"正文 $x<mailto:a$b.example>z$。",
+            "A | $x<https://e.test/$>z$\n--- | ---\n",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertIn("GHM011", self.codes(text))
+
     def test_rejects_footnote_reference_inside_math(self) -> None:
         text = "$x[^1]$\n\n[^1]: note\n"
         self.assertEqual(self.codes(text), ["GHM024"])
@@ -409,6 +438,40 @@ y &= 2
         for text in cases:
             with self.subTest(text=text):
                 self.assertEqual(self.codes(text), [])
+
+    def test_html_code_tag_dollar_cannot_hide_inline_math(self) -> None:
+        cases = [
+            '正文 $x<code data-v="$">y</code>z$。',
+            'A | $x<pre data-v="$">y</pre>z$\n--- | ---\n',
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertIn("GHM011", self.codes(text))
+
+    def test_html_code_container_dollar_does_not_capture_following_math(self) -> None:
+        cases = [
+            '<code data-v="$">literal</code> 后 中文$x$。',
+            '<pre data-v="$">literal</pre> 后 中文$x$。',
+            '<code>literal $</code> 后 中文$x$。',
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), ["GHM005"])
+
+    def test_nested_html_code_containers_mask_only_their_contents(self) -> None:
+        cases = [
+            '<pre><code>literal</code> $x$</pre> 后 中文$y$。',
+            '<pre>\n<code>literal</code>\n中文$x$\n</pre>\n后 中文$y$。',
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), ["GHM005"])
+
+        valid = '<pre><code>literal</code> $x$</pre> 后 $y$。'
+        self.assertEqual(
+            [expression.text for expression in extract_math_expressions(valid)],
+            ["y"],
+        )
 
     def test_rejects_math_inside_inline_html_attribute(self) -> None:
         text = '正文 <span title=" $x$">label</span>\n'
