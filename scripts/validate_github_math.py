@@ -45,11 +45,11 @@ PORTABLE_COMMANDS = frozenset(
     """
     Big Delta Gamma Join Leftrightarrow Longleftrightarrow Omega Phi Pi Pr
     Rightarrow Theta Vert Xi alpha approx arg ast bar begin beta big bigcup bigl
-    bigr bigwedge bmod bot bowtie cap cdot cdots char chi circ coloneqq cup deg
+    bigr bigwedge bmod bot bowtie cap cdot cdots chi circ coloneqq cup deg
     delta div ell emptyset end epsilon equiv exists exp forall frac gamma ge
     geq gg gt hat in infty lVert lambda land langle lbrace lceil ldots le left
     leftarrow leftrightarrow leq lfloor lim ll ln log longrightarrow lor lt
-    ltimes lvert mapsto mathbb mathbf mathbin mathcal mathit mathrel mathrm max
+    ltimes lvert mapsto mathbb mathbf mathbin mathcal mathit mathrel mathrm mathtt max
     mid min models mu ne neg negthinspace neq nexists not notin odot phi pi pm
     pmod prod propto qquad quad rVert rangle rbrace rceil rfloor rho right
     rightarrow rtimes rvert setminus sigma sim simeq sqrt subset subseteq sum
@@ -1126,6 +1126,10 @@ def _tex_issues(
 ) -> list[MathIssue]:
     issues: list[MathIssue] = []
     payload = fragment.text
+    literal_verb_ranges = [
+        match.span() for match in re.finditer(r"\\verb0[_%#]0", payload)
+    ]
+    literal_verb_ends = dict(literal_verb_ranges)
     for match in re.finditer(r'\\(?:[A-Za-z]+|char"[0-9A-Fa-f]+)\{\}[ \t]*(?=[_^])', payload):
         issues.append(
             MathIssue(
@@ -1136,6 +1140,10 @@ def _tex_issues(
         )
     cursor = 0
     while cursor < len(payload):
+        literal_verb_end = literal_verb_ends.get(cursor)
+        if literal_verb_end is not None:
+            cursor = literal_verb_end
+            continue
         char = payload[cursor]
         if char == "*":
             issues.append(
@@ -1285,6 +1293,22 @@ def _tex_issues(
                         f"unsupported custom TeX command: \\{command}; use a self-contained standard expression",
                     )
                 )
+            elif command == "char":
+                issues.append(
+                    MathIssue(
+                        fragment.offset + cursor,
+                        "GHM020",
+                        r'\char does not render reliably on GitHub; use \verb0_0, \verb0%0, or \verb0#0 for literal punctuation',
+                    )
+                )
+            elif command == "verb":
+                issues.append(
+                    MathIssue(
+                        fragment.offset + cursor,
+                        "GHM020",
+                        r"\verb is limited to the GitHub-verified complete forms \verb0_0, \verb0%0, and \verb0#0",
+                    )
+                )
             elif command not in PORTABLE_COMMANDS:
                 issues.append(
                     MathIssue(
@@ -1327,16 +1351,6 @@ def _tex_issues(
                         r"\tag is only allowed in display math",
                     )
                 )
-            elif command == "char" and re.match(
-                r'"(?:0023|0025|005F)\{\}', payload[command_end:]
-            ) is None:
-                issues.append(
-                    MathIssue(
-                        fragment.offset + cursor,
-                        "GHM020",
-                        r'\char is limited to the verified complete forms \char"0023{}, \char"0025{}, and \char"005F{}',
-                    )
-                )
             cursor = command_end
             continue
         if next_char not in " \t":
@@ -1349,11 +1363,13 @@ def _tex_issues(
             )
         cursor = run_end + 1
     for match in re.finditer(r"(?<!\\)%", payload):
+        if any(start <= match.start() < end for start, end in literal_verb_ranges):
+            continue
         issues.append(
             MathIssue(
                 fragment.offset + match.start(),
                 "GHM023",
-                r'raw % starts a TeX comment and silently discards the rest of the line; use the verified \char"0025{} form for a literal percent sign',
+                r"raw % starts a TeX comment and silently discards the rest of the line; use \verb0%0 for a literal percent sign",
             )
         )
     if any(issue.code == "GHM003" for issue in issues):

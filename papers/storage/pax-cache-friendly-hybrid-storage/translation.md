@@ -223,7 +223,7 @@ NSM 只是追加记录；PAX 在存在变长属性时可能需要额外页重组
 原文用如下公式定义 PAX/NSM speedup：
 
 $$
-\text{Speedup}=\left(\frac{\text{ExecutionTime(NSM)}}{\text{ExecutionTime(PAX)}} - 1\right) \times 100\char"0025{}
+\text{Speedup}=\left(\frac{\text{ExecutionTime(NSM)}}{\text{ExecutionTime(PAX)}} - 1\right) \times 100\verb0%0
 $$
 
 在四个 TPC-H 查询上，PAX 均优于 NSM。Q1 和 Q6 本质上是访问 `Lineitem` 约三分之一记录字段并计算聚合的范围查询。与普通范围选择相比，它们会多次访问投影数据计算聚合值，因此更能利用空间局部性，PAX 加速在小数据库上可达约 42%，在 500MB 数据库上约 15%。

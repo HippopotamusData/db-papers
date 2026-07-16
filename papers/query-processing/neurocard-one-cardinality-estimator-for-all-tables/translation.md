@@ -345,7 +345,7 @@ $$
 **工作负载（表 1）。** 我们采用真实世界 IMDB 数据集和模式测试基数估计精度。既有研究 [19, 21] 指出该数据集包含大量相关性，已把它确立为基数估计器的良好测试平台。我们测试以下 IMDB 查询工作负载：
 
 - **JOB-light：** 被许多近期基数估计工作采用的 70 查询基准 [12, 15, 38]。模式有 6 张表：`title`（主表）、`cast_info`、`movie_companies`、`movie_info`、`movie_keyword`、`movie_info_idx`。这是典型星型模式，每张非主表都只通过 `title.id` 与 `title` 连接。全外连接包含 $2\cdot10^{12}$ 个元组。每个查询连接 2–5 张表，除 `title.production_year` 上的范围过滤外，其余过滤均为等值过滤。
-- **JOB-light-ranges：** 我们从 JOB-light 派生出包含 1000 个查询的第二个基准，并增加过滤种类。1000 个查询均匀分配到 JOB-light 的 18 种连接图。对每张连接图，先用采样器从内连接结果抽一个元组，以该元组中的非 NULL 列值作为过滤字面量，再随机放置 3–6 个比较运算符：支持范围的列从 $\lbrace{}\le,\ge,=\rbrace{}$ 中抽取，否则使用等值过滤。这个生成器既遵循数据分布并保证结果非空，也比 JOB-light 包含更多种类、更多数量的过滤。一个三表查询示例为 $mc\bowtie\sigma _ {info\char"005F{}type\char"005F{}id=99}(mi\char"005F{}idx)\bowtie\sigma _ {episode\char"005F{}nr\le4\wedge phonetic\char"005F{}code\ge\text{'N612'}}(t)$，其中 $t.id$ 与其他表的 `movie_id` 连接。
+- **JOB-light-ranges：** 我们从 JOB-light 派生出包含 1000 个查询的第二个基准，并增加过滤种类。1000 个查询均匀分配到 JOB-light 的 18 种连接图。对每张连接图，先用采样器从内连接结果抽一个元组，以该元组中的非 NULL 列值作为过滤字面量，再随机放置 3–6 个比较运算符：支持范围的列从 $\lbrace{}\le,\ge,=\rbrace{}$ 中抽取，否则使用等值过滤。这个生成器既遵循数据分布并保证结果非空，也比 JOB-light 包含更多种类、更多数量的过滤。一个三表查询示例为 $mc\bowtie\sigma _ {info\verb0_0type\verb0_0id=99}(mi\verb0_0idx)\bowtie\sigma _ {episode\verb0_0nr\le4\wedge phonetic\verb0_0code\ge\text{'N612'}}(t)$，其中 $t.id$ 与其他表的 `movie_id` 连接。
 - **JOB-M：** 最后一个基准包含 IMDB 中的 16 张表，并涉及多个连接键。例如，`movie_companies` 不仅通过 `movie_id` 与 `title` 连接，还通过 `company_id` 与 `company_name` 连接、通过 `company_type_id` 与 `company_type` 连接，等等。我们修改了 113 个 JOB 查询 [19]，使每张表在每个查询中至多出现一次，并删除逻辑析取，例如 $A.x=1\vee B.y=1$。每个查询连接 2–11 张表。JOB-M 的全连接比另外两个基准大 5×、维度也更多（表 1），用于检验 NeuroCard 的可扩展性。
 
 这些基准发布于 https://github.com/neurocard。

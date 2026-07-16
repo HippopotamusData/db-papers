@@ -174,11 +174,11 @@ $$
 $$
 \begin{aligned}
 r_1&=\mathrm{Limit} _ {K''}(\mathrm{Filter}(\mathrm{Sort}(R_1))),\\
-K''&=\min(K,K'\times\text{filter\char"005F{}selec{}tivity}).
+K''&=\min(K,K'\times\mathtt{filter\verb0_0selec{}tivity}).
 \end{aligned} \tag{5}
 $$
 
-若能预测最优 $K'=\widetilde K=K/\text{filter\char"005F{}selec{}tivity}$，执行恰得 K 条结果，公式 5 化为：
+若能预测最优 $K'=\widetilde K=K/\mathtt{filter\verb0_0selec{}tivity}$，执行恰得 K 条结果，公式 5 化为：
 
 $$
 r_1=\mathrm{Limit} _ K(\mathrm{Filter}(\mathrm{Sort}(R_1))). \tag{6}
@@ -190,7 +190,7 @@ $$
 r_2=\mathrm{Limit} _ K(\mathrm{Sort}(\mathrm{Filter}(R_2))). \tag{7}
 $$
 
-两种系统使用相同向量索引、遍历算法和松弛单调性终止检查，因此 $R_1=R_2$[^1]；Filter 与 Sort 可交换，故 $r_1=r_2$。若 TopK 系统猜得过小，会结果不足、准确率低；猜得过大或反复试探，则浪费遍历。VBASE 在执行中确定 $\widetilde K\times\text{filter\char"005F{}selec{}tivity}=K$，兼得准确率和性能。
+两种系统使用相同向量索引、遍历算法和松弛单调性终止检查，因此 $R_1=R_2$[^1]；Filter 与 Sort 可交换，故 $r_1=r_2$。若 TopK 系统猜得过小，会结果不足、准确率低；猜得过大或反复试探，则浪费遍历。VBASE 在执行中确定 $\widetilde K\times\mathtt{filter\verb0_0selec{}tivity}=K$，兼得准确率和性能。
 
 **范围过滤。** 仅 TopK 方案可写为：
 
@@ -203,11 +203,11 @@ $$
 $$
 \begin{aligned}
 r_1&=\mathrm{Limit} _ {K''}(\mathrm{Filter}(\mathrm{Sort}(R_1))),\\
-K''&=K'\times\text{filter\char"005F{}selec{}tivity}.
+K''&=K'\times\mathtt{filter\verb0_0selec{}tivity}.
 \end{aligned} \tag{9}
 $$
 
-若查询应产生 T 个向量且 $K'=\widetilde K=T/\text{filter\char"005F{}selec{}tivity}$，则：
+若查询应产生 T 个向量且 $K'=\widetilde K=T/\mathtt{filter\verb0_0selec{}tivity}$，则：
 
 $$
 r_1=\mathrm{Limit} _ T(\mathrm{Filter}(\mathrm{Sort}(R_1)))=\mathrm{Filter}(\mathrm{Sort}(R_1)). \tag{10}
@@ -267,7 +267,7 @@ $$
 **选择率估计。** VBASE 用采样方法 [67, 82] 估计高维向量分布：均匀采样并把样本保存到数据库元数据；查询 q 到来时在样本上运行过滤，估计完整数据集选择率：
 
 $$
-\mathrm{Sel} _ {sample}(q)\approx\mathrm{Sel} _ {full\char"005F{}data}(q).
+\mathrm{Sel} _ {sample}(q)\approx\mathrm{Sel} _ {full\verb0_0data}(q).
 $$
 
 实验中采样率 0.001 通常使 q-error 小于 1.1，额外延迟不足 1 ms。

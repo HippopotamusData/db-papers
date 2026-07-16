@@ -92,6 +92,31 @@ class VerifyMathRenderingTests(unittest.TestCase):
             _normalized_actual_renderer_text("$x&amp;amp;=y$"),
         )
 
+    def test_github_expected_payload_preserves_verb_literal_punctuation(self) -> None:
+        expression = MathExpression(
+            0,
+            r"l\verb0_0partkey=5\verb0%0,serial\verb0#0",
+            False,
+        )
+        self.assertEqual(
+            _normalized_expected_renderer_text(expression),
+            r"$l\verb0_0partkey=5\verb0%0,serial\verb0#0$",
+        )
+
+    def test_loader_sends_verb_literal_punctuation_to_local_mathjax(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "translation.md"
+            path.write_text(
+                r"正文 $l\verb0_0partkey=5\verb0%0,serial\verb0#0$。",
+                encoding="utf-8",
+            )
+            serialized, _ = _load_expressions([path])
+            self.assertEqual(
+                serialized[0]["text"],
+                r"l\verb0_0partkey=5\verb0%0,serial\verb0#0",
+            )
+            self.assertEqual(_verify_mathjax(serialized, self.mathjax), [])
+
     def test_unchecked_loader_uses_only_trusted_dollar_boundaries(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "translation.md"

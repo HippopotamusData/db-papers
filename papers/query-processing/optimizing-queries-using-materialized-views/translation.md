@@ -223,15 +223,15 @@ Where l_orderkey = o_orderkey
 视图范围：
 
 $$
-\lbrace{}l\char"005F{}partkey,p\char"005F{}partkey\rbrace{}\in(150,+\infty),\qquad
-\lbrace{}o\char"005F{}custkey\rbrace{}\in(50,500).
+\lbrace{}l\verb0_0partkey,p\verb0_0partkey\rbrace{}\in(150,+\infty),\qquad
+\lbrace{}o\verb0_0custkey\rbrace{}\in(50,500).
 $$
 
 查询范围：
 
 $$
-\lbrace{}l\char"005F{}partkey,p\char"005F{}partkey\rbrace{}\in(150,160),\qquad
-\lbrace{}o\char"005F{}custkey\rbrace{}\in(123,123).
+\lbrace{}l\verb0_0partkey,p\verb0_0partkey\rbrace{}\in(150,160),\qquad
+\lbrace{}o\verb0_0custkey\rbrace{}\in(123,123).
 $$
 
 **第 4 步：检查查询范围包含关系。**
@@ -327,18 +327,18 @@ Where l_orderkey between 1000 and 1500
 视图：
 
 $$
-\lbrace{}l\char"005F{}orderkey,o\char"005F{}orderkey\rbrace{},\quad \lbrace{}o\char"005F{}custkey,c\char"005F{}custkey\rbrace{};
+\lbrace{}l\verb0_0orderkey,o\verb0_0orderkey\rbrace{},\quad \lbrace{}o\verb0_0custkey,c\verb0_0custkey\rbrace{};
 $$
 
 $$
-\lbrace{}l\char"005F{}orderkey,o\char"005F{}orderkey\rbrace{}\in(500,+\infty).
+\lbrace{}l\verb0_0orderkey,o\verb0_0orderkey\rbrace{}\in(500,+\infty).
 $$
 
 查询：
 
 $$
-\lbrace{}l\char"005F{}shipdate,l\char"005F{}commitdate\rbrace{};\qquad
-\lbrace{}l\char"005F{}orderkey\rbrace{}\in(1000,1500).
+\lbrace{}l\verb0_0shipdate,l\verb0_0commitdate\rbrace{};\qquad
+\lbrace{}l\verb0_0orderkey\rbrace{}\in(1000,1500).
 $$
 
 视图的外键连接图包含三个节点（`lineitem`、`orders`、`customer`），其中有一条从 `lineitem` 指向 `orders` 的边，以及一条从 `orders` 指向 `customer` 的边。`customer` 节点没有出边且有一条入边，因此可以删除；这也会删除从 `orders` 指向 `customer` 的边。于是 `orders` 不再有出边，也可以删除。
@@ -346,16 +346,16 @@ $$
 随后，从概念上把 `orders` 和 `customer` 加入查询。`lineitem` 到 `orders` 边的连接谓词是 `l_orderkey = o_orderkey`，它生成等价类 `{l_orderkey, o_orderkey}`。`orders` 到 `customer` 边的连接谓词是 `o_custkey = c_custkey`，它生成等价类 `{o_custkey, c_custkey}`。更新后的查询等价类和范围为：
 
 $$
-\lbrace{}l\char"005F{}shipdate,l\char"005F{}commitdate\rbrace{},\quad
-\lbrace{}l\char"005F{}orderkey,o\char"005F{}orderkey\rbrace{},\quad
-\lbrace{}o\char"005F{}custkey,c\char"005F{}custkey\rbrace{};
+\lbrace{}l\verb0_0shipdate,l\verb0_0commitdate\rbrace{},\quad
+\lbrace{}l\verb0_0orderkey,o\verb0_0orderkey\rbrace{},\quad
+\lbrace{}o\verb0_0custkey,c\verb0_0custkey\rbrace{};
 $$
 
 $$
-\lbrace{}l\char"005F{}orderkey,o\char"005F{}orderkey\rbrace{}\in(1000,1500).
+\lbrace{}l\verb0_0orderkey,o\verb0_0orderkey\rbrace{}\in(1000,1500).
 $$
 
-接下来应用包含测试。视图通过等值连接包含测试，因为每个视图等价类都是某个查询等价类的子集。视图也通过范围包含测试，因为视图范围 $\lbrace{}l\char"005F{}orderkey,o\char"005F{}orderkey\rbrace{}\in(500,+\infty)$ 包含对应的查询范围 $\lbrace{}l\char"005F{}orderkey,o\char"005F{}orderkey\rbrace{}\in(1000,1500)$。补偿谓词为 `l_orderkey >= 1000` 和 `l_orderkey <= 1500`；由于视图输出中有 `l_orderkey`，可以施加这两个谓词。最后，查询的每个输出列都能由视图输出计算。
+接下来应用包含测试。视图通过等值连接包含测试，因为每个视图等价类都是某个查询等价类的子集。视图也通过范围包含测试，因为视图范围 $\lbrace{}l\verb0_0orderkey,o\verb0_0orderkey\rbrace{}\in(500,+\infty)$ 包含对应的查询范围 $\lbrace{}l\verb0_0orderkey,o\verb0_0orderkey\rbrace{}\in(1000,1500)$。补偿谓词为 `l_orderkey >= 1000` 和 `l_orderkey <= 1500`；由于视图输出中有 `l_orderkey`，可以施加这两个谓词。最后，查询的每个输出列都能由视图输出计算。
 
 上述过程保证：可以直接或间接把视图中的每个额外表“预连接”到查询的某个输入表 $T$，而所得更宽的表与 $T$ 包含完全相同的行。这样做很安全，但有一定限制性，因为我们只需对查询实际消费的行做出保证，而非所有行。下面是这种情况的一个例子。假设视图由表 $T$ 和 $S$ 在 `T.F=S.C` 上连接而成，其中 `F` 被声明为引用 `C` 的外键，`C` 是 $S$ 的主键。再考虑表 $T$ 上谓词为 `T.F > 50` 的选择查询。如果 `T.F` 没有声明 `not null`，本文过程会拒绝该视图。 $T$ 与 $S$ 的连接不保持 $T$ 的基数，因为 `T.F` 列中为空的行不会出现在视图里。不过，对于 `T.F` 非空的行子集，该连接确实保持基数；这正是所需性质，因为查询中的拒空谓词 `T.F > 50` 会排除空值。换言之， $T$ 中 `T.F` 为空的任意行无论如何都会被查询谓词丢弃。
 
@@ -478,7 +478,7 @@ Group by c_nationkey
 
 假设查询输出列 $A$、 $B$ 和 $C$。再假设查询中的列等值谓词生成如下等价类：`{A, D, E}`、`{B, F}`、`{C}`。同一等价类中的列值相同，因此在输出列表中可以互换。我们把输出列表写成 `{A, D, E}`、`{B, F}`、`{C}` 来表示这种选择。
 
-现在考虑一个视图，其输出可写为 `{<u>A</u>, D, G}`、`{<u>E</u>}`、`{<u>B</u>}` 和 `{<u>C</u>, H}`，其中列等价关系由视图的列等值谓词计算得出；下划线表示真正包含在输出列表中的列。从逻辑上说，可以认为该视图输出了所有这些列，即其输出列表被扩展为 $A,D,G,E,B,C,H$。
+现在考虑一个视图，其列等价类可写为 `{A, D, G}`、`{E}`、`{B}` 和 `{C, H}`，其中真正包含在视图输出列表中的列是 `A`、`E`、`B` 和 `C`，其余成员来自视图列等值谓词计算出的等价关系。从逻辑上说，可以认为该视图输出了所有这些列，即其输出列表被扩展为 $A,D,G,E,B,C,H$。
 
 如果 $A$、 $D$ 或 $E$ 中至少一列存在于视图的扩展输出列表中，就能计算查询的第一个输出列。本例中三列都存在。同样，如果扩展输出列表中有 $B$ 或 $F$，就能计算第二列；本例有 $B$，但没有 $F$。最后，第三个输出列需要 $C$，它也存在于扩展输出列表中。因此，查询输出可以由该视图计算。
 

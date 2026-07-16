@@ -159,6 +159,22 @@ y &= 2
         text = r'正文 $x\tag{1}$、 $\char{nonsense}$ 与 $\char"10FFFF{}$。'
         self.assertEqual(self.codes(text), ["GHM020", "GHM020", "GHM020"])
 
+    def test_rejects_char_even_for_previously_allowed_literal_codes(self) -> None:
+        text = r'正文 $\char"005F{}$、 $\char"0025{}$ 与 $\char"0023{}$。'
+        self.assertEqual(self.codes(text), ["GHM020", "GHM020", "GHM020"])
+
+    def test_accepts_verified_verb_literal_punctuation(self) -> None:
+        text = r"正文 $\mathtt{l\verb0_0partkey}=5\verb0%0$ 与 $serial\verb0#0$。"
+        self.assertEqual(self.codes(text), [])
+
+    def test_accepts_verified_verb_literals_inside_table_math(self) -> None:
+        text = "| identifier | percent | number |\n| --- | --- | --- |\n| $l\\verb0_0partkey$ | $12\\verb0%0$ | $serial\\verb0#0$ |\n"
+        self.assertEqual(self.codes(text), [])
+
+    def test_rejects_other_or_malformed_verb_forms(self) -> None:
+        text = r"正文 $\verb|#|$、 $\verb!a!$ 与 $\verb0x?$。"
+        self.assertEqual(self.codes(text), ["GHM020", "GHM020", "GHM020"])
+
     def test_rejects_raw_tex_comment_character(self) -> None:
         self.assertEqual(self.codes(r"正文 $x%+y$。"), ["GHM023"])
 
