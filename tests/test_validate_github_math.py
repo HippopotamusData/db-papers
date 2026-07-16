@@ -163,12 +163,16 @@ y &= 2
         text = r'正文 $\char"005F{}$、 $\char"0025{}$ 与 $\char"0023{}$。'
         self.assertEqual(self.codes(text), ["GHM020", "GHM020", "GHM020"])
 
-    def test_accepts_verified_unicode_literal_codes(self) -> None:
-        text = r"正文 $l\unicode{x5F}partkey=5\unicode{x25}$ 与 $serial\unicode{x23}$。"
+    def test_accepts_verified_verb_literal_punctuation(self) -> None:
+        text = r"正文 $\mathtt{l\verb0_0partkey}=5\verb0%0$ 与 $serial\verb0#0$。"
         self.assertEqual(self.codes(text), [])
 
-    def test_rejects_other_or_malformed_unicode_codes(self) -> None:
-        text = r"正文 $\unicode{x41}$、 $\unicode{95}$ 与 $\unicode x5F$。"
+    def test_accepts_verified_verb_literals_inside_table_math(self) -> None:
+        text = "| identifier | percent | number |\n| --- | --- | --- |\n| $l\\verb0_0partkey$ | $12\\verb0%0$ | $serial\\verb0#0$ |\n"
+        self.assertEqual(self.codes(text), [])
+
+    def test_rejects_other_or_malformed_verb_forms(self) -> None:
+        text = r"正文 $\verb|#|$、 $\verb!a!$ 与 $\verb0x?$。"
         self.assertEqual(self.codes(text), ["GHM020", "GHM020", "GHM020"])
 
     def test_rejects_raw_tex_comment_character(self) -> None:

@@ -10,7 +10,7 @@ entries:
     review_action: repair-review
   cockroachdb-the-resilient-geo-distributed-sql-database:
     source_sha256: 142dbe2ecc31e94891e75783944dbf7b245470095a6e562ed6270868eeb12706
-    translation_sha256: fd1ac2f05361cfebf6a73a381ee21f8f038d99f7e7d506ef18cc9d6dff927479
+    translation_sha256: 4270218c1fd820e29b4913510fdc9038951b6c47a6e5624ea0293e9711efad13
     review_action: repair-review
     waivers:
       - resources
@@ -233,7 +233,7 @@ entries:
       - listings
   qagen-generating-query-aware-test-databases:
     source_sha256: 2a78959862aca53950e6fd1f6e4c1acc23b2c08e5ed89d6896b42492b24f967c
-    translation_sha256: edc8856757f13f42d9c4f99623157a08cc6568a83eed50c8bc5f9dbb702d1bcd
+    translation_sha256: e6d4922a2775ba62646b6feb78b85498387f32a2e3bfe229fbdfd8f6fe51f658
     review_action: repair-review
   quantifying-tpch-choke-points:
     source_sha256: d83f74d2cbda19df37d4f54f2084cd6a536e04d130a43167e64a9c1a4f1e5315
@@ -284,7 +284,7 @@ entries:
     review_action: legacy-migration
   pax-cache-friendly-hybrid-storage:
     source_sha256: ea9eccdae45400b9857e928ae9c0054ce97276ebbce69bbb151fd13ecb87f871
-    translation_sha256: 9d43392f5beee5e57ab5826287594ecba59e3bf0ddb18a5b2d146af7100cc10a
+    translation_sha256: a2b43d5cb097b6e8e0b8f6e38b1f8c2d8723a84004b2ae10e27a1b10f4bb11bd
     review_action: repair-review
   tile-row-store:
     source_sha256: 0ee87d390df57c6c422dbd6522c949e24dac5b3e4933e558163e218e0a2d1220
@@ -312,7 +312,7 @@ entries:
       - listings
   alibaba-hologres-a-cloud-native-service-for-hybrid-serving-analytical-processing:
     source_sha256: 547c216c7bda32e373e540db845e0c21f03fae5e5e9a38c0b3a77e66c2be8155
-    translation_sha256: beacb2f219502a210feadb38faa31bbaf1038d01d967d191f6ddf5aa8cd000b7
+    translation_sha256: 9e8fe6aa163152af1f21140809b764fb91883de01b96cb51e4e734848f6017ef
     review_action: repair-review
   amazon-redshift-and-the-case-for-simpler-data-warehouses:
     source_sha256: b43d0445af872959aacf9a5d94a44797f7b66f86d3b92c8ccfaf255679736dc5
@@ -424,7 +424,7 @@ entries:
     review_action: full-translation-review
   palimpzest-optimizing-ai-powered-analytics-declarative-query-processing:
     source_sha256: ae71e50cb2b22c7ba9ef3e5243c407c669bca7f82ebbb41eb54ceca3aedab385
-    translation_sha256: 512f2d33bb130f35e92161d698bc449011052536de6d8aba51eecf5fd192711e
+    translation_sha256: a9a053ff4cd33bb3211e54044f214075f4cde7b78b0704f7df2fdb6448dbcbbd
     review_action: repair-review
   can-foundation-models-wrangle-your-data:
     source_sha256: 5fd860d3c245002cb1fd4544f75667d4bdc9897a0fdba8e88f3bc9cd6ca381a0
@@ -459,7 +459,7 @@ entries:
       - resources
   a-relational-model-of-data-for-large-shared-data-banks:
     source_sha256: fa2579f427a4da68466ef159a3ae0c3c1fe4eafec60f73c9f2f40378a65d8ef9
-    translation_sha256: d52c95037c7a0e149e9cfd189ee6b980ffd0b8f5a2d5863fb0262856b5215767
+    translation_sha256: 6d3818a0e57ba69c3a61d818520b852883c54e464849efdacded91123429abbc
     review_action: repair-review
   access-path-selection-relational-database-management-system:
     source_sha256: b9a5f26b06914256b27c262a64d5f40cbfe2311efa71c0ad7f2a220ff25ed663
@@ -473,7 +473,7 @@ entries:
     review_action: repair-review
   balsa-learning-a-query-optimizer-without-expert-demonstrations:
     source_sha256: adffe4b310b061c1da403d9d2dfdbf78cfde56884978143cc5f44ce9efe1f0c8
-    translation_sha256: d09a4540384e15cb61cf1c10ca8a8dde73e901f0da998b646d2dd38d87736973
+    translation_sha256: 94ed05f2c05ba8fa71aa05844cf739f55f2681b1250bbd8196ee5a48b278dc14
     review_action: repair-review
   bao-making-learned-query-optimization-practical:
     source_sha256: 7ffe17799d73e5c637254b24ee4b824bd813e92e2b75ab48697e168662bc7721
@@ -481,7 +481,7 @@ entries:
     review_action: repair-review
   deepdb-learn-from-data-not-from-queries:
     source_sha256: e2e854b786eeaf55b33dd79bf6918fa4a4dba695f6c250cd3644b52967c57fb5
-    translation_sha256: 5b1b811094ebd455fdcb25edd38bdc901a53cc8866ebb375a8dbcfa9aa5fbf51
+    translation_sha256: 4a75f46d64d65fe9e36f696b3dabbf6a778e27394cf78b1b8daa105be755d7dd
     review_action: repair-review
     waivers:
       - resources
@@ -495,7 +495,7 @@ entries:
     review_action: repair-review
   neurocard-one-cardinality-estimator-for-all-tables:
     source_sha256: 0789d8dce73de3212412dc3f46dd2087652cbcc44dfad79ad30b0f2c73a6f98c
-    translation_sha256: 04f598bcaa673281a6459d36d42aa4b33a7c91445cb2b1f92f0b8fd0d8f467cf
+    translation_sha256: ea6edfac8f710fffa2fe54d55a3f9f1722c8d47066714aad4f3e352780ef69aa
     review_action: repair-review
   photon-fast-query-engine-lakehouse-systems:
     source_sha256: 0d1c5a77986ede93eee5cfbac03bff0ef5984e4b28ad77988cae4595ffff8468
@@ -514,7 +514,7 @@ entries:
     review_action: repair-review
   diskann-fast-accurate-billion-point-nearest-neighbor-search:
     source_sha256: 15ee6136e41eb70d05692ca5f5af18b47fc63754c3a5004de686d8b1be2c6d2c
-    translation_sha256: cfdb5de1451462de95f3f1363e6cbb673a1caaa558328234ba615e8ac4589f90
+    translation_sha256: 5dc2aed459a197b5510acf94d62bb2606116fb0686670cedb50a37b35e128f06
     review_action: repair-review
   hnsw-efficient-and-robust-approximate-nearest-neighbor-search:
     source_sha256: f78da128a3ea9ac08d37cfe6c4b641f371f88adb677d6d2bf637d90bad8d414a
@@ -534,7 +534,7 @@ entries:
       - resources
   vbase-unifying-vector-search-relational-queries:
     source_sha256: 5a762e51b689b31abe3da8c5288c6791b2a77f8a8e2243ad4a84776b6698e089
-    translation_sha256: ceb29ec07c76d71b1b5ef4f62efd38c5b4a54bc00b3fc656adf4f7bb2cf59d29
+    translation_sha256: 54de2a72329a4c5225b72a8a68c62f8134f72ada3258e7b3c0f05e6b3bd92c49
     review_action: repair-review
   c-store-column-oriented-dbms:
     source_sha256: af02fae1e60f726dfa82e58a7233d71c60d6d1ba3d2fca39042cf5c4f9234d52
@@ -542,7 +542,7 @@ entries:
     review_action: repair-review
   case-for-learned-index-structures:
     source_sha256: 392f604ddcdf26dc4905fc7649dc6e68aa843d50cddcc4fcb5f1b0eed23679a0
-    translation_sha256: a690ae9c10d81a86a5a9496599f24ae0a122190e7cf2c5cf28c18e07918d3019
+    translation_sha256: 0750af86a879ed22d2fbad6afbe3d7eb126e230d50bcbba2295de446678435e9
     review_action: repair-review
   delta-lake-high-performance-acid-table-storage-cloud-object-stores:
     source_sha256: b0fa92e38efb80f6c10f94a0fa31ccc42d0d75c345d5f94d08a7dc18632e9437
@@ -560,11 +560,11 @@ entries:
       - abridgement
   ubiquitous-b-tree:
     source_sha256: d3a834b08bdf4b1e15fc32094d7b65439e0af59351e91baecc06e349e5562bfc
-    translation_sha256: 05e809fba1f9c28d6274d2e4117df75e35a6a07e7b3955c11256c9301d62cc0b
+    translation_sha256: c9f6771ee9bfc2432600d58a656c57a9c3fa1ae0b7c27b831ed0d1f1ca830f6c
     review_action: repair-review
   aurora-new-model-architecture-data-stream-management:
     source_sha256: 070a4a677720520769a0bcabb4b8e5f17dc053e1f45bcdf6438f4c3faedb21a0
-    translation_sha256: 1a15e9aebb194d3d02bac036bd47d7dd7031fda7adfea0d92bafa4f0c3878ddb
+    translation_sha256: 28a2d852943af029606b9948e75805df3aebf336bded49b3b01428abb823cc47
     review_action: repair-review
   cql-continuous-query-language:
     source_sha256: 5353794a69b7ff9905ac56a124f952668b58a11e33ca0b23585e50b6d23a4ef0
@@ -624,7 +624,7 @@ entries:
       - resources
   optimizing-queries-using-materialized-views:
     source_sha256: 673e937f12537c091039b546403d07ce666065afb95b5403bbabf3a3bec50800
-    translation_sha256: f262c684e488da008f9c03e73a22b748684714c9751df2224368cb700e1c9123
+    translation_sha256: 2e5a57d87d5347b9ca2705c17c842f081edd8a5d8b76a033aa8ee09162b9771b
     review_action: repair-review
     waivers:
       - resources
@@ -636,7 +636,7 @@ entries:
       - resources
   merge-path-visually-intuitive-parallel-merging:
     source_sha256: c2d2c0301c47cab5c47e63117f61b412bafa3166b0cfbab47e768f1f1c491dc7
-    translation_sha256: 97d28cfb06e26cad166d1408912d9b49968e6578c745b63f948694a6651445b4
+    translation_sha256: 17678d19a740dc7b6986f3190659e74f7cb0941ccc7a0adfb45ebcfbd4d8e4fa
     review_action: repair-review
     waivers:
       - resources
