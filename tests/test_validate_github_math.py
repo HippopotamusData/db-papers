@@ -163,6 +163,14 @@ y &= 2
         text = r'正文 $\char"005F{}$、 $\char"0025{}$ 与 $\char"0023{}$。'
         self.assertEqual(self.codes(text), ["GHM020", "GHM020", "GHM020"])
 
+    def test_accepts_verified_unicode_literal_codes(self) -> None:
+        text = r"正文 $l\unicode{x5F}partkey=5\unicode{x25}$ 与 $serial\unicode{x23}$。"
+        self.assertEqual(self.codes(text), [])
+
+    def test_rejects_other_or_malformed_unicode_codes(self) -> None:
+        text = r"正文 $\unicode{x41}$、 $\unicode{95}$ 与 $\unicode x5F$。"
+        self.assertEqual(self.codes(text), ["GHM020", "GHM020", "GHM020"])
+
     def test_rejects_raw_tex_comment_character(self) -> None:
         self.assertEqual(self.codes(r"正文 $x%+y$。"), ["GHM023"])
 
@@ -320,10 +328,6 @@ y &= 2
 
     def test_accepts_standard_tex_subscripts_and_star(self) -> None:
         text = r"正文 $M^{valid} _ {a_i}\ast x$ 与 $\mathrm{Syn} _ 1$。"
-        self.assertEqual(self.codes(text), [])
-
-    def test_accepts_github_double_escaped_literal_punctuation(self) -> None:
-        text = r"正文 $l\\_partkey=5\\%$ 与 $serial\\#$。"
         self.assertEqual(self.codes(text), [])
 
     def test_rejects_markdown_sensitive_star_and_underscore(self) -> None:

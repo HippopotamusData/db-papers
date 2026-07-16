@@ -92,19 +92,29 @@ class VerifyMathRenderingTests(unittest.TestCase):
             _normalized_actual_renderer_text("$x&amp;amp;=y$"),
         )
 
-    def test_github_expected_payload_consumes_one_literal_escape(self) -> None:
-        expression = MathExpression(0, r"l\\_partkey=5\\%,serial\\#", False)
+    def test_github_expected_payload_preserves_unicode_literal_commands(self) -> None:
+        expression = MathExpression(
+            0,
+            r"l\unicode{x5F}partkey=5\unicode{x25},serial\unicode{x23}",
+            False,
+        )
         self.assertEqual(
             _normalized_expected_renderer_text(expression),
-            r"$l\_partkey=5\%,serial\#$",
+            r"$l\unicode{x5F}partkey=5\unicode{x25},serial\unicode{x23}$",
         )
 
-    def test_loader_sends_github_payload_to_local_mathjax(self) -> None:
+    def test_loader_sends_unicode_literal_commands_to_local_mathjax(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "translation.md"
-            path.write_text(r"正文 $l\\_partkey=5\\%,serial\\#$。", encoding="utf-8")
+            path.write_text(
+                r"正文 $l\unicode{x5F}partkey=5\unicode{x25},serial\unicode{x23}$。",
+                encoding="utf-8",
+            )
             serialized, _ = _load_expressions([path])
-            self.assertEqual(serialized[0]["text"], r"l\_partkey=5\%,serial\#")
+            self.assertEqual(
+                serialized[0]["text"],
+                r"l\unicode{x5F}partkey=5\unicode{x25},serial\unicode{x23}",
+            )
             self.assertEqual(_verify_mathjax(serialized, self.mathjax), [])
 
     def test_unchecked_loader_uses_only_trusted_dollar_boundaries(self) -> None:

@@ -259,11 +259,11 @@ HOS 的关键挑战是在多租户场景中保证查询级 SLO，例如大规模
 给定 SG，它在一个时间区间中分配给 ECs 的 CPU time 受两个因素影响：（1）其 share；（2）上一时间区间中已占用的 CPU time。令 `ECshare_i` 表示 EC i 的 share，用 `ECshare_avg_i` 表示 EC i 在某时间区间中的实际 share，SG i 的实际 share 是其 ECs share 之和：
 
 $$
-ECshare\\_avg_i = ECshare_i \times \frac{\Delta T _ {run}}{\Delta T _ {run} + \Delta T _ {spd} + \Delta T _ {blk}}
+ECshare\unicode{x5F}avg_i = ECshare_i \times \frac{\Delta T _ {run}}{\Delta T _ {run} + \Delta T _ {spd} + \Delta T _ {blk}}
 $$
 
 $$
-SGshare\\_avg_i = \sum _ {j=1}^{N} ECshare\\_avg_j
+SGshare\unicode{x5F}avg_i = \sum _ {j=1}^{N} ECshare\unicode{x5F}avg_j
 $$
 
 其中 `Delta T_run`、`Delta T_spd` 和 `Delta T_blk` 分别表示 EC i 处于 runnable、suspended 和 blocking 状态的时间区间。
@@ -271,7 +271,7 @@ $$
 对 SG j 中的 EC i，系统维护 Virtual Runtime，用于反映其历史资源分配状态。令 `Delta CPUtime_i` 表示 EC i 在上一时间区间中获得的 CPU time，则 EC i 的 Virtual Runtime 增量为：
 
 $$
-ECvshare_i = \frac{ECshare_i \times SGshare_j}{SGshare\\_avg_j}
+ECvshare_i = \frac{ECshare_i \times SGshare_j}{SGshare\unicode{x5F}avg_j}
 $$
 
 $$

@@ -282,7 +282,7 @@ $$
 并返回符号元组 `<aggsum>`。例如在 8 行连接结果上计算 `SUM(l_price)`，基础做法会向 `PTable` 加 8 条相关记录。为缩短公式，QAGen 通常把 `l_price2,…,l_price8` 在来源基表中替换为 `l_price1`，只保存：
 
 $$
-[aggsum=8\times l\\_price1]
+[aggsum=8\times l\unicode{x5F}price1]
 $$
 
 这样可避免超出 `varchar` 上限、减少 `PTable` 行数，更重要的是降低后续约束求解器的公式规模；求解最坏代价随公式规模指数增长。代价是必须更新每个输入符号在来源基表中的值。
@@ -304,11 +304,11 @@ $$
 每个组分别调用简单聚合。由于同组价格已可统一，得到：
 
 $$
-aggsum_1=5\times l\\_price1
+aggsum_1=5\times l\unicode{x5F}price1
 $$
 
 $$
-aggsum_2=3\times l\\_price5
+aggsum_2=3\times l\unicode{x5F}price5
 $$
 
 输出为 `<o_date1,aggsum1>`、`<o_date2,aggsum2>`；`Orders` 与 `Lineitem` 中相应符号也随之更新，如图 6(c)。
@@ -362,7 +362,7 @@ SQP 复用传统查询处理的反嵌套技术，把嵌套查询改写成连接 
 5. 若 `s` 有谓词，递归查找与它直接或间接相关的全部谓词，计算谓词闭包。例如 `l_price1` 的闭包为：
 
 $$
-[aggsum_1=5\times l\\_price1\ \land\ aggsum_1\ge p_2]
+[aggsum_1=5\times l\unicode{x5F}price1\ \land\ aggsum_1\ge p_2]
 $$
 
 把已在 `SymbolValueCache` 中的符号先替换为具体值，再把闭包交给求解器。一次调用会同时实例化公式中的全部符号，例如得到 `l_price1=10, aggsum1=50, p2=18`。

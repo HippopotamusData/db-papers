@@ -24,7 +24,6 @@ DISPLAY_DELIMITER_RE = re.compile(
 ASCII_WORD_RE = re.compile(r"[A-Za-z0-9_]")
 CONTROL_WORD_RE = re.compile(r"[A-Za-z@]")
 MARKDOWN_ESCAPABLE = frozenset(r'!"#$%&\'()*+,-./:;<=>?@[\]^_`{|}~')
-GITHUB_LITERAL_TEX_ESCAPES = frozenset({"#", "%", "_"})
 CONFIG_COMMANDS = frozenset(
     {
         "DeclareMathOperator",
@@ -55,7 +54,7 @@ PORTABLE_COMMANDS = frozenset(
     pmod prod propto qquad quad rVert rangle rbrace rceil rfloor rho right
     rightarrow rtimes rvert setminus sigma sim simeq sqrt subset subseteq sum
     tag tau text texttt therefore theta thickspace thinspace tilde times to
-    triangleq underbrace varnothing vdots vec vee wedge widehat widetilde
+    triangleq underbrace unicode varnothing vdots vec vee wedge widehat widetilde
     xrightarrow
     """.split()
 )
@@ -102,18 +101,6 @@ class MathExpression:
     offset: int
     text: str
     display: bool
-
-
-def github_renderer_payload(payload: str) -> str:
-    """Return the TeX payload GitHub passes to its client-side renderer.
-
-    GFM consumes one backslash from the repository's double-escaped literal
-    punctuation before it creates the math-renderer node.
-    """
-
-    for literal in GITHUB_LITERAL_TEX_ESCAPES:
-        payload = payload.replace(f"\\\\{literal}", f"\\{literal}")
-    return payload
 
 
 def _mask_range(chars: list[str], start: int, end: int) -> None:
@@ -1231,11 +1218,6 @@ def _tex_issues(
             run_end += 1
         run_length = run_end - cursor
         if run_length >= 2:
-            allowed_literal_escape = (
-                run_length == 2
-                and run_end < len(payload)
-                and payload[run_end] in GITHUB_LITERAL_TEX_ESCAPES
-            )
             allowed_row_break = (
                 fragment.display
                 and run_length == 2
@@ -1244,15 +1226,15 @@ def _tex_issues(
                     or payload[run_end] in " \t\r\n["
                 )
             )
-            if not allowed_literal_escape and not allowed_row_break:
+            if not allowed_row_break:
                 issues.append(
                     MathIssue(
                         fragment.offset + cursor,
                         "GHM009",
-                        r"double backslashes are only allowed as a display-math row break or before _, %, and # so GitHub passes a literal TeX escape",
+                        r"double backslashes are only allowed as a display-math row break",
                     )
                 )
-            cursor = run_end + 1 if allowed_literal_escape else run_end
+            cursor = run_end
             continue
 
         if run_end >= len(payload):
@@ -1308,7 +1290,7 @@ def _tex_issues(
                     MathIssue(
                         fragment.offset + cursor,
                         "GHM020",
-                        r'\char does not render reliably on GitHub; use Markdown source \\_, \\%, or \\# for literal punctuation',
+                        r'\char does not render reliably on GitHub; use \unicode{x5F}, \unicode{x25}, or \unicode{x23} for literal punctuation',
                     )
                 )
             elif command not in PORTABLE_COMMANDS:
@@ -1319,7 +1301,17 @@ def _tex_issues(
                         f"TeX command is outside the repository's GitHub-verified profile: \\{command}",
                     )
                 )
-            if command in {"begin", "end"}:
+            if command == "unicode" and re.match(
+                r"\{x(?:23|25|5F)\}", payload[command_end:]
+            ) is None:
+                issues.append(
+                    MathIssue(
+                        fragment.offset + cursor,
+                        "GHM020",
+                        r"\unicode is limited to the GitHub-verified forms \unicode{x5F}, \unicode{x25}, and \unicode{x23}",
+                    )
+                )
+            elif command in {"begin", "end"}:
                 environment = re.match(r"\{([A-Za-z][A-Za-z0-9*_-]*)\}", payload[command_end:])
                 if not fragment.display:
                     issues.append(
@@ -1369,7 +1361,7 @@ def _tex_issues(
             MathIssue(
                 fragment.offset + match.start(),
                 "GHM023",
-                r"raw % starts a TeX comment and silently discards the rest of the line; use Markdown source \\% so GitHub passes the TeX literal \%",
+                r"raw % starts a TeX comment and silently discards the rest of the line; use \unicode{x25} for a literal percent sign",
             )
         )
     if any(issue.code == "GHM003" for issue in issues):
