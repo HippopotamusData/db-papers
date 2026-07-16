@@ -117,7 +117,7 @@ FDB 把 OCC 与 MVCC 结合，实现可串行化快照隔离（SSI）。事务 $
 
 为确保 LSN 之间没有空洞，Sequencer 在返回提交版本时一并返回前一提交版本（前一 LSN）。Proxy 将 LSN 和前一 LSN 同时发给 Resolver 和 LogServer，让它们按 LSN 顺序串行处理事务；StorageServer 同样按递增 LSN 从 LogServer 拉取日志。
 
-算法 1 给出了 Resolver 上的无锁冲突检测。每个 Resolver 维护近期已提交事务修改过的 key range 及其提交版本映射 `lastCommit`。$Tx$ 的提交请求包括写范围集合 $R_w$ 和读范围集合 $R_r$，单个 key 也转换成单 key range。算法用读集合检查并发已提交事务修改过的范围，从而避免幻读；若不存在读写冲突，Resolver 接受事务并用写集合更新最近修改范围。快照读取不加入 $R_r$。实际实现中，`lastCommit` 是带版本信息的概率 SkipList [56]。
+算法 1 给出了 Resolver 上的无锁冲突检测。每个 Resolver 维护近期已提交事务修改过的 key range 及其提交版本映射 `lastCommit`。 $Tx$ 的提交请求包括写范围集合 $R_w$ 和读范围集合 $R_r$，单个 key 也转换成单 key range。算法用读集合检查并发已提交事务修改过的范围，从而避免幻读；若不存在读写冲突，Resolver 接受事务并用写集合更新最近修改范围。快照读取不加入 $R_r$。实际实现中，`lastCommit` 是带版本信息的概率 SkipList [56]。
 
 **算法 1：检查事务 Tx 的冲突。**
 

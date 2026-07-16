@@ -68,9 +68,9 @@ void hash_int32(int32_t* data, uint32_t* hash, size_t tuples) {
 
 ### 3.1 选择扫描
 
-```math
+$$
 throughput \propto W / cycles
-```
+$$
 
 ![图 1：selection scan 的 predicate tree 与 bitmap 求值示例。](assets/figure-01-selection-scan-example.png)
 
@@ -252,7 +252,7 @@ void shuffle_core(const uint8_t* pids, size_t tuples,  // partition ids
 
 原文在 store 行使用 `off`，而相邻可见向量变量是 `o`；以上按原文保留。
 
-除了输出偏移，VIP 还保存用于串行化 scatter 冲突的偏移。若 SIMD lane $i$ 和 $j$ 指向同一分区，$i$ 的偏移为 $o$，$j$ 的偏移则通过加 1 变为 $o+1$。系统用 conflict-detection SIMD 指令生成 lane 间冲突 bitmap，再逐 lane 统计置位数。
+除了输出偏移，VIP 还保存用于串行化 scatter 冲突的偏移。若 SIMD lane $i$ 和 $j$ 指向同一分区， $i$ 的偏移为 $o$， $j$ 的偏移则通过加 1 变为 $o+1$。系统用 conflict-detection SIMD 指令生成 lane 间冲突 bitmap，再逐 lane 统计置位数。
 
 计算偏移后，VIP 对下一块元组一次 shuffle 一个列。直接 scatter 到输出会造成过多 cache conflict，因此先写入 cache-resident buffer；某个分区的 buffer 填满后，再用 non-temporal store 批量 flush。每个分区的 buffer 为两条 cache line：下半区填满后写出，并把上半区移到下半区。下面是 32 位整数列的实现。
 

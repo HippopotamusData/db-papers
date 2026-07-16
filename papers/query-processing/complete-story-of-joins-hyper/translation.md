@@ -47,8 +47,8 @@ $$
 它使用谓词 $p$ 计算关系 $T_1$ 和 $T_2$ 中所有匹配条目的组合。大多数 SQL 查询都会用到它，但在存在相关子查询时，这一定义并不充分。子查询必须对外层查询的每个元组求值，因此定义依赖连接（dependent join）为：
 
 $$
-T_1 \Join^{dep}_p T_2 :=
-\{t_1 \circ t_2 \mid t_1 \in T_1 \land t_2 \in T_2(t_1) \land p(t_1 \circ t_2)\}
+T_1 \Join^{dep} _ p T_2 :=
+\lbrace{}t_1 \circ t_2 \mid t_1 \in T_1 \land t_2 \in T_2(t_1) \land p(t_1 \circ t_2)\rbrace{}
 $$
 
 其中，右侧输入会针对左侧输入的每个元组求值。按照约定，只有右侧可以依赖左侧，左侧不能依赖右侧。用 $A(T)$ 表示表达式 $T$ 产生的属性，用 $F(T)$ 表示表达式 $T$ 中出现的自由变量。为了求值依赖连接，必须满足 $F(T_2) \subseteq A(T_1)$，也就是说 $T_2$ 需要的属性必须由 $T_1$ 产生。依赖连接及其变换规则构成 HyPer 去嵌套技术的基础，该技术已在此前 BTW 论文中描述 [NK15]。
@@ -56,24 +56,24 @@ $$
 此外还有半连接、反半连接、左外连接和全外连接：
 
 $$
-T_1 \ltimes_p T_2 := \{t_1 \mid t_1 \in T_1 \land \exists t_2 \in T_2: p(t_1 \circ t_2)\}
+T_1 \ltimes_p T_2 := \lbrace{}t_1 \mid t_1 \in T_1 \land \exists t_2 \in T_2: p(t_1 \circ t_2)\rbrace{}
 $$
 
 $$
-T_1 \bar{\ltimes}_p T_2 := \{t_1 \mid t_1 \in T_1 \land \nexists t_2 \in T_2: p(t_1 \circ t_2)\}
+T_1 \bar{\ltimes} _ p T_2 := \lbrace{}t_1 \mid t_1 \in T_1 \land \nexists t_2 \in T_2: p(t_1 \circ t_2)\rbrace{}
 $$
 
 $$
-T_1 \leftouterjoin_p T_2 :=
+T_1 \mathbin{\Join _ {\mathrm{left}}} _ p T_2 :=
 (T_1 \Join_p T_2) \cup
-\{t_1 \circ (a:\mathrm{null})_{a \in A(T_2)} \mid t_1 \in (T_1 \bar{\ltimes}_p T_2)\}
+\lbrace{}t_1 \circ (a:\mathrm{null}) _ {a \in A(T_2)} \mid t_1 \in (T_1 \bar{\ltimes} _ p T_2)\rbrace{}
 $$
 
 $$
-T_1 \fullouterjoin_p T_2 :=
+T_1 \mathbin{\Join _ {\mathrm{full}}} _ p T_2 :=
 (T_1 \Join_p T_2)
-\cup \{t_1 \circ (a:\mathrm{null})_{a \in A(T_2)} \mid t_1 \in (T_1 \bar{\ltimes}_p T_2)\}
-\cup \{(a:\mathrm{null})_{a \in A(T_1)} \circ t_2 \mid t_2 \in (T_2 \bar{\ltimes}_p T_1)\}
+\cup \lbrace{}t_1 \circ (a:\mathrm{null}) _ {a \in A(T_2)} \mid t_1 \in (T_1 \bar{\ltimes} _ p T_2)\rbrace{}
+\cup \lbrace{}(a:\mathrm{null}) _ {a \in A(T_1)} \circ t_2 \mid t_2 \in (T_2 \bar{\ltimes} _ p T_1)\rbrace{}
 $$
 
 这些连接变体也都有对应的依赖连接版本，其定义与依赖内连接类似。
@@ -81,9 +81,9 @@ $$
 除连接算子外，另一个重要算子是 `GROUP BY`：
 
 $$
-\Gamma_{A; a:f}(e) :=
-\{x \circ (a:f(y)) \mid x \in \Pi_A(e) \land
-y = \{z \mid z \in e \land \forall a \in A: x.a = z.a\}\}
+\Gamma _ {A; a:f}(e) :=
+\lbrace{}x \circ (a:f(y)) \mid x \in \Pi_A(e) \land
+y = \lbrace{}z \mid z \in e \land \forall a \in A: x.a = z.a\rbrace{}\rbrace{}
 $$
 
 它按照属性集合 $A$ 对输入 $e$ 分组，并计算一个或多个聚合函数以产生聚合属性。如果 $A$ 为空，则只产生一个聚合元组，这对应 SQL 中缺失 `GROUP BY` 子句的情形。
@@ -109,7 +109,7 @@ where PersID = Lecturer
 会被翻译为：
 
 $$
-\Pi_{Title,Name}(\sigma_{PersID=Lecturer}(Courses \times Professors))
+\Pi _ {Title,Name}(\sigma _ {PersID=Lecturer}(Courses \times Professors))
 $$
 
 之后的优化阶段会把这个规范翻译转换成更高效的计划，例如把选择和笛卡尔积合并为连接。不幸的是，这种简单的教材式翻译不足以处理真实查询。
@@ -129,9 +129,9 @@ from Professors,
 这里的子查询依赖外层连接，因此不能使用笛卡尔积。相关子查询必须通过依赖连接加入：
 
 $$
-Professors \Join^{dep}_{true}
-\Gamma_{\emptyset,total:sum(ECTS)}
-(\sigma_{PersId=Lecturer}(Courses))
+Professors \Join^{dep} _ {true}
+\Gamma _ {\emptyset,total:sum(ECTS)}
+(\sigma _ {PersId=Lecturer}(Courses))
 $$
 
 当然，查询优化器会尽快尝试消除依赖连接，例如使用 [NK15] 中的技术。但初始的关系代数翻译步骤需要依赖连接，使用普通笛卡尔积是不正确的。有些系统在这里使用嵌套循环连接，但并不显式标注它是依赖连接；然而从性能角度看，嵌套循环连接通常非常不理想。一般更好的做法是先引入依赖连接，再通过去嵌套技术把它转换成更高效的普通连接。
@@ -157,22 +157,22 @@ $$
 T_1 \Join^1_p T_2 :=
 \begin{cases}
 \text{runtime error}, & \text{if some } t_1 \in T_1 \text{ has more than one matching } t_2 \in T_2 \\
-T_1 \leftouterjoin_p T_2, & \text{otherwise}
+T_1 \mathbin{\Join _ {\mathrm{left}}} _ p T_2, & \text{otherwise}
 \end{cases}
 $$
 
 使用该算子，可以把标量子查询翻译为连接：
 
 $$
-Professors \Join^1_{true}
-\sigma_{PersId=Boss \land JobTitle='personal assistant'}(Assistants)
+Professors \Join^1 _ {true}
+\sigma _ {PersId=Boss \land JobTitle='personal assistant'}(Assistants)
 $$
 
 查询优化器随后会把相关谓词移入连接算子，得到：
 
 $$
-Professors \Join^1_{PersId=Boss}
-\sigma_{JobTitle='personal assistant'}(Assistants)
+Professors \Join^1 _ {PersId=Boss}
+\sigma _ {JobTitle='personal assistant'}(Assistants)
 $$
 
 引入单值连接同时有性能和正确性理由。在性能方面，基于哈希的单值连接理想情况下运行时间为 $O(n)$，明显优于递归求值的 $O(n^2)$。在正确性方面，一般不能用其他连接实现替代，因为其他实现不会在发现多个连接伙伴时报错。少数例外是：如果已知子查询最多产生一个元组，例如绑定主键或单元组聚合，则可以用其他算子替代单值连接。但这些属于后续优化；初始翻译步骤总是把标量子查询翻译为单值连接。
@@ -195,15 +195,15 @@ where exists (select *
 本文引入标记连接，它创建一个新属性，用于标记某个元组是否具有连接伙伴：
 
 $$
-T_1 \Join^{M:m}_p T_2 :=
-\{t_1 \circ (m:(\exists t_2 \in T_2: p(t_1 \circ t_2))) \mid t_1 \in T_1\}
+T_1 \Join^{M:m} _ p T_2 :=
+\lbrace{}t_1 \circ (m:(\exists t_2 \in T_2: p(t_1 \circ t_2))) \mid t_1 \in T_1\rbrace{}
 $$
 
 使用标记连接，可以把上述查询翻译成相对普通的连接查询：
 
 $$
-\sigma_{m \lor Sabbatical}
-(Professors \Join^{M:m}_{PersId=Lecturer} Courses)
+\sigma _ {m \lor Sabbatical}
+(Professors \Join^{M:m} _ {PersId=Lecturer} Courses)
 $$
 
 如果标记只用于合取谓词，查询优化器通常可以把标记连接转换成半连接或反半连接。但一般情况下不能这样做，例如析取会阻止这种转换。即便如此，标记连接仍然可以高效求值，使用哈希时通常是 $O(n)$，因此引入该算子不会给查询优化器造成问题。
@@ -221,8 +221,8 @@ from Courses c1
 可以直接翻译成标记连接：
 
 $$
-Courses\ c1 \Join^{M:someEqual}_{c1.ECTS=c2.ECTS}
-\sigma_{c2.Lecturer=123}(Courses\ c2)
+Courses\ c1 \Join^{M:someEqual} _ {c1.ECTS=c2.ECTS}
+\sigma _ {c2.Lecturer=123}(Courses\ c2)
 $$
 
 结果列 `someEqual` 可以取 `TRUE`、`FALSE` 和 `NULL`，其中 `NULL` 表示 unknown。因此，实现标记连接时需要格外小心，第 5 节会讨论这一点。其巨大收益是，现在可以把任意 `exists`/`not exists`/`unique`/量化比较查询翻译成连接结构，并在后续优化后获得高效求值策略。
@@ -284,9 +284,9 @@ where p.PersId = a.Boss
 如果没有标记连接，连接顺序实际上被预先决定，`Professors` 和 `Assistants` 之间的内连接总会先执行。使用标记连接后，也可以先执行标记连接，再与 `Assistants` 连接：
 
 $$
-(\sigma_{m \lor Sabbatical}
-(Professors \Join^{M:m}_{PersId=Lecturer} Courses))
-\Join_{PersId=Boss} Assistants
+(\sigma _ {m \lor Sabbatical}
+(Professors \Join^{M:m} _ {PersId=Lecturer} Courses))
+\Join _ {PersId=Boss} Assistants
 $$
 
 如果 `Assistants` 比 `Professors` 更多，那么先做标记连接比先做内连接更快。由于连接谓词具有传递性（`PersId = Boss` 且 `Lecturer = PersId`），也可以从 `Courses` 与 `Assistants` 之间的标记连接开始。三种连接顺序之间的选择由基于代价的连接枚举算法完成。HyPer 使用一种名为 DPhyp 的图式动态规划算法，该算法只枚举不包含笛卡尔积的连通分量 [MN08]，并考虑非内连接的顺序约束。
@@ -337,7 +337,7 @@ from Professors
 
 ### 5.1 常规等值连接（Regular Equi-Joins）
 
-为了突出不同连接之间的差异，先从常规基于哈希的等值连接开始。这里只描述内存内情形，因此代码较短，并作为不同变体的基础。为简单起见，假设计算 $R_{a=b} S$：
+为了突出不同连接之间的差异，先从常规基于哈希的等值连接开始。这里只描述内存内情形，因此代码较短，并作为不同变体的基础。为简单起见，假设计算 $R _ {a=b} S$：
 
 ```text
 List. 1: Equality Hash Join
@@ -354,7 +354,7 @@ for each s in S
 
 ### 5.2 混合类型连接（Joins with Mixed Types）
 
-即使是简单等值连接，如果涉及混合数据类型也会变复杂。在 $R_{a=b} S$ 的例子中，如果 `a` 的数据类型是 `numeric(6,3)`，而 `b` 的数据类型是 `integer`，应该如何组织哈希表？数值的内部表示很不同，但仍需保证 `3` 能与 `3.000` 连接，而不能与 `3.001` 连接。若直接使用不同数据类型的原生哈希函数，通常无法满足这一点。
+即使是简单等值连接，如果涉及混合数据类型也会变复杂。在 $R _ {a=b} S$ 的例子中，如果 `a` 的数据类型是 `numeric(6,3)`，而 `b` 的数据类型是 `integer`，应该如何组织哈希表？数值的内部表示很不同，但仍需保证 `3` 能与 `3.000` 连接，而不能与 `3.001` 连接。若直接使用不同数据类型的原生哈希函数，通常无法满足这一点。
 
 关键洞察是：应在限制最强的数据类型上执行连接，本例中为 `integer`。任何不能精确表示为整数的值都不可能有连接伙伴，因此可以从哈希表中省略。假设 `b` 具有限制最强的数据类型，则伪代码如下：
 
@@ -513,10 +513,10 @@ for each r in H
 
 ### 5.7 非等值连接（Non-Equi Joins）
 
-等值连接最常见，但并不是唯一的连接类型。一般而言，连接谓词可以是任意表达式，而这并不总能用哈希连接求值。在讨论一般情形前，先考虑“近似”等值连接，例如 $R_{a=b \land c>d} S$。这类谓词有一个等值部分，可以用哈希连接求值，而且通常应该这样做。但对非等值部分必须小心处理。对内连接，可以拆分谓词：
+等值连接最常见，但并不是唯一的连接类型。一般而言，连接谓词可以是任意表达式，而这并不总能用哈希连接求值。在讨论一般情形前，先考虑“近似”等值连接，例如 $R _ {a=b \land c\gt{}d} S$。这类谓词有一个等值部分，可以用哈希连接求值，而且通常应该这样做。但对非等值部分必须小心处理。对内连接，可以拆分谓词：
 
 $$
-R_{a=b \land c>d} S \equiv \sigma_{c>d}(R_{a=b} S)
+R _ {a=b \land c\gt{}d} S \equiv \sigma _ {c\gt{}d}(R _ {a=b} S)
 $$
 
 这很容易回答。但对外连接等情形，这种拆分是不正确的，额外限制必须在连接过程中直接求值，以避免错误结果。对于 HyPer 这类编译型数据库系统 [Ne11]，这种组合求值很自然；但 Vectorwise [ZB12] 之类系统需要额外逻辑，才能在哈希连接中求值任意表达式。注意，连接条件的非等值部分也可能返回 `NULL`，这对标记连接相关；如果当前标记为 `FALSE`，该结果会产生 `NULL` 标记。

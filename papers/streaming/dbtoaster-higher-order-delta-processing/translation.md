@@ -35,13 +35,13 @@ source: source.pdf
 
 本文的技术重点是增量视图维护的一种极端形式，我们称之为高阶 IVM。我们在多个推导层次上递归使用离散前向差分（增量查询）。也就是说，先用增量查询（“一阶增量”）增量维护输入查询的视图，再把增量查询也物化为视图，并用增量查询的增量查询（“二阶增量”）维护这些视图；如此继续，在物化视图与推导用于维护的更高阶增量查询之间交替。该技术对高阶增量的使用，与早先在查询子表达式的不同物化和增量维护选择之间权衡以取得最佳性能的工作 [27] 很不相同。相反，我们构造高阶增量视图的技术在某种程度上让人联想到离散小波和数值微分方法；基于与 Haar 小波变换的一种表面类比，我们把基础技术命名为视图元变换。
 
-**示例 1** 考虑查询 $Q$，它统计关系 $R$ 与 $S$ 的乘积中的元组数。暂时只考虑在插入操作下维护 $Q$ 的视图。用 $\Delta_R$（相应地，$\Delta_S$）表示向 $R$（相应地，$S$）插入一个元组时视图发生的变化。假设我们同时物化以下四个视图：
+**示例 1** 考虑查询 $Q$，它统计关系 $R$ 与 $S$ 的乘积中的元组数。暂时只考虑在插入操作下维护 $Q$ 的视图。用 $\Delta_R$ 表示向 $R$ 插入一个元组时视图发生的变化；相应地，用 $\Delta_S$ 表示向 $S$ 插入一个元组时的变化。假设我们同时物化以下四个视图：
 
 - $Q$（0 阶）；
 - $\Delta_RQ=\mathrm{count}(S)$ 和 $\Delta_SQ=\mathrm{count}(R)$（一阶）；
 - $\Delta_R(\Delta_SQ)=\Delta_S(\Delta_RQ)=1$（二阶，即“增量查询的增量”）。
 
-于是，可以让这些视图彼此支持，同时维护它们；整个过程只需加法，无须计算任何乘积。第四个视图是常量，不依赖数据库。插入一个元组时，另外每个视图都通过加上适当的增量视图来刷新。例如，向 $R$ 插入元组时，把 $\Delta_RQ$ 加到 $Q$ 上，并把 $\Delta_R\Delta_SQ$ 加到 $\Delta_SQ$ 上（$\Delta_RQ$ 不需要变化，因为 $\Delta_R\Delta_RQ=0$）。假设 $R$ 含 2 个元组，$S$ 含 3 个元组。若向 $S$ 添加一个元组，则将 $Q$ 增加 2（$\Delta_SQ$），得到 8；将 $\Delta_RQ$ 增加 1（$\Delta_S\Delta_RQ$），得到 4。随后若向 $R$ 插入一个元组，则将 $Q$ 增加 4（$\Delta_RQ$），得到 12；将 $\Delta_SQ$ 增加 1，得到 3。再插入两个 $S$ 元组后，物化视图的状态序列如下：
+于是，可以让这些视图彼此支持，同时维护它们；整个过程只需加法，无须计算任何乘积。第四个视图是常量，不依赖数据库。插入一个元组时，另外每个视图都通过加上适当的增量视图来刷新。例如，向 $R$ 插入元组时，把 $\Delta_RQ$ 加到 $Q$ 上，并把 $\Delta_R\Delta_SQ$ 加到 $\Delta_SQ$ 上（ $\Delta_RQ$ 不需要变化，因为 $\Delta_R\Delta_RQ=0$）。假设 $R$ 含 2 个元组， $S$ 含 3 个元组。若向 $S$ 添加一个元组，则将 $Q$ 增加 2（ $\Delta_SQ$），得到 8；将 $\Delta_RQ$ 增加 1（ $\Delta_S\Delta_RQ$），得到 4。随后若向 $R$ 插入一个元组，则将 $Q$ 增加 4（ $\Delta_RQ$），得到 12；将 $\Delta_SQ$ 增加 1，得到 3。再插入两个 $S$ 元组后，物化视图的状态序列如下：
 
 | 时间点 | 插入到 | $\lVert R\rVert$ | $\lVert S\rVert$ | $Q$ | $\Delta_RQ$ | $\Delta_SQ$ | $\Delta_R\Delta_SQ,\ \Delta_S\Delta_RQ$ |
 | ---: | :---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -55,7 +55,7 @@ source: source.pdf
 
 这是视图元变换包含二阶增量查询的最简单示例；它省略了谓词、自连接和嵌套查询等复杂查询特性。视图元变换能处理包括删除和更新在内的一般更新工作负载，也能处理返回多行结果的查询。
 
-对于 SQL 的一个大型片段，高阶 IVM 可以避免任何形式的连接处理，把全部视图刷新工作都化为求和。事实上，只有在视图定义包含不等连接和嵌套聚合时才需要连接。视图元变换会反复（递归地）执行增量重写。除嵌套聚合以外，每个 $k$ 阶增量在结构上都比 $k-1$ 阶增量查询更简单。视图元变换必然终止：对某个 $n$，$n$ 阶增量必定是常量，只依赖更新而不依赖数据库。在上例中，二阶增量就是不使用任何数据库关系的常量。
+对于 SQL 的一个大型片段，高阶 IVM 可以避免任何形式的连接处理，把全部视图刷新工作都化为求和。事实上，只有在视图定义包含不等连接和嵌套聚合时才需要连接。视图元变换会反复（递归地）执行增量重写。除嵌套聚合以外，每个 $k$ 阶增量在结构上都比 $k-1$ 阶增量查询更简单。视图元变换必然终止：对某个 $n$， $n$ 阶增量必定是常量，只依赖更新而不依赖数据库。在上例中，二阶增量就是不使用任何数据库关系的常量。
 
 我们的高阶 IVM 框架 DBToaster，通过扩展袋关系代数的查询语言、查询编译以及多种新颖的物化与优化策略，实现了对 SQL 尽可能增量的查询求值。DBToaster 有望以非常高的视图刷新速率，提供复杂长时间运行 SQL 查询的物化视图，而不受窗口语义或其他限制。数据可以快速变化，其中一部分仍可长期存在。DDMS 能以此功能为基础，构造比流处理引擎所支持的查询构造更加丰富的查询。DBToaster 接受 SQL 视图查询作为输入，并自动将其增量化为过程式 C++ 触发器代码；其中所有工作都归结为对物化视图的细粒度、低成本更新。
 
@@ -67,7 +67,7 @@ Q = select sum(LI.PRICE * O.XCH)
     where O.ORDK = LI.ORDK;
 ```
 
-它运行在类似 TPC-H 的 Orders 和 Lineitem 模式之上，其中明细项有价格，订单有货币汇率。查询计算所有订单按汇率加权的总销售额。我们物化查询 $Q$ 的视图以及一阶视图 $Q_{LI}$（$\Delta_{LI}Q$）和 $Q_O$（$\Delta_OQ$）。二阶增量相对于数据库是常量，已内联到我们的方法为查询 $Q$ 生成的以下插入触发器程序中：
+它运行在类似 TPC-H 的 Orders 和 Lineitem 模式之上，其中明细项有价格，订单有货币汇率。查询计算所有订单按汇率加权的总销售额。我们物化查询 $Q$ 的视图以及一阶视图 $Q _ {LI}$（ $\Delta _ {LI}Q$）和 $Q_O$（ $\Delta_OQ$）。二阶增量相对于数据库是常量，已内联到我们的方法为查询 $Q$ 生成的以下插入触发器程序中：
 
 ```text
 on insert into O values (ordk, custk, xch) do {
@@ -86,7 +86,7 @@ on insert into LI values (ordk, partk, price) do {
 select sum(LI.PRICE) from Lineitem LI where LI.ORDK = ordk
 ```
 
-我们通过对增量本身执行 IVM 绕过这一点。因而在本例的单元组插入下，触发器可以在常量时间内求值。$Q$ 的删除触发器与插入触发器相同，只需把所有 `+=` 换成 `-=`。□
+我们通过对增量本身执行 IVM 绕过这一点。因而在本例的单元组插入下，触发器可以在常量时间内求值。 $Q$ 的删除触发器与插入触发器相同，只需把所有 `+=` 换成 `-=`。□
 
 这个例子给出单元组更新触发器。视图元变换并不限于此，也支持批量更新。不过，单元组更新的增量查询有相当大的额外优化空间；编译器利用这一点生成十分高效的代码，每逢新更新到达便刷新视图。我们不会把更新排队等候批处理，因此最大化了视图可用性，并最小化视图刷新延迟，从而支持超低延迟监控与算法交易应用。
 
@@ -112,7 +112,7 @@ select sum(LI.PRICE) from Lineitem LI where LI.ORDK = ordk
 **增量维护算法与形式语义。** 在集合关系代数 [6, 7] 和袋关系代数 [8, 14] 下都有人研究过查询答案的维护。一般而言，给定 $N$ 个关系上的查询 $Q(R_1,\ldots,R_N)$，经典 IVM 会依次对每个输入关系 $R_i$ 使用一阶增量查询
 
 $$
-\Delta_{R_1}Q=Q(R_1\cup\Delta R_1,R_2,\ldots,R_N)-Q(R_1,\ldots,R_N).
+\Delta _ {R_1}Q=Q(R_1\cup\Delta R_1,R_2,\ldots,R_N)-Q(R_1,\ldots,R_N).
 $$
 
 带聚合 [25] 和袋语义 [14] 的查询语言如何创建增量查询已有研究，但据我们所知，尚无工作考察嵌套与相关子查询的增量查询。文献 [17] 研究了嵌套关系代数（NRA）中的视图维护，但任何商业 DBMS 都没有广泛采用它。最后，文献 [33] 研究了时态视图，文献 [22] 研究了外连接与空值；这些工作都局限于扁平 SPJAG 查询，没有推广到子查询、SQL 的完整组合性或标准聚合的范围。
@@ -148,14 +148,14 @@ $$
 $$
 R\bowtie S:\quad \vec t\mapsto
 \begin{cases}
-R(\pi_{\mathrm{sch}(R)}\vec t)\cdot S(\pi_{\mathrm{sch}(S)}\vec t),
-& \vec t=\pi_{\mathrm{sch}(R)\cup\mathrm{sch}(S)}(\vec t)\\
+R(\pi _ {\mathrm{sch}(R)}\vec t)\cdot S(\pi _ {\mathrm{sch}(S)}\vec t),
+& \vec t=\pi _ {\mathrm{sch}(R)\cup\mathrm{sch}(S)}(\vec t)\\
 0,& \text{其他情况}
 \end{cases}
 $$
 
 $$
-\sigma_\theta R:\quad \vec t\mapsto
+\sigma _ \theta R:\quad \vec t\mapsto
 \begin{cases}
 R(\vec t),&\theta(\vec t)\text{ 为真}\\
 0,&\text{其他情况}
@@ -163,11 +163,11 @@ R(\vec t),&\theta(\vec t)\text{ 为真}\\
 $$
 
 $$
-\mathrm{Sum}_{\vec A;f}R:\quad
-\vec a\mapsto\sum_{\pi_{\vec A}(\vec t)=\vec a}R(\vec t)\cdot f(\vec t).
+\mathrm{Sum} _ {\vec A;f}R:\quad
+\vec a\mapsto\sum _ {\pi _ {\vec A}(\vec t)=\vec a}R(\vec t)\cdot f(\vec t).
 $$
 
-这里 $\pi$ 投影的是记录而不是关系，即从 $\vec t$ 中删除标签不属于列名集合 $\vec A$ 的字段；$\mathrm{sch}(R)$ 表示 GMR $R$ 的列名列表。聚合 $\mathrm{Sum}_{\vec A;f}R$ 与 SQL 查询 `select A, sum(f) from R group by A` 几乎相同，区别是 SQL 把聚合值放入新列，而 $\mathrm{Sum}_{\vec A;f}R$ 把它放入分组元组的重数。聚合还可作为保留重数的投影；查询 $\mathrm{Sum}_{\vec A;1}(R)$ 同时等价于 SQL 查询 `select A from R` 和 `select A, sum(1) from R group by A`。
+这里 $\pi$ 投影的是记录而不是关系，即从 $\vec t$ 中删除标签不属于列名集合 $\vec A$ 的字段； $\mathrm{sch}(R)$ 表示 GMR $R$ 的列名列表。聚合 $\mathrm{Sum} _ {\vec A;f}R$ 与 SQL 查询 `select A, sum(f) from R group by A` 几乎相同，区别是 SQL 把聚合值放入新列，而 $\mathrm{Sum} _ {\vec A;f}R$ 把它放入分组元组的重数。聚合还可作为保留重数的投影；查询 $\mathrm{Sum} _ {\vec A;1}(R)$ 同时等价于 SQL 查询 `select A from R` 和 `select A, sum(1) from R group by A`。
 
 **图 1：使用有理数元组重数的广义多重集关系的并、连接和聚合示例。**
 
@@ -188,7 +188,7 @@ $$
 | $\langle b_1,c_2\rangle$ | -7 | $\langle a,b_1,c_2\rangle$ | -14 |
 | $\langle b_2,c_1\rangle$ | -11 | $\langle a,b_2,c_1\rangle$ | 33 |
 
-| $\mathrm{Sum}_{AC;1/2}(R\bowtie(S_1+S_2))\langle A,C\rangle$ | 重数 |
+| $\mathrm{Sum} _ {AC;1/2}(R\bowtie(S_1+S_2))\langle A,C\rangle$ | 重数 |
 | --- | ---: |
 | $\langle a,c_1\rangle$ | 21.5 |
 | $\langle a,c_2\rangle$ | -7 |
@@ -196,24 +196,24 @@ $$
 我们的查询语言包括关系原子 $R$、常量单例关系、自然连接、并（以 $+$ 表示）、选择、分组求和聚合和列重命名 $\rho$：
 
 $$
-Q ::= R\mid\{\vec A:\vec a\mapsto c\}\mid Q\bowtie Q\mid Q+Q\mid
-\sigma_\phi Q\mid\mathrm{Sum}_{\vec A;f}Q\mid\rho_{\vec A}Q,
+Q ::= R\mid\lbrace{}\vec A:\vec a\mapsto c\rbrace{}\mid Q\bowtie Q\mid Q+Q\mid
+\sigma _ \phi Q\mid\mathrm{Sum} _ {\vec A;f}Q\mid\rho _ {\vec A}Q,
 $$
 
-其中 $c$ 是有理数，$f$ 是项，$\phi$ 是项上的条件。项使用有理常数和列名上的算术定义。此外，非分组聚合也可以作为项使用（其值即重数），尤其可用在选择条件中。由此可以表达带嵌套聚合的查询。嵌套聚合可以像 SQL 中常见的那样与外部相关。例如，$\sigma_{C<\mathrm{Sum}_{A;B}R}S$ 表示以下 SQL 查询：
+其中 $c$ 是有理数， $f$ 是项， $\phi$ 是项上的条件。项使用有理常数和列名上的算术定义。此外，非分组聚合也可以作为项使用（其值即重数），尤其可用在选择条件中。由此可以表达带嵌套聚合的查询。嵌套聚合可以像 SQL 中常见的那样与外部相关。例如， $\sigma _ {C\lt{}\mathrm{Sum} _ {A;B}R}S$ 表示以下 SQL 查询：
 
 ```sql
 select * from S
 where S.C < (select sum(B) from R where R.A = S.A)
 ```
 
-可以把删除写作 $R-S$；这并非本质上的新操作，因为可以定义 $R-S:=R+(S\bowtie\{\langle\rangle\mapsto-1\})$。这里 $\{\langle\rangle\mapsto-1\}$ 是单例 GMR 构造 $\{\vec A:\vec a\mapsto c\}$ 的零元特例。
+可以把删除写作 $R-S$；这并非本质上的新操作，因为可以定义 $R-S:=R+(S\bowtie\lbrace{}\langle\rangle\mapsto-1\rbrace{})$。这里 $\lbrace{}\langle\rangle\mapsto-1\rbrace{}$ 是单例 GMR 构造 $\lbrace{}\vec A:\vec a\mapsto c\rbrace{}$ 的零元特例。
 
 语法中没有显式的全称量化/关系差，也没有 Sum 之外的聚合，但所有这些特性都能用（嵌套的）求和聚合查询表达——这是数据库课程里常见的作业。对这些特性在增量处理和查询优化中作专门处理，可能取得比实验所报告更好的性能；但为这些可定义特性赋予专门处理超出了本文范围。因此，我们的实现只原生支持上述片段，实验也只使用本文描述的技术。下文将像在袋关系代数与 SQL 中习惯的那样交替使用关系代数和 SQL 语法。
 
 ### 3.2 计算查询的增量
 
-下面说明如何构造增量查询。熟悉增量视图维护的读者可以跳过本节，但请注意，刚才确定的代数具有一个良好性质：它在取增量操作下封闭。对于每个查询表达式 $Q$，同一代数中都有表达式 $\Delta Q$，表示当数据库 $D$ 被更新工作负载 $\Delta D$ 改变时，$Q$ 的结果如何变化：
+下面说明如何构造增量查询。熟悉增量视图维护的读者可以跳过本节，但请注意，刚才确定的代数具有一个良好性质：它在取增量操作下封闭。对于每个查询表达式 $Q$，同一代数中都有表达式 $\Delta Q$，表示当数据库 $D$ 被更新工作负载 $\Delta D$ 改变时， $Q$ 的结果如何变化：
 
 $$
 \Delta Q(D,\Delta D):=Q(D+\Delta D)-Q(D).
@@ -224,14 +224,14 @@ $$
 $$
 \begin{aligned}
 \Delta(Q_1+Q_2)&:=(\Delta Q_1)+(\Delta Q_2),\\
-\Delta(\mathrm{Sum}_{\vec A;f}Q)&:=\mathrm{Sum}_{\vec A;f}(\Delta Q),\\
+\Delta(\mathrm{Sum} _ {\vec A;f}Q)&:=\mathrm{Sum} _ {\vec A;f}(\Delta Q),\\
 \Delta(Q_1\bowtie Q_2)&:=((\Delta Q_1)\bowtie Q_2)+(Q_1\bowtie(\Delta Q_2))
 +((\Delta Q_1)\bowtie(\Delta Q_2)),\\
-\Delta(\sigma_\theta Q)&:=\sigma_\theta(\Delta Q).
+\Delta(\sigma _ \theta Q)&:=\sigma _ \theta(\Delta Q).
 \end{aligned}
 $$
 
-$\Delta R$ 是对 $R$ 的更新。如果更新不改变 $R$（而改变其他关系），则 $\Delta R$ 为空。
+ $\Delta R$ 是对 $R$ 的更新。如果更新不改变 $R$（而改变其他关系），则 $\Delta R$ 为空。
 
 这里假设 $f$ 和 $\theta$ 不含嵌套聚合。达到完全的一般性并不存在技术困难，但需要超出本文范围的记法；一般情形见文献 [19]。第 5 节将看到，实践中不需要为带嵌套聚合的条件求增量，因为我们会选择重新求值这些条件，而不是将其物化并增量维护。
 
@@ -241,13 +241,13 @@ $\Delta R$ 是对 $R$ 的更新。如果更新不改变 $R$（而改变其他关
 select sum(A * D) from R, S where B = C
 ```
 
-在代数中写作 $\mathrm{Sum}_{\langle\rangle;A*D}(\sigma_{B=C}(R\bowtie S))$。忽略命名差异，这就是示例 2 的查询。对关系 $R$ 应用变化 $\Delta R$、而保持 $S$ 不变（$\Delta S$ 为空）时，该查询的增量为：
+在代数中写作 $\mathrm{Sum} _ {\langle\rangle;A\ast D}(\sigma _ {B=C}(R\bowtie S))$。忽略命名差异，这就是示例 2 的查询。对关系 $R$ 应用变化 $\Delta R$、而保持 $S$ 不变（ $\Delta S$ 为空）时，该查询的增量为：
 
 $$
 \begin{aligned}
-\Delta\mathrm{Sum}_{\langle\rangle;A*D}(\sigma_{B=C}(R\bowtie S))
-&=\mathrm{Sum}_{\langle\rangle;A*D}(\Delta\sigma_{B=C}(R\bowtie S))\\
-&=\mathrm{Sum}_{\langle\rangle;A*D}(\sigma_{B=C}\Delta(R\bowtie S)).
+\Delta\mathrm{Sum} _ {\langle\rangle;A\ast D}(\sigma _ {B=C}(R\bowtie S))
+&=\mathrm{Sum} _ {\langle\rangle;A\ast D}(\Delta\sigma _ {B=C}(R\bowtie S))\\
+&=\mathrm{Sum} _ {\langle\rangle;A\ast D}(\sigma _ {B=C}\Delta(R\bowtie S)).
 \end{aligned}
 $$
 
@@ -257,15 +257,15 @@ $$
 \Delta(R\bowtie S)=(\Delta R)\bowtie S+R\bowtie(\Delta S)+(\Delta R)\bowtie(\Delta S).
 $$
 
-因此，增量查询为 $\mathrm{Sum}_{\langle\rangle;A*D}(\sigma_{B=C}((\Delta R)\bowtie S))$。□
+因此，增量查询为 $\mathrm{Sum} _ {\langle\rangle;A\ast D}(\sigma _ {B=C}((\Delta R)\bowtie S))$。□
 
 增量规则适用于批量更新。单元组更新这一特例很有意义，因为它让我们可以进一步简化增量查询，并生成特别高效的视图刷新代码。
 
-**示例 4** 继续示例 3，但现在假设 $\Delta R$ 是插入单个元组 $\langle A:x,B:y\rangle$。增量查询 $\mathrm{Sum}_{\langle\rangle;A*D}(\sigma_{B=C}(\{\langle A:x,B:y\rangle\}\bowtie S))$ 可简化为 $\mathrm{Sum}_{\langle\rangle;x*D}(\sigma_{y=C}S)$。□
+**示例 4** 继续示例 3，但现在假设 $\Delta R$ 是插入单个元组 $\langle A:x,B:y\rangle$。增量查询 $\mathrm{Sum} _ {\langle\rangle;A\ast D}(\sigma _ {B=C}(\lbrace{}\langle A:x,B:y\rangle\rbrace{}\bowtie S))$ 可简化为 $\mathrm{Sum} _ {\langle\rangle;x\ast D}(\sigma _ {y=C}S)$。□
 
 ### 3.3 绑定模式
 
-查询表达式具有绑定模式：有些输入变量或参数缺失时无法求值这些表达式；另有输出变量，即查询结果模式中的列。每个表达式 $Q$ 都有输入变量或参数 $\vec x_{in}$，以及组成查询结果模式的一组输出变量 $\vec x_{out}$。我们把这样的表达式记作 $Q[\vec x_{in}][\vec x_{out}]$。输入变量是在演算表述中不受值域限制的变量；等价地，在 SQL 查询中必须把它们理解为参数，因为无法从数据库计算出其值：必须提供这些变量，查询才能求值。
+查询表达式具有绑定模式：有些输入变量或参数缺失时无法求值这些表达式；另有输出变量，即查询结果模式中的列。每个表达式 $Q$ 都有输入变量或参数 $\vec x _ {in}$，以及组成查询结果模式的一组输出变量 $\vec x _ {out}$。我们把这样的表达式记作 $Q[\vec x _ {in}][\vec x _ {out}]$。输入变量是在演算表述中不受值域限制的变量；等价地，在 SQL 查询中必须把它们理解为参数，因为无法从数据库计算出其值：必须提供这些变量，查询才能求值。
 
 最有意义的输入变量情形出现在单独看待的相关嵌套子查询中。这样的子查询里，来自外层的相关变量就是输入变量；只有给定输入变量的值才能计算子查询。
 
@@ -276,17 +276,17 @@ select * from R
 where B < (select sum(D) from S where A > C)
 ```
 
-在代数中等价于 $\mathrm{Sum}_{*;1}(\sigma_{B<\mathrm{Sum}_{\langle\rangle;D}(\sigma_{A>C}(S))}R)$。这里，$R$ 模式中的所有列都是输出变量。在子表达式 $\mathrm{Sum}_{\langle\rangle;D}(\sigma_{A>C}(S))$ 中，$A$ 是输入变量；由于聚合不分组，所以没有输出变量。□
+在代数中等价于 $\mathrm{Sum} _ {\ast;1}(\sigma _ {B\lt{}\mathrm{Sum} _ {\langle\rangle;D}(\sigma _ {A\gt{}C}(S))}R)$。这里， $R$ 模式中的所有列都是输出变量。在子表达式 $\mathrm{Sum} _ {\langle\rangle;D}(\sigma _ {A\gt{}C}(S))$ 中， $A$ 是输入变量；由于聚合不分组，所以没有输出变量。□
 
 还要注意，取增量会增加以更新对查询进行参数化的输入变量。例如在示例 4 中，增量查询有输入变量 $x$ 和 $y$，用于传入更新。批量更新的增量查询则有关系值参数。
 
 ## 4. 视图元变换
 
-下面给出视图元变换。若限制查询语言，不允许把聚合嵌套进条件[^nested]（这种情况下增量查询很复杂），查询语言片段便具有如下良好性质。用下述方式度量查询复杂度时，$\Delta Q$ 在结构上严格比 $Q$ 简单。对于不含并（$+$）的查询，查询 $Q$ 的度 $\deg(Q)$ 是连接在一起的关系数。利用分配律可以把并推到连接之上，从而也能为带并的查询赋予一个度：各个无并子查询的最大度。查询与多项式高度类似，查询的度也恰如多项式的度那样定义，其中查询的关系原子对应多项式的变量。
+下面给出视图元变换。若限制查询语言，不允许把聚合嵌套进条件[^nested]（这种情况下增量查询很复杂），查询语言片段便具有如下良好性质。用下述方式度量查询复杂度时， $\Delta Q$ 在结构上严格比 $Q$ 简单。对于不含并（ $+$）的查询，查询 $Q$ 的度 $\deg(Q)$ 是连接在一起的关系数。利用分配律可以把并推到连接之上，从而也能为带并的查询赋予一个度：各个无并子查询的最大度。查询与多项式高度类似，查询的度也恰如多项式的度那样定义，其中查询的关系原子对应多项式的变量。
 
 [^nested]: 下一节将消除这一技术限制。
 
-**定理 1（[19]）** 若 $\deg(Q)>0$，则
+**定理 1（[19]）** 若 $\deg(Q)\gt{}0$，则
 
 $$
 \deg(\Delta Q)=\deg(Q)-1.
@@ -296,13 +296,13 @@ $$
 
 所有查询，无论是否为聚合查询，都会把元组映射到有理数（即定义 GMR）。因此，把视图视作映射数据结构（字典）是很自然的。本节在记法上不区分查询与（物化）视图，但从增量更新的上下文可以清楚看出何时使用的是视图。
 
-**定义 1** 视图元变换把查询转化成一组更新触发器，这些触发器共同维护该查询的视图与一组辅助视图。假设查询 $Q$ 有输入变量（参数）$\vec x_{in}$。对于查询中使用的每个关系 $R$，视图元变换创建触发器：
+**定义 1** 视图元变换把查询转化成一组更新触发器，这些触发器共同维护该查询的视图与一组辅助视图。假设查询 $Q$ 有输入变量（参数） $\vec x _ {in}$。对于查询中使用的每个关系 $R$，视图元变换创建触发器：
 
 ```text
 on update R values D_R do T_R.
 ```
 
-其中 $D_R$ 是对名为 $R$ 的关系的更新——一个广义多重集关系；$T_R$ 是触发器体，即语句集合。触发器体最容易通过下面的递归命令式过程 $VT$ 定义（初始时，语句列表 $T_R$ 为空）：
+其中 $D_R$ 是对名为 $R$ 的关系的更新——一个广义多重集关系； $T_R$ 是触发器体，即语句集合。触发器体最容易通过下面的递归命令式过程 $VT$ 定义（初始时，语句列表 $T_R$ 为空）：
 
 ```text
 procedure VT(Q, x_in):
@@ -317,7 +317,7 @@ procedure VT(Q, x_in):
 
 这里，作用于 $T_R$ 的 `+=` 向命令式代码块追加一条语句，作用于广义多重集关系的 `+=` 使用第 3.1 节的 $+$。只有触发器中出现且度大于零的查询才会被物化；当然，它们恰好就是触发器语句所增加的查询，即受到增量维护的查询。□
 
-**示例 6** 假设模式包含两个关系 $R$、$S$，查询 $Q$ 的度为 2，则 $VT(Q,\langle\rangle)$ 返回的 $T_R$ 代码块为：
+**示例 6** 假设模式包含两个关系 $R$、 $S$，查询 $Q$ 的度为 2，则 $VT(Q,\langle\rangle)$ 返回的 $T_R$ 代码块为：
 
 ```text
 Q += Δ_R Q[D_R];
@@ -325,7 +325,7 @@ foreach D_1 do Δ_R Q[D_1] += Δ_R Δ_R Q[D_1, D_R];
 foreach D_2 do Δ_S Q[D_2] += Δ_R Δ_S Q[D_2, D_R]
 ```
 
-$S$ 的更新触发器体 $T_S$ 与此类似。注意前两条语句的顺序很重要。为保证正确性，触发器中读取的是视图的旧版本。□
+ $S$ 的更新触发器体 $T_S$ 与此类似。注意前两条语句的顺序很重要。为保证正确性，触发器中读取的是视图的旧版本。□
 
 视图元变换与 Haar 小波变换有表面上的类比：后者也物化差分的层次结构；但它们并不是差分的差分，而是递归计算之和的差分。
 
@@ -333,7 +333,7 @@ $S$ 的更新触发器体 $T_S$ 与此类似。注意前两条语句的顺序很
 
 我们将研究单元组插入与单元组删除，分别记为向关系 $R$ 插入元组 $\vec t$ 的 $+R(\vec t)$ 和删除元组 $\vec t$ 的 $-R(\vec t)$。在这里创建插入与删除触发器，触发器参数是元组而不是广义多重集关系，并避免在关系类型的变量上循环。
 
-**示例 7** 回到示例 4 中带单元组更新的查询 $Q$。该查询的度为 2。二阶增量 $(\Delta_{sgn_R R(x,y)}\Delta_{sgn_S S(z,u)}Q)[x,y,z,u]$ 的值为 $sgn_Rsgn_S\mathrm{Sum}_{\langle\rangle;x*u}(\sigma_{y=z}\{\langle\rangle\})$；这等价于：若 $y=z$，则 $\langle\rangle\mapsto sgn_Rsgn_Sx*u$，否则为 0；其中 $sgn_R,sgn_S\in\{+,-\}$。变量 $x,y$ 是触发器参数，在运行时已绑定，但必须在变量 $z,u$ 上循环。另一方面，只有在 $y=z$ 时触发器右侧才非零。因此可以处处用 $y$ 替换 $z$，消去 $z$。根据视图元变换，使用这一简化后的 $R$ 插入触发器 $+R(x,y)$ 为：
+**示例 7** 回到示例 4 中带单元组更新的查询 $Q$。该查询的度为 2。二阶增量 $(\Delta _ {sgn_R R(x,y)}\Delta _ {sgn_S S(z,u)}Q)[x,y,z,u]$ 的值为 $sgn_Rsgn_S\mathrm{Sum} _ {\langle\rangle;x\ast u}(\sigma _ {y=z}\lbrace{}\langle\rangle\rbrace{})$；这等价于：若 $y=z$，则 $\langle\rangle\mapsto sgn_Rsgn_Sx\ast u$，否则为 0；其中 $sgn_R,sgn_S\in\lbrace{}+,-\rbrace{}$。变量 $x,y$ 是触发器参数，在运行时已绑定，但必须在变量 $z,u$ 上循环。另一方面，只有在 $y=z$ 时触发器右侧才非零。因此可以处处用 $y$ 替换 $z$，消去 $z$。根据视图元变换，使用这一简化后的 $R$ 插入触发器 $+R(x,y)$ 为：
 
 ```text
 Q += Δ_{+R(x,y)} Q[x,y];
@@ -341,9 +341,9 @@ foreach u do Δ_{+S(y,u)} Q[y,u] += {<> -> x * u};
 foreach u do Δ_{-S(y,u)} Q[y,u] -= {<> -> x * u}
 ```
 
-其余触发器以类似方式构造。触发器包含整体查询结果（本例中为标量）视图 $Q$ 的更新规则；该规则使用辅助视图 $\Delta_{\pm R(x,y)}Q$，后者在 $S$ 的更新触发器中维护。此外还有辅助视图 $\Delta_{\pm S(z,u)}Q$ 的更新规则；这些视图用于在 $S$ 的插入和删除触发器中更新 $Q$。
+其余触发器以类似方式构造。触发器包含整体查询结果（本例中为标量）视图 $Q$ 的更新规则；该规则使用辅助视图 $\Delta _ {\pm R(x,y)}Q$，后者在 $S$ 的更新触发器中维护。此外还有辅助视图 $\Delta _ {\pm S(z,u)}Q$ 的更新规则；这些视图用于在 $S$ 的插入和删除触发器中更新 $Q$。
 
-之所以没有展示 $\Delta_{\pm R(\ldots)}\Delta_{\pm R(\ldots)}Q$ 或 $\Delta_{\pm S(\ldots)}\Delta_{\pm S(\ldots)}Q$，是因为查询不含自连接，所以这些值保证为 0。下一节介绍的进一步优化利用分配律并消除关于 $u$ 的循环，最终得到示例 2 中的触发器。□
+之所以没有展示 $\Delta _ {\pm R(\ldots)}\Delta _ {\pm R(\ldots)}Q$ 或 $\Delta _ {\pm S(\ldots)}\Delta _ {\pm S(\ldots)}Q$，是因为查询不含自连接，所以这些值保证为 0。下一节介绍的进一步优化利用分配律并消除关于 $u$ 的循环，最终得到示例 2 中的触发器。□
 
 需要完成的工作具有极其规则且（概念上）简单的结构。此外，其中已不存在经典的大粒度算子，因此把这一工作负载交给经典查询优化器没有意义。程序中有许多可能很昂贵的多变量 `for` 循环，但这些工作也完全可以做数据并行，而且没有可与连接中的依赖相比的数据依赖。这些特点为大量使用编译提供了依据。
 
@@ -357,72 +357,72 @@ foreach u do Δ_{-S(y,u)} Q[y,u] -= {<> -> x * u}
 
 1. 查询分解
 
-   $$
-   \mathcal M(\mathrm{Sum}_{\vec A\vec B;f_1*f_2}(Q_1\bowtie Q_2))
-   \Rightarrow
-   \mathcal M(\mathrm{Sum}_{\vec A;f_1}(Q_1))\bowtie
-   \mathcal M(\mathrm{Sum}_{\vec B;f_2}(Q_2))
-   \tag{1}
-   $$
+$$
+\mathcal M(\mathrm{Sum} _ {\vec A\vec B;f_1\ast f_2}(Q_1\bowtie Q_2))
+\Rightarrow
+\mathcal M(\mathrm{Sum} _ {\vec A;f_1}(Q_1))\bowtie
+\mathcal M(\mathrm{Sum} _ {\vec B;f_2}(Q_2))
+\tag{1}
+$$
 
-   条件：$Q_1$ 与 $Q_2$ 没有公共列；$\vec A$、$\vec B$ 分别是两侧的分组项。
+   条件： $Q_1$ 与 $Q_2$ 没有公共列； $\vec A$、 $\vec B$ 分别是两侧的分组项。
 
 2. 因式分解与多项式展开
 
-   $$
-   \mathcal M(Q_L\bowtie(Q_1+Q_2+\cdots)\bowtie Q_R)
-   \Leftrightarrow
-   \mathcal M(Q_L\bowtie Q_1\bowtie Q_R)+
-   \mathcal M(Q_L\bowtie Q_2\bowtie Q_R)+\cdots
-   \tag{2}
-   $$
+$$
+\mathcal M(Q_L\bowtie(Q_1+Q_2+\cdots)\bowtie Q_R)
+\Leftrightarrow
+\mathcal M(Q_L\bowtie Q_1\bowtie Q_R)+
+\mathcal M(Q_L\bowtie Q_2\bowtie Q_R)+\cdots
+\tag{2}
+$$
 
 3. 输入变量
 
-   $$
-   \mathcal M(\mathrm{Sum}_{\vec A;f(\vec B,\vec C)}
-   (\sigma_{\theta(\vec B,\vec C)}(Q)))
-   \Rightarrow
-   \mathrm{Sum}_{\vec A;f(\vec B,\vec C)}
-   (\sigma_{\theta(\vec B,\vec C)}
-   (\mathcal M(\mathrm{Sum}_{\vec A\vec B;1}(Q))))
-   \tag{3}
-   $$
+$$
+\mathcal M(\mathrm{Sum} _ {\vec A;f(\vec B,\vec C)}
+(\sigma _ {\theta(\vec B,\vec C)}(Q)))
+\Rightarrow
+\mathrm{Sum} _ {\vec A;f(\vec B,\vec C)}
+(\sigma _ {\theta(\vec B,\vec C)}
+(\mathcal M(\mathrm{Sum} _ {\vec A\vec B;1}(Q))))
+\tag{3}
+$$
 
-   条件：$f,\theta$ 是项上的函数；$\vec A$ 是 $Q$ 上聚合的分组变量；$\vec B$ 是 $Q$ 中被 $f,\theta$ 使用的输出变量；$\vec C$ 是不出现在 $Q$ 中的输入变量。
+   条件： $f,\theta$ 是项上的函数； $\vec A$ 是 $Q$ 上聚合的分组变量； $\vec B$ 是 $Q$ 中被 $f,\theta$ 使用的输出变量； $\vec C$ 是不出现在 $Q$ 中的输入变量。
 
 4. 嵌套聚合与去相关
 
-   $$
-   \mathcal M(\mathrm{Sum}_{\vec A;f}
-   (\sigma_{\theta(Q_N,\vec B)}(Q_O)))
-   \Rightarrow
-   \mathrm{Sum}_{\vec A;1}
-   (\sigma_{\theta(\mathcal M(Q_N),\vec B)}
-   (\mathcal M(\mathrm{Sum}_{\vec A\vec B;f}(Q_O))))
-   \tag{4}
-   $$
+$$
+\mathcal M(\mathrm{Sum} _ {\vec A;f}
+(\sigma _ {\theta(Q_N,\vec B)}(Q_O)))
+\Rightarrow
+\mathrm{Sum} _ {\vec A;1}
+(\sigma _ {\theta(\mathcal M(Q_N),\vec B)}
+(\mathcal M(\mathrm{Sum} _ {\vec A\vec B;f}(Q_O))))
+\tag{4}
+$$
 
-   条件：$Q_N$ 是非分组聚合项；$f,\theta$ 是项上的函数；$\vec A$ 是 $Q_O$ 上聚合的分组变量；$\vec B$ 是 $Q_O$ 中被 $f,\theta,Q_N$ 使用的输出变量。
+   条件： $Q_N$ 是非分组聚合项； $f,\theta$ 是项上的函数； $\vec A$ 是 $Q_O$ 上聚合的分组变量； $\vec B$ 是 $Q_O$ 中被 $f,\theta,Q_N$ 使用的输出变量。
 
 ### 5.1 物化决策
 
 对于任意查询 $Q$，朴素视图元变换都生成单个物化视图 $M_Q$。然而，更高效的做法往往是把 $Q$ 分片物化成一组受到增量维护的物化视图 $\vec M_Q$，以及在这些物化视图上求值的等价查询 $Q'$。我们把这个重写查询及其分片映射称为 $Q$ 的一个物化决策，记作 $\langle Q',\vec M_Q\rangle$。
 
-DBToaster 迭代地为查询 $Q$ 选择物化决策：从朴素物化决策 $\langle(M_{Q,1}),(M_{Q,1}:=Q)\rangle$ 开始，反复应用若干重写规则直至不动点。这些规则见图 2，下面逐一讨论。图 3 给出规则对第 6 节和附录 A 所述实验工作负载的适用情况。
+DBToaster 迭代地为查询 $Q$ 选择物化决策：从朴素物化决策 $\langle(M _ {Q,1}),(M _ {Q,1}:=Q)\rangle$ 开始，反复应用若干重写规则直至不动点。这些规则见图 2，下面逐一讨论。图 3 给出规则对第 6 节和附录 A 所述实验工作负载的适用情况。
 
 为清楚起见，我们用物化算子 $\mathcal M$ 把物化决策与相应查询并列显示。例如，查询 $Q:=Q_1\bowtie Q_2$ 的一种可能物化决策是：
 
 $$
 \mathcal M(Q_1)\bowtie\mathcal M(Q_2)
-\equiv\langle(M_{Q,1}\bowtie M_{Q,2}),\{M_{Q,i}:=Q_i\}\rangle.
+\equiv\langle(M _ {Q,1}\bowtie M _ {Q,2}),\lbrace{}M _ {Q,i}:=Q_i\rbrace{}\rangle.
 $$
 
 我们先讨论启发式优化器如何使用这些规则；对于绝大多数查询，尽可能激进地应用规则便可生成近乎最优的触发器程序。随后简述基于代价的优化策略如何进一步提升性能。
 
-**消除重复视图。** 作为最简单的优化，我们观察到朴素视图元变换会生成许多重复视图。这主要是因为增量操作通常可以与自身交换；对于不在 $R$ 或 $S$ 上包含嵌套聚合的任意 $Q$，$\Delta_R\Delta_SQ=\Delta_S\Delta_RQ$。即使只做简单的结构等价判断，也能有效识别这种视图重复。视图去重会显著减少所创建的视图数。
+**消除重复视图。** 作为最简单的优化，我们观察到朴素视图元变换会生成许多重复视图。这主要是因为增量操作通常可以与自身交换；对于不在 $R$ 或 $S$ 上包含嵌套聚合的任意 $Q$， $\Delta_R\Delta_SQ=\Delta_S\Delta_RQ$。即使只做简单的结构等价判断，也能有效识别这种视图重复。视图去重会显著减少所创建的视图数。
 
-**查询分解。** DBToaster 广泛使用广义分配律 [5]（该定律在图模型的概率推断中发挥重要作用），对连接图中含不连通部分的表达式物化进行分解。该规则见图 2 的规则 1。如果 $Q$ 的连接图包含多个不连通分量 $Q_1,Q_2,\ldots$（即 $Q:=Q_1\times Q_2\times\cdots$），分别物化各分量更好。无论使用哪种物化策略，从 $Q$ 中选择或在 $Q$ 上迭代的代价相同；但维护各个 $Q_i$ 的计算成本更低：分解后的物化只存储（并维护）$\sum_i|Q_i|$ 个值，组合物化则要处理 $\prod_i|Q_i|$ 个值。
+**查询分解。** DBToaster 广泛使用广义分配律 [5]（该定律在图模型的概率推断中发挥重要作用），对连接图中含不连通部分的表达式物化进行分解。该规则见图 2 的规则 1。如果 $Q$ 的连接图包含多个不连通分量 $Q_1,Q_2,\ldots$（即 $Q:=Q_1\times Q_2\times\cdots$），分别物化各分量更好。无论使用哪种物化策略，从 $Q$ 中选择或在 $Q$ 上迭代的代价相同；但维护各个 $Q_i$ 的计算成本更低：分解后的物化只存储（并维护） $\sum_i|Q_i|$ 个值，组合物化则要处理 $\prod_i|Q_i|$ 个值。
 
 这一优化对 DBToaster 的效率以及采用编译的合理性都很重要。对查询取关于单元组更新的增量，会把查询中的一个关系替换为常量单例元组，从而有效删除连接图中的一条超边，并产生可以进一步分解的新不连通分量。查询分解也是保证任意无环查询所创建映射数为多项式的关键。
 
@@ -430,7 +430,7 @@ $$
 
 任何查询表达式都可以展开成扁平多项式表示，即一组纯合取查询的并。随后分别对每个合取查询应用查询分解。这一重写规则见图 2 的规则 2。
 
-该重写规则也能反向应用。可以通过识别公共子表达式（规则中的 $Q_L$ 和 $Q_R$）并将其提到并之外，把多项式表达式因式分解为更小的表示。基于代价的优化器大量使用因式分解，以完整探索可能的物化决策空间。启发式优化器在作出物化决策时不尝试因式分解；不过，物化决策 $\langle M_Q,\{\ldots\}\rangle$ 最终确定后，物化查询 $M_Q$ 自身会通过因式分解得到简化。
+该重写规则也能反向应用。可以通过识别公共子表达式（规则中的 $Q_L$ 和 $Q_R$）并将其提到并之外，把多项式表达式因式分解为更小的表示。基于代价的优化器大量使用因式分解，以完整探索可能的物化决策空间。启发式优化器在作出物化决策时不尝试因式分解；不过，物化决策 $\langle M_Q,\lbrace{}\ldots\rbrace{}\rangle$ 最终确定后，物化查询 $M_Q$ 自身会通过因式分解得到简化。
 
 **输入变量。** 带输入变量的查询具有无限值域，不能被完全物化。默认情况下，DBToaster 的启发式方法确保查询及其所有子表达式都避免输入变量。
 
@@ -449,62 +449,62 @@ $$
 **示例 8** 考虑下面的查询，关系 $R,S$ 分别有列 $A,B$：
 
 $$
-Q:=\mathrm{Sum}_{\langle\rangle;1}
-(\sigma_{\mathrm{Sum}_{\langle\rangle;1}(S)=A}(R)).
+Q:=\mathrm{Sum} _ {\langle\rangle;1}
+(\sigma _ {\mathrm{Sum} _ {\langle\rangle;1}(S)=A}(R)).
 $$
 
 根据嵌套聚合的增量规则：
 
 $$
-\Delta_{+S(B')}Q:=
-\mathrm{Sum}_{\langle\rangle;1}(\sigma_{\mathrm{Sum}_{\langle\rangle;1}(S)+1=A}(R))-
-\mathrm{Sum}_{\langle\rangle;1}(\sigma_{\mathrm{Sum}_{\langle\rangle;1}(S)=A}(R)).
+\Delta _ {+S(B')}Q:=
+\mathrm{Sum} _ {\langle\rangle;1}(\sigma _ {\mathrm{Sum} _ {\langle\rangle;1}(S)+1=A}(R))-
+\mathrm{Sum} _ {\langle\rangle;1}(\sigma _ {\mathrm{Sum} _ {\langle\rangle;1}(S)=A}(R)).
 $$
 
 因为原嵌套查询出现在增量表达式中，朴素视图元变换不会在这里终止。为解决这一问题，增量查询被去相关为嵌套子查询与外部查询的两个独立物化表达式。图 2 的规则 4 应用两次（分别用于两处实例）。现在每个物化表达式的度都比原查询低。
 
 尽管这一规则是保证终止所必需的，但在求值增量查询时会引入计算成本。注意，只有嵌套子查询的增量非零时才需要、因而才会使用该规则。
 
-**示例 9** 继续示例 8，$\Delta_{+S(B')}Q$ 的物化决策使用两个物化视图：$M_{Q,1}:=\mathrm{Sum}_{\langle\rangle;1}(S)$ 和 $M_{Q,2}:=R$，并各自使用两次。然而，$\Delta_{+R(A')}Q$ 的度自然比 $Q$ 低，因此会整体物化。□
+**示例 9** 继续示例 8， $\Delta _ {+S(B')}Q$ 的物化决策使用两个物化视图： $M _ {Q,1}:=\mathrm{Sum} _ {\langle\rangle;1}(S)$ 和 $M _ {Q,2}:=R$，并各自使用两次。然而， $\Delta _ {+R(A')}Q$ 的度自然比 $Q$ 低，因此会整体物化。□
 
 另外我们观察到，对某些查询，在某些更新下完全重新计算 $Q$ 更高效。考虑嵌套聚合的一般形式：
 
 $$
-Q:=\mathrm{Sum}_{\vec A;f_1}
-(\sigma_{(\mathrm{Sum}_{\vec A\vec B;f_2}(Q_O))}).
+Q:=\mathrm{Sum} _ {\vec A;f_1}
+(\sigma _ {(\mathrm{Sum} _ {\vec A\vec B;f_2}(Q_O))}).
 $$
 
-$Q$ 的增量会求值两个几乎相同的表达式。朴素做法中，计算增量的代价是原查询的两倍，因此重新求值更高效。不过，如果增量的触发器参数绑定 $\vec B$ 中的一个或多个变量，增量查询只会在 $Q_O$ 的元组子集上聚合，因而更快。启发式优化器据此分析决定任意给定增量查询应重新求值还是增量维护。
+ $Q$ 的增量会求值两个几乎相同的表达式。朴素做法中，计算增量的代价是原查询的两倍，因此重新求值更高效。不过，如果增量的触发器参数绑定 $\vec B$ 中的一个或多个变量，增量查询只会在 $Q_O$ 的元组子集上聚合，因而更快。启发式优化器据此分析决定任意给定增量查询应重新求值还是增量维护。
 
 **代价模型。** DBToaster 完整的基于代价的优化器超出了本文范围，下面只简述其代价模型。占主导地位的处理开销是：（1）用查询结果更新映射；（2）把元组合并成聚合值的 Sum 聚合。
 
-物化决策 $\langle Q',\vec M_Q\rangle$ 的代价包括求值分量（$cost_e$）和维护分量（$cost_m$），二者都涵盖为原查询物化的视图和全部高阶视图。
+物化决策 $\langle Q',\vec M_Q\rangle$ 的代价包括求值分量（ $cost_e$）和维护分量（ $cost_m$），二者都涵盖为原查询物化的视图和全部高阶视图。
 
-DBToaster 使用标准基数估计 [12, 32] 估计把查询 $Q$ 的结果投影到列 $\vec A$ 后的不同元组数。我们把它称为 $Q$ 中 $\vec A$ 的值域大小（$|dom_{\vec A}(Q)|$）。若 $\vec A$ 是 $Q$ 输出变量的完整集合，则称其为 $Q$ 的完整值域（$|dom(Q)|$）。
+DBToaster 使用标准基数估计 [12, 32] 估计把查询 $Q$ 的结果投影到列 $\vec A$ 后的不同元组数。我们把它称为 $Q$ 中 $\vec A$ 的值域大小（ $|dom _ {\vec A}(Q)|$）。若 $\vec A$ 是 $Q$ 输出变量的完整集合，则称其为 $Q$ 的完整值域（ $|dom(Q)|$）。
 
 令 $\mathbb Q$ 为 $Q$ 的所有子表达式集合。查询 $Q$ 的代价是外部查询 $Q$ 与所有直接嵌套在聚合求和中的查询 $Q_i$ 的完整值域大小之和：
 
 $$
 cost_e(Q)=|dom(Q)|+
-\sum_{\{Q_i\mid\mathrm{Sum}(Q_i)\in\mathbb Q\}}|dom(Q_i)|.
+\sum _ {\lbrace{}Q_i\mid\mathrm{Sum}(Q_i)\in\mathbb Q\rbrace{}}|dom(Q_i)|.
 $$
 
-$Q$ 的维护代价以维护 $\vec M_Q$ 中所有 $M_{Q,i}$ 的代价为基础。对出现在 $M_{Q,i}$ 中的每个关系 $R_j$ 的每次变化，都必须更新 $M_{Q,i}$。若 $M_{Q,i}$ 的增量查询使用物化决策 $\langle Q'_{i,j},\vec M_{Q_{i,j}}\rangle$ 物化，且向 $R_j$ 的插入速率为 $rate_{R_j}$，则维护 $M_{Q,i}$ 的代价为：
+ $Q$ 的维护代价以维护 $\vec M_Q$ 中所有 $M _ {Q,i}$ 的代价为基础。对出现在 $M _ {Q,i}$ 中的每个关系 $R_j$ 的每次变化，都必须更新 $M _ {Q,i}$。若 $M _ {Q,i}$ 的增量查询使用物化决策 $\langle Q' _ {i,j},\vec M _ {Q _ {i,j}}\rangle$ 物化，且向 $R_j$ 的插入速率为 $rate _ {R_j}$，则维护 $M _ {Q,i}$ 的代价为：
 
 $$
-cost_m(M_{Q,i})=
-\sum_{R_j}rate_{R_j}\cdot cost_e(Q'_{i,j})+
-\sum_{M\in\vec M_{Q_{i,j}}}cost_m(M).
+cost_m(M _ {Q,i})=
+\sum _ {R_j}rate _ {R_j}\cdot cost_e(Q' _ {i,j})+
+\sum _ {M\in\vec M _ {Q _ {i,j}}}cost_m(M).
 $$
 
-这个定义会在维护求值 $Q_{i,j}$ 所需映射的代价上递归。已经由另一查询物化的映射，其维护代价为零。处理查询 $Q$ 的完整代价为：
+这个定义会在维护求值 $Q _ {i,j}$ 所需映射的代价上递归。已经由另一查询物化的映射，其维护代价为零。处理查询 $Q$ 的完整代价为：
 
 $$
-cost(Q)=rate_{refresh}\cdot cost_e(Q')+
-\sum_i cost_m(M_{Q,i}),
+cost(Q)=rate _ {refresh}\cdot cost_e(Q')+
+\sum_i cost_m(M _ {Q,i}),
 $$
 
-其中，$Q$ 的刷新速率取决于必须提供新鲜视图的频率。在典型使用场景中，每次更新都触发一次刷新，所以 $rate_{refresh}=\sum_j rate_{R_j}$。
+其中， $Q$ 的刷新速率取决于必须提供新鲜视图的频率。在典型使用场景中，每次更新都触发一次刷新，所以 $rate _ {refresh}=\sum_j rate _ {R_j}$。
 
 **图 3：重写规则在实验工作负载上的应用。** “S”表示子查询，“R”表示重新求值，“C”表示缓存，“I”表示增量维护。
 
@@ -527,73 +527,73 @@ $$
 
 图 4 给出由测试工作负载中的查询 Q18（见附录 A）编译出的触发器程序。
 
-为简洁起见，采用缩写模式 $C(CK)$、$O(CK,OK)$ 和 $LI(OK,QTY)$。查询 $Q[][CK]$ 为：
+为简洁起见，采用缩写模式 $C(CK)$、 $O(CK,OK)$ 和 $LI(OK,QTY)$。查询 $Q[][CK]$ 为：
 
 $$
-\mathrm{Sum}_{CK;QTY}
-(\sigma_{100<\mathrm{Sum}_{\langle\rangle;QTY'}
-(\sigma_{OK=OK'}(\rho_{OK',QTY'}LI))}(C\bowtie O\bowtie LI)).
+\mathrm{Sum} _ {CK;QTY}
+(\sigma _ {100\lt{}\mathrm{Sum} _ {\langle\rangle;QTY'}
+(\sigma _ {OK=OK'}(\rho _ {OK',QTY'}LI))}(C\bowtie O\bowtie LI)).
 $$
 
 受篇幅限制，只展示向 Orders $O$ 和 Lineitem $LI$ 插入时的推导。向 Customer $C$ 插入只是简单扩展；删除则与插入对偶，这里完全略去。
 
-**向 Orders 插入。** 插入单个元组 $\langle CK:ck,OK:ok\rangle$ 时，$Q$ 的一阶增量为：
+**向 Orders 插入。** 插入单个元组 $\langle CK:ck,OK:ok\rangle$ 时， $Q$ 的一阶增量为：
 
 $$
-\Delta_{+O\langle ck,ok\rangle}Q:=
-\mathrm{Sum}_{CK;QTY}
-(\sigma_{OK=ok\land CK=ck\land Q_{ns}}(C\bowtie LI)),
+\Delta _ {+O\langle ck,ok\rangle}Q:=
+\mathrm{Sum} _ {CK;QTY}
+(\sigma _ {OK=ok\land CK=ck\land Q _ {ns}}(C\bowtie LI)),
 $$
 
 其中
 
 $$
-Q_{ns}:=(100<\mathrm{Sum}_{\langle\rangle;QTY'}
-(\sigma_{ok=OK'}(\rho_{OK',QTY'}LI))).
+Q _ {ns}:=(100\lt{}\mathrm{Sum} _ {\langle\rangle;QTY'}
+(\sigma _ {ok=OK'}(\rho _ {OK',QTY'}LI))).
 $$
 
 利用重写规则 1，该增量表达式可以分解成两个独立映射，因为 $C$ 与 $LI$ 没有公共列。此外，嵌套子表达式不含关系 $O$，所以这里不应用重写规则 4。增量表达式可以物化为：
 
 $$
-\mathcal M(\mathrm{Sum}_{\langle CK\rangle;1}(\sigma_{CK=ck}C))\bowtie
-\mathcal M(\mathrm{Sum}_{\langle\rangle;QTY}
-(\sigma_{OK=ok\land(100<\mathrm{Sum}_{\langle\rangle;QTY'}
-(\sigma_{ok=OK'}(\rho_{OK',QTY'}LI)))}LI)).
+\mathcal M(\mathrm{Sum} _ {\langle CK\rangle;1}(\sigma _ {CK=ck}C))\bowtie
+\mathcal M(\mathrm{Sum} _ {\langle\rangle;QTY}
+(\sigma _ {OK=ok\land(100\lt{}\mathrm{Sum} _ {\langle\rangle;QTY'}
+(\sigma _ {ok=OK'}(\rho _ {OK',QTY'}LI)))}LI)).
 $$
 
-第二个物化映射还可通过规则 1 和 4 进一步简化。$OK$ 绑定到触发器参数 $ok$，这会断开选择谓词与 $LI$ 之间的连接图。随后，因为选择谓词应用于单例，可以安全地只物化谓词中的聚合。应用这些优化可得到以下物化决策（$1:=\{\langle\rangle\mapsto1\}$）：
+第二个物化映射还可通过规则 1 和 4 进一步简化。 $OK$ 绑定到触发器参数 $ok$，这会断开选择谓词与 $LI$ 之间的连接图。随后，因为选择谓词应用于单例，可以安全地只物化谓词中的聚合。应用这些优化可得到以下物化决策（ $1:=\lbrace{}\langle\rangle\mapsto1\rbrace{}$）：
 
 $$
-\mathcal M(\mathrm{Sum}_{\langle CK\rangle;1}(\sigma_{CK=ck}C))\bowtie
-\mathcal M(\mathrm{Sum}_{\langle\rangle;QTY}(\sigma_{OK=ok}LI))\bowtie
-\mathrm{Sum}_{\langle\rangle;1}
-(\sigma_{100<\mathcal M(\mathrm{Sum}_{\langle\rangle;QTY}
-(\sigma_{ok=OK}LI))}(1)).
+\mathcal M(\mathrm{Sum} _ {\langle CK\rangle;1}(\sigma _ {CK=ck}C))\bowtie
+\mathcal M(\mathrm{Sum} _ {\langle\rangle;QTY}(\sigma _ {OK=ok}LI))\bowtie
+\mathrm{Sum} _ {\langle\rangle;1}
+(\sigma _ {100\lt{}\mathcal M(\mathrm{Sum} _ {\langle\rangle;QTY}
+(\sigma _ {ok=OK}LI))}(1)).
 $$
 
-触发器语句 04 使用以下视图（注意 $Q_{O2}$ 使用两次）：
+触发器语句 04 使用以下视图（注意 $Q _ {O2}$ 使用两次）：
 
 $$
-Q_{O1}:=\mathrm{Sum}_{CK;1}(C),\qquad
-Q_{O2}:=\mathrm{Sum}_{OK;QTY}(LI).
+Q _ {O1}:=\mathrm{Sum} _ {CK;1}(C),\qquad
+Q _ {O2}:=\mathrm{Sum} _ {OK;QTY}(LI).
 $$
 
-$Q_{O1}[][CK]$ 在插入 $C$ 时由下式维护：
+ $Q _ {O1}[][CK]$ 在插入 $C$ 时由下式维护：
 
 $$
-\Delta_{+C\langle ck\rangle}Q_{O1}:=\{\langle CK:ck\rangle\mapsto1\},
+\Delta _ {+C\langle ck\rangle}Q _ {O1}:=\lbrace{}\langle CK:ck\rangle\mapsto1\rbrace{},
 $$
 
-它对应触发器语句 03。$Q_{O2}[][OK]$ 由触发器语句 10 以类似方式维护。
+它对应触发器语句 03。 $Q _ {O2}[][OK]$ 由触发器语句 10 以类似方式维护。
 
-**向 Lineitem 插入。** 插入单个元组 $\langle OK:ok,QTY:qty\rangle$ 时，$Q$ 的一阶增量为：
+**向 Lineitem 插入。** 插入单个元组 $\langle OK:ok,QTY:qty\rangle$ 时， $Q$ 的一阶增量为：
 
 $$
 \begin{aligned}
-\Delta_{+LI\langle ok,qty\rangle}Q:=\mathrm{Sum}_{CK;QTY}\big(&
-\sigma_{OK=ok\land100<qty+Q_{ns}}
-(C\bowtie O\bowtie(LI+\{\langle OK:ok,QTY:qty\rangle\mapsto1\}))\\
-&-\sigma_{OK=ok\land100<Q_{ns}}(C\bowtie O\bowtie LI)\big).
+\Delta _ {+LI\langle ok,qty\rangle}Q:=\mathrm{Sum} _ {CK;QTY}\big(&
+\sigma _ {OK=ok\land100\lt{}qty+Q _ {ns}}
+(C\bowtie O\bowtie(LI+\lbrace{}\langle OK:ok,QTY:qty\rangle\mapsto1\rbrace{}))\\
+&-\sigma _ {OK=ok\land100\lt{}Q _ {ns}}(C\bowtie O\bowtie LI)\big).
 \end{aligned}
 $$
 
@@ -602,19 +602,19 @@ $$
 结合触发器变量优化和选择下推，反复应用重写规则 2、3、4 和 1，得到以下物化决策：
 
 $$
-\mathcal M(\mathrm{Sum}_{CK;1}(\sigma_{OK=ok}(C\bowtie O)))\bowtie
-\Big((\mathcal M(Q_2)+\{\langle\rangle\mapsto qty\})
-\bowtie\sigma_{100<qty+\mathcal M(Q_2)}(1)
--\mathcal M(Q_2)\bowtie\sigma_{100<\mathcal M(Q_2)}(1)\Big),
+\mathcal M(\mathrm{Sum} _ {CK;1}(\sigma _ {OK=ok}(C\bowtie O)))\bowtie
+\Big((\mathcal M(Q_2)+\lbrace{}\langle\rangle\mapsto qty\rbrace{})
+\bowtie\sigma _ {100\lt{}qty+\mathcal M(Q_2)}(1)
+-\mathcal M(Q_2)\bowtie\sigma _ {100\lt{}\mathcal M(Q_2)}(1)\Big),
 $$
 
-其中 $Q_2=\mathrm{Sum}_{\langle\rangle;QTY}(\sigma_{OK=ok}LI)$。
+其中 $Q_2=\mathrm{Sum} _ {\langle\rangle;QTY}(\sigma _ {OK=ok}LI)$。
 
-除最外层的物化（$C\bowtie O$）外，该表达式中其余四次物化不仅等价，而且都与已在维护的 $Q_{O2}$ 相同。只需物化一个视图：$Q_{LI}:=\mathrm{Sum}_{CK;1}(\sigma_{OK=ok}(C\bowtie O))$。重写物化决策会产生触发器语句 08。
+除最外层的物化（ $C\bowtie O$）外，该表达式中其余四次物化不仅等价，而且都与已在维护的 $Q _ {O2}$ 相同。只需物化一个视图： $Q _ {LI}:=\mathrm{Sum} _ {CK;1}(\sigma _ {OK=ok}(C\bowtie O))$。重写物化决策会产生触发器语句 08。
 
-注意该语句需要循环。我们在 $dom_{CK}(\Delta_{+LI}Q)=dom_{CK}(Q_{LI})$ 上迭代以更新 $Q$。由于从 $O$ 到 $C$ 的外键依赖，在本例中循环遇到的元组永远不超过一个。
+注意该语句需要循环。我们在 $dom _ {CK}(\Delta _ {+LI}Q)=dom _ {CK}(Q _ {LI})$ 上迭代以更新 $Q$。由于从 $O$ 到 $C$ 的外键依赖，在本例中循环遇到的元组永远不超过一个。
 
-$Q_{LI}$ 可以用类似示例 3 的方式维护，从而产生触发器语句 03、05、06。
+ $Q _ {LI}$ 可以用类似示例 3 的方式维护，从而产生触发器语句 03、05、06。
 
 ```text
 on insert into C values (ck) do {
@@ -651,18 +651,18 @@ DBToaster 编译器把触发器程序生成为 C++ 代码，其中的视图用 B
 
 | 类别 | 查询 | 表数与连接类型（`=` 等值，`x` 叉积） | Where 子句 | Group-by | 子查询数 / 深度 |
 | --- | --- | --- | --- | :---: | :---: |
-| Finance | AXF | 2, = | $\lor,<$ | 是 | 0 / 0 |
-| Finance | BSP | 2, = | $\land,<$ | 是 | 0 / 0 |
+| Finance | AXF | 2, = | $\lor,\lt{}$ | 是 | 0 / 0 |
+| Finance | BSP | 2, = | $\land,\lt{}$ | 是 | 0 / 0 |
 | Finance | BSV | 2, = | 无 | 否 | 0 / 0 |
-| Finance | MST | 2, x | $\land,<$ | 是 | 2 / 1 |
-| Finance | PSP | 2, x | $\land,<$ | 否 | 2 / 1 |
-| Finance | VWAP | 1 | $<$ | 否 | 2 / 1 |
-| TPCH | Q3 | 3, = | $\land,<$ | 是 | 0 / 0 |
+| Finance | MST | 2, x | $\land,\lt{}$ | 是 | 2 / 1 |
+| Finance | PSP | 2, x | $\land,\lt{}$ | 否 | 2 / 1 |
+| Finance | VWAP | 1 | $\lt{}$ | 否 | 2 / 1 |
+| TPCH | Q3 | 3, = | $\land,\lt{}$ | 是 | 0 / 0 |
 | TPCH | Q11 | 2, = | 无 | 是 | 0 / 0 |
-| TPCH | Q17 | 2, = | $<$ | 否 | 1 / 1 |
-| TPCH | Q18 | 3, = | $<$ | 是 | 1 / 2 |
-| TPCH | Q22 | 1 | $=,<$ | 是 | 2 / 1 |
-| TPCH | SSB4 | 7, = | $<$ | 是 | 0 / 0 |
+| TPCH | Q17 | 2, = | $\lt{}$ | 否 | 1 / 1 |
+| TPCH | Q18 | 3, = | $\lt{}$ | 是 | 1 / 2 |
+| TPCH | Q22 | 1 | $=,\lt{}$ | 是 | 2 / 1 |
+| TPCH | SSB4 | 7, = | $\lt{}$ | 是 | 0 / 0 |
 
 **图 6：实验使用的算法交易与在线决策支持工作负载的特性。**
 

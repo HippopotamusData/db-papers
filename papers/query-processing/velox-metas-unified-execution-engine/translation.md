@@ -208,7 +208,7 @@ strpos(upper(a), 'FOO') > 0 OR strpos(upper(a), 'BAR') > 0
 **自适应合取项重排。** 计算 AND 或 OR 表达式时，引擎会动态跟踪各合取项性能，并优先计算最有效的合取项，即用最短时间剔除最多值的项。评分为：
 
 $$
-\frac{time}{1+n_{in}-n_{out}},
+\frac{time}{1+n _ {in}-n _ {out}},
 $$
 
 分数越低越好。为了让执行期间的自适应合取项重排发挥最大效果，表达式编译还会展平相邻的 AND/OR 表达式。例如，输入 `AND(AND(AND(a, b), c), AND(d, e))` 会在编译时展平成单个 `AND(a, b, c, d, e)` 节点。

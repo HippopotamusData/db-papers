@@ -15,7 +15,7 @@ require_command() {
   echo "$command_name: $(command -v "$command_name")"
 }
 
-for command_name in make rg pdfinfo pdftotext pdftoppm perl sed awk find sort mktemp; do
+for command_name in make rg pdfinfo pdftotext pdftoppm perl sed awk find sort mktemp node npm; do
   require_command "$command_name"
 done
 
@@ -42,6 +42,21 @@ command -v pdfinfo >/dev/null 2>&1 && pdfinfo -v 2>&1 | head -n 1
 command -v pdftotext >/dev/null 2>&1 && pdftotext -v 2>&1 | head -n 1
 command -v pdftoppm >/dev/null 2>&1 && pdftoppm -v 2>&1 | head -n 1
 command -v perl >/dev/null 2>&1 && perl -v 2>&1 | sed -n '2p'
+
+if command -v node >/dev/null 2>&1; then
+  node - <<'JS' || failures=$((failures + 1))
+const fs = require("fs");
+const path = "node_modules/mathjax/package.json";
+if (!fs.existsSync(path)) {
+  throw new Error("ERROR: MathJax is missing; run npm ci");
+}
+const version = JSON.parse(fs.readFileSync(path, "utf8")).version;
+if (version !== "4.1.3") {
+  throw new Error(`ERROR: MathJax 4.1.3 is required (found ${version})`);
+}
+console.log(`MathJax: ${version}`);
+JS
+fi
 
 if command -v make >/dev/null 2>&1; then
   make_banner=$(make --version 2>&1 | head -n 1)
@@ -72,12 +87,16 @@ fi
 if [[ -x "$PYTHON" ]] || command -v "$PYTHON" >/dev/null 2>&1; then
   "$PYTHON" - <<'PY' || failures=$((failures + 1))
 import sys
+from importlib.metadata import version
 
 if sys.version_info < (3, 11):
     raise SystemExit("ERROR: Python 3.11 or newer is required")
 
 import PIL
 import yaml
+
+markdown_it_version = version("markdown-it-py")
+mdurl_version = version("mdurl")
 
 
 def major_minor(version: str) -> tuple[int, int]:
@@ -89,9 +108,17 @@ if not ((6, 0) <= major_minor(yaml.__version__) < (7, 0)):
     raise SystemExit(f"ERROR: PyYAML >=6.0,<7 is required (found {yaml.__version__})")
 if not ((10, 0) <= major_minor(PIL.__version__) < (13, 0)):
     raise SystemExit(f"ERROR: Pillow >=10,<13 is required (found {PIL.__version__})")
+if markdown_it_version != "4.2.0":
+    raise SystemExit(
+        f"ERROR: markdown-it-py 4.2.0 is required (found {markdown_it_version})"
+    )
+if mdurl_version != "0.1.2":
+    raise SystemExit(f"ERROR: mdurl 0.1.2 is required (found {mdurl_version})")
 
 print(f"PyYAML: {yaml.__version__}")
 print(f"Pillow: {PIL.__version__}")
+print(f"markdown-it-py: {markdown_it_version}")
+print(f"mdurl: {mdurl_version}")
 PY
 fi
 

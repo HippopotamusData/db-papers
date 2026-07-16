@@ -124,11 +124,11 @@ CREATE PROJECTION ... SEGMENTED BY <expr>
 节点被分配用于存储 segmentation expression 值范围。令 `CMAX` 为最大整数值，在 Vertica 中为 `2^64`，则初始映射如下：
 
 $$
-0 \le expr < \frac{CMAX}{N} \Rightarrow Node_1
+0 \le expr \lt{} \frac{CMAX}{N} \Rightarrow Node_1
 $$
 
 $$
-\frac{1 \cdot CMAX}{N} \le expr < \frac{2 \cdot CMAX}{N} \Rightarrow Node_2
+\frac{1 \cdot CMAX}{N} \le expr \lt{} \frac{2 \cdot CMAX}{N} \Rightarrow Node_2
 $$
 
 $$
@@ -136,11 +136,11 @@ $$
 $$
 
 $$
-\frac{(N-2) \cdot CMAX}{N} \le expr < \frac{(N-1) \cdot CMAX}{N} \Rightarrow Node_{N-1}
+\frac{(N-2) \cdot CMAX}{N} \le expr \lt{} \frac{(N-1) \cdot CMAX}{N} \Rightarrow Node _ {N-1}
 $$
 
 $$
-\frac{(N-1) \cdot CMAX}{N} \le expr < CMAX \Rightarrow Node_N
+\frac{(N-1) \cdot CMAX}{N} \le expr \lt{} CMAX \Rightarrow Node_N
 $$
 
 这是一种经典 ring-style segmentation scheme。最常见选择是 `HASH(col_1 ... col_n)`，其中 `col_i` 是某个高基数且值分布相对均匀的列，常见为主键列。在每个节点内部，除指定 partitioning 外，Vertica 还把 tuple 物理隔离成 local segment，以便支持集群的在线扩张和收缩。当节点添加或移除时，系统通过把一个或多个已有 local segment 分配给新节点，并以原生格式整体传输 segment 数据，快速移动数据，不需要重新排列或拆分。

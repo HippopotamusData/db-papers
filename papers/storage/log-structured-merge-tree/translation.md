@@ -127,19 +127,19 @@ LSM-tree 的优势来自两个相乘的因素：多页块 I/O 的单位成本 `C
 考虑大小为 `S` MB、访问率为 `H` IOPS 的数据。若以磁盘容量和磁盘臂 I/O 能力中较大的需求配置磁盘，其成本为：
 
 $$
-COST_D = \max(S\,COST_d,\; H\,COST_P).
+COST_D = \max(S\thinspace{}COST_d,\thickspace{} H\thinspace{}COST_P).
 $$
 
 若数据缓存在内存中，仍须在磁盘保留一份，成本为：
 
 $$
-COST_B = S\,COST_m + S\,COST_d.
+COST_B = S\thinspace{}COST_m + S\thinspace{}COST_d.
 $$
 
 因此总成本取两种方案中的较小者：
 
 $$
-COST_{TOT}=\min\left(\max(S\,COST_d,H\,COST_P),\;S\,COST_m+S\,COST_d\right).
+COST _ {TOT}=\min\left(\max(S\thinspace{}COST_d,H\thinspace{}COST_P),\thickspace{}S\thinspace{}COST_m+S\thinspace{}COST_d\right).
 $$
 
 把单位数据访问率 `H/S` 称为数据的**温度**。冻结点和沸点分别为：
@@ -151,7 +151,7 @@ $$
 以 1995 年的典型值为例：内存每 MB 100 美元，磁盘介质每 MB 1 美元；随机 I/O 能力的成本为每 IOPS 25 美元，多页块 I/O 能力为每 IOPS 2.5 美元。于是 `T_f=0.04`、`T_b=4` 次 I/O/秒/MB。对于 4 KB 页，按沸点换算的经济缓冲引用间隔为：
 
 $$
-\tau=\frac{1}{\text{page-size}\cdot T_b}=62.5\text{ 秒}。
+\tau=\frac{1}{\text{page-size}\cdot T_b}=62.5\text{ 秒}
 $$
 
 ![图 3：访问成本与数据温度的关系](assets/figure-3-1-temperature.png)
@@ -175,7 +175,7 @@ $$
 假定 B-tree 的高层目录都已缓存在内存，而从最低未缓存目录层到叶层的有效深度为 `D_e`。一次插入需读到叶节点并写回更新后的叶节点，可能还要读取一个未缓存目录页。我们把成本写为：
 
 $$
-COST_{B\text{-}ins}=COST_P(D_e+1). \tag{3.1}
+COST _ {B\text{-}ins}=COST_P(D_e+1). \tag{3.1}
 $$
 
 实际大型树通常 `D_e≈2`。
@@ -191,14 +191,14 @@ $$
 例如每页 200 个条目、`S_1=40S_0` 时，`M≈5`。每个合并页需要一次读和一次写，其成本由 `M` 个新条目分摊，所以：
 
 $$
-COST_{LSM\text{-}ins}=\frac{2COST_\pi}{M}. \tag{3.3}
+COST _ {LSM\text{-}ins}=\frac{2COST _ \pi}{M}. \tag{3.3}
 $$
 
 两者之比为：
 
 $$
-\frac{COST_{LSM\text{-}ins}}{COST_{B\text{-}ins}}
-=K_1\left(\frac{COST_\pi}{COST_P}\right)\left(\frac{1}{M}\right),
+\frac{COST _ {LSM\text{-}ins}}{COST _ {B\text{-}ins}}
+=K_1\left(\frac{COST _ \pi}{COST_P}\right)\left(\frac{1}{M}\right),
 \qquad K_1=\frac{2}{D_e+1}\approx0.67. \tag{3.4}
 $$
 
@@ -231,7 +231,7 @@ $$
 假定新条目以较稳定的 `R` 字节/秒进入 `C_0`，所有新条目都通过连续滚动合并存活到 `C_K`。`C_0` 至 `C_{K-1}` 接近各自待定的最大阈值；`C_K` 因删除抵消插入而大小相对稳定。令相邻组件的大小比：
 
 $$
-r_i=\frac{S_i}{S_{i-1}},\qquad i=1,\ldots,K.
+r_i=\frac{S_i}{S _ {i-1}},\qquad i=1,\ldots,K.
 $$
 
 假定各组件块混合条带化到不同磁盘臂，使磁盘利用率均衡。在磁盘臂而非容量主导的区间，最小化总 I/O 率 `H` 就等同于最小化磁盘臂成本。
@@ -253,19 +253,19 @@ $$
 **证明。** 稳态下，条目在到达 `C_K` 前不删除，因此进入 `C_0` 的速率 `R` 也等于从每个 `C_{i-1}` 迁往 `C_i` 的速率。若 `C_{i-1}` 在磁盘上，该层合并以 `R/S_p` 页/秒读取 `C_{i-1}`；因为 `C_i` 大 `r_i` 倍，还以 `r_iR/S_p` 页/秒读 `C_i`；写出扩大后的 `C_i` 需要 `(r_i+1)R/S_p` 页/秒。对所有磁盘组件求和：
 
 $$
-H=\frac{R}{S_p}\bigl((2r_1+2)+(2r_2+2)+\cdots+(2r_{K-1}+2)+(2r_K+1)\bigr). \tag{3.7}
+H=\frac{R}{S_p}\bigl((2r_1+2)+(2r_2+2)+\cdots+(2r _ {K-1}+2)+(2r_K+1)\bigr). \tag{3.7}
 $$
 
 即：
 
 $$
-H=\frac{2R}{S_p}\left(\sum_{i=1}^{K}r_i+K-\frac{1}{2}\right). \tag{3.8}
+H=\frac{2R}{S_p}\left(\sum _ {i=1}^{K}r_i+K-\frac{1}{2}\right). \tag{3.8}
 $$
 
 约束为：
 
 $$
-\prod_{i=1}^{K}r_i=\frac{S_K}{S_0}=C.
+\prod _ {i=1}^{K}r_i=\frac{S_K}{S_0}=C.
 $$
 
 用 `r_K=C\prod_{i=1}^{K-1}r_i^{-1}` 消去 `r_K`，对其余变量求偏导并令其为零，所得同形方程由 `r_1=\cdots=r_K=C^{1/K}` 解出。因此中间组件应在最小和最大组件之间构成几何级数。证毕。
@@ -274,9 +274,9 @@ $$
 
 $$
 \begin{aligned}
-r_{K-1}&=r_K+1,\\
-r_{K-2}&=r_{K-1}+\frac{1}{r_{K-1}},\\
-r_{K-3}&=r_{K-2}+\frac{1}{r_{K-1}r_{K-2}},\\
+r _ {K-1}&=r_K+1,\\
+r _ {K-2}&=r _ {K-1}+\frac{1}{r _ {K-1}},\\
+r _ {K-3}&=r _ {K-2}+\frac{1}{r _ {K-1}r _ {K-2}},\\
 &\ \vdots
 \end{aligned}
 $$
@@ -288,7 +288,7 @@ $$
 当固定 `R` 和 `S_K`、允许 `S_0` 变化时，式 (3.5) 表明缩小 `S_0` 会增大 `r`，式 (3.6) 又表明 `H` 随之增大。总成本是内存成本与磁盘容量/I/O 成本之和：
 
 $$
-COST_{tot}=COST_mS_0+\max(COST_dS_1,COST_\pi H).
+COST _ {tot}=COST_mS_0+\max(COST_dS_1,COST _ \pi H).
 $$
 
 对双组件情形，`K=1`、`r=S_1/S_0`。令：
@@ -301,14 +301,14 @@ $$
 
 $$
 t=2\left(\frac{R/S_p}{S_1}\right)
-\left(\frac{COST_\pi}{COST_d}\right)
+\left(\frac{COST _ \pi}{COST_d}\right)
 \left(\frac{COST_m}{COST_d}\right),
 $$
 
 表示归一化温度，并令：
 
 $$
-C=\frac{COST_{tot}}{COST_dS_1}.
+C=\frac{COST _ {tot}}{COST_dS_1}.
 $$
 
 在 `S_0/S_1` 很小时，近似为：
@@ -320,7 +320,7 @@ $$
 最简单的选型沿 `s=t`，此时磁盘容量与 I/O 能力都充分利用，`C=s+1`；这对 `t≤1` 成本最优。若 `t>1`，最小值沿 `s=\sqrt t`，此时 `C=2\sqrt t`。还原量纲，对 `t≥1`：
 
 $$
-COST_{min}=2\left[(COST_mS_1)\left(\frac{2COST_\pi R}{S_p}\right)\right]^{1/2}. \tag{3.8}
+COST _ {min}=2\left[(COST_mS_1)\left(\frac{2COST _ \pi R}{S_p}\right)\right]^{1/2}. \tag{3.8}
 $$
 
 原文把这一最小成本公式也编号为 (3.8)，与前面的总 I/O 率公式编号重复。其含义是：最小总成本等于“把全部 LSM 数据放内存的极高成本”和“以最便宜方式用多页 I/O 把插入写盘的极低成本”之几何平均数的两倍；一半付给 `S_0` 内存，另一半付给 `S_1` 的磁盘 I/O。随着 `R→∞`，LSM-tree 成本按 `R^{1/2}` 增长，而 B-tree 按 `R` 增长。若 `t≤1`，最小点在 `s=t`，`C=t+1<2`，系统先按存储容量配置磁盘，再用其全部 I/O 能力尽量减少内存。

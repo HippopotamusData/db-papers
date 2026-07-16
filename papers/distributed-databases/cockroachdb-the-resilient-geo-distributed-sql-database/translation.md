@@ -227,7 +227,7 @@ HLC 有三项关键性质。第一，节点在每条消息中携带 HLC，收到
 事务创建时，从协调器本地 HLC 取得暂定提交时间 `commit_ts`，不确定区间为：
 
 $$
-[\text{commit\_ts},\ \text{commit\_ts}+\text{max\_offset}].
+[\text{commit\char"005F{}ts},\ \text{commit\char"005F{}ts}+\text{max\char"005F{}offset}].
 $$
 
 时间戳低于 `commit_ts` 的值显然属于过去，读时可见、写时可覆盖。没有全局同步时，一个真实时间上更晚的事务，其暂定时间戳可能比因果前驱早至多 `max_offset`。若事务遇到时间戳高于 `commit_ts` 但落在不确定区间内的值，就执行 uncertainty restart：把暂定提交时间推进到该值之后，同时保持不确定区间上界不变。这样区间内所有值都被当作过去写，单 key 操作顺序因而与真实时间一致。

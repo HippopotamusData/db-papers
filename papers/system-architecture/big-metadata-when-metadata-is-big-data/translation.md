@@ -272,27 +272,27 @@ CXi = {min(xi), max(xi), total_rows(xi), total_nulls(xi), ...}
 
 问题可形式化为寻找 `F(CX1, CX2, ..., CXn)`，使得：
 
-```math
+$$
 F(CX_1, ..., CX_n) \Rightarrow \neg \exists x_1, ..., x_n(P(x_1, ..., x_n)) \tag{1}
-```
+$$
 
 当可证伪表达式 `F()` 是 tight 时，关系更强；没有假阴性意味着：
 
-```math
+$$
 \neg F(CX_1, ..., CX_n) \Rightarrow \exists x_1, ..., x_n(P(x_1, ..., x_n))
-```
+$$
 
 由于 `neg p => neg q` 等价于 `q => p`，可重写为：
 
-```math
+$$
 \neg \exists x_1, ..., x_n(P(x_1, ..., x_n)) \Rightarrow F(CX_1, ..., CX_n)
-```
+$$
 
 结合第一个公式，得到 tight 可证伪表达式的定义：
 
-```math
+$$
 F(CX_1, ..., CX_n) \Leftrightarrow \neg \exists x_1, ..., x_n(P(x_1, ..., x_n)) \tag{2}
-```
+$$
 
 直观上，这个问题与布尔可满足性问题 SAT 有关，尽管变量域和函数都超出了布尔范围。由于 SAT 是 NP 完全问题，构建可证伪表达式的问题也是 NP 完全。本文算法只在有限情形下实用，但它针对真实代表性工作负载中 WHERE 子句使用的条件进行了调优。算法以一组递归应用的规则给出。
 
@@ -306,50 +306,50 @@ F(CX_1, ..., CX_n) \Leftrightarrow \neg \exists x_1, ..., x_n(P(x_1, ..., x_n)) 
 
 设有两个表达式 `PX(X)` 和 `PY(Y)`，变量集分别是 `X = x1, ..., xn` 和 `Y = y1, ..., yk`。允许 X 和 Y 任意重叠。如果 `PX(X)` 有可证伪表达式 `FX(CX)`，`PY(Y)` 有可证伪表达式 `FY(CY)`，则 `PX(X) AND PY(Y)` 的可证伪表达式是：
 
-```math
+$$
 F_X(C_X) \lor F_Y(C_Y)
-```
+$$
 
 证明。已知：
 
-```math
+$$
 F_X(C_X) \Rightarrow \neg\exists X(P_X(X)), \qquad
 F_Y(C_Y) \Rightarrow \neg\exists Y(P_Y(Y))
-```
+$$
 
 需要证明：
 
-```math
+$$
 F_X(C_X) \lor F_Y(C_Y)
 \Rightarrow
 \neg\exists X,Y(P_X(X) \land P_Y(Y))
-```
+$$
 
 先利用 $p \Rightarrow q \equiv \neg q \Rightarrow \neg p$，得到：
 
-```math
+$$
 \exists X(P_X(X)) \Rightarrow \neg F_X(C_X), \qquad
 \exists Y(P_Y(Y)) \Rightarrow \neg F_Y(C_Y)
-```
+$$
 
 于是：
 
-```math
+$$
 \begin{aligned}
 \exists X,Y(P_X(X) \land P_Y(Y))
 &\Rightarrow \exists X(P_X(X)) \land \exists Y(P_Y(Y)) \\
 &\Rightarrow \neg F_X(C_X) \land \neg F_Y(C_Y) \\
 &\Leftrightarrow \neg(F_X(C_X) \lor F_Y(C_Y))
 \end{aligned}
-```
+$$
 
 再次应用 $p \Rightarrow q \equiv \neg q \Rightarrow \neg p$，得到：
 
-```math
+$$
 F_X(C_X) \lor F_Y(C_Y)
 \Rightarrow
 \neg\exists X,Y(P_X(X) \land P_Y(Y))
-```
+$$
 
 证毕。即使 $F_X$ 和 $F_Y$ 都是 tight，所得可证伪表达式也并不 tight；这是由证明第一步中的单向蕴含造成的。
 
@@ -357,20 +357,20 @@ F_X(C_X) \lor F_Y(C_Y)
 
 表达式 `PX(X) OR PY(Y)` 的可证伪表达式是：
 
-```math
+$$
 F_X(C_X) \land F_Y(C_Y)
-```
+$$
 
 证明如下：
 
-```math
+$$
 \begin{aligned}
 \exists X,Y(P_X(X) \lor P_Y(Y))
 &\Leftrightarrow \exists X(P_X(X)) \lor \exists Y(P_Y(Y)) \\
 &\Rightarrow \neg F_X(C_X) \lor \neg F_Y(C_Y) \\
 &\Leftrightarrow \neg(F_X(C_X) \land F_Y(C_Y))
 \end{aligned}
-```
+$$
 
 证毕。与合取不同的是，如果 $F_X$ 和 $F_Y$ 都 tight，则所得可证伪表达式也 tight。
 
@@ -391,34 +391,34 @@ F_X(C_X) \land F_Y(C_Y)
 
 以第一行为例。给定：
 
-```math
-P(x) = x > c
-```
+$$
+P(x) = x \gt{} c
+$$
 
-```math
+$$
 F(C_X) = max(x) \le c
-```
+$$
 
 根据 `max(x)` 定义有：
 
-```math
+$$
 \forall x(x \le max(x)) \Leftrightarrow true
-```
+$$
 
 因此：
 
-```math
+$$
 F(C_X) \Leftrightarrow F(C_X) \land true
-```
+$$
 
-```math
+$$
 max(x) \le c \land \forall x(x \le max(x)) \Leftrightarrow
 \forall x(x \le max(x) \land max(x) \le c) \Leftrightarrow
 \forall x(x \le c) \Leftrightarrow
-\forall x\neg(x > c) \Leftrightarrow
-\neg\exists x(x > c) \Leftrightarrow
+\forall x\neg(x \gt{} c) \Leftrightarrow
+\neg\exists x(x \gt{} c) \Leftrightarrow
 \neg\exists x(P(x))
-```
+$$
 
 这证明 `F(CX)` 是 `p(x)` 的 tight 可证伪表达式。
 
@@ -468,36 +468,36 @@ AND cN NOT IN bloom_filter(x)
 
 如果 `P(x)` 有可证伪表达式 `F(min(x), max(x))`，且 `G(y)` 是单调非递减函数，则 `P(G(x))` 有可证伪表达式：
 
-```math
+$$
 F(G(min(x)), G(max(x)))
-```
+$$
 
 证明从单调非递减函数 `G()` 的性质出发：
 
-```math
+$$
 G(min(x)) = min(G(x)); \quad G(max(x)) = max(G(x))
-```
+$$
 
 为说明这一点，从 `min(x)` 的定义和单调函数的定义出发：
 
-```math
+$$
 \forall x(min(x) \le x); \qquad
 \forall x_1,x_2(x_1 \le x_2 \Rightarrow G(x_1) \le G(x_2))
-```
+$$
 
 合并二者可得：
 
-```math
+$$
 \forall x(min(x) \le x)
 \Rightarrow
 \forall x(G(min(x)) \le G(x))
-```
+$$
 
 而 `min(G(x))` 的定义为：
 
-```math
+$$
 \forall x(min(G(x)) \le G(x))
-```
+$$
 
 因此 $G(min(x)) = min(G(x))$。证毕。
 
@@ -525,9 +525,9 @@ OR DATE_TRUNC(max(d), MONTH) < DATE '2020-05-01'
 
 某些函数只在其定义域的一个子集上可证明单调。算法会在生成的可证伪函数中加入额外条件。如果 `P(x)` 有可证伪表达式 `F(min(x), max(x))`，且 `G(y)` 只有当条件 `H(CX)` 为 true 时才在 `G()` 值域内单调非递减，则 `P(G(x))` 有可证伪函数：
 
-```math
+$$
 F(G(min(x)), G(max(x))) \land H(C_X)
-```
+$$
 
 许多日期时间操作函数并非单调。例如：
 
@@ -655,11 +655,11 @@ NOT _ST_INTERSECTS(
 
 当块中某变量的所有值相同，即 `min(x) = max(x)`，或全为 NULL 时，会出现一个特殊情况。此时可以计算 `P(min(x))` 和 `P(NULL)`，并检查结果是否为 `FALSE` 或 NULL；两者都会消除行：
 
-```math
+$$
 F(C_X) = (\mathrm{NOT}\ P(C_X))
 \lor (P(C_X)\ \mathrm{IS\ NULL})
 \land min(x) = max(x)
-```
+$$
 
 只要 `P()` 已知是确定性的，这适用于任意复杂函数；它不适用于 `RAND()` 或非确定性 UDF。不过，把这个条件加入可证伪表达式中的每个变量会增加成本。通常大多数列不会在整个块中取相同值，因此这样做浪费。例外是已有额外元数据信息时，例如 DATE 类型分区键列以及按日期粒度分区的数据。由于 BigQuery 中的块不跨分区边界，块可保证对分区键有相同值。
 
