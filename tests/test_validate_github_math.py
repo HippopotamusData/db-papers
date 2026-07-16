@@ -388,6 +388,28 @@ y &= 2
     def test_void_html_does_not_capture_following_math(self) -> None:
         self.assertEqual(self.codes("正文 <br> 后 $x$。\n"), [])
 
+    def test_rejects_html_code_tags_inside_math_payloads(self) -> None:
+        cases = [
+            r"正文 $x<code>y</code>$。",
+            r"正文 $x<pre>y</pre>$。",
+            "A | $x<code>y</code>$\n--- | ---\n",
+            "A | $x<pre>y</pre>$\n--- | ---\n",
+            "$$\nx<code>y</code>\n$$\n",
+            "$$\nx<pre>y</pre>\n$$\n",
+            "$$\nx<code>\ny\n</code>\n$$\n",
+            "$$\nx<pre>\ny\n</pre>\n$$\n",
+            "> $$\n> x<code>y</code>\n> $$\n",
+        ]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), ["GHM011"] * 4)
+
+    def test_self_closing_html_code_tag_does_not_capture_following_math(self) -> None:
+        cases = ["正文 <code/> 后 $x$。\n", "正文 <pre /> 后 $x$。\n"]
+        for text in cases:
+            with self.subTest(text=text):
+                self.assertEqual(self.codes(text), [])
+
     def test_rejects_math_inside_inline_html_attribute(self) -> None:
         text = '正文 <span title=" $x$">label</span>\n'
         self.assertEqual(self.codes(text), ["GHM017"])

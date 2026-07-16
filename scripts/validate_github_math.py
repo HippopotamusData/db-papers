@@ -256,9 +256,23 @@ def _mask_inline_html_code(chars: list[str]) -> list[str]:
     """Mask inline ``code``/``pre`` HTML containers without parsing math."""
 
     visible = "".join(chars)
+    math_payload_ranges = _math_payload_ranges(visible)
     opened: int | None = None
     for match in HTML_CODE_TAG_RE.finditer(visible):
-        closing = match.group().lstrip().startswith("</")
+        # A raw HTML tag inside inline or display math is part of the TeX
+        # payload, not a Markdown code container. Keep it visible so the math
+        # parser rejects the HTML-sensitive angle brackets instead of
+        # validating a sanitized expression.
+        if any(
+            start <= match.start() and match.end() <= end
+            for start, end in math_payload_ranges
+        ):
+            continue
+        tag = match.group()
+        closing = tag.lstrip().startswith("</")
+        self_closing = tag.rstrip().endswith("/>")
+        if self_closing:
+            continue
         if not closing and opened is None:
             opened = match.start()
         elif closing and opened is not None:
@@ -267,6 +281,37 @@ def _mask_inline_html_code(chars: list[str]) -> list[str]:
     if opened is not None:
         _mask_range(chars, opened, len(chars))
     return chars
+
+
+def _math_payload_ranges(text: str) -> list[tuple[int, int]]:
+    """Return source ranges that may become inline or display TeX payloads."""
+
+    ranges: list[tuple[int, int]] = []
+    display_start: int | None = None
+    display_quote_depth = 0
+    offset = 0
+    for line in text.splitlines(keepends=True):
+        delimiter = DISPLAY_DELIMITER_RE.match(line)
+        if delimiter:
+            quote_depth = delimiter.group("prefix").count(">")
+            if display_start is None:
+                display_start = offset + len(line)
+                display_quote_depth = quote_depth
+            elif quote_depth == display_quote_depth:
+                ranges.append((display_start, offset))
+                display_start = None
+                display_quote_depth = 0
+            offset += len(line)
+            continue
+        if display_start is None:
+            ranges.extend(
+                (offset + opening + 1, offset + closing)
+                for opening, closing in _inline_math_pairs(line)
+            )
+        offset += len(line)
+    if display_start is not None:
+        ranges.append((display_start, len(text)))
+    return ranges
 
 
 def _range_inside_inline_math(
