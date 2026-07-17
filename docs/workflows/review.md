@@ -25,7 +25,7 @@
 
 schema v3 不接受 `legacy-migration` 或 `pending-v3-re-review`。无法追溯实际审阅者的迁移期历史兼容记录只能使用已冻结的 `historical-v2-reviewer-unrecorded` 条目；其论文 ID、全部证据字段和基线指纹由代码逐项锁定，只允许通过真实重审把整条记录替换为普通 reviewer，不允许新增或改写历史标记。
 
-只有机械候选已回到 PDF 逐项处置后，才能使用 `paper-check` 输出的 `WAIVER-EVIDENCE` 指纹。`--waiver` 必须写成 `category=fingerprint`；同一类别内新增、删除或改写任一候选都会改变指纹并阻止 accept。账本保存排序后的完整候选和内容指纹；确定性错误始终失败。
+只有机械候选已回到 PDF 逐项处置后，才能使用 `paper-check` 输出的 `WAIVER-EVIDENCE` 指纹。`--waiver` 必须写成 `category=fingerprint`。指纹绑定版本化的精确语义发现集合，即规则与受影响对象；新增或删除规则、Listing/资源/引用等对象都会改变指纹并阻止 accept。账本同时保存排序后的原始诊断（含便于审计的计数、比例与抽取器信息），但这些跨平台可能变化的测量值不参与指纹。未知诊断规则、同一语义发现的重复诊断和确定性错误始终失败。
 
 ```bash
 python3 scripts/papers.py accept \
@@ -38,7 +38,7 @@ python3 scripts/papers.py accept \
 
 `review_base_sha` 必须是当前 `HEAD` 可见的真实祖先提交；同一批次使用预检时记录的固定基线，不使用审阅完成后的临时提交冒充基线。`reviewer` 记录实际执行本次 PDF 对照审阅的稳定身份。
 
-accept 先在未改写权威文件的 `draft` 上执行单篇深检和候选发现，要求发现指纹与命令行逐项一致，再用同一组证据执行 `translated` 级别复检，随后运行锁定 MathJax 与 GitHub Markdown 节点审计。预检覆盖只通过 accept 传入的显式内部参数生效；普通深检拒绝同名环境变量，始终读取权威账本。全部通过后才在跨进程锁内以 compare-and-swap 写入账本和状态；源文、译文、资源、元数据、账本或 Git HEAD 发生并发漂移，或进程被中断时，验收失败并回滚自身已尝试的写入。
+accept 先在未改写权威文件的 `draft` 上执行单篇深检和候选发现，要求发现指纹与命令行逐项一致，再用同一组证据执行 `translated` 级别复检，随后运行锁定 MathJax 与 GitHub Markdown 节点审计。两次本地预检不仅要求语义发现一致，也要求原始诊断逐字一致，以阻止同一进程中的测量漂移；只有不同受支持平台之间的等价语义发现才允许原始测量不同。预检覆盖只通过 accept 传入的显式内部参数生效；普通深检拒绝同名环境变量，始终读取权威账本。全部通过后才在跨进程锁内以 compare-and-swap 写入账本和状态；源文、译文、资源、元数据、账本或 Git HEAD 发生并发漂移，或进程被中断时，验收失败并回滚自身已尝试的写入。
 
 `config/acceptance.yaml` 是每篇论文当前已验收版本的快照，不是事件日志；每项绑定源文、译文、非忽略资源清单、审阅动作、审阅者、固定基线和精确候选证据。重新验收会替换旧条目，详细审校过程由 Git 历史保存。
 

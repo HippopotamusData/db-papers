@@ -293,19 +293,19 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
       quality_issue "$translation has suspiciously low source/translation coverage ($translated_chars/$source_chars)"
     fi
 
-    source_words=$(pdftotext -raw "$pdf" - 2>/dev/null | perl -CSD -ne 'last if /^\s*(?:\d+\.?\s+)?REFERENCES\s*$/i; $n += () = /\b[A-Za-z]+(?:[-'"'"'][A-Za-z]+)*\b/g; END { print $n + 0 }')
-    translated_cjk=$(perl -CSD -ne 'last if /^##\s*(?:参考文献|References)\s*$/i; $n += () = /[\x{3400}-\x{9fff}]/g; END { print $n + 0 }' "$translation")
-    if awk -v s="$source_words" -v t="$translated_cjk" 'BEGIN { exit !(s > 0 && t / s < 0.50) }'; then
-      abridgement_candidate="high mechanical abridgement risk: CJK/source-word ratio=$translated_cjk/$source_words (<0.50)"
+    abridgement_stderr="$validation_tmp/abridgement-${paper_id}.stderr"
+    abridgement_candidate=$("$PYTHON" scripts/pdf_metrics.py abridgement "$pdf" "$translation" 2>"$abridgement_stderr")
+    abridgement_status=$?
+    if (( abridgement_status != 0 )); then
+      abridgement_error=$(tr '\n\r\t' '   ' < "$abridgement_stderr")
+      fail "$translation abridgement metric failed (exit=$abridgement_status): $abridgement_error"
+    elif [[ -s "$abridgement_stderr" ]]; then
+      abridgement_error=$(tr '\n\r\t' '   ' < "$abridgement_stderr")
+      fail "$translation abridgement metric emitted unexpected stderr: $abridgement_error"
+    elif [[ -n "$abridgement_candidate" ]]; then
       record_observed_waiver "$observed_acceptance_evidence" "abridgement" "$abridgement_candidate"
       if [[ "$reading_status" == "draft" ]]; then
-        warn "$translation has high mechanical abridgement risk: CJK/source-word ratio=$translated_cjk/$source_words (<0.50)"
-      fi
-    elif awk -v s="$source_words" -v t="$translated_cjk" 'BEGIN { exit !(s > 0 && t / s < 0.75) }'; then
-      abridgement_candidate="moderate mechanical abridgement risk: CJK/source-word ratio=$translated_cjk/$source_words (<0.75)"
-      record_observed_waiver "$observed_acceptance_evidence" "abridgement" "$abridgement_candidate"
-      if [[ "$reading_status" == "draft" ]]; then
-        warn "$translation has moderate abridgement risk: CJK/source-word ratio=$translated_cjk/$source_words (<0.75)"
+        warn "$translation has $abridgement_candidate"
       fi
     fi
 
@@ -343,6 +343,11 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     elif (( waiver_match_status == 1 )); then
       while IFS= read -r waiver_mismatch; do
         [[ -n "$waiver_mismatch" ]] || continue
+        if [[ "$waiver_mismatch" == reviewed:* ]]; then
+          reviewed_risks=$((reviewed_risks + 1))
+          echo "REVIEWED-RISK: $translation ${waiver_mismatch#reviewed:}"
+          continue
+        fi
         fail "$translation acceptance waiver evidence mismatch: $waiver_mismatch"
       done <<< "$waiver_mismatches"
     else

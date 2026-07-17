@@ -94,6 +94,7 @@ if sys.version_info < (3, 11):
     raise SystemExit("ERROR: Python 3.11 or newer is required")
 
 import PIL
+import pypdf
 import yaml
 
 markdown_it_version = version("markdown-it-py")
@@ -115,9 +116,12 @@ if markdown_it_version != "4.2.0":
     )
 if mdurl_version != "0.1.2":
     raise SystemExit(f"ERROR: mdurl 0.1.2 is required (found {mdurl_version})")
+if pypdf.__version__ != "6.14.2":
+    raise SystemExit(f"ERROR: pypdf 6.14.2 is required (found {pypdf.__version__})")
 
 print(f"PyYAML: {yaml.__version__}")
 print(f"Pillow: {PIL.__version__}")
+print(f"pypdf: {pypdf.__version__}")
 print(f"markdown-it-py: {markdown_it_version}")
 print(f"mdurl: {mdurl_version}")
 PY

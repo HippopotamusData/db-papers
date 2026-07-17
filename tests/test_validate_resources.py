@@ -298,12 +298,41 @@ class ResourceValidationTests(unittest.TestCase):
         self.assertTrue(any("equation (5)" in issue for issue in risks))
 
     def test_missing_structural_headings_are_review_candidates(self) -> None:
-        source = "ABSTRACT\nText\n1 INTRODUCTION\nText\n7 CONCLUSIONS\nText\n"
-        translation = "正文只有交叉引用：见第 1 节和第 7 节。\n"
+        source = (
+            "ABSTRACT\nText\n"
+            "1 INTRODUCTION\nText\n"
+            "2 METHODS\nText\n"
+            "3 CONCLUSIONS\nText\n"
+        )
+        translation = "## 1 引言\n正文。\n## 3 结论\n正文。\n"
         _errors, risks = source_coverage_findings(source, translation, False)
         self.assertTrue(any("Abstract heading" in issue for issue in risks))
-        self.assertTrue(any("Conclusion/Summary" in issue for issue in risks))
-        self.assertTrue(any("1, 7" in issue for issue in risks))
+        self.assertFalse(any("Conclusion/Summary" in issue for issue in risks))
+        self.assertTrue(any(issue.endswith("candidates: 2") for issue in risks))
+
+    def test_numeric_ocr_rows_do_not_form_a_heading_sequence(self) -> None:
+        for source in (
+            "150000 THROUGHPUT\nText\n",
+            "16 SIMD\n64 LANES\nText\n",
+            "2 METHODS\n1 INTRODUCTION\nText\n",
+        ):
+            with self.subTest(source=source):
+                _errors, risks = source_coverage_findings(source, "正文。\n", False)
+                self.assertFalse(any("numbered top-level" in issue for issue in risks))
+
+    def test_heading_sequence_stops_at_first_gap_and_before_references(self) -> None:
+        source = (
+            "1 INTRODUCTION\nText\n"
+            "2 METHODS\nText\n"
+            "5000 THROUGHPUT\n"
+            "REFERENCES\n"
+            "3 RESULTS\n"
+        )
+        translation = "## 1 引言\n正文。\n"
+        _errors, risks = source_coverage_findings(source, translation, False)
+        heading_risks = [issue for issue in risks if "numbered top-level" in issue]
+        self.assertEqual(len(heading_risks), 1)
+        self.assertTrue(heading_risks[0].endswith("candidates: 2"))
 
     @unittest.skipUnless(shutil.which("git"), "git is required for ignore tests")
     def test_ignored_orphan_is_suppressed_but_reference_is_an_error(self) -> None:

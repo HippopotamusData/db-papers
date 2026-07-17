@@ -991,6 +991,12 @@ def acceptance_preflight(
         except (OSError, ValueError) as exc:
             output.append(f"ERROR: cannot verify translated acceptance evidence: {exc}")
             return False, "\n".join(output), waiver_records
+        if waiver_records != translated_records and not mismatches:
+            output.append(
+                "ERROR: raw waiver diagnostics changed between acceptance passes "
+                "while semantic findings stayed constant"
+            )
+            return False, "\n".join(output), waiver_records
         if mismatches:
             output.extend(f"ERROR: waiver evidence {item}" for item in mismatches)
             return False, "\n".join(output), waiver_records

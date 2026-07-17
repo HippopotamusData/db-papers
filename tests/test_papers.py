@@ -28,7 +28,11 @@ REVIEW_BASE_SHA = "a" * 40
 
 def resource_waivers() -> dict[str, dict[str, object]]:
     return build_waiver_records(
-        {"resources": ["source Figure 1 has no formal payload candidate"]}
+        {
+            "resources": [
+                "RISK: source Figure 1 has no formal translation-side payload candidate"
+            ]
+        }
     )
 
 
@@ -418,9 +422,9 @@ class PapersTests(unittest.TestCase):
                     command[command.index("--acceptance-evidence-file") + 1]
                 )
                 candidate = (
-                    "source Figure 1 has no formal payload candidate"
+                    "RISK: source Figure 1 has no formal translation-side payload candidate"
                     if "--acceptance-discovery" in command
-                    else "source Figure 2 has no formal payload candidate"
+                    else "RISK: source Figure 2 has no formal translation-side payload candidate"
                 )
                 evidence.write_text(f"resources\t{candidate}\n", encoding="utf-8")
             return subprocess.CompletedProcess(command, 0, "", "")
@@ -445,8 +449,8 @@ class PapersTests(unittest.TestCase):
                     command[command.index("--acceptance-evidence-file") + 1]
                 )
                 evidence.write_text(
-                    "resources\tsource Figure 1 has no formal payload candidate\n"
-                    "resources\tsource Figure 2 has no formal payload candidate\n",
+                    "resources\tRISK: source Figure 1 has no formal translation-side payload candidate\n"
+                    "resources\tRISK: source Figure 2 has no formal translation-side payload candidate\n",
                     encoding="utf-8",
                 )
             return subprocess.CompletedProcess(command, 0, "", "")
@@ -459,6 +463,37 @@ class PapersTests(unittest.TestCase):
             )
         self.assertFalse(passed)
         self.assertIn("approved waiver fingerprint changed: resources:", output)
+
+    def test_acceptance_preflight_rejects_raw_diagnostic_drift(self) -> None:
+        root = self.make_root("draft")
+        discovery_candidate = (
+            "RISK: Listing 1 fenced payload has weak distinctive-identifier "
+            "overlap with source candidate (0.10)"
+        )
+        translated_candidate = discovery_candidate.replace("0.10", "0.09")
+        reviewed = build_waiver_records({"listings": [discovery_candidate]})["listings"]
+
+        def change_diagnostic(command, **_kwargs):
+            if "scripts/validate_translations.sh" in command:
+                evidence = Path(
+                    command[command.index("--acceptance-evidence-file") + 1]
+                )
+                candidate = (
+                    discovery_candidate
+                    if "--acceptance-discovery" in command
+                    else translated_candidate
+                )
+                evidence.write_text(f"listings\t{candidate}\n", encoding="utf-8")
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with self.globals_patch(root), patch.object(
+            papers.subprocess, "run", side_effect=change_diagnostic
+        ):
+            passed, output, _records = papers.acceptance_preflight(
+                "sample-paper", {"listings": reviewed["fingerprint"]}
+            )
+        self.assertFalse(passed)
+        self.assertIn("raw waiver diagnostics changed between acceptance passes", output)
 
     def test_accept_rejects_direct_refresh_of_translated_paper(self) -> None:
         root = self.make_root("translated")

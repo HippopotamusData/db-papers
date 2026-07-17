@@ -569,8 +569,11 @@ def _section_heading_findings(source_text: str, translation_text: str) -> list[s
     ):
         risks.append("source Conclusion/Summary heading has no translation-side heading candidate")
 
-    source_numbers: set[int] = set()
-    for number_text, title in SOURCE_NUMBERED_HEADING_RE.findall(source_text):
+    reference_heading = SOURCE_REFERENCE_HEADING_RE.search(source_text)
+    heading_source = source_text[: reference_heading.start()] if reference_heading else source_text
+    source_sequence: list[int] = []
+    expected_number = 1
+    for number_text, title in SOURCE_NUMBERED_HEADING_RE.findall(heading_source):
         words = title.split()
         letters = [character for character in title if character.isalpha()]
         uppercase_ratio = (
@@ -578,8 +581,20 @@ def _section_heading_findings(source_text: str, translation_text: str) -> list[s
             if letters
             else 0.0
         )
-        if len(title) <= 100 and len(words) <= 12 and uppercase_ratio >= 0.65:
-            source_numbers.add(int(number_text))
+        if len(title) > 100 or len(words) > 12 or uppercase_ratio < 0.65:
+            continue
+        number = int(number_text)
+        if not source_sequence:
+            if number == 1:
+                source_sequence.append(number)
+                expected_number = 2
+            continue
+        if number == expected_number:
+            source_sequence.append(number)
+            expected_number += 1
+            continue
+        break
+    source_numbers = set(source_sequence) if len(source_sequence) >= 2 else set()
     translation_numbers = {
         int(number) for number in TRANSLATION_NUMBERED_HEADING_RE.findall(translation_text)
     }

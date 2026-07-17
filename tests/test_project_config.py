@@ -1,16 +1,19 @@
 from __future__ import annotations
 
-import hashlib
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from acceptance_evidence import build_waiver_records  # noqa: E402
 from project_config import (  # noqa: E402
+    HISTORICAL_V2_ENTRY_FINGERPRINTS,
     assets_manifest_sha256,
     configured_paths,
     effective_page_limit,
@@ -27,7 +30,13 @@ class ProjectConfigTests(unittest.TestCase):
         policy = load_project_policy(paths["policy"])
         self.assertEqual(policy["default_max_source_pages"], 60)
         load_taxonomy(ROOT / "config/taxonomy.yaml")
-        load_acceptance_ledger(paths["acceptance_ledger"])
+        acceptance = load_acceptance_ledger(paths["acceptance_ledger"])
+        historical_ids = {
+            paper_id
+            for paper_id, entry in acceptance["entries"].items()
+            if entry["reviewer"] == "historical-v2-reviewer-unrecorded"
+        }
+        self.assertEqual(historical_ids, set(HISTORICAL_V2_ENTRY_FINGERPRINTS))
 
     def test_page_exception_requires_authorization_and_higher_limit(self) -> None:
         invalid_records = (
@@ -132,22 +141,29 @@ class ProjectConfigTests(unittest.TestCase):
     def test_acceptance_v3_requires_reviewer_base_asset_hash_and_exact_waiver(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "acceptance.yaml"
-            candidate = "source Figure 1 has no formal payload candidate"
-            payload = (
-                '{"candidates":["' + candidate + '"],"category":"resources"}'
-            ).encode("utf-8")
-            fingerprint = hashlib.sha256(payload).hexdigest()
+            candidate = (
+                "RISK: source Figure 1 has no formal translation-side payload candidate"
+            )
             path.write_text(
-                "schema_version: 3\nentries:\n  sample:\n"
-                f"    source_sha256: '{'0' * 64}'\n"
-                f"    translation_sha256: '{'1' * 64}'\n"
-                f"    assets_manifest_sha256: '{'2' * 64}'\n"
-                "    review_action: repair-review\n"
-                "    reviewer: reviewer@example.com\n"
-                f"    review_base_sha: '{'3' * 40}'\n"
-                "    waivers:\n      resources:\n"
-                f"        fingerprint: '{fingerprint}'\n"
-                f"        candidates:\n          - {candidate}\n",
+                yaml.safe_dump(
+                    {
+                        "schema_version": 3,
+                        "entries": {
+                            "sample": {
+                                "source_sha256": "0" * 64,
+                                "translation_sha256": "1" * 64,
+                                "assets_manifest_sha256": "2" * 64,
+                                "review_action": "repair-review",
+                                "reviewer": "reviewer@example.com",
+                                "review_base_sha": "3" * 40,
+                                "waivers": build_waiver_records(
+                                    {"resources": [candidate]}
+                                ),
+                            }
+                        },
+                    },
+                    sort_keys=False,
+                ),
                 encoding="utf-8",
             )
             entry = load_acceptance_ledger(path)["entries"]["sample"]

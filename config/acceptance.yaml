@@ -23,7 +23,11 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: cc2267ab4f28e4a96bac4f67c2a4e0165a95c5ac058b2592a48a742785744a18
+        evidence_version: 1
+        fingerprint: 5ad6c927fbc622bdee2a2857ca1763305e9af2e0c9417f16f8ee2a4630beaf08
+        findings:
+          - missing-formal-payload:algorithm:1
+          - missing-formal-payload:table:1
         candidates:
           - 'RISK: source Algorithm 1 has no formal translation-side payload candidate'
           - 'RISK: source Table 1 has no formal translation-side payload candidate'
@@ -43,7 +47,19 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 19a9cbab9b6027ef21e978c479095da156f40be6b859247e0e303951ec2e613b
+        evidence_version: 1
+        fingerprint: de37947448b6b9b71abbe18083c33ae2b5a55d6ed9b9cb5ee3b4f29a14571673
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:4
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:37
+          - unmatched-translation-reference:38
+          - unmatched-translation-reference:41
+          - unmatched-translation-reference:5
+          - unmatched-translation-reference:6
+          - unmatched-translation-reference:7
+          - unmatched-translation-reference:8
         candidates:
           - 'RISK: reference entry-count candidate differs (34/42)'
           - 'RISK: translation has unmatched reference identifiers: 2, 37, 38, 41, 5, 6, 7, 8'
@@ -62,11 +78,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: 9add4000db7a54bfa9283a542356119dd7f92e17b38c161f7758f69240bcfb36
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 60'
   apache-calcite-a-foundational-framework-for-optimized-query-processing-over-heterogeneous-data-sources:
     source_sha256: f95d42f2cbf92edf32f5c8eb4a20f42c51b8368a27243f1a57903197e74443bd
     translation_sha256: 17d9f0c3ee67b3c6d762a6e2cafeb16caf45f55619f54694cdb03128b527f421
@@ -76,7 +87,42 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 7618676cfcc504cece2f915835a9fb018a34544c6347db65627160c035857cc8
+        evidence_version: 1
+        fingerprint: 894fc2d6265492e8a68e0844f528228c2984fb20f9116e4a65eb50aa7dcba9d1
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:1
+          - short-translation-reference:4
+          - unmatched-translation-reference:10
+          - unmatched-translation-reference:11
+          - unmatched-translation-reference:12
+          - unmatched-translation-reference:14
+          - unmatched-translation-reference:16
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:39
+          - unmatched-translation-reference:40
+          - unmatched-translation-reference:41
+          - unmatched-translation-reference:42
+          - unmatched-translation-reference:43
+          - unmatched-translation-reference:44
+          - unmatched-translation-reference:45
+          - unmatched-translation-reference:46
+          - unmatched-translation-reference:47
+          - unmatched-translation-reference:48
+          - unmatched-translation-reference:49
+          - unmatched-translation-reference:5
+          - unmatched-translation-reference:50
+          - unmatched-translation-reference:51
+          - unmatched-translation-reference:52
+          - unmatched-translation-reference:53
+          - unmatched-translation-reference:54
+          - unmatched-translation-reference:55
+          - unmatched-translation-reference:56
+          - unmatched-translation-reference:57
+          - unmatched-translation-reference:6
+          - unmatched-translation-reference:7
+          - unmatched-translation-reference:8
+          - unmatched-translation-reference:9
         candidates:
           - 'RISK: reference entry-count candidate differs (27/57)'
           - 'RISK: translation has unmatched reference identifiers: 10, 11, 12, 14, 16, 2, 39, 40, 41, 42, 43, 44, 45, 46,
@@ -112,27 +158,12 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 56eb506ae445953a64ed8986be0a391ee5372d7fefc2a5c765631402584c4650
+        evidence_version: 1
+        fingerprint: 437d28b4979ad3e8aaec26e490182faa4ed4ad26c8a5c93ed6764ee1eda07a16
+        findings:
+          - missing-conclusion-summary-heading
         candidates:
           - 'RISK: source Conclusion/Summary heading has no translation-side heading candidate'
-  efficiently-compiling-efficient-query-plans-modern-hardware:
-    source_sha256: 7e3f5001d09f13b1a5dbc6d1756b7d2dbe1db0f023f14817d02226b00c09726c
-    translation_sha256: bf0bf7d0aeaae99dc022146a1e6d8360f636e2f50d09ff66e705de842e77db56
-    assets_manifest_sha256: 13be39fe482111cdf4e4f7aa1dc4bbae95ed8f9cf5bfafc8c31020a356132c71
-    review_action: full-translation-review
-    reviewer: codex:/root
-    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: dbe0116eedd8007c7c36119204d70a2e6f05218d88fce179eafbe6e0b1d9bb83
-        candidates:
-          - 'RISK: source Figure 2 has no formal translation-side payload candidate'
-          - 'RISK: source Figure 4 has no formal translation-side payload candidate'
-          - 'RISK: source Figure 5 has no formal translation-side payload candidate'
-          - 'RISK: source Table 1 has no formal translation-side payload candidate'
-          - 'RISK: source Table 2 has no formal translation-side payload candidate'
-          - 'RISK: source Table 3 has no formal translation-side payload candidate'
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 545'
   exploiting-upper-lower-bounds-top-down-query-optimization:
     source_sha256: d34bead23826588002c2210597719c3778542b6b8dfd4b8c3ee58cdf70c1ef57
     translation_sha256: 880642fe336ccab415e760aabe97ccec350b2f783d1e2624ebd60699709f00e4
@@ -142,7 +173,10 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 47095a8ced211883565d3bb8ced6736195e41d08bfe33ea9e4540a1efc883cc9
+        evidence_version: 1
+        fingerprint: 2ecf32a9ed88aec8cedf6b05e3c2c8e853484cf1cdb89200dffef1395d3e98ea
+        findings:
+          - missing-formal-payload:figure:1
         candidates:
           - 'RISK: source Figure 1 has no formal translation-side payload candidate'
   expression-templates-revisited:
@@ -154,7 +188,75 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       listings:
-        fingerprint: eb11d2bbddaf8911261aff6ec7111f47907ec01d3e4f7b35d66382ecdb82f6c8
+        evidence_version: 1
+        fingerprint: 482c4fee5039a688ecc39c0de451398a75885eaa6f2129daec2ebb792ac7fd4e
+        findings:
+          - listing:10:short-relative-to-source
+          - listing:10:weak-distinctive-identifier-overlap
+          - listing:10:weak-key-token-overlap
+          - listing:11:no-shared-literals
+          - listing:11:short-relative-to-source
+          - listing:11:weak-distinctive-identifier-overlap
+          - listing:11:weak-key-token-overlap
+          - listing:12:no-shared-literals
+          - listing:12:short-relative-to-source
+          - listing:12:weak-distinctive-identifier-overlap
+          - listing:12:weak-key-token-overlap
+          - listing:13:weak-distinctive-identifier-overlap
+          - listing:13:weak-key-token-overlap
+          - listing:14:no-shared-literals
+          - listing:14:weak-distinctive-identifier-overlap
+          - listing:15:no-shared-literals
+          - listing:15:short-relative-to-source
+          - listing:15:weak-distinctive-identifier-overlap
+          - listing:16:no-shared-literals
+          - listing:16:weak-key-token-overlap
+          - listing:17:no-shared-literals
+          - listing:17:weak-distinctive-identifier-overlap
+          - listing:17:weak-key-token-overlap
+          - listing:18:no-shared-literals
+          - listing:18:short-relative-to-source
+          - listing:18:weak-distinctive-identifier-overlap
+          - listing:19:short-relative-to-source
+          - listing:19:weak-distinctive-identifier-overlap
+          - listing:19:weak-key-token-overlap
+          - listing:1:no-shared-literals
+          - listing:1:short-relative-to-source
+          - listing:1:weak-distinctive-identifier-overlap
+          - listing:1:weak-key-token-overlap
+          - listing:20:no-shared-literals
+          - listing:20:short-relative-to-source
+          - listing:20:weak-distinctive-identifier-overlap
+          - listing:20:weak-key-token-overlap
+          - listing:21:no-shared-literals
+          - listing:21:short-relative-to-source
+          - listing:21:weak-distinctive-identifier-overlap
+          - listing:21:weak-key-token-overlap
+          - listing:22:no-shared-literals
+          - listing:22:short-relative-to-source
+          - listing:22:weak-distinctive-identifier-overlap
+          - listing:22:weak-key-token-overlap
+          - listing:23:weak-distinctive-identifier-overlap
+          - listing:24:no-shared-literals
+          - listing:24:short-relative-to-source
+          - listing:24:weak-distinctive-identifier-overlap
+          - listing:24:weak-key-token-overlap
+          - listing:25:no-shared-literals
+          - listing:2:weak-distinctive-identifier-overlap
+          - listing:3:short-relative-to-source
+          - listing:3:weak-distinctive-identifier-overlap
+          - listing:3:weak-key-token-overlap
+          - listing:4:no-shared-literals
+          - listing:4:short-relative-to-source
+          - listing:4:weak-distinctive-identifier-overlap
+          - listing:4:weak-key-token-overlap
+          - listing:5:short-relative-to-source
+          - listing:5:weak-distinctive-identifier-overlap
+          - listing:5:weak-key-token-overlap
+          - listing:6:no-shared-literals
+          - listing:6:weak-distinctive-identifier-overlap
+          - listing:7:weak-distinctive-identifier-overlap
+          - listing:9:weak-distinctive-identifier-overlap
         candidates:
           - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.00)'
           - 'RISK: Listing 1 fenced payload has weak key-token overlap with source candidate (class, for, from, function,
@@ -242,19 +344,23 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       abridgement:
-        fingerprint: 35ce306ec365c46920dbf8369a7e7678cc68c8eb42f2f4822c3e089ce41921f6
+        evidence_version: 1
+        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        findings:
+          - abridgement:moderate
         candidates:
-          - 'moderate mechanical abridgement risk: CJK/source-word ratio=6247/9375 (<0.75)'
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=6243/9670 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
       listings:
-        fingerprint: d4a82563adda283a2d171b2bf654a90d296f7bc6299954c93b3c1cc897d6885d
+        evidence_version: 1
+        fingerprint: af9f548fd16af476fbb1e7bc4456e3f4f6a44e6b58e7547729db09c7a3765b29
+        findings:
+          - listing:1:short-relative-to-source
+          - listing:1:weak-distinctive-identifier-overlap
+          - listing:2:weak-distinctive-identifier-overlap
         candidates:
           - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.12)'
           - 'RISK: Listing 1 fenced payload is short relative to source code candidate (272/1880)'
           - 'RISK: Listing 2 fenced payload has weak distinctive-identifier overlap with source candidate (0.26)'
-      resources:
-        fingerprint: b0b6ecd3ea331c5b80aea67eea3b3cc96adb2091e22436d6b9a97458a33d5f1b
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 20, 621, 623'
   how-good-are-query-optimizers-really:
     source_sha256: c7f5f654f506ca0f84249205f3c1702d2f5839a34c2aae95595c91331c5af32b
     translation_sha256: 225e08b531fe7fb86ae0f2fce670fc128282e87f5fd25b9f55792efb22784e4a
@@ -278,11 +384,23 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       abridgement:
-        fingerprint: 4dc4fbf3a2cb70b691c90088413540556c550adb1ed2fbf170132ee19f2caf87
+        evidence_version: 1
+        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        findings:
+          - abridgement:moderate
         candidates:
-          - 'moderate mechanical abridgement risk: CJK/source-word ratio=7732/13631 (<0.75)'
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=7728/12412 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
       listings:
-        fingerprint: 52b9185a20ad71349f8a87bf3065b311048c1a566a6545c1281018312cfef313
+        evidence_version: 1
+        fingerprint: 97b58d985d01956309df7a46c0a901bdecc39c0a5f726dd68aa1a1238988dd54
+        findings:
+          - listing:1:short-relative-to-source
+          - listing:1:weak-distinctive-identifier-overlap
+          - listing:2:no-shared-literals
+          - listing:2:weak-distinctive-identifier-overlap
+          - listing:3:no-shared-literals
+          - listing:3:weak-distinctive-identifier-overlap
+          - listing:4:weak-distinctive-identifier-overlap
         candidates:
           - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.17)'
           - 'RISK: Listing 1 fenced payload is short relative to source code candidate (666/2060)'
@@ -298,18 +416,6 @@ entries:
     review_action: repair-review
     reviewer: codex:/root/repair_expression_templates
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-  low-latency-compilation-sql-queries-machine-code:
-    source_sha256: 7492417add1690acce4161c34859ccfacd7cf2196f915d87e3cc38f93a2a1216
-    translation_sha256: 2b8da04d8a5eb59ddf76875e79ba4e30c7d2135457314fe8b67bcc4b76627211
-    assets_manifest_sha256: 7ad185fa003cbaabca8cbccba0f0df0ca647e82b630da2118e6cdf8bafffa3a6
-    review_action: full-translation-review
-    reviewer: codex:/root
-    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: 8421ae7cd16d76f94bbbae14990ffb1678f1473c4e9e82e2a8869aebda225340
-        candidates:
-          - 'RISK: source Figure 2 has no formal translation-side payload candidate'
   memsql-query-optimizer:
     source_sha256: a6faf719a05bbcbbcc0dcb8bb3775d5ab174bac78d64ef9731fd0bb6c648e17e
     translation_sha256: 9e84cd77ec50deebedca7810b9a789c567a2b8313a9458a7d41c855537031419
@@ -317,11 +423,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: 552a3c4ea2975c593c55e4b9b7f041b3a130d8f75499e957ba057d04e5cc500e
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 120'
   monetdb-x100-hyper-pipelining-query-execution:
     source_sha256: c509153c876aee8706e298d43e2fa93ade2696cc3102643b439af0f508bb52fc
     translation_sha256: b144e175d8c1e8197ef35f619d60c3e112bc6c3cbfc78d306f61f7da903279d5
@@ -359,7 +460,14 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       listings:
-        fingerprint: 8e26b57b5b843fd0c805b2b5e09abffcacf85ea27b38331419bc1c0ab02f8c4b
+        evidence_version: 1
+        fingerprint: cdfadd528a42776e85ff5df6f47645f9194153c5d8b120dd1facdcb770f274e1
+        findings:
+          - listing:1:no-shared-literals
+          - listing:1:weak-distinctive-identifier-overlap
+          - listing:1:weak-key-token-overlap
+          - listing:2:weak-distinctive-identifier-overlap
+          - listing:2:weak-key-token-overlap
         candidates:
           - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.08)'
           - 'RISK: Listing 1 fenced payload has weak key-token overlap with source candidate (for, from, group, join, operator,
@@ -397,9 +505,12 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       abridgement:
-        fingerprint: 701577a8d8f6a4df69b2b5ba52c6dc4f919c8f5ff0ac4f0c424688b881a7cf20
+        evidence_version: 1
+        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        findings:
+          - abridgement:moderate
         candidates:
-          - 'moderate mechanical abridgement risk: CJK/source-word ratio=6038/10384 (<0.75)'
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=6034/10581 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
   relaxed-operator-fusion-in-memory-databases:
     source_sha256: 4ded6b8ac68654fa5e2048ae8b10c040080f75ba6de557972ddcccc20573f261
     translation_sha256: a96f9804bca754076ffe8e94f214a2c158b92211986cbb9c83469d0bf272ecdc
@@ -409,10 +520,32 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 88caa36cdb4430124d5094efd8c71c214f31de36586c8de4978092f456970b1a
+        evidence_version: 1
+        fingerprint: 83bf7b4e3dd58d36dd2318ab3cebf5d0f408036de1abce9f7b4778f825686a42
+        findings:
+          - reference-entry-count-differs
+          - unmatched-translation-reference:1
+          - unmatched-translation-reference:25
+          - unmatched-translation-reference:26
+          - unmatched-translation-reference:27
+          - unmatched-translation-reference:28
+          - unmatched-translation-reference:29
+          - unmatched-translation-reference:30
+          - unmatched-translation-reference:31
+          - unmatched-translation-reference:32
+          - unmatched-translation-reference:33
+          - unmatched-translation-reference:34
+          - unmatched-translation-reference:35
+          - unmatched-translation-reference:36
+          - unmatched-translation-reference:37
+          - unmatched-translation-reference:38
+          - unmatched-translation-reference:39
+          - unmatched-translation-reference:40
+          - unmatched-translation-reference:41
+          - unmatched-translation-reference:42
+          - unmatched-translation-reference:43
         candidates:
           - 'RISK: reference entry-count candidate differs (23/43)'
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 11'
           - 'RISK: translation has unmatched reference identifiers: 1, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
             38, 39, 40, 41, 42, 43'
   rethinking-simd-vectorization-in-memory-databases:
@@ -424,13 +557,18 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 06e0a721cd358372eb6a5c719c28b0a08e72e675bca0b6ef7a1fe07a84edfa2f
+        evidence_version: 1
+        fingerprint: a6dfd3e5f5db93ba4a302c9f9443019fb20d6cc22da3383cef9b1f17687a4b25
+        findings:
+          - missing-formal-payload:algorithm:1
+          - missing-formal-payload:algorithm:2
+          - missing-formal-payload:algorithm:7
+          - missing-formal-payload:table:1
         candidates:
           - 'RISK: source Algorithm 1 has no formal translation-side payload candidate'
           - 'RISK: source Algorithm 2 has no formal translation-side payload candidate'
           - 'RISK: source Algorithm 7 has no formal translation-side payload candidate'
           - 'RISK: source Table 1 has no formal translation-side payload candidate'
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 16, 64'
   runtime-code-generation-cloudera-impala:
     source_sha256: f403619421fcbb018d7e074917a1ddc9d155e5e0d76bbab7a73902034987d47f
     translation_sha256: e62205bb02f494cd29a1711218097360bd113a60af80e9f7b931ede98e58cb1c
@@ -440,7 +578,13 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 8113d17eee1fe790d69ddea18222450b7d027d9534e29274f8f245ddf68304d2
+        evidence_version: 1
+        fingerprint: 517336061fc9af6508af6eb5ce00c08bd6980c61cf3446f515367196fa2bf9df
+        findings:
+          - missing-display-equation:1
+          - missing-formal-payload:figure:1
+          - missing-formal-payload:table:3
+          - missing-formal-payload:table:4
         candidates:
           - 'RISK: source Figure 1 has no formal translation-side payload candidate'
           - 'RISK: source Table 3 has no formal translation-side payload candidate'
@@ -462,7 +606,19 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: be58cd56d8ff72876f2c5c3503248e7cf6ddfe76ce090912ac339b890a25352a
+        evidence_version: 1
+        fingerprint: b0b9dca4a7eb3a78b6940a02daa162e1facee4d68f0e7ccc9a597d4367b6444d
+        findings:
+          - missing-formal-payload:figure:1
+          - missing-formal-payload:figure:10
+          - missing-formal-payload:figure:2
+          - missing-formal-payload:figure:3
+          - missing-formal-payload:figure:4
+          - missing-formal-payload:figure:5
+          - missing-formal-payload:figure:6
+          - missing-formal-payload:figure:7
+          - missing-formal-payload:figure:8
+          - missing-formal-payload:figure:9
         candidates:
           - 'RISK: source Figure 1 has no formal translation-side payload candidate'
           - 'RISK: source Figure 10 has no formal translation-side payload candidate'
@@ -490,17 +646,15 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: d0bc2fa11e6cf090d453430c7c2190325a1970b6e585a599f65e543417f3347f
+        evidence_version: 1
+        fingerprint: 0ee7da38d1587d27811ed43a5a950c87b4451ae7050b354f04ed9a934e2aae04
+        findings:
+          - reference-entry-count-differs
+          - unmatched-translation-reference:baw+09
+          - unmatched-translation-reference:shp+96
         candidates:
           - 'RISK: reference entry-count candidate differs (20/22)'
           - 'RISK: translation has unmatched reference identifiers: baw+09, shp+96'
-  vectorization-vs-compilation-query-execution:
-    source_sha256: 758880f84f27f640b809e5f6659dbfcfd5e26a1b75222cecaf7d4d6f90817e6c
-    translation_sha256: 5c7df2aa5690b7f16192dc40270c6258d00c148d18abf60eeca417d832155642
-    assets_manifest_sha256: a50e7782774c035a7fc0fff6809c964d2e7d4d83020c5e5f761901e526cf39fd
-    review_action: repair-review
-    reviewer: historical-v2-reviewer-unrecorded
-    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
   volcano-optimizer-generator:
     source_sha256: 77a4930474ee3caf2e774c72d1b842190e299fd4f492ea3577f8307972cc3f5f
     translation_sha256: 49d637d297ecfdb234610957f328b05460e15dcdb9e34f4d217ba57578146135
@@ -524,7 +678,36 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       listings:
-        fingerprint: 584b12300dad7656e1ef94cd473bcfc1a7fb3f98e6c752e30e496ebd6e1bedc0
+        evidence_version: 1
+        fingerprint: 5fa0866126633cd576c51e60cae7fbcf74f773825a9145bb21ce463441a2d3c1
+        findings:
+          - listing:10:short-relative-to-source
+          - listing:10:weak-distinctive-identifier-overlap
+          - listing:11:no-shared-literals
+          - listing:11:short-relative-to-source
+          - listing:11:weak-distinctive-identifier-overlap
+          - listing:12:short-relative-to-source
+          - listing:12:weak-distinctive-identifier-overlap
+          - listing:13:short-relative-to-source
+          - listing:13:weak-distinctive-identifier-overlap
+          - listing:1:short-relative-to-source
+          - listing:1:weak-distinctive-identifier-overlap
+          - listing:2:short-relative-to-source
+          - listing:2:weak-distinctive-identifier-overlap
+          - listing:3:short-relative-to-source
+          - listing:3:weak-distinctive-identifier-overlap
+          - listing:4:short-relative-to-source
+          - listing:4:weak-distinctive-identifier-overlap
+          - listing:5:short-relative-to-source
+          - listing:5:weak-distinctive-identifier-overlap
+          - listing:6:short-relative-to-source
+          - listing:6:weak-distinctive-identifier-overlap
+          - listing:7:short-relative-to-source
+          - listing:7:weak-distinctive-identifier-overlap
+          - listing:8:short-relative-to-source
+          - listing:8:weak-distinctive-identifier-overlap
+          - listing:9:short-relative-to-source
+          - listing:9:weak-distinctive-identifier-overlap
         candidates:
           - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.04)'
           - 'RISK: Listing 1 fenced payload is short relative to source code candidate (117/1396)'
@@ -567,11 +750,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: 986bd54f5a177c1f9372ea7d7675c61cae02ea6ea3073b6bfd5f5245b874f9b9
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 500'
   druid-a-real-time-analytical-data-store:
     source_sha256: dc1b1db149e5408ccc66cc5198a4cc3b5fead34d1d69157c3b708159934dc17b
     translation_sha256: 8b7ffc535eaa0f7edbe8b634f682f403b9c72a5754e6efdb01f2bfd27d0f9765
@@ -579,11 +757,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: cb254ac63529bb93c40283689a7df59a7d6719b55149afdb8201b43343b803ad
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 5000'
   pinot-realtime-olap-for-530-million-users:
     source_sha256: 17b7e856c5bea94d95b3fcdd0be9bc59a5b90a4ae5d647c115f228d86537f243
     translation_sha256: 7ac7054aa36860a27ff9da8c09e60f9bf95da1a70d4f075f97acea4b5429b4e7
@@ -593,7 +766,11 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: f8306ca166e590136b94bd64d59a5ca01dc243d73c3f4f00f35db33f796f5e54
+        evidence_version: 1
+        fingerprint: c7e94010c2a3616c9095bf6bdfd2bf808835157843567b6d3904aefa2fcd3709
+        findings:
+          - missing-formal-payload:algorithm:1
+          - missing-formal-payload:algorithm:2
         candidates:
           - 'RISK: source Algorithm 1 has no formal translation-side payload candidate'
           - 'RISK: source Algorithm 2 has no formal translation-side payload candidate'
@@ -606,10 +783,33 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 743fc3e7a463bc56f0ab0a41105e06d13111c64bc6124d407a0df3d7e1e05ac1
+        evidence_version: 1
+        fingerprint: 52de6a69f551e7124f1a3ef01b0eabbabd0f5811a2f44ca3ad391630688ce75a
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:10
+          - short-translation-reference:7
+          - unmatched-translation-reference:1
+          - unmatched-translation-reference:11
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:25
+          - unmatched-translation-reference:26
+          - unmatched-translation-reference:27
+          - unmatched-translation-reference:28
+          - unmatched-translation-reference:29
+          - unmatched-translation-reference:3
+          - unmatched-translation-reference:30
+          - unmatched-translation-reference:31
+          - unmatched-translation-reference:35
+          - unmatched-translation-reference:36
+          - unmatched-translation-reference:37
+          - unmatched-translation-reference:4
+          - unmatched-translation-reference:5
+          - unmatched-translation-reference:6
+          - unmatched-translation-reference:8
+          - unmatched-translation-reference:9
         candidates:
           - 'RISK: reference entry-count candidate differs (18/37)'
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 128'
           - 'RISK: translation has unmatched reference identifiers: 1, 11, 2, 25, 26, 27, 28, 29, 3, 30, 31, 35, 36, 37, 4,
             5, 6, 8, 9'
           - 'RISK: translation reference content is suspiciously short for: 10, 7'
@@ -629,7 +829,12 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: db3208876cd9793c62484a15bb2d5b28c62c9233ceef741ddadbc24df0f0e2c1
+        evidence_version: 1
+        fingerprint: 16378edc80d097084682295f9c257e8fd409ab10230dab1b3970149cce85b9ba
+        findings:
+          - multiple-image-candidates:figure:12
+          - multiple-image-candidates:figure:2
+          - multiple-image-candidates:figure:7
         candidates:
           - 'RISK: Figure 12 has 2 image candidates; verify subfigures versus duplicate representations'
           - 'RISK: Figure 2 has 2 image candidates; verify subfigures versus duplicate representations'
@@ -641,11 +846,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: 7619cfcaf453924b57b2fbaf5e1d03ecc4fe2ec4161098662a601b272b219a78
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 1200'
   kudu-storage-for-fast-analytics-on-fast-data:
     source_sha256: fef225bde3408de13152cd31af34ee07c0d3d6643deaa0ec4efe6db156af9001
     translation_sha256: 3c0e9dbd145256655c95969d85b66b10083b6425483c4429a1f437c1856f8bd4
@@ -688,11 +888,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: c74e0cd0ee9fed1b70aabb7302f8794a763e9410af972bcd33523108525d2385
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 30, 80'
   snappydata-unified-cluster-for-streaming-transactions-and-interactive-analytics:
     source_sha256: 0c1d1d302e4d7e79e1870a1cd4b4a8248def1d9aaef64522ca0053057985031b
     translation_sha256: b280e6cec71a745f9dadae37c7d5ab749787d9d9a6c58d230a8e0a438be2dc52
@@ -702,7 +897,10 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       listings:
-        fingerprint: f847cae32e9ab7edc30b769e036477b122f0a413c288cbb44457a12d41ff5958
+        evidence_version: 1
+        fingerprint: 386b4c52807697aa19c357333fdaf31bf07562d7a1e5511de307d6324a0ef40a
+        findings:
+          - listing:2:weak-distinctive-identifier-overlap
         candidates:
           - 'RISK: Listing 2 fenced payload has weak distinctive-identifier overlap with source candidate (0.09)'
   alibaba-hologres-a-cloud-native-service-for-hybrid-serving-analytical-processing:
@@ -726,11 +924,6 @@ entries:
     review_action: repair-review
     reviewer: codex:/root/repair_generating_code
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: b52bbddddce5665acb754175e0531af7a0ca0f0b779a75e301f12d92f3bfca67
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 102, 2060'
   big-metadata-when-metadata-is-big-data:
     source_sha256: 35bda2cd483f7fc6c64b1d6eaa8509ad30eb009e62f1396660b0288aa437285f
     translation_sha256: 182c314a351abaa6b4d0b24c877e0d1ce2d006a9fd3fc64768ec884502f7f911
@@ -740,7 +933,20 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: febcb8e865a950d6198e5133344de42f93c03c05afc7d9f9206ebd5c6ad110ae
+        evidence_version: 1
+        fingerprint: 551ca73a3a4990b3d37319f1d511a72de65e7641516efb7f8403981602966682
+        findings:
+          - reference-entry-count-differs
+          - unmatched-translation-reference:11
+          - unmatched-translation-reference:12
+          - unmatched-translation-reference:13
+          - unmatched-translation-reference:14
+          - unmatched-translation-reference:15
+          - unmatched-translation-reference:16
+          - unmatched-translation-reference:17
+          - unmatched-translation-reference:18
+          - unmatched-translation-reference:19
+          - unmatched-translation-reference:20
         candidates:
           - 'RISK: reference entry-count candidate differs (10/20)'
           - 'RISK: translation has unmatched reference identifiers: 11, 12, 13, 14, 15, 16, 17, 18, 19, 20'
@@ -765,13 +971,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-  db2-with-blu-acceleration-so-much-more-than-just-a-column-store:
-    source_sha256: 5d3106da72932c1c61f76d6e9afd2ef8bca1f495c7b249d9649c9d9c44203b0a
-    translation_sha256: 16ea5620139839244ec5f1a244b18a945cf8b5c97a1f955163de768668b21941
-    assets_manifest_sha256: c37d9d85c0ef35bae12bd84cbaaa02c7647059092115657bc30a69ec26e6872c
-    review_action: repair-review
-    reviewer: codex:/root/repair_lsm
-    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
   dremel-interactive-analysis-of-web-scale-datasets:
     source_sha256: 1cde13e72f37da3444f89f001150a92ab30dd8921e8a4bd0cc773d9ff631c405
     translation_sha256: 5f1511362488689d4a24a649744e4b1078e33cbafeb5283f73e46e64b49041d6
@@ -795,13 +994,12 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       abridgement:
-        fingerprint: 8ff0e56107c0d595428aa78d8d9e81caf2a4148d803e3dd28038f9744672f653
+        evidence_version: 1
+        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        findings:
+          - abridgement:moderate
         candidates:
-          - 'moderate mechanical abridgement risk: CJK/source-word ratio=5823/10298 (<0.75)'
-      resources:
-        fingerprint: c8a9fc1b580a58169a32b7eedc9be96017561a5511d323e2b97f1e1c455bd779
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 100, 106, 1000'
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=5819/10449 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
   napa-powering-scalable-data-warehousing-with-robust-query-performance-at-google:
     source_sha256: d13af9093017aa67f41f3d135a13751534df23aa982e195ddc878ed11a96b5ef
     translation_sha256: 76e5bef3d9a152d257dca327a0f3639471b7294dad2772ef670bef0592d881f4
@@ -811,7 +1009,19 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: be58cd56d8ff72876f2c5c3503248e7cf6ddfe76ce090912ac339b890a25352a
+        evidence_version: 1
+        fingerprint: b0b9dca4a7eb3a78b6940a02daa162e1facee4d68f0e7ccc9a597d4367b6444d
+        findings:
+          - missing-formal-payload:figure:1
+          - missing-formal-payload:figure:10
+          - missing-formal-payload:figure:2
+          - missing-formal-payload:figure:3
+          - missing-formal-payload:figure:4
+          - missing-formal-payload:figure:5
+          - missing-formal-payload:figure:6
+          - missing-formal-payload:figure:7
+          - missing-formal-payload:figure:8
+          - missing-formal-payload:figure:9
         candidates:
           - 'RISK: source Figure 1 has no formal translation-side payload candidate'
           - 'RISK: source Figure 10 has no formal translation-side payload candidate'
@@ -832,7 +1042,33 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: de82270d8ae3cbb65a1dc4f7efd53893406cf01ef31a01402e217d80ee57f5ad
+        evidence_version: 1
+        fingerprint: 5b88bf8b58c2039b58e97f0cbe5f949b3e0da3226ac2258a1cb097a6fb5dd74d
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:1
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:27
+          - unmatched-translation-reference:28
+          - unmatched-translation-reference:29
+          - unmatched-translation-reference:3
+          - unmatched-translation-reference:30
+          - unmatched-translation-reference:31
+          - unmatched-translation-reference:32
+          - unmatched-translation-reference:33
+          - unmatched-translation-reference:34
+          - unmatched-translation-reference:35
+          - unmatched-translation-reference:36
+          - unmatched-translation-reference:37
+          - unmatched-translation-reference:38
+          - unmatched-translation-reference:39
+          - unmatched-translation-reference:4
+          - unmatched-translation-reference:40
+          - unmatched-translation-reference:41
+          - unmatched-translation-reference:42
+          - unmatched-translation-reference:43
+          - unmatched-translation-reference:5
+          - unmatched-translation-reference:8
         candidates:
           - 'RISK: reference entry-count candidate differs (21/43)'
           - 'RISK: translation has unmatched reference identifiers: 2, 27, 28, 29, 3, 30, 31, 32, 33, 34, 35, 36, 37, 38,
@@ -854,7 +1090,26 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 73d1692c514b8ccf1452b57e6119b40336608e9fefc841d6c08f7194ba57ac58
+        evidence_version: 1
+        fingerprint: 3ecaccafba9bdbacf3df72bfaeac4c7400a6f235835ecd4398bddc6c75eff51f
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:1
+          - short-translation-reference:5
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:21
+          - unmatched-translation-reference:22
+          - unmatched-translation-reference:23
+          - unmatched-translation-reference:24
+          - unmatched-translation-reference:25
+          - unmatched-translation-reference:26
+          - unmatched-translation-reference:27
+          - unmatched-translation-reference:28
+          - unmatched-translation-reference:3
+          - unmatched-translation-reference:4
+          - unmatched-translation-reference:6
+          - unmatched-translation-reference:7
+          - unmatched-translation-reference:8
         candidates:
           - 'RISK: reference entry-count candidate differs (14/28)'
           - 'RISK: translation has unmatched reference identifiers: 2, 21, 22, 23, 24, 25, 26, 27, 28, 3, 4, 6, 7, 8'
@@ -882,7 +1137,10 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 026ac46d7bc94bfe8fff75cd7356809496c6f2efa75332d185b98bf6cccd7b5a
+        evidence_version: 1
+        fingerprint: 34edb24fd770744502f2650a0bb2450c7e5095e9909f794b4832c06e7153f2db
+        findings:
+          - missing-formal-payload:table:1
         candidates:
           - 'RISK: source Table 1 has no formal translation-side payload candidate'
   foundationdb-a-distributed-unbundled-transactional-key-value-store:
@@ -915,7 +1173,21 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: a235b204fe790cf77e260d0b74dbe552d178130fa06a848c8f51c8ff1d678307
+        evidence_version: 1
+        fingerprint: bed785e02e182b221fe61596e6b5c59aedc1a5cbb5db0bce343e09716c4e1cd4
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:6
+          - unmatched-translation-reference:10
+          - unmatched-translation-reference:11
+          - unmatched-translation-reference:12
+          - unmatched-translation-reference:13
+          - unmatched-translation-reference:14
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:4
+          - unmatched-translation-reference:7
+          - unmatched-translation-reference:8
+          - unmatched-translation-reference:9
         candidates:
           - 'RISK: reference entry-count candidate differs (4/14)'
           - 'RISK: translation has unmatched reference identifiers: 10, 11, 12, 13, 14, 2, 4, 7, 8, 9'
@@ -957,7 +1229,13 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: eee5f89b1c70b946072986f39419f635060d81d7fc15c7d1c661044650490798
+        evidence_version: 1
+        fingerprint: ce863a1293b95cdd1f00b8f4912fc15062ee76cff9dad67bd2f0dbd7c1e7883d
+        findings:
+          - duplicate-source-reference:44
+          - reference-entry-count-differs
+          - short-translation-reference:44
+          - short-translation-reference:62
         candidates:
           - 'RISK: reference entry-count candidate differs (63/62)'
           - 'RISK: source has duplicate reference identifier candidates: 44'
@@ -978,7 +1256,26 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 1e65595afd06da97291c2204db519aa907bf5296997a723204c29939b701678e
+        evidence_version: 1
+        fingerprint: adaea433cd7a58699c16ae66935a3a516bd4d48babf0eea749624fb80838a1c8
+        findings:
+          - reference-entry-count-differs
+          - unmatched-translation-reference:1
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:22
+          - unmatched-translation-reference:23
+          - unmatched-translation-reference:24
+          - unmatched-translation-reference:25
+          - unmatched-translation-reference:26
+          - unmatched-translation-reference:27
+          - unmatched-translation-reference:28
+          - unmatched-translation-reference:29
+          - unmatched-translation-reference:3
+          - unmatched-translation-reference:31
+          - unmatched-translation-reference:35
+          - unmatched-translation-reference:36
+          - unmatched-translation-reference:37
+          - unmatched-translation-reference:4
         candidates:
           - 'RISK: reference entry-count candidate differs (22/38)'
           - 'RISK: translation has unmatched reference identifiers: 1, 2, 22, 23, 24, 25, 26, 27, 28, 29, 3, 31, 35, 36, 37,
@@ -992,7 +1289,34 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       listings:
-        fingerprint: d90feb81ae2d815d310a852ac605f959a9a9674ec8fdb06cf49ced6da5da632a
+        evidence_version: 1
+        fingerprint: 6659b3f2720eeb2e5cae174ee8ad9f9b0e8f63bcbf6dd2afbe0dfb9fd39ab855
+        findings:
+          - listing:1:no-shared-literals
+          - listing:1:short-relative-to-source
+          - listing:1:weak-distinctive-identifier-overlap
+          - listing:1:weak-key-token-overlap
+          - listing:2:no-shared-literals
+          - listing:2:short-relative-to-source
+          - listing:2:weak-distinctive-identifier-overlap
+          - listing:2:weak-key-token-overlap
+          - listing:3:no-shared-literals
+          - listing:3:weak-distinctive-identifier-overlap
+          - listing:3:weak-key-token-overlap
+          - listing:4:no-shared-literals
+          - listing:4:weak-distinctive-identifier-overlap
+          - listing:5:no-shared-literals
+          - listing:5:weak-distinctive-identifier-overlap
+          - listing:5:weak-key-token-overlap
+          - listing:6:no-shared-literals
+          - listing:6:short-relative-to-source
+          - listing:6:weak-distinctive-identifier-overlap
+          - listing:7:no-shared-literals
+          - listing:7:short-relative-to-source
+          - listing:7:weak-distinctive-identifier-overlap
+          - listing:8:no-shared-literals
+          - listing:8:short-relative-to-source
+          - listing:8:weak-distinctive-identifier-overlap
         candidates:
           - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.10)'
           - 'RISK: Listing 1 fenced payload has weak key-token overlap with source candidate (for, from, select, while)'
@@ -1021,10 +1345,6 @@ entries:
           - 'RISK: Listing 8 fenced payload has weak distinctive-identifier overlap with source candidate (0.09)'
           - 'RISK: Listing 8 fenced payload is short relative to source code candidate (240/883)'
           - 'RISK: Listing 8 fenced payload shares no literals with source candidate'
-      resources:
-        fingerprint: 3cfe1aeed554dd4b932f51a59333f6fb43c4372f7bb4d64996985f59b8705228
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 15, 73'
   a-relational-model-of-data-for-large-shared-data-banks:
     source_sha256: fa2579f427a4da68466ef159a3ae0c3c1fe4eafec60f73c9f2f40378a65d8ef9
     translation_sha256: 6d3818a0e57ba69c3a61d818520b852883c54e464849efdacded91123429abbc
@@ -1039,11 +1359,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: 882ef8fd6635761ab4b41f2f31d79dae3dcb90e899b3e09626f8453fae2c0d4a
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 9, 12, 25'
   are-we-ready-for-learned-cardinality-estimation:
     source_sha256: 396379d1b67949e30036f8c8409a25f984765dffc07d3a921394361ec0868709
     translation_sha256: e4306632806dd4dc9b44a6f630289b6b3b7c88a86e4309c7d56a624a0e03e439
@@ -1072,11 +1387,6 @@ entries:
     review_action: full-translation-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-    waivers:
-      resources:
-        fingerprint: 9add4000db7a54bfa9283a542356119dd7f92e17b38c161f7758f69240bcfb36
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 60'
   learned-cardinalities-estimating-correlated-joins-deep-learning:
     source_sha256: 48b814cc3f70be4b32c0f5dfd27d2ae26512803daf559959a0c164d17f7516c0
     translation_sha256: 52ec989e88c776dd18a7c38db3d9ca3beaa328770530d630234d51af10d78a6f
@@ -1107,15 +1417,16 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       listings:
-        fingerprint: c36b3d7accfeb6d5e898ae03f41f1fda1c84ff819d79a03da0a8ee7df5bd0ac9
+        evidence_version: 1
+        fingerprint: af9f548fd16af476fbb1e7bc4456e3f4f6a44e6b58e7547729db09c7a3765b29
+        findings:
+          - listing:1:short-relative-to-source
+          - listing:1:weak-distinctive-identifier-overlap
+          - listing:2:weak-distinctive-identifier-overlap
         candidates:
           - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.02)'
           - 'RISK: Listing 1 fenced payload is short relative to source code candidate (150/562)'
           - 'RISK: Listing 2 fenced payload has weak distinctive-identifier overlap with source candidate (0.21)'
-      resources:
-        fingerprint: 7d7d94c44d37771856b46658271064c39252c59d03f4a22154bdd5b01b50301e
-        candidates:
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 50'
   velox-metas-unified-execution-engine:
     source_sha256: 1b9e6048af04d2fdfe31a026e1689e9a35c6814772770b243b8dc452af6e964c
     translation_sha256: 4b6065b5909ed657f018cd57d808bbd146fc5babbe0f708868f65ca609ae3c3c
@@ -1146,10 +1457,42 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 3f5f8bc67f5eca33fe280a8d141011206e0049ec6e6b6d16933c450057c6ba4e
+        evidence_version: 1
+        fingerprint: 93b72c6375718ce579209c3b1290ad1e4aaaced9d6597ad2c5864cf8187378ba
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:2
+          - short-translation-reference:6
+          - unmatched-translation-reference:1
+          - unmatched-translation-reference:28
+          - unmatched-translation-reference:29
+          - unmatched-translation-reference:3
+          - unmatched-translation-reference:30
+          - unmatched-translation-reference:31
+          - unmatched-translation-reference:32
+          - unmatched-translation-reference:33
+          - unmatched-translation-reference:34
+          - unmatched-translation-reference:35
+          - unmatched-translation-reference:36
+          - unmatched-translation-reference:37
+          - unmatched-translation-reference:38
+          - unmatched-translation-reference:39
+          - unmatched-translation-reference:4
+          - unmatched-translation-reference:40
+          - unmatched-translation-reference:41
+          - unmatched-translation-reference:42
+          - unmatched-translation-reference:43
+          - unmatched-translation-reference:44
+          - unmatched-translation-reference:45
+          - unmatched-translation-reference:46
+          - unmatched-translation-reference:47
+          - unmatched-translation-reference:48
+          - unmatched-translation-reference:5
+          - unmatched-translation-reference:7
+          - unmatched-translation-reference:8
+          - unmatched-translation-reference:9
         candidates:
           - 'RISK: reference entry-count candidate differs (31/59)'
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 10, 12'
           - 'RISK: translation has unmatched reference identifiers: 1, 28, 29, 3, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
             4, 40, 41, 42, 43, 44, 45, 46, 47, 48, 5, 7, 8, 9'
           - 'RISK: translation reference content is suspiciously short for: 2, 6'
@@ -1169,7 +1512,11 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 45ec7a7dbf43ad8d4014cafa27a31e28eea9e752e0a7c584ab284024dd47e0c3
+        evidence_version: 1
+        fingerprint: 17a8e56432527aad90724c548e45091cfdcc57a41f36ff21c33d2daab82fd7ca
+        findings:
+          - multiple-image-candidates:figure:7
+          - multiple-image-candidates:figure:9
         candidates:
           - 'RISK: Figure 7 has 2 image candidates; verify subfigures versus duplicate representations'
           - 'RISK: Figure 9 has 2 image candidates; verify subfigures versus duplicate representations'
@@ -1177,13 +1524,6 @@ entries:
     source_sha256: 5a762e51b689b31abe3da8c5288c6791b2a77f8a8e2243ad4a84776b6698e089
     translation_sha256: 54de2a72329a4c5225b72a8a68c62f8134f72ada3258e7b3c0f05e6b3bd92c49
     assets_manifest_sha256: ce232403e6e45b523590431aaf838e6b8e614db47379da1c984adb747c451af0
-    review_action: repair-review
-    reviewer: historical-v2-reviewer-unrecorded
-    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
-  c-store-column-oriented-dbms:
-    source_sha256: af02fae1e60f726dfa82e58a7233d71c60d6d1ba3d2fca39042cf5c4f9234d52
-    translation_sha256: 06c5caceae7c2b00dd7aeb2ae018cf01106f287101c59cd7ee8334a2b36153c9
-    assets_manifest_sha256: 341e4051875f393fc1d480d5e97181120950378a0d2926a075f4f8c1cd797b81
     review_action: repair-review
     reviewer: historical-v2-reviewer-unrecorded
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
@@ -1252,10 +1592,30 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: aa83cb12b02254615e3c84ed5e8428a24cd2b728e8f820de7f68fcf0f3a47022
+        evidence_version: 1
+        fingerprint: b0bd4a12ea76410c4c03d7b55d3faed7c5e7dd10d5a4e22442f6da4e3e2075a9
+        findings:
+          - low-token-overlap-reference:c0pe84
+          - low-token-overlap-reference:cl0c81
+          - low-token-overlap-reference:r0bi81
+          - low-token-overlap-reference:st0n81
+          - reference-entry-count-differs
+          - short-translation-reference:c0pe84
+          - short-translation-reference:cl0c81
+          - short-translation-reference:r0bi81
+          - unmatched-translation-reference:allm76
+          - unmatched-translation-reference:cloc81
+          - unmatched-translation-reference:codd70
+          - unmatched-translation-reference:cope84
+          - unmatched-translation-reference:eswa75
+          - unmatched-translation-reference:kung84
+          - unmatched-translation-reference:robi81
+          - unmatched-translation-reference:ston81
+          - unmatched-translation-reference:ston84a
+          - unmatched-translation-reference:ston84b
+          - unmatched-translation-reference:ston85a
         candidates:
           - 'RISK: reference entry-count candidate differs (37/48)'
-          - 'RISK: source numbered top-level section headings have no translation-side heading candidates: 18, 29'
           - 'RISK: translation has unmatched reference identifiers: allm76, cloc81, codd70, cope84, eswa75, kung84, robi81,
             ston81, ston84a, ston84b, ston85a'
           - 'RISK: translation reference content is suspiciously short for: c0pe84, cl0c81, r0bi81'
@@ -1269,7 +1629,43 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: c2995a7a3df53d3cd0eef77ff1fc1410a0426ab02d66672b6ce4a37062f8ed7a
+        evidence_version: 1
+        fingerprint: 6deb66657f246c848e2b2a0dbb54b0c4e4ccc76bbf8a083419cd8fce1e5f09cb
+        findings:
+          - low-token-overlap-reference:l
+          - reference-entry-count-differs
+          - short-translation-reference:14
+          - short-translation-reference:6
+          - short-translation-reference:l
+          - unmatched-translation-reference:1
+          - unmatched-translation-reference:10
+          - unmatched-translation-reference:11
+          - unmatched-translation-reference:12
+          - unmatched-translation-reference:13
+          - unmatched-translation-reference:15
+          - unmatched-translation-reference:16
+          - unmatched-translation-reference:17
+          - unmatched-translation-reference:18
+          - unmatched-translation-reference:19
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:20
+          - unmatched-translation-reference:21
+          - unmatched-translation-reference:22
+          - unmatched-translation-reference:23
+          - unmatched-translation-reference:24
+          - unmatched-translation-reference:25
+          - unmatched-translation-reference:26
+          - unmatched-translation-reference:27
+          - unmatched-translation-reference:28
+          - unmatched-translation-reference:29
+          - unmatched-translation-reference:3
+          - unmatched-translation-reference:30
+          - unmatched-translation-reference:31
+          - unmatched-translation-reference:4
+          - unmatched-translation-reference:5
+          - unmatched-translation-reference:7
+          - unmatched-translation-reference:8
+          - unmatched-translation-reference:9
         candidates:
           - 'RISK: reference entry-count candidate differs (3/32)'
           - 'RISK: translation has unmatched reference identifiers: 1, 10, 11, 12, 13, 15, 16, 17, 18, 19, 2, 20, 21, 22,
@@ -1292,7 +1688,17 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 254e826f384fca3cffd6f25f0cf357eade390ed0778ff4fa45bef55205e5c18a
+        evidence_version: 1
+        fingerprint: 55261e0649b5c0211075d8fa9c26c3c935d800933b6a52896c532722394d980f
+        findings:
+          - reference-entry-count-differs
+          - unmatched-translation-reference:abj
+          - unmatched-translation-reference:gr
+          - unmatched-translation-reference:hob
+          - unmatched-translation-reference:ill
+          - unmatched-translation-reference:ms
+          - unmatched-translation-reference:oobbgm
+          - unmatched-translation-reference:tha
         candidates:
           - 'RISK: reference entry-count candidate differs (11/18)'
           - 'RISK: translation has unmatched reference identifiers: abj, gr, hob, ill, ms, oobbgm, tha'
@@ -1305,7 +1711,10 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 6084e50a0923a4105df447068a59a53330d5a90005653a62f208a67d78b4c20a
+        evidence_version: 1
+        fingerprint: 92fe86b48cb40b3186ffddea03945b8d9a62d510abf0d9a41a9b0845c1c6b70e
+        findings:
+          - source-reference-ocr-normalization:i:1
         candidates:
           - 'RISK: source reference identifier i was normalized to 1 as a contiguous numeric-series OCR candidate'
   notions-consistency-predicate-locks-database-system:
@@ -1331,7 +1740,10 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 9430089d908d8db8e66b26f59c4a80b98bafe91d88b75522e834683be0eadc7a
+        evidence_version: 1
+        fingerprint: a53a0d6c4b5e37ec21abdf448c8ccbc595c54e65035813b77902cce16bde9f8c
+        findings:
+          - multiple-image-candidates:figure:5
         candidates:
           - 'RISK: Figure 5 has 2 image candidates; verify subfigures versus duplicate representations'
   winmagic-subquery-elimination-window-aggregation:
@@ -1343,7 +1755,10 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 72dd711de7ef94bbd69c4ce951e7b6f66231e4794923ae543487a001d456a8e8
+        evidence_version: 1
+        fingerprint: 96e478c807bc481265e3f4545a96c421a6bb9d49ef6ab588431986120f6345a5
+        findings:
+          - multiple-image-candidates:figure:6
         candidates:
           - 'RISK: Figure 6 has 2 image candidates; verify subfigures versus duplicate representations'
   optimizing-queries-using-materialized-views:
@@ -1355,7 +1770,27 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 2ee4fcebda28a7d570717d9219b47220080c3c0e0cec26f89c05017cd1ba5daf
+        evidence_version: 1
+        fingerprint: f136ccd03d848dabf4f0f4a68ab89cfcf857c5717837c40a9688cb9cd6c7878d
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:3
+          - short-translation-reference:9
+          - unmatched-translation-reference:10
+          - unmatched-translation-reference:11
+          - unmatched-translation-reference:12
+          - unmatched-translation-reference:13
+          - unmatched-translation-reference:14
+          - unmatched-translation-reference:15
+          - unmatched-translation-reference:16
+          - unmatched-translation-reference:17
+          - unmatched-translation-reference:18
+          - unmatched-translation-reference:2
+          - unmatched-translation-reference:4
+          - unmatched-translation-reference:5
+          - unmatched-translation-reference:6
+          - unmatched-translation-reference:7
+          - unmatched-translation-reference:8
         candidates:
           - 'RISK: reference entry-count candidate differs (3/18)'
           - 'RISK: translation has unmatched reference identifiers: 10, 11, 12, 13, 14, 15, 16, 17, 18, 2, 4, 5, 6, 7, 8'
@@ -1369,7 +1804,13 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: 35518607c847500c3ddf0462b08ef1474d8a7fea2f84b6e89a88b3f787593d82
+        evidence_version: 1
+        fingerprint: a578381de004b7ef010e09e9d50af93c689bce6ee61871dc134a51800fd35cbd
+        findings:
+          - missing-formal-payload:figure:1
+          - missing-formal-payload:figure:2
+          - missing-formal-payload:figure:3
+          - missing-formal-payload:figure:6
         candidates:
           - 'RISK: source Figure 1 has no formal translation-side payload candidate'
           - 'RISK: source Figure 2 has no formal translation-side payload candidate'
@@ -1384,7 +1825,10 @@ entries:
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
     waivers:
       resources:
-        fingerprint: f63437a05abc70c409f2c76268369182ecf1777f57f6c74f6b442355ec03a0a4
+        evidence_version: 1
+        fingerprint: c08c2742818d35ea1c1d5493bf3052bbf691e1a49132be4cc4fdb445b8574b04
+        findings:
+          - missing-formal-payload:algorithm:17
         candidates:
           - 'RISK: source Algorithm 17 has no formal translation-side payload candidate'
   pattern-defeating-quicksort:
@@ -1408,3 +1852,77 @@ entries:
     review_action: repair-review
     reviewer: codex:/root
     review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
+  efficiently-compiling-efficient-query-plans-modern-hardware:
+    source_sha256: 7e3f5001d09f13b1a5dbc6d1756b7d2dbe1db0f023f14817d02226b00c09726c
+    translation_sha256: a40d239a07e4b70e992c1a3362a077f4486818c2531cdf1f1c9546ee9731b0e1
+    assets_manifest_sha256: 13be39fe482111cdf4e4f7aa1dc4bbae95ed8f9cf5bfafc8c31020a356132c71
+    review_action: repair-review
+    reviewer: codex:/root/ci_reproduce_linux
+    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
+    waivers:
+      abridgement:
+        evidence_version: 1
+        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        findings:
+          - abridgement:moderate
+        candidates:
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=4927/7095 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
+  low-latency-compilation-sql-queries-machine-code:
+    source_sha256: 7492417add1690acce4161c34859ccfacd7cf2196f915d87e3cc38f93a2a1216
+    translation_sha256: 00433953181da67fc90f6e2f0188fec96f60a85b98a7b8e64eb16a97490d24bb
+    assets_manifest_sha256: 7ad185fa003cbaabca8cbccba0f0df0ca647e82b630da2118e6cdf8bafffa3a6
+    review_action: repair-review
+    reviewer: codex:/root/review_borderline_exec
+    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
+    waivers:
+      abridgement:
+        evidence_version: 1
+        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        findings:
+          - abridgement:moderate
+        candidates:
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=2000/2737 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
+      resources:
+        evidence_version: 1
+        fingerprint: c5a513edddc9f6489925a11e3f8476b3f0e8c20fb42c945f7cb93f4842d3bdd6
+        findings:
+          - missing-formal-payload:figure:2
+        candidates:
+          - 'RISK: source Figure 2 has no formal translation-side payload candidate'
+  vectorization-vs-compilation-query-execution:
+    source_sha256: 758880f84f27f640b809e5f6659dbfcfd5e26a1b75222cecaf7d4d6f90817e6c
+    translation_sha256: 4ff794a357cc1857cf18121946ad250fd14de82156147f3947cd010f21ab834c
+    assets_manifest_sha256: e2c1a949d1d0b3dcdfcdd1abaa4e0357434a379ce86de5dbfcbc604322ea397b
+    review_action: repair-review
+    reviewer: codex:/root/review_borderline_exec
+    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
+  c-store-column-oriented-dbms:
+    source_sha256: af02fae1e60f726dfa82e58a7233d71c60d6d1ba3d2fca39042cf5c4f9234d52
+    translation_sha256: cab3410f1ff20e4a09859f21682a36a0ec97cc1371661ecb48b7690aecc87db1
+    assets_manifest_sha256: 341e4051875f393fc1d480d5e97181120950378a0d2926a075f4f8c1cd797b81
+    review_action: repair-review
+    reviewer: codex:/root/review_borderline_cstore
+    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
+    waivers:
+      abridgement:
+        evidence_version: 1
+        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        findings:
+          - abridgement:moderate
+        candidates:
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=7575/10325 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
+  db2-with-blu-acceleration-so-much-more-than-just-a-column-store:
+    source_sha256: 5d3106da72932c1c61f76d6e9afd2ef8bca1f495c7b249d9649c9d9c44203b0a
+    translation_sha256: 16ea5620139839244ec5f1a244b18a945cf8b5c97a1f955163de768668b21941
+    assets_manifest_sha256: c37d9d85c0ef35bae12bd84cbaaa02c7647059092115657bc30a69ec26e6872c
+    review_action: section-review
+    reviewer: codex:/root/ci_reproduce_linux
+    review_base_sha: fc8f89daae1e4f9cf6433a3ada07582a552389d2
+    waivers:
+      abridgement:
+        evidence_version: 1
+        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        findings:
+          - abridgement:moderate
+        candidates:
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=8242/11008 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
