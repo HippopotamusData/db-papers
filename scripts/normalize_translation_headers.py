@@ -105,10 +105,19 @@ def normalize_text(text: str, title: str) -> str:
     return "\n".join(normalized).rstrip() + "\n"
 
 
-def normalize_all(root: Path, *, check: bool = False) -> list[Path]:
+def normalize_all(
+    root: Path, *, check: bool = False, paper_id: str | None = None
+) -> list[Path]:
     changed: list[Path] = []
     updates: list[tuple[Path, str]] = []
-    for metadata_path in sorted((root / "papers").glob("*/*/paper.yaml")):
+    metadata_paths = sorted((root / "papers").glob("*/*/paper.yaml"))
+    if paper_id is not None:
+        metadata_paths = [
+            path for path in metadata_paths if path.parent.name == paper_id
+        ]
+        if len(metadata_paths) != 1:
+            raise ValueError(f"paper id must resolve exactly once: {paper_id}")
+    for metadata_path in metadata_paths:
         translation = metadata_path.parent / "translation.md"
         if not translation.is_file():
             continue
@@ -130,11 +139,12 @@ def normalize_all(root: Path, *, check: bool = False) -> list[Path]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--paper-id", help="limit normalization to one exact paper id")
     parser.add_argument("--check", action="store_true", help="report drift without writing")
     args = parser.parse_args()
     root = args.root.resolve()
     try:
-        changed = normalize_all(root, check=args.check)
+        changed = normalize_all(root, check=args.check, paper_id=args.paper_id)
     except (OSError, ValueError, yaml.YAMLError) as exc:
         print(f"ERROR: {exc}")
         return 2

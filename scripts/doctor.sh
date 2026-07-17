@@ -4,6 +4,7 @@ set -uo pipefail
 
 failures=0
 PYTHON=${PYTHON:-python3}
+MATHJAX_MODULE=${MATHJAX_MODULE:-node_modules/mathjax}
 
 require_command() {
   local command_name=$1
@@ -44,11 +45,11 @@ command -v pdftoppm >/dev/null 2>&1 && pdftoppm -v 2>&1 | head -n 1
 command -v perl >/dev/null 2>&1 && perl -v 2>&1 | sed -n '2p'
 
 if command -v node >/dev/null 2>&1; then
-  node - <<'JS' || failures=$((failures + 1))
+  MATHJAX_MODULE="$MATHJAX_MODULE" node - <<'JS' || failures=$((failures + 1))
 const fs = require("fs");
-const path = "node_modules/mathjax/package.json";
+const path = require("path").join(process.env.MATHJAX_MODULE, "package.json");
 if (!fs.existsSync(path)) {
-  throw new Error("ERROR: MathJax is missing; run npm ci");
+  throw new Error(`ERROR: MathJax is missing at ${path}; run npm ci or set MATHJAX_MODULE`);
 }
 const version = JSON.parse(fs.readFileSync(path, "utf8")).version;
 if (version !== "4.1.3") {

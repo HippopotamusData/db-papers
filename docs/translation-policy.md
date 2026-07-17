@@ -46,4 +46,4 @@
 
 字符数和中英文比例用于发现摘要化风险，不能替代逐节核对。机械风险信号保留在校验输出中，不进入单篇阅读元数据。
 
-未完成逐节验收时使用 `reading_status: draft`；该状态允许校验器把 TODO、低覆盖、表格、Listing 和资源缺口报告为 warning。验收完成后由 review/accept 记录源文/译文哈希、审阅动作和必要 waivers，再改为 `translated`；这些缺口在 `translated` 中是硬失败。机械候选只扩大人工复审范围，不构成语义完整性证明。
+未完成逐节验收时使用 `reading_status: draft`；该状态允许校验器把 TODO、低覆盖、表格、Listing 和资源缺口报告为 warning。验收完成后由 review/accept 记录源文、译文、非忽略资源、审阅者、固定基线和逐项 waiver 证据，再改为 `translated`；未获精确处置的候选在 `translated` 中是硬失败。机械候选只扩大人工复审范围，不构成语义完整性证明。

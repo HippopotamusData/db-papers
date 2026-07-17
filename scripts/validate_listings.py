@@ -10,12 +10,12 @@ from pathlib import Path
 
 
 PUNCTUATED_SOURCE_CAPTION_RE = re.compile(
-    r"(?:^[ \t]*|[ \t]{2,})(?i:Listing)[ \t]+([1-9]\d*)"
+    r"(?:^[ \t\f]*|[ \t]{2,})(?i:Listing)[ \t]+([1-9]\d*)"
     r"[ \t]*[:.](?!\d)[ \t]+(?=\S)",
     re.MULTILINE,
 )
 BARE_UPPER_SOURCE_CAPTION_RE = re.compile(
-    r"(?:^[ \t]*|[ \t]{2,})LISTING[ \t]+([1-9]\d*)"
+    r"(?:^[ \t\f]*|[ \t]{2,})LISTING[ \t]+([1-9]\d*)"
     r"(?![.\d])(?=[ \t]*$|[ \t]{2,}\S)",
     re.MULTILINE,
 )

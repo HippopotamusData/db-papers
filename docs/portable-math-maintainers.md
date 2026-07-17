@@ -71,7 +71,7 @@ make math-audit-katex KATEX_MODULE='/path/to/katex'
 
 `make check` 和 `make deep-check` 都包含只读 `math-check`：静态解析后，用 `package-lock.json` 锁定的 MathJax 对每个 TeX 载荷做结构渲染。该本地门禁捕获括号、命令参数、`\left`/`\right` 与环境配对等错误，但不代替 GitHub 自身的 Markdown 解析。
 
-GitHub 的链接化和 Markdown 规则会随上下文组合，无法靠静态规则穷举。每个变更译文在验收或提交前必须运行限定 `FILES` 的 GitHub Markdown API 审计；CI 根据 Git diff 重复这项检查。公式 profile、扫描器、审计器、MathJax 锁或工作流发生变化时，CI 自动升级为全库审计；全库迁移也运行不带 `FILES` 的审计。
+GitHub 的链接化和 Markdown 规则会随上下文组合，无法靠静态规则穷举。accept 在写入账本和状态前自动对当前译文运行 GitHub Markdown API 审计；其他未经过 accept 的变更译文在提交前必须运行限定 `FILES` 的同一审计。CI 根据 Git diff 重复这项检查。公式 profile、扫描器、审计器、MathJax 锁或工作流发生变化时，CI 自动升级为全库审计；全库迁移也运行不带 `FILES` 的审计。
 
 普通 `pull_request` 检查不接收 API token。带只读 token 的外部审计由默认分支上的受信任脚本运行；PR worktree 只作为 Markdown 数据读取，禁止执行其中的脚本、依赖或配置，并拒绝符号链接和非普通输入。该审计只信任仓库既定的 `$`/`$$` 边界提取，不信任 PR 自己修改的 TeX allowlist；PR 内的新静态规则仍由无 token 的普通 CI 验证。
 

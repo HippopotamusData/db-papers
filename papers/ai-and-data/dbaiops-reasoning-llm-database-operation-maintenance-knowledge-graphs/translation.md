@@ -447,65 +447,48 @@ $$
 
 **表 5：不同方法在四种数据库系统异常上的整体诊断性能。**
 
-**Oracle**
-
-| 方法 | Precision | F1-Score | Accuracy | HEval |
-| --- | ---: | ---: | ---: | ---: |
-| 规则工具 + DBA | 0.88 | 0.89 | 0.88 | 0.88 |
-| 仅 DeepSeek-R1 32B | 0.68 | 0.70 | 0.65 | 0.52 |
-| 仅 DeepSeek-R1 671B | 0.77 | 0.83 | 0.75 | 0.78 |
-| ChatDBA | N/A | N/A | N/A | N/A |
-| D-Bot（DeepSeek V3） | N/A | N/A | N/A | N/A |
-| D-Bot（DeepSeek-R1 32B） | N/A | N/A | N/A | N/A |
-| D-Bot（DeepSeek-R1 671B） | N/A | N/A | N/A | N/A |
-| DBAIOps（DeepSeek V3） | 0.50 | 0.67 | 0.45 | 0.66 |
-| DBAIOps（DeepSeek-R1 32B） | 0.94 | 0.88 | 0.93 | 0.87 |
-| DBAIOps（DeepSeek-R1 671B） | 1.00 | 0.95 | 1.00 | 0.91 |
-
-**MySQL**
-
-| 方法 | Precision | F1-Score | Accuracy | HEval |
-| --- | ---: | ---: | ---: | ---: |
-| 规则工具 + DBA | 1.00 | 0.67 | 1.00 | 0.50 |
-| 仅 DeepSeek-R1 32B | 0.84 | 0.91 | 0.71 | 0.85 |
-| 仅 DeepSeek-R1 671B | 0.67 | 0.80 | 0.56 | 0.70 |
-| ChatDBA | 0.50 | 0.60 | 0.45 | 0.65 |
-| D-Bot（DeepSeek V3） | N/A | N/A | N/A | N/A |
-| D-Bot（DeepSeek-R1 32B） | N/A | N/A | N/A | N/A |
-| D-Bot（DeepSeek-R1 671B） | N/A | N/A | N/A | N/A |
-| DBAIOps（DeepSeek V3） | 0.77 | 0.87 | 1.00 | 0.88 |
-| DBAIOps（DeepSeek-R1 32B） | 0.94 | 0.97 | 1.00 | 0.95 |
-| DBAIOps（DeepSeek-R1 671B） | 0.92 | 0.96 | 1.00 | 0.98 |
-
-**PostgreSQL**
-
-| 方法 | Precision | F1-Score | Accuracy | HEval |
-| --- | ---: | ---: | ---: | ---: |
-| 规则工具 + DBA | 1.00 | 1.00 | 1.00 | 0.95 |
-| 仅 DeepSeek-R1 32B | 0.10 | 0.13 | 0.83 | 0.05 |
-| 仅 DeepSeek-R1 671B | 0.75 | 0.86 | 0.63 | 0.75 |
-| ChatDBA | 0.63 | 0.56 | 0.59 | 0.40 |
-| D-Bot（DeepSeek V3） | 0.50 | 0.40 | 0.45 | 0.35 |
-| D-Bot（DeepSeek-R1 32B） | 0.33 | 0.33 | 0.27 | 0.50 |
-| D-Bot（DeepSeek-R1 671B） | 0.40 | 0.36 | 0.34 | 0.35 |
-| DBAIOps（DeepSeek V3） | 0.83 | 0.91 | 0.75 | 0.83 |
-| DBAIOps（DeepSeek-R1 32B） | 0.87 | 0.93 | 0.93 | 0.85 |
-| DBAIOps（DeepSeek-R1 671B） | 0.83 | 0.91 | 0.91 | 0.88 |
-
-**DM8**
-
-| 方法 | Precision | F1-Score | Accuracy | HEval |
-| --- | ---: | ---: | ---: | ---: |
-| 规则工具 + DBA | 1.00 | 1.00 | 1.00 | 0.90 |
-| 仅 DeepSeek-R1 32B | 0.74 | 0.72 | 0.01 | 0.63 |
-| 仅 DeepSeek-R1 671B | 0.60 | 0.60 | 0.73 | 0.45 |
-| ChatDBA | N/A | N/A | N/A | N/A |
-| D-Bot（DeepSeek V3） | N/A | N/A | N/A | N/A |
-| D-Bot（DeepSeek-R1 32B） | N/A | N/A | N/A | N/A |
-| D-Bot（DeepSeek-R1 671B） | N/A | N/A | N/A | N/A |
-| DBAIOps（DeepSeek V3） | 1.00 | 1.00 | 0.82 | 0.95 |
-| DBAIOps（DeepSeek-R1 32B） | 1.00 | 0.95 | 0.85 | 0.90 |
-| DBAIOps（DeepSeek-R1 671B） | 1.00 | 1.00 | 0.82 | 0.95 |
+| 数据库 | 方法 | Precision | F1-Score | Accuracy | HEval |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Oracle | 规则工具 + DBA | 0.88 | 0.89 | 0.88 | 0.88 |
+| Oracle | 仅 DeepSeek-R1 32B | 0.68 | 0.70 | 0.65 | 0.52 |
+| Oracle | 仅 DeepSeek-R1 671B | 0.77 | 0.83 | 0.75 | 0.78 |
+| Oracle | ChatDBA | N/A | N/A | N/A | N/A |
+| Oracle | D-Bot（DeepSeek V3） | N/A | N/A | N/A | N/A |
+| Oracle | D-Bot（DeepSeek-R1 32B） | N/A | N/A | N/A | N/A |
+| Oracle | D-Bot（DeepSeek-R1 671B） | N/A | N/A | N/A | N/A |
+| Oracle | DBAIOps（DeepSeek V3） | 0.50 | 0.67 | 0.45 | 0.66 |
+| Oracle | DBAIOps（DeepSeek-R1 32B） | 0.94 | 0.88 | 0.93 | 0.87 |
+| Oracle | DBAIOps（DeepSeek-R1 671B） | 1.00 | 0.95 | 1.00 | 0.91 |
+| MySQL | 规则工具 + DBA | 1.00 | 0.67 | 1.00 | 0.50 |
+| MySQL | 仅 DeepSeek-R1 32B | 0.84 | 0.91 | 0.71 | 0.85 |
+| MySQL | 仅 DeepSeek-R1 671B | 0.67 | 0.80 | 0.56 | 0.70 |
+| MySQL | ChatDBA | 0.50 | 0.60 | 0.45 | 0.65 |
+| MySQL | D-Bot（DeepSeek V3） | N/A | N/A | N/A | N/A |
+| MySQL | D-Bot（DeepSeek-R1 32B） | N/A | N/A | N/A | N/A |
+| MySQL | D-Bot（DeepSeek-R1 671B） | N/A | N/A | N/A | N/A |
+| MySQL | DBAIOps（DeepSeek V3） | 0.77 | 0.87 | 1.00 | 0.88 |
+| MySQL | DBAIOps（DeepSeek-R1 32B） | 0.94 | 0.97 | 1.00 | 0.95 |
+| MySQL | DBAIOps（DeepSeek-R1 671B） | 0.92 | 0.96 | 1.00 | 0.98 |
+| PostgreSQL | 规则工具 + DBA | 1.00 | 1.00 | 1.00 | 0.95 |
+| PostgreSQL | 仅 DeepSeek-R1 32B | 0.10 | 0.13 | 0.83 | 0.05 |
+| PostgreSQL | 仅 DeepSeek-R1 671B | 0.75 | 0.86 | 0.63 | 0.75 |
+| PostgreSQL | ChatDBA | 0.63 | 0.56 | 0.59 | 0.40 |
+| PostgreSQL | D-Bot（DeepSeek V3） | 0.50 | 0.40 | 0.45 | 0.35 |
+| PostgreSQL | D-Bot（DeepSeek-R1 32B） | 0.33 | 0.33 | 0.27 | 0.50 |
+| PostgreSQL | D-Bot（DeepSeek-R1 671B） | 0.40 | 0.36 | 0.34 | 0.35 |
+| PostgreSQL | DBAIOps（DeepSeek V3） | 0.83 | 0.91 | 0.75 | 0.83 |
+| PostgreSQL | DBAIOps（DeepSeek-R1 32B） | 0.87 | 0.93 | 0.93 | 0.85 |
+| PostgreSQL | DBAIOps（DeepSeek-R1 671B） | 0.83 | 0.91 | 0.91 | 0.88 |
+| DM8 | 规则工具 + DBA | 1.00 | 1.00 | 1.00 | 0.90 |
+| DM8 | 仅 DeepSeek-R1 32B | 0.74 | 0.72 | 0.01 | 0.63 |
+| DM8 | 仅 DeepSeek-R1 671B | 0.60 | 0.60 | 0.73 | 0.45 |
+| DM8 | ChatDBA | N/A | N/A | N/A | N/A |
+| DM8 | D-Bot（DeepSeek V3） | N/A | N/A | N/A | N/A |
+| DM8 | D-Bot（DeepSeek-R1 32B） | N/A | N/A | N/A | N/A |
+| DM8 | D-Bot（DeepSeek-R1 671B） | N/A | N/A | N/A | N/A |
+| DM8 | DBAIOps（DeepSeek V3） | 1.00 | 1.00 | 0.82 | 0.95 |
+| DM8 | DBAIOps（DeepSeek-R1 32B） | 1.00 | 0.95 | 0.85 | 0.90 |
+| DM8 | DBAIOps（DeepSeek-R1 671B） | 1.00 | 1.00 | 0.82 | 0.95 |
 
 根据表 5，我们得到以下观察。
 
@@ -559,10 +542,9 @@ $$
 
 **表 7：DBAIOps 和基线方法生成的诊断报告案例研究。**
 
-**Oracle：LOG SYNCHRONIZATION DELAY。** 异常描述：提交或回滚时等待 Redo 日志写入磁盘；在事务繁重或 I/O 性能较差时，经常造成瓶颈。
-
-| HEval 准则 | 正例：DBAIOps（HEval=1.00） | 反例：工具 / DeepSeek-R1 32B（HEval=0.40） |
+| Oracle：LOG SYNCHRONIZATION DELAY—HEval 准则 | 正例：DBAIOps（HEval=1.00） | 反例：工具 / DeepSeek-R1 32B（HEval=0.40） |
 | --- | --- | --- |
+| 异常描述：提交或回滚时等待 Redo 日志写入磁盘；在事务繁重或 I/O 性能较差时，经常造成瓶颈。 |  |  |
 | 根因召回率：报告内容 | 根因：（1）Redo 日志存储的 I/O 性能不足；（2）日志写入期间出现间歇性 I/O 压力尖峰。 | 根因：（1）log file parallel write 异常；（2）Redo 生成速率异常；（3）检查点延迟异常；（4）内存不足；（5）控制文件写入异常。 |
 | 根因召回率：评论 | 找到了以 I/O 存储瓶颈为中心的两个根因。 | 只罗列症状和表现，即根因（1）、（3）和（5）；遗漏 I/O 瓶颈这一核心根因，即（2）和（4）不是直接根因。 |
 | 理论一致性：报告内容 | 推理：log_file_sync / log_file_parallel_write = 2 → 存储 I/O 是主要因素；06:00 出现尖峰且操作系统延迟正常 → 瞬时负载。 | 推理：Redo 激增 → 日志缓冲区溢出 → 等待 LGWR；内存压力 → 日志缓冲区不足。 |
@@ -570,10 +552,9 @@ $$
 | 证据真实性：报告内容 | 指标 2184301（log file sync）：最大值 15.2 ms、平均值 6.0 ms；指标 2184305（log file parallel write）：最大值 7.09 ms、平均值 3.0 ms。 | 指标 2180503（checkpoint delay）：最大值 61,660.0 ms、平均值 61,060.0 ms；指标 2184306（control file write）：最大值 3.78 ms、平均值 1.0 ms。 |
 | 证据真实性：评论 | 所有指标都存在于给定数据中，没有幻觉。 | 引用了给定指标中不存在的数据，即幻觉指标。 |
 
-**PostgreSQL：BACKEND PROCESS FLUSHES DIRTY PAGES。** 异常描述：指标 backend buffer write ratio 触发异常告警，表明 shared buffers 或 bgwriter/checkpoint 设置可能不正确。
-
-| HEval 准则 | 正例：DBAIOps（HEval=1.00） | 反例：工具 / DeepSeek-R1 32B（HEval=0.00） |
+| PostgreSQL：BACKEND PROCESS FLUSHES DIRTY PAGES—HEval 准则 | 正例：DBAIOps（HEval=1.00） | 反例：工具 / DeepSeek-R1 32B（HEval=0.00） |
 | --- | --- | --- |
+| 异常描述：指标 backend buffer write ratio 触发异常告警，表明 shared buffers 或 bgwriter/checkpoint 设置可能不正确。 |  |  |
 | 根因召回率：报告内容 | 根因：（1）bgwriter_lru_maxpages 过低；（2）I/O 延迟导致 bgwriter 失效；（3）bgwriter_lru_multiplier 过低。 | 根因：（1）I/O 延迟高；（2）检查点配置错误；（3）bgwriter 不足；（4）并发写入高；（5）SQL 未优化。 |
 | 根因召回率：评论 | 正确聚焦于 BGWRITER 参数和 I/O 瓶颈根因。 | 根因（4）和（5）描述事务积压，与 Redo 日志无关；根因（1）至（3）部分有效，但被其他结论稀释。 |
 | 理论一致性：报告内容 | 推理：bgwriter_stop_scan_count > 0 → 达到 bgwriter_lru_maxpages 上限 → bgwriter 停止 → 后端接管写入。 | 推理：I/O 延迟最大值 5736.96 ms、平均值 827.0 ms（正常值应小于 10 ms）；活动会话平均值 48 → 高并发；检查点延迟最大值 525,058,688.0 ms → 检查点进程严重阻塞。 |

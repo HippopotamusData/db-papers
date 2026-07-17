@@ -43,7 +43,7 @@ make diff-check
 
    warning 必须报告，不得靠 waiver、隐藏标记或降低阈值消除。
 3. 根代理等待本轮全部译者结束，确认改动只在获分配目录；越界、同篇并发写入或基线漂移均停止该项。
-4. 已授权验收时，由不同子代理按 review workflow 交叉 review-and-repair；根代理等待全部审阅结束后逐篇串行 accept。失败项保持 `draft`，不回滚其他成功项。
+4. 已授权验收时，由不同子代理按 review workflow 交叉 review-and-repair；根代理记录实际 reviewer、`paper-check` 输出的逐类别证据指纹，并对所有论文传入同一个预检基线 `review_base_sha`，等待全部审阅结束后逐篇串行 accept。失败项保持 `draft`，不回滚其他成功项。
 5. 根代理对每篇新验收论文执行 rating workflow。证据不足时保持无 `rating`、标为 `blocked`；译文可为 `translated`，但不得计入完整处理。
 6. 每轮运行 `make catalog`、`make check`、`make diff-check`；获授权且全绿时创建只包含本轮成果的 checkpoint commit。
 
@@ -55,7 +55,7 @@ make diff-check
 4. 已授权本地集成且 `main` 干净时使用 `git merge --ff-only <batch-branch>`；不能 fast-forward、存在未归属改动或工作树占用不安全时停止。
 5. 推送是单独的外部发布授权。
 
-普通批次不运行全库 `deep-check`：每篇 accept 已强制执行单篇深度门禁。只有同时修改校验器、影响历史论文判定的全局策略，或用户明确要求全库审计时，最终额外运行一次 `make deep-check`。
+普通批次不运行全库 `deep-check`：每篇 accept 已在任何写入前强制执行双轮单篇深度门禁、锁定 MathJax 和 GitHub 节点审计。只有同时修改校验器、影响历史论文判定的全局策略，或用户明确要求全库审计时，最终额外运行一次 `make deep-check`。
 
 ## 恢复与清理
 

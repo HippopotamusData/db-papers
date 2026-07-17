@@ -406,6 +406,20 @@ WHERE text LIKE '%Spark%' AND tags IS NOT NULL
 
 *图 7：一个短 MLlib pipeline 及运行它的 Python 代码。它从 `(text, label)` 记录的 DataFrame 开始，把文本切分为词，运行词频特征化器 HashingTF 获得特征向量，然后训练 logistic regression。*
 
+```python
+data = <DataFrame of (text, label) records>
+
+tokenizer = Tokenizer()
+  .setInputCol("text").setOutputCol("words")
+tf = HashingTF()
+  .setInputCol("words").setOutputCol("features")
+lr = LogisticRegression()
+  .setInputCol("features")
+
+pipeline = Pipeline().setStages([tokenizer, tf, lr])
+model = pipeline.fit(data)
+```
+
 MLlib 为使用 Spark SQL 需要做的主要工作，是为向量创建用户自定义类型。这个 vector UDT 可以存储稠密和稀疏向量，并把它们表示为四个原语字段：表示类型（dense 或 sparse）的 boolean、向量大小、索引数组（用于 sparse 坐标）和 double 值数组（对于 sparse 向量表示非零坐标；否则表示所有坐标）。除了 DataFrame 在跟踪和操作列方面的实用性，我们发现它还有另一个重要价值：它使得在 Spark 支持的所有编程语言中暴露 MLlib 新 API 变得容易得多。以前，MLlib 中的每个算法都会接收表示特定领域概念的对象，例如分类中的 labeled point，或推荐中的 `(user, product)` rating；这些类都必须在不同语言中实现，例如从 Scala 复制到 Python。全面使用 DataFrame 后，在所有语言中暴露算法变得更简单，因为只需要在 Spark SQL 中做数据转换，而这些转换已经存在。随着 Spark 增加新语言绑定，这一点尤其重要。
 
 最后，MLlib 使用 DataFrame 存储，也让把所有算法暴露给 SQL 变得非常容易。我们可以简单定义一个类似 MADlib 的 UDF，如第 3.7 节所述，它会在内部对表调用算法。我们还在探索在 SQL 中暴露 pipeline 构造的 API。

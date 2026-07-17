@@ -19,7 +19,9 @@
 
 若要改变必填字段或可选评分结构，必须由用户明确选择，并一次性更新模板、文档、脚本和生成目录。不要为单篇论文添加临时字段。`docs/` 只保留当前规则和工作流；旧规则、迁移记录和审校过程通过 Git 历史追溯，不得作为当前状态输入。
 
-默认页数上限、单篇例外和 skipped 原因集中在 `config/policy.yaml`。单篇页数例外必须包含高于默认值的 `max_source_pages` 和用户授权依据 `authorization`；跳过原因使用代码定义的受控值。验收账本是当前已验收版本的快照，只保存文件哈希、一个受控 `review_action` 和与当前机械候选精确匹配的受控 `waivers`；重新验收会替换旧条目。源文或译文发生实质变化时先迁移到 `draft`，旧账本哈希不得继续支持 `translated`。
+默认页数上限、单篇例外和 skipped 原因集中在 `config/policy.yaml`。单篇页数例外必须包含高于默认值的 `max_source_pages` 和用户授权依据 `authorization`；跳过原因使用代码定义的受控值。验收账本是当前已验收版本的快照，保存源文/译文哈希、非忽略资源清单哈希、一个受控 `review_action`、实际 `reviewer`、固定祖先基线 `review_base_sha`，以及与当前机械候选逐项匹配的受控 `waivers`；重新验收会替换旧条目。源文、译文或资源发生实质变化时先迁移到 `draft`，旧账本不得继续支持 `translated`。
+
+从不含审阅者和资源快照的旧账本迁移时，不得猜测历史审阅身份。schema v3 只保留迁移时已冻结的 `historical-v2-reviewer-unrecorded` 兼容记录，其论文 ID 和完整条目指纹在代码中形成只减不增的 allowlist；完成真实 PDF 对照后通过普通 accept 替换整条记录。`pending-v3-re-review` 与 `legacy-migration` 均不是有效的当前账本值。
 
 ## 环境准备
 
@@ -38,4 +40,4 @@ make deep-check  # 修改校验器或全局翻译策略时
 make diff-check
 ```
 
-`make check` 内含锁定版本 MathJax 的本地 TeX 结构门禁。所有变更译文必须按 `docs/portable-math-maintainers.md` 执行限定文件范围的 GitHub 节点审计；公式校验器或全局公式策略变更执行全库 `make math-audit-github`，并在推送后的真实 GitHub 文件页检查最终显示。外部审计依赖已登录的 `gh` 和网络，因此不纳入无网络的 `make check`，由 CI 对变更译文重复执行；VS Code/KaTeX 仅为可选诊断，不能驱动有损公式改写。审计结果必须在完成报告中明确列出。
+`make check` 内含锁定版本 MathJax 的本地 TeX 结构门禁。accept 对当前译文额外执行 GitHub 节点审计后才允许写入；未运行 accept 的其他变更译文仍须按 `docs/portable-math-maintainers.md` 执行限定文件范围的审计。公式校验器或全局公式策略变更执行全库 `make math-audit-github`，并在推送后的真实 GitHub 文件页检查最终显示。外部审计依赖已登录的 `gh` 和网络，因此不纳入无网络的 `make check`，由 CI 对变更译文重复执行；VS Code/KaTeX 仅为可选诊断，不能驱动有损公式改写。审计结果必须在完成报告中明确列出。
