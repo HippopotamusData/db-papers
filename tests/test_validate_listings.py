@@ -12,6 +12,13 @@ from validate_listings import listing_findings, listing_issues  # noqa: E402
 
 
 class ListingValidationTests(unittest.TestCase):
+    def test_page_start_form_feed_caption_is_detected(self) -> None:
+        errors, _risks = listing_findings(
+            "\fListing 4: Probe a row\nint probe() { return 1; }\n",
+            "正文没有清单。\n",
+        )
+        self.assertIn("Listing 4 has no labeled fenced payload", errors)
+
     def setUp(self) -> None:
         fixtures = ROOT / "tests/fixtures/listings"
         self.source = (fixtures / "source-listing.txt").read_text(encoding="utf-8")

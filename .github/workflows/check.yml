@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   archive-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
@@ -30,10 +30,8 @@ jobs:
         run: npm ci
       - name: Check maintainer environment
         run: make doctor
-      - name: Run tests
-        run: make test
-      - name: Validate archive and generated catalog
-        run: make check
+      - name: Run full archive gate
+        run: make deep-check
       - name: Check whitespace
         env:
           EVENT_NAME: ${{ github.event_name }}

@@ -3,14 +3,71 @@
 set -uo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-source "$ROOT/scripts/acceptance_waivers.sh"
 cd "$ROOT"
 PYTHON=${PYTHON:-python3}
 target_paper_id=${PAPER_ID:-}
 deep_validation=${DEEP_VALIDATION:-0}
+acceptance_discovery=0
+acceptance_evidence_file=
+acceptance_paper_id=
+acceptance_target_status=
+acceptance_recorded_waivers=
+
+for internal_name in ACCEPTANCE_DISCOVERY ACCEPTANCE_EVIDENCE_FILE ACCEPTANCE_PAPER_ID ACCEPTANCE_RECORDED_WAIVERS ACCEPTANCE_TARGET_STATUS; do
+  if [[ -n "${!internal_name+x}" ]]; then
+    echo "ERROR: $internal_name is an internal preflight option, not an ambient environment interface" >&2
+    exit 1
+  fi
+done
+
+while (( $# > 0 )); do
+  case "$1" in
+    --acceptance-discovery)
+      acceptance_discovery=1
+      shift
+      ;;
+    --acceptance-evidence-file|--acceptance-paper-id|--acceptance-target-status|--acceptance-recorded-waivers)
+      if (( $# < 2 )); then
+        echo "ERROR: $1 requires a value" >&2
+        exit 1
+      fi
+      case "$1" in
+        --acceptance-evidence-file) acceptance_evidence_file=$2 ;;
+        --acceptance-paper-id) acceptance_paper_id=$2 ;;
+        --acceptance-target-status) acceptance_target_status=$2 ;;
+        --acceptance-recorded-waivers) acceptance_recorded_waivers=$2 ;;
+      esac
+      shift 2
+      ;;
+    *)
+      echo "ERROR: unknown validation option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
 
 if [[ "$deep_validation" != "0" && "$deep_validation" != "1" ]]; then
   echo "ERROR: DEEP_VALIDATION must be 0 or 1" >&2
+  exit 1
+fi
+
+if [[ "$acceptance_discovery" == "1" && ( -z "$target_paper_id" || -z "$acceptance_evidence_file" || -z "$acceptance_paper_id" ) ]]; then
+  echo "ERROR: acceptance discovery requires a scoped paper id and evidence file" >&2
+  exit 1
+fi
+
+if [[ -n "$acceptance_evidence_file" && ( -z "$target_paper_id" || "$target_paper_id" != "$acceptance_paper_id" ) ]]; then
+  echo "ERROR: acceptance evidence requires matching scoped and preflight paper ids" >&2
+  exit 1
+fi
+
+if [[ -n "$acceptance_target_status" && "$acceptance_target_status" != "translated" ]]; then
+  echo "ERROR: acceptance target status must be translated" >&2
+  exit 1
+fi
+
+if [[ -n "$acceptance_target_status" && -z "$acceptance_recorded_waivers" ]]; then
+  echo "ERROR: translated acceptance preflight requires recorded waiver evidence" >&2
   exit 1
 fi
 
@@ -19,6 +76,7 @@ warnings=0
 record_count=0
 translation_count=0
 translation_file_count=0
+reviewed_risks=0
 
 fail() {
   echo "ERROR: $*" >&2
@@ -39,11 +97,15 @@ quality_issue() {
 }
 
 record_observed_waiver() {
-  local waiver=$1
-  if ! has_waiver "$observed_acceptance_waivers" "$waiver"; then
-    [[ -z "$observed_acceptance_waivers" ]] || observed_acceptance_waivers+=$'\t'
-    observed_acceptance_waivers+="$waiver"
-  fi
+  local evidence_path=$1
+  local category=$2
+  local candidates=$3
+  local candidate
+  while IFS= read -r candidate; do
+    candidate=$(printf '%s' "$candidate" | tr '\t\r' '  ')
+    [[ -n "${candidate//[[:space:]]/}" ]] || continue
+    printf '%s\t%s\n' "$category" "$candidate" >> "$evidence_path"
+  done <<< "$candidates"
 }
 
 for command_name in rg pdfinfo pdftotext perl sed awk find sort mktemp; do
@@ -60,10 +122,14 @@ if [[ "${SKIP_METADATA_VALIDATION:-0}" != "1" ]]; then
   [[ -n "$target_paper_id" ]] && metadata_args+=(--paper-id "$target_paper_id")
   "$PYTHON" scripts/papers.py "${metadata_args[@]}" || exit 1
 fi
-manifest=$(mktemp "${TMPDIR:-/tmp}/db-papers-validation-manifest.XXXXXX")
-trap 'rm -f "$manifest"' EXIT
+validation_tmp=$(mktemp -d "${TMPDIR:-/tmp}/db-papers-validation.XXXXXX")
+manifest="$validation_tmp/manifest"
+trap 'rm -rf "$validation_tmp"' EXIT
 manifest_args=(validation-manifest)
 [[ -n "$target_paper_id" ]] && manifest_args+=(--paper-id "$target_paper_id")
+[[ -n "$acceptance_paper_id" ]] && manifest_args+=(--acceptance-paper-id "$acceptance_paper_id")
+[[ -n "$acceptance_target_status" ]] && manifest_args+=(--acceptance-target-status "$acceptance_target_status")
+[[ -n "$acceptance_recorded_waivers" ]] && manifest_args+=(--acceptance-recorded-waivers "$acceptance_recorded_waivers")
 "$PYTHON" scripts/papers.py "${manifest_args[@]}" > "$manifest" || exit 1
 
 {
@@ -82,7 +148,8 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
   record_count=$((record_count + 1))
   pdf="$dir/$source_name"
   translation="$dir/$translation_name"
-  observed_acceptance_waivers=""
+  observed_acceptance_evidence="$validation_tmp/observed-${paper_id}.tsv"
+  : > "$observed_acceptance_evidence"
 
   case "$reading_status" in
     unavailable)
@@ -211,13 +278,9 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
       if (( listing_status == 1 )); then
         quality_issue "$translation has deterministic source-listing errors: $listing_issues"
       elif (( listing_status == 3 )); then
-        record_observed_waiver "listings"
-        if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "listings"; then
-          echo "REVIEWED-RISK: $translation Listing candidates were manually disposed in acceptance ledger"
-        elif [[ "$reading_status" == "draft" ]]; then
+        record_observed_waiver "$observed_acceptance_evidence" "listings" "$listing_issues"
+        if [[ "$reading_status" == "draft" ]]; then
           warn "$translation has Listing review candidates: $listing_issues"
-        else
-          fail "$translation has unresolved Listing review candidates (record disposition before acceptance): $listing_issues"
         fi
       else
         fail "$translation listing validation failed (exit=$listing_status)"
@@ -230,29 +293,23 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
       quality_issue "$translation has suspiciously low source/translation coverage ($translated_chars/$source_chars)"
     fi
 
-    source_words=$(pdftotext -raw "$pdf" - 2>/dev/null | perl -CSD -ne 'last if /^\s*(?:\d+\.?\s+)?REFERENCES\s*$/i; $n += () = /\b[A-Za-z]+(?:[-'"'"'][A-Za-z]+)*\b/g; END { print $n + 0 }')
-    translated_cjk=$(perl -CSD -ne 'last if /^##\s*(?:参考文献|References)\s*$/i; $n += () = /[\x{3400}-\x{9fff}]/g; END { print $n + 0 }' "$translation")
-    if awk -v s="$source_words" -v t="$translated_cjk" 'BEGIN { exit !(s > 0 && t / s < 0.50) }'; then
-      record_observed_waiver "abridgement"
-      if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "abridgement"; then
-        echo "REVIEWED-RISK: $translation high mechanical abridgement candidate was manually disposed in acceptance ledger"
-      elif [[ "$reading_status" == "draft" ]]; then
-        warn "$translation has high mechanical abridgement risk: CJK/source-word ratio=$translated_cjk/$source_words (<0.50)"
-      else
-        fail "$translation has unresolved high mechanical abridgement risk (record disposition before acceptance): CJK/source-word ratio=$translated_cjk/$source_words (<0.50)"
-      fi
-    elif awk -v s="$source_words" -v t="$translated_cjk" 'BEGIN { exit !(s > 0 && t / s < 0.75) }'; then
-      record_observed_waiver "abridgement"
-      if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "abridgement"; then
-        echo "REVIEWED-RISK: $translation moderate mechanical abridgement candidate was manually disposed in acceptance ledger"
-      elif [[ "$reading_status" == "draft" ]]; then
-        warn "$translation has moderate abridgement risk: CJK/source-word ratio=$translated_cjk/$source_words (<0.75)"
-      else
-        fail "$translation has unresolved moderate abridgement risk (record disposition before acceptance): CJK/source-word ratio=$translated_cjk/$source_words (<0.75)"
+    abridgement_stderr="$validation_tmp/abridgement-${paper_id}.stderr"
+    abridgement_candidate=$("$PYTHON" scripts/pdf_metrics.py abridgement "$pdf" "$translation" 2>"$abridgement_stderr")
+    abridgement_status=$?
+    if (( abridgement_status != 0 )); then
+      abridgement_error=$(tr '\n\r\t' '   ' < "$abridgement_stderr")
+      fail "$translation abridgement metric failed (exit=$abridgement_status): $abridgement_error"
+    elif [[ -s "$abridgement_stderr" ]]; then
+      abridgement_error=$(tr '\n\r\t' '   ' < "$abridgement_stderr")
+      fail "$translation abridgement metric emitted unexpected stderr: $abridgement_error"
+    elif [[ -n "$abridgement_candidate" ]]; then
+      record_observed_waiver "$observed_acceptance_evidence" "abridgement" "$abridgement_candidate"
+      if [[ "$reading_status" == "draft" ]]; then
+        warn "$translation has $abridgement_candidate"
       fi
     fi
 
-    source_table_numbers=$(perl -ne 'while (/(?:^|\s{2,})Table\s+(\d+)\s*[:.]/ig) { print "$1\n" }' "$source_text" | sort -nu)
+    source_table_numbers=$(perl -ne 'while (/(?:^|\f|\s{2,})Table\s+(\d+)\s*[:.]/ig) { print "$1\n" }' "$source_text" | sort -nu)
     while IFS= read -r table_number; do
       [[ -z "$table_number" ]] && continue
       rg -q "(表|Table)[[:space:]]*${table_number}([^0-9]|$)" "$translation" || quality_issue "$translation does not identify source Table $table_number"
@@ -266,29 +323,47 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     if (( resource_status == 1 )); then
       quality_issue "$translation has deterministic resource/reference errors: $resource_issues"
     elif (( resource_status == 3 )); then
-      record_observed_waiver "resources"
-      if [[ "$reading_status" == "translated" ]] && has_waiver "$acceptance_waivers" "resources"; then
-        echo "REVIEWED-RISK: $translation resource candidates were manually disposed in acceptance ledger"
-      elif [[ "$reading_status" == "draft" ]]; then
+      record_observed_waiver "$observed_acceptance_evidence" "resources" "$resource_issues"
+      if [[ "$reading_status" == "draft" ]]; then
         warn "$translation has resource review candidates: $resource_issues"
-      else
-        fail "$translation has unresolved resource review candidates (record disposition before acceptance): $resource_issues"
       fi
     elif (( resource_status != 0 )); then
       fail "$translation resource validation failed (exit=$resource_status): $resource_issues"
     fi
   fi
   if [[ "$reading_status" == "translated" ]]; then
-    # Candidate branches above report missing waivers with evidence; this set
-    # comparison enforces the reverse direction and rejects stale waivers.
-    waiver_mismatches=$(compare_acceptance_waivers "$acceptance_waivers" "$observed_acceptance_waivers")
+    waiver_mismatches=$("$PYTHON" scripts/acceptance_evidence.py compare --recorded "$acceptance_waivers" --observed "$observed_acceptance_evidence" 2>&1)
     waiver_match_status=$?
-    if (( waiver_match_status != 0 )); then
-      while IFS= read -r waiver_mismatch; do
-        [[ "$waiver_mismatch" == unused:* ]] || continue
-        fail "$translation records unused acceptance waiver ${waiver_mismatch#unused:}; no matching current mechanical candidate"
+    if (( waiver_match_status == 0 )); then
+      while IFS= read -r waiver_match; do
+        [[ "$waiver_match" == reviewed:* ]] || continue
+        reviewed_risks=$((reviewed_risks + 1))
+        echo "REVIEWED-RISK: $translation ${waiver_match#reviewed:}"
       done <<< "$waiver_mismatches"
+    elif (( waiver_match_status == 1 )); then
+      while IFS= read -r waiver_mismatch; do
+        [[ -n "$waiver_mismatch" ]] || continue
+        if [[ "$waiver_mismatch" == reviewed:* ]]; then
+          reviewed_risks=$((reviewed_risks + 1))
+          echo "REVIEWED-RISK: $translation ${waiver_mismatch#reviewed:}"
+          continue
+        fi
+        fail "$translation acceptance waiver evidence mismatch: $waiver_mismatch"
+      done <<< "$waiver_mismatches"
+    else
+      fail "$translation acceptance waiver evidence validation failed: $waiver_mismatches"
     fi
+  elif [[ "$reading_status" == "draft" && -s "$observed_acceptance_evidence" ]]; then
+    evidence_summary=$("$PYTHON" scripts/acceptance_evidence.py summarize --observed "$observed_acceptance_evidence" 2>&1)
+    evidence_summary_status=$?
+    if (( evidence_summary_status == 0 )); then
+      printf '%s\n' "$evidence_summary"
+    else
+      fail "$translation acceptance evidence summary failed: $evidence_summary"
+    fi
+  fi
+  if [[ -n "$acceptance_evidence_file" ]]; then
+    cat "$observed_acceptance_evidence" >> "$acceptance_evidence_file" || fail "cannot write acceptance evidence: $acceptance_evidence_file"
   fi
   rm -f "$source_text"
 done
@@ -309,7 +384,7 @@ if (( failures > 0 )); then
 fi
 
 if [[ "$deep_validation" == "1" ]]; then
-  echo "Deep translation validation passed: $record_count records and $translation_count translated papers ($warnings warning(s))."
+  echo "Deep translation validation passed: $record_count records and $translation_count translated papers ($warnings warning(s), $reviewed_risks reviewed-risk category group(s))."
 else
   echo "Fast translation validation passed: $record_count records and $translation_count translated papers ($warnings warning(s))."
 fi

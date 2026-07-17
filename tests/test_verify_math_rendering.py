@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 import tempfile
 import unittest
@@ -22,9 +23,13 @@ from verify_math_rendering import (  # noqa: E402
 class VerifyMathRenderingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.mathjax = ROOT / "node_modules" / "mathjax"
+        cls.mathjax = Path(
+            os.environ.get("MATHJAX_MODULE", ROOT / "node_modules" / "mathjax")
+        )
         if not cls.mathjax.exists():
-            raise RuntimeError("MathJax test dependency is missing; run npm ci")
+            raise RuntimeError(
+                f"MathJax test dependency is missing at {cls.mathjax}; run npm ci or set MATHJAX_MODULE"
+            )
 
     def test_mathjax_accepts_well_formed_tex(self) -> None:
         expressions = [

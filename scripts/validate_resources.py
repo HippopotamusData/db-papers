@@ -18,18 +18,18 @@ from PIL import Image, UnidentifiedImageError
 IMAGE_RE = re.compile(r"!\[([^]]*)\]\((<[^>]+>|[^)\s]+)(?:\s+['\"][^'\"]*['\"])?\)")
 SOURCE_RESOURCE_PATTERNS = {
     "figure": re.compile(
-        r"(?:^[ \t]*|[ \t]{2,})(?:Figure|Fig\.)\s*([1-9]\d*)\s*[:.]",
+        r"(?:^[ \t\f]*|[ \t]{2,})(?:Figure|Fig\.)\s*([1-9]\d*)\s*[:.]",
         re.IGNORECASE | re.MULTILINE,
     ),
     "table": re.compile(
-        r"(?:^[ \t]*|[ \t]{2,})Table\s*([1-9]\d*)\s*[:.]",
+        r"(?:^[ \t\f]*|[ \t]{2,})Table\s*([1-9]\d*)\s*[:.]",
         re.IGNORECASE | re.MULTILINE,
     ),
     "algorithm": re.compile(
         # Some proceedings print ``Algorithm 1 Name`` without a colon.  Keep
         # this anchored like a caption and reject the common prose forms so a
         # sentence such as "Algorithm 1 shows ..." is not source evidence.
-        r"(?:^[ \t]*|[ \t]{2,})Algorithm\s*([1-9]\d*)"
+        r"(?:^[ \t\f]*|[ \t]{2,})Algorithm\s*([1-9]\d*)"
         r"(?:(?:[ \t]*[:.][ \t]*)|(?:[ \t]+(?!(?:shows?|depicts?|presents?|"
         r"describes?|illustrates?|lists?|uses?|is|was|has|can|will)\b)(?=\S)))",
         re.IGNORECASE | re.MULTILINE,
@@ -400,6 +400,40 @@ def _reference_tokens(text: str) -> set[str]:
     }
 
 
+def _normalize_source_reference_ocr(
+    entries: list[tuple[str, str]],
+) -> tuple[list[tuple[str, str]], list[str]]:
+    """Normalize one conservative ``i``/``l`` -> ``1`` OCR candidate.
+
+    Old scanned papers occasionally expose a visible numeric bibliography as
+    ``[i], [2], ...`` in the PDF text layer.  Only normalize when exactly one
+    such lookalike exists, no real ``1`` exists, every other identifier is
+    numeric, and the result is the complete contiguous series ``1..N``.  This
+    keeps author-key bibliographies untouched and still emits review evidence.
+    """
+
+    identifiers = [identifier for identifier, _body in entries]
+    candidates = [
+        index for index, identifier in enumerate(identifiers) if identifier in {"i", "l"}
+    ]
+    if len(candidates) != 1 or "1" in identifiers:
+        return entries, []
+    candidate_index = candidates[0]
+    normalized_identifiers = identifiers.copy()
+    normalized_identifiers[candidate_index] = "1"
+    if not all(identifier.isdigit() for identifier in normalized_identifiers):
+        return entries, []
+    numeric_identifiers = [int(identifier) for identifier in normalized_identifiers]
+    if sorted(numeric_identifiers) != list(range(1, len(entries) + 1)):
+        return entries, []
+    normalized = entries.copy()
+    original, body = normalized[candidate_index]
+    normalized[candidate_index] = ("1", body)
+    return normalized, [
+        f"source reference identifier {original} was normalized to 1 as a contiguous numeric-series OCR candidate"
+    ]
+
+
 def _compact_text_length(text: str) -> int:
     return len(re.sub(r"\s+", "", text))
 
@@ -421,6 +455,8 @@ def _reference_findings(source_text: str, translation_text: str) -> tuple[list[s
         translation_section = ""
 
     source_entries = _reference_entries(source_section)
+    source_entries, source_ocr_risks = _normalize_source_reference_ocr(source_entries)
+    risks.extend(source_ocr_risks)
     translation_entries = _reference_entries(translation_section)
     source_counts = Counter(identifier for identifier, _text in source_entries)
     translation_counts = Counter(identifier for identifier, _text in translation_entries)
@@ -533,8 +569,11 @@ def _section_heading_findings(source_text: str, translation_text: str) -> list[s
     ):
         risks.append("source Conclusion/Summary heading has no translation-side heading candidate")
 
-    source_numbers: set[int] = set()
-    for number_text, title in SOURCE_NUMBERED_HEADING_RE.findall(source_text):
+    reference_heading = SOURCE_REFERENCE_HEADING_RE.search(source_text)
+    heading_source = source_text[: reference_heading.start()] if reference_heading else source_text
+    source_sequence: list[int] = []
+    expected_number = 1
+    for number_text, title in SOURCE_NUMBERED_HEADING_RE.findall(heading_source):
         words = title.split()
         letters = [character for character in title if character.isalpha()]
         uppercase_ratio = (
@@ -542,8 +581,20 @@ def _section_heading_findings(source_text: str, translation_text: str) -> list[s
             if letters
             else 0.0
         )
-        if len(title) <= 100 and len(words) <= 12 and uppercase_ratio >= 0.65:
-            source_numbers.add(int(number_text))
+        if len(title) > 100 or len(words) > 12 or uppercase_ratio < 0.65:
+            continue
+        number = int(number_text)
+        if not source_sequence:
+            if number == 1:
+                source_sequence.append(number)
+                expected_number = 2
+            continue
+        if number == expected_number:
+            source_sequence.append(number)
+            expected_number += 1
+            continue
+        break
+    source_numbers = set(source_sequence) if len(source_sequence) >= 2 else set()
     translation_numbers = {
         int(number) for number in TRANSLATION_NUMBERED_HEADING_RE.findall(translation_text)
     }

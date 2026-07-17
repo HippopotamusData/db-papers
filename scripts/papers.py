@@ -4,7 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
+import hashlib
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -16,24 +20,37 @@ from urllib.parse import urlparse
 
 import yaml
 
+from acceptance_evidence import (
+    build_waiver_records,
+    compare_waiver_records,
+    decode_waiver_records,
+    encode_waiver_records,
+    read_observed_tsv,
+)
 from project_config import (
     ACCEPTANCE_WAIVERS,
     ALLOW_WHOLE_PAGE_IMAGES_IN_READING_PATH,
+    GIT_SHA_RE,
     METADATA_FILE,
+    MIGRATION_REVIEWERS,
     REQUIRE_COMPLETE_REFERENCES,
     RUNTIME_REVIEW_ACTIONS,
+    SHA256_RE,
     SLUG_RE,
     SOURCE_FILE,
     TARGET_LANGUAGE,
     TRANSLATION_FILE,
+    assets_manifest_sha256,
     configured_paths,
     effective_page_limit,
     load_acceptance_ledger,
     load_project_policy,
     load_taxonomy,
     load_yaml,
+    load_yaml_text,
     sha256_file,
     skip_reason as configured_skip_reason,
+    validate_acceptance_ledger,
 )
 from validation_policy import quality_issue_severity
 
@@ -200,6 +217,21 @@ def validate(paper_id: str | None = None) -> int:
         print(f"ERROR: paper id must be kebab-case: {paper_id}", file=sys.stderr)
         return 1
 
+    acceptance_entries = acceptance["entries"]
+    review_bases = {
+        entry["review_base_sha"]
+        for configured_id, entry in acceptance_entries.items()
+        if paper_id is None or configured_id == paper_id
+    }
+    for review_base_sha in sorted(review_bases):
+        try:
+            validate_review_base_commit(ROOT, review_base_sha)
+        except (OSError, ValueError) as exc:
+            errors.append(
+                f"{paths['acceptance_ledger'].relative_to(ROOT)}: "
+                f"invalid review_base_sha {review_base_sha}: {exc}"
+            )
+
     if paper_id is None:
         for path in sorted(PAPERS.glob("**/metadata.md")):
             add_error(errors, path, f"legacy metadata.md is not allowed; use {metadata_name}")
@@ -324,12 +356,25 @@ def validate(paper_id: str | None = None) -> int:
             if not ledger_entry:
                 add_error(errors, path, "reading_status=translated requires an acceptance-ledger entry")
             elif source.is_file() and translation.is_file():
+                if ledger_entry["reviewer"] == "pending-v3-re-review":
+                    add_error(
+                        errors,
+                        path,
+                        "pending-v3-re-review cannot support reading_status=translated",
+                    )
                 current_source_hash = sha256_file(source)
                 current_translation_hash = sha256_file(translation)
+                current_assets_hash = assets_manifest_sha256(path.parent, ROOT)
                 if ledger_entry["source_sha256"] != current_source_hash:
                     add_error(errors, path, "source.pdf changed after acceptance; set status to draft and review again")
                 if ledger_entry["translation_sha256"] != current_translation_hash:
                     add_error(errors, path, "translation.md changed after acceptance; set status to draft and review again")
+                if ledger_entry["assets_manifest_sha256"] != current_assets_hash:
+                    add_error(
+                        errors,
+                        path,
+                        "assets changed after acceptance; set status to draft and review again",
+                    )
         elif ledger_entry and reading_status not in {"draft"}:
             add_error(errors, path, "acceptance-ledger entry is only allowed for translated or re-reviewing draft papers")
 
@@ -572,7 +617,7 @@ def config_value(key: str, paper_id: str | None) -> int:
             print("ERROR: --paper-id is required for acceptance_waivers", file=sys.stderr)
             return 1
         entry = acceptance["entries"].get(paper_id)
-        print("\t".join(entry.get("waivers", [])) if entry else "")
+        print(encode_waiver_records(entry.get("waivers", {}) if entry else {}))
         return 0
     if key == "paper_title":
         if not paper_id:
@@ -596,7 +641,13 @@ def config_value(key: str, paper_id: str | None) -> int:
     return 0
 
 
-def validation_manifest(paper_id: str | None) -> int:
+def validation_manifest(
+    paper_id: str | None,
+    *,
+    preflight_paper_id: str | None = None,
+    preflight_target_status: str = "",
+    preflight_waivers: str = "",
+) -> int:
     """Emit one validated, delimiter-safe snapshot for the shell deep validator."""
 
     try:
@@ -627,6 +678,36 @@ def validation_manifest(paper_id: str | None) -> int:
         return 1
 
     metadata_name = paths["metadata"].name
+    preflight_paper_id = preflight_paper_id or ""
+    if preflight_paper_id and paper_id != preflight_paper_id:
+        print(
+            "ERROR: acceptance preflight paper id must match the scoped --paper-id",
+            file=sys.stderr,
+        )
+        return 1
+    if (preflight_target_status or preflight_waivers) and not preflight_paper_id:
+        print(
+            "ERROR: acceptance preflight overrides require an exact paper id",
+            file=sys.stderr,
+        )
+        return 1
+    if preflight_target_status not in {"", "translated"}:
+        print("ERROR: acceptance target status must be translated", file=sys.stderr)
+        return 1
+    if preflight_target_status and not preflight_waivers:
+        print(
+            "ERROR: translated acceptance preflight requires recorded waiver evidence",
+            file=sys.stderr,
+        )
+        return 1
+    if preflight_waivers:
+        try:
+            preflight_waivers = encode_waiver_records(
+                decode_waiver_records(preflight_waivers)
+            )
+        except ValueError as exc:
+            print(f"ERROR: invalid acceptance recorded waivers: {exc}", file=sys.stderr)
+            return 1
     for path in sorted(PAPERS.glob(f"*/*/{metadata_name}")):
         slug = path.parent.name
         if paper_id and slug != paper_id:
@@ -645,7 +726,11 @@ def validation_manifest(paper_id: str | None) -> int:
             )
             return 1
         entry = acceptance["entries"].get(slug)
-        waivers = "\t".join(entry.get("waivers", [])) if entry else ""
+        waivers = encode_waiver_records(entry.get("waivers", {}) if entry else {})
+        if slug == preflight_paper_id:
+            if preflight_target_status:
+                reading_status = preflight_target_status
+            waivers = preflight_waivers or encode_waiver_records({})
         severity = (
             quality_issue_severity(reading_status)
             if reading_status in {"draft", "translated"}
@@ -666,9 +751,141 @@ def validation_manifest(paper_id: str | None) -> int:
     return 0
 
 
-def acceptance_preflight(paper_id: str) -> tuple[bool, str]:
-    env = os.environ.copy()
-    env.update(
+class AcceptanceInterrupted(RuntimeError):
+    """Raised when SIGTERM requests a rollback-safe acceptance stop."""
+
+
+def _acceptance_lock_path(root: Path) -> Path:
+    root_key = hashlib.sha256(os.fsencode(root.resolve())).hexdigest()[:24]
+    return Path(tempfile.gettempdir()) / f"db-papers-acceptance-{root_key}.lock"
+
+
+@contextlib.contextmanager
+def acceptance_lock(root: Path):
+    """Serialize acceptance writers across processes for one repository root."""
+
+    lock_path = _acceptance_lock_path(root)
+    with lock_path.open("a+b") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+@contextlib.contextmanager
+def sigterm_as_exception():
+    """Convert SIGTERM into an exception and restore the caller's handler."""
+
+    def handle_sigterm(_signum, _frame) -> None:
+        raise AcceptanceInterrupted("acceptance interrupted by SIGTERM")
+
+    try:
+        previous = signal.signal(signal.SIGTERM, handle_sigterm)
+    except ValueError:
+        # Signal handlers can only be installed by the main thread.  The CLI is
+        # always on that thread; tests embedding this function still get all
+        # lock, CAS, and KeyboardInterrupt protections.
+        yield
+        return
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
+def _run_preflight_command(
+    command: list[str], env: dict[str, str], output: list[str]
+) -> bool:
+    completed = subprocess.run(
+        command,
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    details = "\n".join(
+        part.strip() for part in (completed.stdout, completed.stderr) if part.strip()
+    )
+    if details:
+        output.append(details)
+    return completed.returncode == 0
+
+
+def validate_review_base_commit(root: Path, review_base_sha: str) -> None:
+    """Require the recorded review baseline to be a real ancestor commit."""
+
+    commit = subprocess.run(
+        ["git", "-C", os.fspath(root), "cat-file", "-e", f"{review_base_sha}^{{commit}}"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if commit.returncode != 0:
+        details = commit.stderr.strip()
+        suffix = f": {details}" if details else ""
+        raise ValueError(f"review_base_sha is not an available Git commit{suffix}")
+    ancestor = subprocess.run(
+        ["git", "-C", os.fspath(root), "merge-base", "--is-ancestor", review_base_sha, "HEAD"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if ancestor.returncode == 1:
+        raise ValueError("review_base_sha must be an ancestor of the current HEAD")
+    if ancestor.returncode != 0:
+        details = ancestor.stderr.strip()
+        suffix = f": {details}" if details else ""
+        raise ValueError(f"cannot verify review_base_sha ancestry{suffix}")
+
+
+def current_git_head(root: Path) -> str:
+    result = subprocess.run(
+        ["git", "-C", os.fspath(root), "rev-parse", "--verify", "HEAD"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    head = result.stdout.strip()
+    if result.returncode != 0 or not GIT_SHA_RE.fullmatch(head):
+        details = result.stderr.strip()
+        suffix = f": {details}" if details else ""
+        raise ValueError(f"cannot resolve current Git HEAD{suffix}")
+    return head
+
+
+def acceptance_preflight(
+    paper_id: str, approved_waivers: dict[str, str]
+) -> tuple[bool, str, dict[str, dict[str, Any]]]:
+    """Run discovery and translated-grade gates before mutating authoritative state.
+
+    ``validate_translations.sh`` writes exact candidates to the TSV named by
+    ``ACCEPTANCE_EVIDENCE_FILE``.  The discovery pass runs while the paper is
+    still a draft.  The second pass receives the resulting item-level evidence
+    through ``ACCEPTANCE_RECORDED_WAIVERS`` and is forced to translated severity.
+    This two-pass protocol lets mechanical candidates be reviewed without ever
+    temporarily claiming the paper is accepted.
+    """
+
+    matches = sorted(PAPERS.glob(f"*/{paper_id}/{TRANSLATION_FILE}"))
+    if len(matches) != 1:
+        return False, f"ERROR: paper id must resolve exactly once: {paper_id}", {}
+    translation = matches[0]
+    output: list[str] = []
+    base_env = os.environ.copy()
+    for internal_key in (
+        "ACCEPTANCE_DISCOVERY",
+        "ACCEPTANCE_EVIDENCE_FILE",
+        "ACCEPTANCE_PAPER_ID",
+        "ACCEPTANCE_RECORDED_WAIVERS",
+        "ACCEPTANCE_TARGET_STATUS",
+    ):
+        base_env.pop(internal_key, None)
+    base_env.update(
         {
             "PAPER_ID": paper_id,
             "PYTHON": sys.executable,
@@ -676,111 +893,339 @@ def acceptance_preflight(paper_id: str) -> tuple[bool, str]:
             "DEEP_VALIDATION": "1",
         }
     )
-    commands = [
-        [sys.executable, "scripts/papers.py", "validate"],
-        [sys.executable, "scripts/normalize_translation_headers.py", "--check"],
-        ["bash", "scripts/validate_translations.sh"],
+    initial_commands = [
+        [sys.executable, "scripts/papers.py", "validate", "--paper-id", paper_id],
+        [
+            sys.executable,
+            "scripts/normalize_translation_headers.py",
+            "--check",
+            "--paper-id",
+            paper_id,
+        ],
     ]
-    output: list[str] = []
-    for command in commands:
-        completed = subprocess.run(
-            command,
-            cwd=ROOT,
-            env=env,
-            text=True,
-            capture_output=True,
-            check=False,
+    for command in initial_commands:
+        if not _run_preflight_command(command, base_env, output):
+            return False, "\n".join(output), {}
+
+    with tempfile.TemporaryDirectory(prefix="db-papers-acceptance-evidence-") as temporary:
+        evidence_root = Path(temporary)
+        discovery_file = evidence_root / "discovery.tsv"
+        translated_file = evidence_root / "translated.tsv"
+        discovery_file.write_text("", encoding="utf-8")
+        translated_file.write_text("", encoding="utf-8")
+
+        discovery_env = base_env.copy()
+        discovery_command = [
+            "bash",
+            "scripts/validate_translations.sh",
+            "--acceptance-discovery",
+            "--acceptance-evidence-file",
+            os.fspath(discovery_file),
+            "--acceptance-paper-id",
+            paper_id,
+        ]
+        if not _run_preflight_command(
+            discovery_command, discovery_env, output
+        ):
+            return False, "\n".join(output), {}
+
+        try:
+            waiver_records = build_waiver_records(read_observed_tsv(discovery_file))
+        except (OSError, ValueError) as exc:
+            output.append(f"ERROR: cannot read acceptance evidence: {exc}")
+            return False, "\n".join(output), {}
+        observed_fingerprints = {
+            category: record["fingerprint"] for category, record in waiver_records.items()
+        }
+        if observed_fingerprints != approved_waivers:
+            missing = observed_fingerprints.keys() - approved_waivers.keys()
+            unused = approved_waivers.keys() - observed_fingerprints.keys()
+            changed = {
+                category
+                for category in observed_fingerprints.keys() & approved_waivers.keys()
+                if observed_fingerprints[category] != approved_waivers[category]
+            }
+            if missing:
+                output.append(
+                    "ERROR: unapproved waiver candidates: "
+                    + ", ".join(
+                        f"{category}={observed_fingerprints[category]}"
+                        for category in sorted(missing)
+                    )
+                )
+            if unused:
+                output.append(
+                    "ERROR: requested waivers have no current candidates: "
+                    + ", ".join(sorted(unused))
+                )
+            for category in sorted(changed):
+                output.append(
+                    "ERROR: approved waiver fingerprint changed: "
+                    f"{category}:{approved_waivers[category]}:"
+                    f"{observed_fingerprints[category]}"
+                )
+            return False, "\n".join(output), waiver_records
+
+        translated_env = base_env.copy()
+        translated_command = [
+            "bash",
+            "scripts/validate_translations.sh",
+            "--acceptance-evidence-file",
+            os.fspath(translated_file),
+            "--acceptance-paper-id",
+            paper_id,
+            "--acceptance-target-status",
+            "translated",
+            "--acceptance-recorded-waivers",
+            encode_waiver_records(waiver_records),
+        ]
+        if not _run_preflight_command(
+            translated_command, translated_env, output
+        ):
+            return False, "\n".join(output), waiver_records
+        try:
+            translated_records = build_waiver_records(read_observed_tsv(translated_file))
+            _reviewed, mismatches = compare_waiver_records(
+                waiver_records, translated_records
+            )
+        except (OSError, ValueError) as exc:
+            output.append(f"ERROR: cannot verify translated acceptance evidence: {exc}")
+            return False, "\n".join(output), waiver_records
+        if waiver_records != translated_records and not mismatches:
+            output.append(
+                "ERROR: raw waiver diagnostics changed between acceptance passes "
+                "while semantic findings stayed constant"
+            )
+            return False, "\n".join(output), waiver_records
+        if mismatches:
+            output.extend(f"ERROR: waiver evidence {item}" for item in mismatches)
+            return False, "\n".join(output), waiver_records
+
+        mathjax_module = os.environ.get(
+            "MATHJAX_MODULE", os.fspath(ROOT / "node_modules/mathjax")
         )
-        details = "\n".join(
-            part.strip() for part in (completed.stdout, completed.stderr) if part.strip()
-        )
-        if details:
-            output.append(details)
-        if completed.returncode != 0:
-            return False, "\n".join(output)
-    return True, "\n".join(output)
+        mathjax_command = [
+            sys.executable,
+            "scripts/verify_math_rendering.py",
+            "--mathjax-module",
+            mathjax_module,
+            translation.relative_to(ROOT).as_posix(),
+        ]
+        if not _run_preflight_command(mathjax_command, translated_env, output):
+            return False, "\n".join(output), waiver_records
+
+        github_command = [
+            sys.executable,
+            "scripts/verify_math_rendering.py",
+            "--github",
+            translation.relative_to(ROOT).as_posix(),
+        ]
+        if not _run_preflight_command(github_command, translated_env, output):
+            return False, "\n".join(output), waiver_records
+
+    return True, "\n".join(output), waiver_records
 
 
-def accept_record(paper_id: str, review_action: str, waivers: list[str]) -> int:
-    try:
-        paths = configured_paths(ROOT)
-        ledger = load_acceptance_ledger(paths["acceptance_ledger"])
-    except ValueError as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
-        return 1
+def _assert_acceptance_snapshot(
+    *,
+    ledger_path: Path,
+    expected_ledger: str,
+    metadata_path: Path,
+    expected_metadata: str,
+    source: Path,
+    source_sha256: str,
+    translation: Path,
+    translation_sha256: str,
+    assets_sha256: str,
+    expected_head_sha: str,
+) -> None:
+    if current_git_head(ROOT) != expected_head_sha:
+        raise ValueError("Git HEAD changed during acceptance")
+    if ledger_path.read_text(encoding="utf-8") != expected_ledger:
+        raise ValueError("acceptance ledger changed concurrently")
+    if metadata_path.read_text(encoding="utf-8") != expected_metadata:
+        raise ValueError("paper.yaml changed concurrently")
+    if sha256_file(source) != source_sha256:
+        raise ValueError("source.pdf changed during acceptance")
+    if sha256_file(translation) != translation_sha256:
+        raise ValueError("translation.md changed during acceptance")
+    if assets_manifest_sha256(metadata_path.parent, ROOT) != assets_sha256:
+        raise ValueError("assets changed during acceptance")
+
+
+def _rollback_attempted_writes(
+    attempted: list[tuple[Path, str, str]]
+) -> list[str]:
+    errors: list[str] = []
+    for path, original, expected_write in reversed(attempted):
+        try:
+            current = path.read_text(encoding="utf-8")
+            if current == original:
+                continue
+            if current != expected_write:
+                errors.append(f"{path}: changed concurrently; refusing to overwrite")
+                continue
+            atomic_write_text(path, original)
+        except OSError as exc:
+            errors.append(f"{path}: {exc}")
+    return errors
+
+
+def _accept_record_locked(
+    paper_id: str,
+    review_action: str,
+    waivers: list[str],
+    reviewer: str,
+    review_base_sha: str,
+) -> int:
+    paths = configured_paths(ROOT)
+    ledger_path = paths["acceptance_ledger"]
     matches = sorted(PAPERS.glob(f"*/{paper_id}/{paths['metadata'].name}"))
     if len(matches) != 1:
-        print(f"ERROR: paper id must resolve exactly once: {paper_id}", file=sys.stderr)
-        return 1
+        raise ValueError(f"paper id must resolve exactly once: {paper_id}")
     metadata_path = matches[0]
-    data = load_yaml(metadata_path)
+    original_ledger = ledger_path.read_text(encoding="utf-8")
+    ledger = validate_acceptance_ledger(
+        load_yaml_text(original_ledger, str(ledger_path)), str(ledger_path)
+    )
+    original_metadata = metadata_path.read_text(encoding="utf-8")
+    data = load_yaml_text(original_metadata, str(metadata_path))
     if data.get("reading_status") != "draft":
-        print(
-            "ERROR: acceptance requires reading_status=draft; changed or re-reviewed translated papers must transition to draft first",
-            file=sys.stderr,
+        raise ValueError(
+            "acceptance requires reading_status=draft; changed or re-reviewed "
+            "translated papers must transition to draft first"
         )
-        return 1
     source = metadata_path.parent / paths["source"].name
     translation = metadata_path.parent / paths["translation"].name
     if not source.is_file() or not translation.is_file():
-        print("ERROR: acceptance requires source.pdf and translation.md", file=sys.stderr)
-        return 1
+        raise ValueError("acceptance requires source.pdf and translation.md")
     if review_action not in RUNTIME_REVIEW_ACTIONS:
-        print(
-            "ERROR: runtime review action must be one of: "
-            + ", ".join(sorted(RUNTIME_REVIEW_ACTIONS)),
-            file=sys.stderr,
+        raise ValueError(
+            "runtime review action must be one of: "
+            + ", ".join(sorted(RUNTIME_REVIEW_ACTIONS))
         )
-        return 1
-    normalized_waivers = list(dict.fromkeys(item.strip() for item in waivers if item.strip()))
-    unknown_waivers = set(normalized_waivers) - ACCEPTANCE_WAIVERS
-    if unknown_waivers:
-        print(
-            "ERROR: unknown acceptance waivers: " + ", ".join(sorted(unknown_waivers)),
-            file=sys.stderr,
-        )
-        return 1
+    approved_waivers: dict[str, str] = {}
+    for raw_waiver in waivers:
+        if not isinstance(raw_waiver, str):
+            raise ValueError("acceptance waiver approvals must be strings")
+        category, separator, fingerprint = raw_waiver.strip().partition("=")
+        if not separator or category not in ACCEPTANCE_WAIVERS:
+            raise ValueError(
+                "acceptance waivers must use category=<reviewed-fingerprint> for: "
+                + ", ".join(sorted(ACCEPTANCE_WAIVERS))
+            )
+        if not SHA256_RE.fullmatch(fingerprint):
+            raise ValueError(
+                f"acceptance waiver fingerprint for {category} must be lowercase SHA-256"
+            )
+        if category in approved_waivers:
+            raise ValueError(f"duplicate acceptance waiver approval: {category}")
+        approved_waivers[category] = fingerprint
+    if not isinstance(reviewer, str) or not reviewer.strip() or reviewer != reviewer.strip():
+        raise ValueError("reviewer must be a non-empty trimmed string")
+    if reviewer in MIGRATION_REVIEWERS:
+        raise ValueError("migration reviewer markers cannot be used by runtime acceptance")
+    if not isinstance(review_base_sha, str) or not GIT_SHA_RE.fullmatch(review_base_sha):
+        raise ValueError("review_base_sha must be a 40-character lowercase Git SHA")
+    validate_review_base_commit(ROOT, review_base_sha)
+    expected_head_sha = current_git_head(ROOT)
 
-    original_ledger = paths["acceptance_ledger"].read_text(encoding="utf-8")
-    original_metadata = metadata_path.read_text(encoding="utf-8")
+    source_hash = sha256_file(source)
+    translation_hash = sha256_file(translation)
+    assets_hash = assets_manifest_sha256(metadata_path.parent, ROOT)
+
+    accepted, details, waiver_records = acceptance_preflight(paper_id, approved_waivers)
+    if not accepted:
+        raise ValueError(f"acceptance preflight failed\n{details}".rstrip())
+
+    _assert_acceptance_snapshot(
+        ledger_path=ledger_path,
+        expected_ledger=original_ledger,
+        metadata_path=metadata_path,
+        expected_metadata=original_metadata,
+        source=source,
+        source_sha256=source_hash,
+        translation=translation,
+        translation_sha256=translation_hash,
+        assets_sha256=assets_hash,
+        expected_head_sha=expected_head_sha,
+    )
+
     ledger["entries"][paper_id] = {
-        "source_sha256": sha256_file(source),
-        "translation_sha256": sha256_file(translation),
+        "source_sha256": source_hash,
+        "translation_sha256": translation_hash,
+        "assets_manifest_sha256": assets_hash,
         "review_action": review_action,
+        "reviewer": reviewer,
+        "review_base_sha": review_base_sha,
     }
-    if normalized_waivers:
-        ledger["entries"][paper_id]["waivers"] = normalized_waivers
+    if waiver_records:
+        ledger["entries"][paper_id]["waivers"] = waiver_records
     data["reading_status"] = "translated"
+    accepted_ledger = dump_yaml(ledger)
+    accepted_metadata = dump_yaml(data)
+    attempted: list[tuple[Path, str, str]] = []
 
     try:
-        atomic_write_text(paths["acceptance_ledger"], dump_yaml(ledger))
-        atomic_write_text(metadata_path, dump_yaml(data))
-        accepted, details = acceptance_preflight(paper_id)
-        if not accepted:
-            raise ValueError(f"acceptance preflight failed\n{details}".rstrip())
-        recorded = load_acceptance_ledger(paths["acceptance_ledger"])["entries"].get(paper_id)
-        if not recorded or recorded["source_sha256"] != sha256_file(source):
-            raise ValueError("source.pdf changed during acceptance preflight")
-        if recorded["translation_sha256"] != sha256_file(translation):
-            raise ValueError("translation.md changed during acceptance preflight")
-    except (OSError, ValueError) as exc:
-        rollback_errors: list[str] = []
-        for path, content in (
-            (paths["acceptance_ledger"], original_ledger),
-            (metadata_path, original_metadata),
-        ):
-            try:
-                atomic_write_text(path, content)
-            except OSError as rollback_exc:
-                rollback_errors.append(f"{path}: {rollback_exc}")
-        print(f"ERROR: {exc}", file=sys.stderr)
+        attempted.append((ledger_path, original_ledger, accepted_ledger))
+        atomic_write_text(ledger_path, accepted_ledger)
+        _assert_acceptance_snapshot(
+            ledger_path=ledger_path,
+            expected_ledger=accepted_ledger,
+            metadata_path=metadata_path,
+            expected_metadata=original_metadata,
+            source=source,
+            source_sha256=source_hash,
+            translation=translation,
+            translation_sha256=translation_hash,
+            assets_sha256=assets_hash,
+            expected_head_sha=expected_head_sha,
+        )
+        attempted.append((metadata_path, original_metadata, accepted_metadata))
+        atomic_write_text(metadata_path, accepted_metadata)
+        _assert_acceptance_snapshot(
+            ledger_path=ledger_path,
+            expected_ledger=accepted_ledger,
+            metadata_path=metadata_path,
+            expected_metadata=accepted_metadata,
+            source=source,
+            source_sha256=source_hash,
+            translation=translation,
+            translation_sha256=translation_hash,
+            assets_sha256=assets_hash,
+            expected_head_sha=expected_head_sha,
+        )
+        recorded = load_acceptance_ledger(ledger_path)["entries"].get(paper_id)
+        if recorded != ledger["entries"][paper_id]:
+            raise ValueError("acceptance ledger failed post-write verification")
+    except BaseException:
+        rollback_errors = _rollback_attempted_writes(attempted)
         if rollback_errors:
             print("ERROR: rollback failed: " + "; ".join(rollback_errors), file=sys.stderr)
-        else:
+        elif attempted:
             print("Acceptance changes were rolled back.", file=sys.stderr)
-        return 1
-    print(f"Accepted {paper_id}; hashes recorded in {paths['acceptance_ledger'].relative_to(ROOT)}.")
+        raise
+
+    print(f"Accepted {paper_id}; hashes recorded in {ledger_path.relative_to(ROOT)}.")
     return 0
+
+
+def accept_record(
+    paper_id: str,
+    review_action: str,
+    waivers: list[str],
+    reviewer: str,
+    review_base_sha: str,
+) -> int:
+    try:
+        with sigterm_as_exception(), acceptance_lock(ROOT):
+            return _accept_record_locked(
+                paper_id, review_action, waivers, reviewer, review_base_sha
+            )
+    except (AcceptanceInterrupted, KeyboardInterrupt, OSError, ValueError) as exc:
+        details = str(exc).strip() or f"acceptance interrupted by {type(exc).__name__}"
+        print(f"ERROR: {details}", file=sys.stderr)
+        return 1
 
 
 def main() -> int:
@@ -796,6 +1241,13 @@ def main() -> int:
         "validation-manifest", help="print one batched snapshot for deep translation validation"
     )
     manifest_parser.add_argument("--paper-id")
+    manifest_parser.add_argument("--acceptance-paper-id", help=argparse.SUPPRESS)
+    manifest_parser.add_argument(
+        "--acceptance-target-status", default="", help=argparse.SUPPRESS
+    )
+    manifest_parser.add_argument(
+        "--acceptance-recorded-waivers", default="", help=argparse.SUPPRESS
+    )
     catalog_parser = subparsers.add_parser("catalog", help="generate CATALOG.md")
     catalog_parser.add_argument("--check", action="store_true", help="fail if CATALOG.md is stale")
     new_parser = subparsers.add_parser("new", help="create a minimal unavailable paper record")
@@ -815,7 +1267,21 @@ def main() -> int:
     accept_parser.add_argument(
         "--review-action", required=True, choices=sorted(RUNTIME_REVIEW_ACTIONS)
     )
-    accept_parser.add_argument("--waiver", action="append", default=[], choices=sorted(ACCEPTANCE_WAIVERS))
+    accept_parser.add_argument(
+        "--reviewer", required=True, help="reviewer identity recorded in acceptance evidence"
+    )
+    accept_parser.add_argument(
+        "--review-base-sha",
+        required=True,
+        help="40-character fixed baseline commit against which the review was performed",
+    )
+    accept_parser.add_argument(
+        "--waiver",
+        action="append",
+        default=[],
+        metavar="CATEGORY=FINGERPRINT",
+        help="approve one exact reviewed candidate-group fingerprint",
+    )
     args = parser.parse_args()
 
     if args.command == "validate":
@@ -825,11 +1291,22 @@ def main() -> int:
     if args.command == "config":
         return config_value(args.key, args.paper_id)
     if args.command == "validation-manifest":
-        return validation_manifest(args.paper_id)
+        return validation_manifest(
+            args.paper_id,
+            preflight_paper_id=args.acceptance_paper_id,
+            preflight_target_status=args.acceptance_target_status,
+            preflight_waivers=args.acceptance_recorded_waivers,
+        )
     if args.command == "catalog":
         return catalog(args.check)
     if args.command == "accept":
-        return accept_record(args.paper_id, args.review_action, args.waiver)
+        return accept_record(
+            args.paper_id,
+            args.review_action,
+            args.waiver,
+            args.reviewer,
+            args.review_base_sha,
+        )
     return new_record(args.id, args.title, args.area, args.topics, args.url)
 
 

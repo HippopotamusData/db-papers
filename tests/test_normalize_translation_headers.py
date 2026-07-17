@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -10,7 +11,11 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from normalize_translation_headers import TRANSLATOR_NOTE, normalize_text  # noqa: E402
+from normalize_translation_headers import (  # noqa: E402
+    TRANSLATOR_NOTE,
+    normalize_all,
+    normalize_text,
+)
 
 
 class NormalizeTranslationHeadersTests(unittest.TestCase):
@@ -67,6 +72,32 @@ class NormalizeTranslationHeadersTests(unittest.TestCase):
     def test_rejects_multiple_h1_headings(self) -> None:
         with self.assertRaisesRegex(ValueError, "exactly one H1"):
             normalize_text("# One\n\n# Two\n", "Canonical")
+
+    def test_scoped_check_ignores_another_in_progress_translation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            sample = root / "papers/query-processing/sample-paper"
+            other = root / "papers/query-processing/other-paper"
+            sample.mkdir(parents=True)
+            other.mkdir(parents=True)
+            for paper, title in ((sample, "Sample"), (other, "Other")):
+                (paper / "paper.yaml").write_text(
+                    yaml.safe_dump({"title": title}), encoding="utf-8"
+                )
+            (sample / "translation.md").write_text(
+                "# Sample（中文译文）\n\n"
+                f"## 译者说明\n\n{TRANSLATOR_NOTE}\n",
+                encoding="utf-8",
+            )
+            (other / "translation.md").write_text(
+                "# Other\n\n# In-progress duplicate\n", encoding="utf-8"
+            )
+
+            self.assertEqual(
+                normalize_all(root, check=True, paper_id="sample-paper"), []
+            )
+            with self.assertRaisesRegex(ValueError, "exactly one H1"):
+                normalize_all(root, check=True)
 
     def test_translation_template_matches_canonical_header_contract(self) -> None:
         template_path = REPO_ROOT / "templates/translation.md"

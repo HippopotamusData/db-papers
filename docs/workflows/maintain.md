@@ -19,11 +19,13 @@
 
 若要改变必填字段或可选评分结构，必须由用户明确选择，并一次性更新模板、文档、脚本和生成目录。不要为单篇论文添加临时字段。`docs/` 只保留当前规则和工作流；旧规则、迁移记录和审校过程通过 Git 历史追溯，不得作为当前状态输入。
 
-默认页数上限、单篇例外和 skipped 原因集中在 `config/policy.yaml`。单篇页数例外必须包含高于默认值的 `max_source_pages` 和用户授权依据 `authorization`；跳过原因使用代码定义的受控值。验收账本是当前已验收版本的快照，只保存文件哈希、一个受控 `review_action` 和与当前机械候选精确匹配的受控 `waivers`；重新验收会替换旧条目。源文或译文发生实质变化时先迁移到 `draft`，旧账本哈希不得继续支持 `translated`。
+默认页数上限、单篇例外和 skipped 原因集中在 `config/policy.yaml`。单篇页数例外必须包含高于默认值的 `max_source_pages` 和用户授权依据 `authorization`；跳过原因使用代码定义的受控值。验收账本是当前已验收版本的快照，保存源文/译文哈希、非忽略资源清单哈希、一个受控 `review_action`、实际 `reviewer`、固定祖先基线 `review_base_sha`，以及与当前机械候选逐项匹配的受控 `waivers`；每项 waiver 同时保存证据版本、语义发现集合及其指纹和原始诊断。语义发现用于跨平台匹配，原始诊断用于审计和同次 accept 的漂移检测。重新验收会替换旧条目。源文、译文或资源发生实质变化时先迁移到 `draft`，旧账本不得继续支持 `translated`。
+
+从不含审阅者和资源快照的旧账本迁移时，不得猜测历史审阅身份。schema v3 只保留迁移时已冻结的 `historical-v2-reviewer-unrecorded` 兼容记录，其论文 ID 和完整条目指纹在代码中形成只减不增的 allowlist；完成真实 PDF 对照后通过普通 accept 替换整条记录。`pending-v3-re-review` 与 `legacy-migration` 均不是有效的当前账本值。
 
 ## 环境准备
 
-`make doctor` 检查项目所需工具及版本。维护环境需要 Python 3.11+、pip 25.1+ 和 `pyproject.toml` 的 `dev` dependency group（其中 Markdown 解析器及其 URL 依赖锁定精确版本，另含 PyYAML、Pillow）、Node.js 与 npm、`package-lock.json` 锁定的 MathJax、GNU Make 3.81+、ripgrep、Poppler（`pdfinfo`、`pdftotext`、`pdftoppm`）、Perl 5.30+，以及兼容 POSIX 选项的 `sed`、`awk`、`find`、`sort`、`mktemp`。
+`make doctor` 检查项目所需工具及版本。维护环境需要 Python 3.11+、pip 25.1+ 和 `pyproject.toml` 的 `dev` dependency group（Markdown 解析器及其 URL 依赖、用于摘要化风险指标的 pypdf 均锁定精确版本，另含 PyYAML、Pillow）、Node.js 与 npm、`package-lock.json` 锁定的 MathJax、GNU Make 3.81+、ripgrep、Poppler（`pdfinfo`、`pdftotext`、`pdftoppm`）、Perl 5.30+，以及兼容 POSIX 选项的 `sed`、`awk`、`find`、`sort`、`mktemp`。CI 固定使用 Ubuntu 24.04；pypdf 6.14.2 提供跨平台一致的正文词数，Poppler 的布局文本继续用于 Listing、资源和参考文献等候选发现，其原始测量不作为跨平台 waiver 身份。
 
 macOS 可执行 `brew install make ripgrep poppler perl node`，再执行 `python3 -m pip install --upgrade "pip>=25.1"`、`python3 -m pip install --group dev` 和 `npm ci`。读者可见标题约定变化时使用 `make normalize-headers` 做机械迁移。公式修复必须按 `docs/portable-math-maintainers.md` 限定文件范围，并显式运行 `make fix-math FILES='...'`；`make check` 只读，不修改译文。
 
@@ -38,4 +40,4 @@ make deep-check  # 修改校验器或全局翻译策略时
 make diff-check
 ```
 
-`make check` 内含锁定版本 MathJax 的本地 TeX 结构门禁。所有变更译文必须按 `docs/portable-math-maintainers.md` 执行限定文件范围的 GitHub 节点审计；公式校验器或全局公式策略变更执行全库 `make math-audit-github`，并在推送后的真实 GitHub 文件页检查最终显示。外部审计依赖已登录的 `gh` 和网络，因此不纳入无网络的 `make check`，由 CI 对变更译文重复执行；VS Code/KaTeX 仅为可选诊断，不能驱动有损公式改写。审计结果必须在完成报告中明确列出。
+`make check` 内含锁定版本 MathJax 的本地 TeX 结构门禁。accept 对当前译文额外执行 GitHub 节点审计后才允许写入；未运行 accept 的其他变更译文仍须按 `docs/portable-math-maintainers.md` 执行限定文件范围的审计。公式校验器或全局公式策略变更执行全库 `make math-audit-github`，并在推送后的真实 GitHub 文件页检查最终显示。外部审计依赖已登录的 `gh` 和网络，因此不纳入无网络的 `make check`，由 CI 对变更译文重复执行；VS Code/KaTeX 仅为可选诊断，不能驱动有损公式改写。审计结果必须在完成报告中明确列出。
