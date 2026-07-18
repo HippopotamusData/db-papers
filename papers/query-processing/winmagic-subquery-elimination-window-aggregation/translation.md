@@ -11,9 +11,14 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
-Calisto Zuzarte、Hamid Pirahesh、Wenbin Ma、Qi Cheng、Linqi Liu、Kwai Wong
-
-IBM
+| 姓名 | 单位与地址 | 电话 | 电子邮箱 |
+| --- | --- | --- | --- |
+| Calisto Zuzarte | IBM；8200 Warden Ave., Markham, On, Canada | (905) 413 2530 | `calisto@ca.ibm.com` |
+| Hamid Pirahesh | IBM；650 Harry Road, San Jose, California | (408) 927 1754 | `pirahesh@almaden.ibm.com` |
+| Wenbin Ma | IBM；8200 Warden Ave., Markham, On, Canada | (905) 413 4192 | `wenbinm@ca.ibm.com` |
+| Qi Cheng | IBM；8200 Warden Ave., Markham, On, Canada | (905) 413 2804 | `qicheng@ca.ibm.com` |
+| Linqi Liu | IBM；8200 Warden Ave., Markham, On, Canada | (905) 413 3898 | `liulinqi@ca.ibm.com` |
+| Kwai Wong | IBM；8200 Warden Ave., Markham, On, Canada | (905) 413 2818 | `kwaiwong@ca.ibm.com` |
 
 **版权与许可说明：** 只要副本不以营利或商业优势为目的制作或分发，并且首页载有本声明及完整引用，即可免费为个人或课堂用途制作本文部分或全部内容的数字版或纸质副本。以其他方式复制、再版、发布到服务器或向邮件列表再分发，须事先获得明确许可和/或支付费用。SIGMOD 2003，2003 年 6 月 9–12 日，美国加利福尼亚州圣迭戈。Copyright 2003 ACM 1-58113-634-X/03/06…\$5.00。
 
@@ -101,11 +106,13 @@ Function(arg)
 
 ```sql
 SELECT empnum, dept, salary,
-       SUM(salary) OVER (PARTITION BY dept) AS deptsum
+       SUM(salary) OVER (PARTITION BY dept) AS deptsum,
        DECIMAL(salary, 17, 0) * 100 /
          SUM(salary) OVER (PARTITION BY dept) AS salratio
 FROM employee;
 ```
+
+**译者注：** 原文查询 3 在 `deptsum` 与下一输出表达式之间漏印逗号；译文补入逗号，使可见 SQL 与该查询紧随其后的五列表格一致。
 
 | EMPNUM | DEPT | SALARY | DEPTSUM | SALRATIO |
 | ---: | ---: | ---: | ---: | ---: |
@@ -238,7 +245,7 @@ FROM
          AVG(CASE WHEN c_acctbal > 0
                   THEN c_acctbal
                   ELSE NULL
-             END) OVER () AS AVGACCTBAL,
+             END) OVER () AS AVGACCTBAL
   FROM tpcd.customer
   WHERE SUBSTR(c_phone, 1, 2) IN ('13', '31', '23')
 ) AS cstsale
@@ -246,6 +253,8 @@ WHERE c_acctbal > AVGACCTBAL
 GROUP BY cntrycode
 ORDER BY cntrycode;
 ```
+
+**译者注：** 原文查询 7 在最后一个选择列表达式后、`FROM` 前多印了逗号；译文删除该逗号，使 SQL 语法完整。
 
 WinMagic 不仅适用于相关子查询，也可以处理打开时求值（evaluate-at-open）的子查询。WinMagic 还可以扩展到子查询中不含聚合的情况。对于本文前面的查询 2，可以通过消除连接将查询简化如下：
 
@@ -256,12 +265,14 @@ SELECT ...
 FROM
 (
   SELECT E1.*,
-         MAX(eff_date) OVER (PARTITION BY emplid) AS ME
+         MAX(eff_date) OVER (PARTITION BY emplid) AS ME,
          MAX(seq) OVER (PARTITION BY emplid, eff_date) AS MS
   FROM empl E1
 ) AS E
 WHERE eff_date = ME AND seq = MS;
 ```
+
+**译者注：** 原文查询 8 在 `ME` 与 `MS` 两个输出列之间漏印逗号；译文补入逗号，使 SQL 语法完整。
 
 ## 4. 性能结果
 
@@ -305,6 +316,8 @@ FETCH FIRST 100 ROWS ONLY;
 ![图 5：100 GB TPC-H Q2 上，查询 9 使用 WinMagic 后性能提升 10%–15%](assets/figure-5-q2-100gb.png)
 
 **图 5：** 在 100 GB TPC-H Q2 上，查询 9 使用 WinMagic 后性能提升 10%–15%。
+
+**译者注：** 原文图 5 图注把区间起点排印为 `!0%`；同页正文与图中柱高表明这里是 `10%`，译文据此显式更正为 10%–15%。
 
 尽管 WinMagic 在查询 9 中消除了多次表访问和连接，但性能提升并不显著，因为涉及的表较小，而且对魔术去相关版本而言，冗余表访问所需的页面很可能已经在缓冲池中。
 

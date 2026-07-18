@@ -124,7 +124,17 @@ def _github_html(text: str, context: str) -> str:
     for attempt in range(3):
         try:
             result = subprocess.run(
-                ["gh", "api", "--method", "POST", "markdown", "--input", "-"],
+                [
+                    "gh",
+                    "api",
+                    "--hostname",
+                    "github.com",
+                    "--method",
+                    "POST",
+                    "markdown",
+                    "--input",
+                    "-",
+                ],
                 input=payload,
                 text=True,
                 capture_output=True,

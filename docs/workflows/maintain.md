@@ -19,9 +19,15 @@
 
 若要改变必填字段或可选评分结构，必须由用户明确选择，并一次性更新模板、文档、脚本和生成目录。不要为单篇论文添加临时字段。`docs/` 只保留当前规则和工作流；旧规则、迁移记录和审校过程通过 Git 历史追溯，不得作为当前状态输入。
 
-默认页数上限、单篇例外和 skipped 原因集中在 `config/policy.yaml`。单篇页数例外必须包含高于默认值的 `max_source_pages` 和用户授权依据 `authorization`；跳过原因使用代码定义的受控值。验收账本是当前已验收版本的快照，保存源文/译文哈希、非忽略资源清单哈希、一个受控 `review_action`、实际 `reviewer`、固定祖先基线 `review_base_sha`，以及与当前机械候选逐项匹配的受控 `waivers`；每项 waiver 同时保存证据版本、语义发现集合及其指纹和原始诊断。语义发现用于跨平台匹配，原始诊断用于审计和同次 accept 的漂移检测。重新验收会替换旧条目。源文、译文或资源发生实质变化时先迁移到 `draft`，旧账本不得继续支持 `translated`。
+默认页数上限、单篇例外和 skipped 原因集中在 `config/policy.yaml`。单篇页数例外必须包含高于默认值的 `max_source_pages` 和用户授权依据 `authorization`；跳过原因使用代码定义的受控值。schema v4 验收账本是当前已验收版本的快照，保存源文/译文哈希、非忽略资源清单哈希、一个受控 `review_action`、实际 `reviewer`、固定祖先基线 `review_base_sha`，以及与当前机械候选逐项匹配的受控 `waivers`；新的或重新验收的条目还必须保存内容绑定的 `review_receipt`，记录独立译者/审阅者自报身份、身份保证级别、翻译策略哈希、首页书目信息哈希、验收门禁清单哈希、完整受控检查项、发现摘要、逐项 waiver 证据和 receipt 指纹。账本顶层的 `retired_legacy_entry_fingerprints` 保存已被当前 receipt 取代的旧冻结指纹，并与条目替换处于同一原子事务。验收门禁清单同时绑定执行脚本、依赖锁、策略配置和当前 review/batch-review 程序，用于记录本次审阅的可复现运行时；receipt 生成后、accept 完成前这些输入发生变化必须重新生成 receipt。进入 `translated` 后，运行时或策略快照漂移本身不自动否定内容绑定的历史验收；维护者应运行回归测试和非破坏性全库检查，只把被具体新证据影响的论文转入 `draft`。无法机械定位的重大标准变化必须先给出影响分析，未经用户明确授权不得据此启动全库内容复审或批量历史修改。每项 waiver 同时保存证据版本、语义发现集合及其指纹和原始诊断。语义发现用于跨平台匹配，原始诊断用于审计和同次 accept 的漂移检测；历史验收后若当前检测集合只是已审语义发现的子集，表示保守候选被消除，不使内容失效，只有新增语义发现才点名该论文重新处置。重新验收会替换旧条目。源文、译文、资源或受审书目信息发生实质变化时先迁移到 `draft`，旧账本不得继续支持 `translated`。
 
-从不含审阅者和资源快照的旧账本迁移时，不得猜测历史审阅身份。schema v3 只保留迁移时已冻结的 `historical-v2-reviewer-unrecorded` 兼容记录，其论文 ID 和完整条目指纹在代码中形成只减不增的 allowlist；完成真实 PDF 对照后通过普通 accept 替换整条记录。`pending-v3-re-review` 与 `legacy-migration` 均不是有效的当前账本值。
+review receipt 的 schema 版本必须冻结该版本的检查项、受审元数据字段、受控动作和身份保证语义；读取历史 receipt 时按其自身 schema 解释，不能用最新常量重释旧证据。未来确需改变这些语义时新增 schema 版本并继续支持旧版本，未知版本 fail closed；不得为了迁移而批量重算旧 receipt 指纹。
+
+waiver 的 `evidence_version` 同样冻结原始诊断到语义发现的映射和指纹算法；历史记录必须按自身 evidence version 验证。新增候选语义时新增并并行支持新的 evidence version，未知版本 fail closed，不能用当前解析器重新解释旧 waiver。
+
+从不含审阅者和资源快照的旧账本迁移时，不得猜测历史审阅身份。schema v4 对全部 receiptless 兼容条目冻结论文 ID 和完整条目指纹，其中 `historical-v2-reviewer-unrecorded` 还受独立历史 allowlist 约束；代码中的冻结全集不可增长，必须精确分成仍活跃的 receiptless 条目和账本中已有当前 receipt 支撑的退役条目，不能保留未归属 ID 作为未来新增入口。schema v3 迁移的普通 receiptless 条目也只能在真实 PDF 对照后由带 receipt 的普通 accept 原子替换并退役旧指纹。`pending-v3-re-review` 与 `legacy-migration` 均不是有效的当前账本值。在用户已授权的历史复审范围内，用 `scripts/papers.py review-queue` 对 receiptless、历史和 waiver 项按风险排序；队列不授予复审权限，也不用批量伪造 receipt 消除债务。代码内冻结清单、账本退役映射和 schema 属于受 Git 评审约束的维护权限边界，不是密码学签名；对抗恶意维护者需要仓库外签名或受保护分支机制。
+
+accept 用带指纹的 `config/.acceptance-transaction.yaml` 协调账本和 `paper.yaml` 两个权威文件，并对文件和目录项执行持久化同步。事务完成时先把活动日志原子改名为 `config/.acceptance-transaction.cleanup.yaml` 并同步目录，形成删除前的持久恢复锚点；随后才删除 cleanup marker。任一事务 marker 残留都是硬失败；只能按 review workflow 使用 `recover-acceptance --mode commit|rollback` 恢复，不得手工删除、改写或纳入提交。
 
 ## 环境准备
 
@@ -41,3 +47,5 @@ make diff-check
 ```
 
 `make check` 内含锁定版本 MathJax 的本地 TeX 结构门禁。accept 对当前译文额外执行 GitHub 节点审计后才允许写入；未运行 accept 的其他变更译文仍须按 `docs/portable-math-maintainers.md` 执行限定文件范围的审计。公式校验器或全局公式策略变更执行全库 `make math-audit-github`，并在推送后的真实 GitHub 文件页检查最终显示。外部审计依赖已登录的 `gh` 和网络，因此不纳入无网络的 `make check`，由 CI 对变更译文重复执行；VS Code/KaTeX 仅为可选诊断，不能驱动有损公式改写。审计结果必须在完成报告中明确列出。
+
+校验器、依赖或流程实现变化时，`make deep-check` 可以扫描整个仓库以识别实际受影响论文，但该只读检查不等于全库复审授权。无确定性历史影响时保留既有验收；存在确定性影响时按 paper ID 做范围修复与复审；只有用户明确要求时才把影响范围扩展为全库逐篇内容复审。

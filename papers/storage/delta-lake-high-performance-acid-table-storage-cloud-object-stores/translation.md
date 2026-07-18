@@ -17,6 +17,8 @@ Databricks；¹ CWI；² UC Berkeley；³ Stanford University
 
 `delta-paper-authors@databricks.com`
 
+**出版信息：** 本文采用 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License（CC BY-NC-ND 4.0）许可。许可文本见 <http://creativecommons.org/licenses/by-nc-nd/4.0/>；超出该许可范围的使用，请联系 `info@vldb.org`。版权由权利人持有，出版权授予 VLDB Endowment。发表于 *Proceedings of the VLDB Endowment*，Vol. 13, No. 12，ISSN 2150-8097。DOI：<https://doi.org/10.14778/3415478.3415560>。
+
 ## 摘要
 
 Amazon S3 等云对象存储是全球规模最大、成本效益最高的存储系统之一，因此非常适合存放大型数据仓库和数据湖。然而，它们以键值存储实现，难以同时获得 ACID 事务和高性能：列举对象等元数据操作代价高昂，一致性保证也很有限。我们介绍 Delta Lake，这是最初由 Databricks 开发、构建在云对象存储之上的开源 ACID 表存储层。Delta Lake 使用事务日志，并把日志压缩成 Apache Parquet 格式，以提供 ACID 属性、时间旅行，以及面向大型表格数据集的显著更快的元数据操作，例如从数十亿个表分区中迅速找出与查询相关的分区。该设计还支持自动数据布局优化、upsert、缓存和审计日志等高级功能。Apache Spark、Hive、Presto、Redshift 等系统都能访问 Delta Lake 表。Delta Lake 已部署于数千家 Databricks 客户，每天处理 EB 级数据；其中最大的实例管理 EB 级数据集和数十亿个对象。
@@ -392,7 +394,7 @@ Delta Lake 时间旅行也有助于可复现的数据科学与机器学习。我
 
 #### 5.4.3 面向机器学习的媒体数据集
 
-一个较出人意料的应用是用 Delta Lake 管理多媒体数据集，例如网站上传、需要用于机器学习的一组图像。图像和其他媒体文件虽然已经采用高效二进制格式编码，但作为数百万个对象保存在云对象存储时仍很难管理，因为每个对象只有数 KB。对象存储 LIST 可能需要几分钟，也很难并行读取足够多的对象，为 GPU 上运行的机器学习推理作业供数。
+一个较出人意料的应用是用 Delta Lake 管理多媒体数据集，例如网站上传、需要用于机器学习的一组图像。图像和其他媒体文件虽然已经采用高效二进制格式编码，但作为数百万个对象保存在云对象存储时仍很难管理，因为每个对象只有数 KB。对象存储 LIST 可能需要几分钟，也很难并行读取足够多的对象，为 GPU 上运行的机器学习推理作业供给数据。
 
 我们看到多个组织把媒体文件保存成 Delta 表中的 `BINARY` 记录，借助 Delta 获得更快的推理查询、流处理和 ACID 事务。领先的电子商务和旅游公司正在用这种方式管理数百万张用户上传图像。
 

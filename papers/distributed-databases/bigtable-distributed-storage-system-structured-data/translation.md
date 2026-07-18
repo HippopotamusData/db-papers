@@ -11,9 +11,15 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
+## 作者与出版信息
+
 Fay Chang，Jeffrey Dean，Sanjay Ghemawat，Wilson C. Hsieh，Deborah A. Wallach，Mike Burrows，Tushar Chandra，Andrew Fikes，Robert E. Gruber
 
 Google, Inc.
+
+联系邮箱：`{fay,jeff,sanjay,wilsonh,kerr,m3b,tushar,fikes,gruber}@google.com`
+
+原文首页注明本文将发表于 OSDI 2006。
 
 ## 摘要
 

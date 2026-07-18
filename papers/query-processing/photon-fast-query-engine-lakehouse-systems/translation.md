@@ -11,6 +11,8 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
+## 作者与出处
+
 Alexander Behm、Shoumik Palkar、Utkarsh Agarwal、Timothy Armstrong、David Cashman、Ankur Dave、Todd Greenstein、Shant Hovsepian、Ryan Johnson、Arvind Sai Krishnan、Paul Leventis、Ala Luszczak、Prashanth Menon、Mostafa Mokhtar、Gene Pang、Sameer Paranjpye、Greg Rahn、Bart Samwel、Tom van Bussel、Herman van Hovell、Maryann Xue、Reynold Xin、Matei Zaharia
 
 Databricks Inc.；`photon-paper-authors@databricks.com`
@@ -436,6 +438,8 @@ Photon 解决了 Lakehouse 存储架构特有的一些查询处理挑战 [19]。
 
 ## 参考文献
 
+> 译者注：原文参考文献 [18] 将两个人名分别印为 `Alicja undefineduszczak` 和 `Michał undefinedwitakowski`；同一原文的参考文献 [38] 给出了 `Alicja Luszczak` 和 `Michał Switakowski`，因此下列 [18] 依据这一内部证据校正。
+
 - [1] 2017. Restrict-qualified pointers in LLVM. https://llvm.org/devmtg/2017-02-04/Restrict-Qualified-Pointers-in-LLVM.pdf.
 - [2] 2018. Apache Arrow. https://arrow.apache.org/.
 - [3] 2021. Apache Impala. https://impala.apache.org/.
@@ -453,7 +457,7 @@ Photon 解决了 Lakehouse 存储架构特有的一些查询处理挑战 [19]。
 - [15] 2021. TPC-DS Result Details. http://tpc.org/tpcds/results/tpcds_result_detail5.asp?id=121103001.
 - [16] Daniel Abadi, Peter Boncz, Stavros Harizopoulos Amiato, Stratos Idreos, and Samuel Madden. 2013. *The Design and Implementation of Modern Column-oriented Database Systems*. Now Hanover, Mass.
 - [17] Sameer Agarwal, Davies Liu, and Reynold Xin. 2016. Apache Spark as a Compiler: Joining a Billion Rows per Second on a Laptop. https://databricks.com/blog/2016/05/23/.
-- [18] Michael Armbrust, Tathagata Das, Liwen Sun, Burak Yavuz, Shixiong Zhu, Mukul Murthy, Joseph Torres, Herman van Hovell, Adrian Ionescu, Alicja undefineduszczak, Michał undefinedwitakowski, Michał Szafrański, Xiao Li, Takuya Ueshin, Mostafa Mokhtar, Peter Boncz, Ali Ghodsi, Sameer Paranjpye, Pieter Senster, Reynold Xin, and Matei Zaharia. 2020. Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores. *Proc. VLDB Endow.* 13, 12 (August 2020), 3411–3424. https://doi.org/10.14778/3415478.3415560.
+- [18] Michael Armbrust, Tathagata Das, Liwen Sun, Burak Yavuz, Shixiong Zhu, Mukul Murthy, Joseph Torres, Herman van Hovell, Adrian Ionescu, Alicja Luszczak, Michał Switakowski, Michał Szafrański, Xiao Li, Takuya Ueshin, Mostafa Mokhtar, Peter Boncz, Ali Ghodsi, Sameer Paranjpye, Pieter Senster, Reynold Xin, and Matei Zaharia. 2020. Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores. *Proc. VLDB Endow.* 13, 12 (August 2020), 3411–3424. https://doi.org/10.14778/3415478.3415560.
 - [19] Michael Armbrust, Ali Ghodsi, Reynold Xin, and Matei Zaharia. 2021. Lakehouse: A New Generation of Open Platforms that Unify Data Warehousing and Advanced Analytics. *CIDR*.
 - [20] Michael Armbrust, Reynold S. Xin, Cheng Lian, Yin Huai, Davies Liu, Joseph K. Bradley, Xiangrui Meng, Tomer Kaftan, Michael J. Franklin, Ali Ghodsi, and Matei Zaharia. 2015. Spark SQL: Relational Data Processing in Spark. In *Proc. ACM SIGMOD* (Melbourne, Victoria, Australia). 1383–1394. https://doi.org/10.1145/2723372.2742797.
 - [21] Benoit Dageville. 2021. Striking a balance with ‘open’ at Snowflake. https://www.infoworld.com/article/3617938/striking-a-balance-with-open-at-snowflake.html.

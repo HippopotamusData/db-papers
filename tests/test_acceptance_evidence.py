@@ -12,6 +12,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import acceptance_evidence  # noqa: E402
 from acceptance_evidence import (  # noqa: E402
     build_waiver_records,
     compare_waiver_records,
@@ -153,6 +154,88 @@ class AcceptanceEvidenceTests(unittest.TestCase):
         )
         self.assertTrue(compare_waiver_records(recorded, observed)[1])
 
+    def test_removed_reviewed_findings_do_not_invalidate_acceptance(self) -> None:
+        recorded = build_waiver_records(
+            {
+                "resources": [
+                    "RISK: translation has unmatched reference identifiers: 1, 2, 3"
+                ]
+            }
+        )
+        observed = build_waiver_records(
+            {
+                "resources": [
+                    "RISK: translation has unmatched reference identifiers: 2"
+                ]
+            }
+        )
+        reviewed, mismatches = compare_waiver_records(recorded, observed)
+        self.assertEqual(mismatches, [])
+        self.assertEqual(len(reviewed), 1)
+        self.assertTrue(reviewed[0].startswith("reviewed:resources:"))
+
+    def test_resolved_waiver_category_does_not_invalidate_acceptance(self) -> None:
+        recorded = build_waiver_records(
+            {"resources": [self.resource_candidate(1)]}
+        )
+        reviewed, mismatches = compare_waiver_records(recorded, {})
+        self.assertEqual(reviewed, [])
+        self.assertEqual(mismatches, [])
+
+    def test_missing_inline_citation_subjects_are_content_bound(self) -> None:
+        recorded = build_waiver_records(
+            {
+                "resources": [
+                    "RISK: source body citation identifiers have no "
+                    "translation-side candidate: 2"
+                ]
+            }
+        )
+        observed = build_waiver_records(
+            {
+                "resources": [
+                    "RISK: source body citation identifiers have no "
+                    "translation-side candidate: 2, 4"
+                ]
+            }
+        )
+        self.assertEqual(
+            recorded["resources"]["findings"],
+            ["missing-inline-citation:2"],
+        )
+        self.assertTrue(compare_waiver_records(recorded, observed)[1])
+
+    def test_ordered_reference_ocr_mappings_are_item_bound(self) -> None:
+        candidate = (
+            "RISK: source reference identifiers were normalized by ordered "
+            "contiguous OCR evidence: l->1, cs->9, lo->10, 19->14"
+        )
+        record = build_waiver_records({"resources": [candidate]})
+        self.assertEqual(
+            record["resources"]["findings"],
+            [
+                "source-reference-ocr-normalization:19:14",
+                "source-reference-ocr-normalization:cs:9",
+                "source-reference-ocr-normalization:l:1",
+                "source-reference-ocr-normalization:lo:10",
+            ],
+        )
+
+    def test_complete_delimiter_ocr_mappings_are_item_bound(self) -> None:
+        candidate = (
+            "RISK: source reference identifiers were normalized by complete "
+            "ordered delimiter-OCR evidence: [ii->1, pi->2, i.581->58"
+        )
+        record = build_waiver_records({"resources": [candidate]})
+        self.assertEqual(
+            record["resources"]["findings"],
+            [
+                "source-reference-ocr-normalization:%5bii:1",
+                "source-reference-ocr-normalization:i.581:58",
+                "source-reference-ocr-normalization:pi:2",
+            ],
+        )
+
     def test_duplicate_semantic_finding_and_unknown_rule_are_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "duplicate waiver finding"):
             build_waiver_records(
@@ -192,6 +275,11 @@ class AcceptanceEvidenceTests(unittest.TestCase):
         records["resources"]["evidence_version"] += 1
         with self.assertRaisesRegex(ValueError, "evidence_version"):
             validate_waiver_records(records)
+
+    def test_v1_evidence_uses_its_frozen_parser(self) -> None:
+        records = build_waiver_records({"resources": [self.resource_candidate(1)]})
+        with patch.object(acceptance_evidence, "WAIVER_EVIDENCE_VERSION", 2):
+            self.assertEqual(validate_waiver_records(records), records)
 
     def test_reviewed_category_is_separate_from_changed_category(self) -> None:
         recorded = build_waiver_records(

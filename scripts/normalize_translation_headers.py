@@ -10,6 +10,8 @@ from typing import Any
 
 import yaml
 
+from markdown_visibility import reader_visible_markdown
+
 
 ROOT = Path(__file__).resolve().parents[1]
 TRANSLATOR_NOTE = (
@@ -51,26 +53,40 @@ def prose_line_indices(lines: list[str]) -> list[int]:
 def normalize_text(text: str, title: str) -> str:
     """Return a canonical H1 and translator-note block, preserving all other text."""
     lines = text.splitlines()
-    prose_indices = prose_line_indices(lines)
-    h1_indices = [index for index in prose_indices if lines[index].startswith("# ")]
+    visible_lines = reader_visible_markdown(text).splitlines()
+    prose_indices = prose_line_indices(visible_lines)
+    h1_indices = [
+        index for index in prose_indices if visible_lines[index].startswith("# ")
+    ]
     if len(h1_indices) != 1:
         raise ValueError(f"expected exactly one H1, found {len(h1_indices)}")
 
-    note_indices = [index for index in prose_indices if lines[index] == "## 译者说明"]
+    note_indices = [
+        index for index in prose_indices if visible_lines[index] == "## 译者说明"
+    ]
     if len(note_indices) > 1:
         raise ValueError(f"expected at most one translator-note heading, found {len(note_indices)}")
 
     if note_indices:
         note_start = note_indices[0]
         first_content = note_start + 1
-        while first_content < len(lines) and not lines[first_content].strip():
+        while (
+            first_content < len(visible_lines)
+            and not visible_lines[first_content].strip()
+        ):
             first_content += 1
-        if first_content < len(lines) and lines[first_content] == TRANSLATOR_NOTE:
+        if (
+            first_content < len(visible_lines)
+            and visible_lines[first_content] == TRANSLATOR_NOTE
+        ):
             # A canonical block has a known one-line body. Delete only that
             # block: author/affiliation lines may legitimately follow it before
             # the next H2 and must survive a second normalization pass.
             note_end = first_content + 1
-            while note_end < len(lines) and not lines[note_end].strip():
+            while (
+                note_end < len(visible_lines)
+                and not visible_lines[note_end].strip()
+            ):
                 note_end += 1
         else:
             # Legacy notes have free-form bodies; their boundary is the next H2.
@@ -79,14 +95,17 @@ def normalize_text(text: str, title: str) -> str:
                     index
                     for index in prose_indices
                     if index > note_start
-                    if lines[index].startswith("## ")
+                    if visible_lines[index].startswith("## ")
                 ),
                 len(lines),
             )
         del lines[note_start:note_end]
 
+    visible_lines = reader_visible_markdown("\n".join(lines)).splitlines()
     h1_index = next(
-        index for index in prose_line_indices(lines) if lines[index].startswith("# ")
+        index
+        for index in prose_line_indices(visible_lines)
+        if visible_lines[index].startswith("# ")
     )
     lines[h1_index] = f"# {title}（中文译文）"
 

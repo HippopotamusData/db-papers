@@ -17,7 +17,7 @@
 | `topics` | string list | 一个或多个 `config/taxonomy.yaml` 受控主题；顺序无语义 |
 | `reading_status` | enum | `unavailable`、`source_only`、`draft`、`translated` 或 `skipped` |
 
-论文 ID 和一级领域由目录表达；原文、译文和资源可用性由 `source.pdf`、`translation.md`、`assets/` 表达。文件名、中文目标语言和质量底线是代码不变量；默认页数上限、单篇例外与 skipped 原因属于 `config/policy.yaml`，验收内容快照、审阅动作、审阅者、固定基线和必要 waivers 属于 `config/acceptance.yaml`。这些信息不得在 `paper.yaml` 中重复。
+论文 ID 和一级领域由目录表达；原文、译文和资源可用性由 `source.pdf`、`translation.md`、`assets/` 表达。文件名、中文目标语言和质量底线是代码不变量；默认页数上限、单篇例外与 skipped 原因属于 `config/policy.yaml`，验收内容快照、内容绑定 review receipt、固定基线和必要 waivers 属于 `config/acceptance.yaml`。这些信息不得在 `paper.yaml` 中重复。
 
 `rating` 的字段、证据和计算规则只由 `docs/workflows/rating.md` 定义。本工作流不得创建、删除或修改 `rating`。
 
@@ -28,7 +28,7 @@
 | `unavailable` | 无 | 无 | 当前没有可读原文 |
 | `source_only` | 有 | 无 | 已验证原文，尚无译文 |
 | `draft` | 有 | 有 | 译文尚未逐节验收 |
-| `translated` | 有 | 有 | 逐节验收通过且账本哈希匹配 |
+| `translated` | 有 | 有 | 验收快照与当前文件匹配；新的或重新验收的条目还必须有独立 review receipt，且受审 title/authors/year/source_url 未漂移 |
 | `skipped` | 有 | 无 | 项目策略已有对应 reason code |
 
 状态与文件不一致、`translated` 缺少匹配的验收条目或 `skipped` 缺少项目级原因时，`make check` 必须失败。`draft` 允许存在显式工作缺口，不表示译文接近验收完成。

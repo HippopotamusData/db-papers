@@ -15,6 +15,14 @@ source: source.pdf
 
 Bart Samwel、John Cieslewicz、Ben Handy、Jason Govig、Petros Venetis、Chanjun Yang、Keith Peters、Jeff Shute、Daniel Tenedorio、Himani Apte、Felix Weigel、David Wilhite、Jiacheng Yang、Jun Xu、Jiexing Li、Zhan Yuan、Craig Chasseur、Qiang Zeng、Ian Rae、Anurag Biyani、Andrew Harn、Yang Xia、Andrey Gubichev、Amr El-Helw、Orri Erling、Zhepeng Yan、Mohan Yang、Yiqun Wei、Thanh Do、Colin Zheng、Goetz Graefe、Somayeh Sardashti、Ahmed M. Aly、Divy Agrawal、Ashish Gupta 与 Shiv Venkataraman（Google LLC）。
 
+联系邮箱：`f1-query-paper@google.com`
+
+## 出版信息
+
+PVLDB 引用格式：B. Samwel 等，*F1 Query: Declarative Querying at Scale*，*Proceedings of the VLDB Endowment*，11(12): 1835–1848，2018。DOI：<https://doi.org/10.14778/3229863.3229871>。
+
+本文采用 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License；许可文本见 <http://creativecommons.org/licenses/by-nc-nd/4.0/>。超出该许可范围的使用，请联系 `info@vldb.org` 获取许可。原文版权行注明：版权 © 2018，权利人为 VLDB Endowment，ISSN 2150-8097/18/8。
+
 ## 摘要
 
 F1 Query 是一个独立的联邦查询处理平台，它能够对 Google 内部以不同文件格式以及存储在不同存储系统（例如 Bigtable、Spanner 和 Google 表格）中的数据执行 SQL 查询。F1 Query 同时支持：（1）只影响少量记录的 OLTP 式点查询；（2）对大量数据进行的低延迟 OLAP 查询；以及（3）大型 ETL 管道，从而消除了必须始终严格区分各类数据处理工作负载的需要。它把定制业务逻辑集成到声明式查询中，也显著减少了开发硬编码数据处理管道的需求。

@@ -13,9 +13,15 @@ source: source.pdf
 
 ## 作者
 
-Jinyang Li、Binyuan Hui、Ge Qu、Jiaxi Yang、Binhua Li、Bowen Li、Bailin Wang、Bowen Qin、Ruiying Geng、Nan Huo、Xuanhe Zhou、Chenhao Ma、Guoliang Li、Kevin C.C. Chang、Fei Huang、Reynold Cheng、Yongbin Li
+Jinyang Li¹♣‡、Binyuan Hui²♣、Ge Qu¹♣、Jiaxi Yang²、Binhua Li²、Bowen Li⁶、Bailin Wang⁵、Bowen Qin²、Ruiying Geng²、Nan Huo¹、Xuanhe Zhou³、Chenhao Ma⁶、Guoliang Li³、Kevin C.C. Chang⁷、Fei Huang²、Reynold Cheng¹、Yongbin Li²
 
-本文作者的单位包括香港大学、阿里巴巴集团达摩院、清华大学、上海人工智能实验室、MIT CSAIL、香港中文大学（深圳）及伊利诺伊大学厄巴纳-香槟分校。Jinyang Li、Binyuan Hui 与 Ge Qu 贡献相同；本工作部分完成于阿里巴巴达摩院实习期间。
+¹ 香港大学；² 阿里巴巴集团达摩院；³ 清华大学；⁴ 上海人工智能实验室；⁵ MIT CSAIL；⁶ 香港中文大学（深圳）；⁷ 伊利诺伊大学厄巴纳-香槟分校。
+
+联系邮箱：`{jl0725,quge}@connect.hku.hk`、`ckcheng@cs.hku.hk`、`binyuan.hby@alibaba-inc.com`。
+
+♣ Jinyang Li、Binyuan Hui 与 Ge Qu 贡献相同。‡ Jinyang Li 的这项工作完成于阿里巴巴达摩院实习期间。
+
+会议：第 37 届神经信息处理系统大会（NeurIPS 2023）Datasets and Benchmarks Track。
 
 ## 摘要
 

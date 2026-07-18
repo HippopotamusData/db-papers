@@ -11,9 +11,17 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
+## 作者与机构
+
 Ashish Gupta、Fan Yang、Jason Govig、Adam Kirsch、Kelvin Chan、Kevin Lai、Shuo Wu、Sandeep Govind Dhoot、Abhilash Rajesh Kumar、Ankur Agiwal、Sanjay Bhansali、Mingsheng Hong、Jamie Cameron、Masood Siddiqi、David Jones、Jeff Shute、Andrey Gubarev、Shivakumar Venkataraman、Divyakant Agrawal
 
 Google, Inc.
+
+## 出版信息
+
+本文发表于 *Proceedings of the VLDB Endowment*，Vol. 7, No. 12（2014）；原文版权行注明：版权 © 2014，权利人为 VLDB Endowment，ISSN 2150-8097/14/08。本卷论文受邀在 2014 年 9 月 1–5 日于中国杭州举行的第 40 届 International Conference on Very Large Data Bases 上报告。
+
+本文采用 Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License；许可文本见 <http://creativecommons.org/licenses/by-nc-nd/3.0/>。超出该许可范围的使用须事先获得许可，请通过 `info@vldb.org` 联系权利人。
 
 ## 摘要
 
@@ -149,6 +157,8 @@ $$
 | 2013/01/01 | 1 | US | +5 | +3 |
 | 2014/01/01 | 2 | UK | +60 | +30 |
 | 2014/01/01 | 2 | US | +50 | +20 |
+
+> **原文勘误提示：** 图 2(d) 第一行日期在原文中印为 `2013/01/01`；它与图 1(b) 中对应记录及相邻更新日期不一致，疑为 `2014/01/01` 的排印错误。上表按原文保留。
 
 表 C 对应在表 B 上执行下列查询得到的物化视图：
 

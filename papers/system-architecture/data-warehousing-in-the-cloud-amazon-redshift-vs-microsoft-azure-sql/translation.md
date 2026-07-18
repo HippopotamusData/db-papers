@@ -11,6 +11,18 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
+## 作者与机构
+
+Pedro Joel Ferreira¹、Ana Almeida¹、Jorge Bernardino²
+
+¹ Instituto Superior de Engenharia do Porto, Rua Bernardino de Almeida, Porto, Portugal
+
+² Instituto Superior de Engenharia de Coimbra, Rua Pedro Nunes, Coimbra, Portugal
+
+## 出版信息
+
+本文收录于 *Proceedings of the 9th International Joint Conference on Knowledge Discovery, Knowledge Engineering and Knowledge Management (KDIR 2017)*，第 318–325 页。DOI：`10.5220/0006587103180325`；ISBN：`978-989-758-271-4`。© 2017 SCITEPRESS – Science and Technology Publications, Lda.，保留所有权利。
+
 ## 关键词
 
 云计算（Cloud Computing）、数据仓库（Data Warehousing）、云数据仓库（Cloud Data Warehousing）。
@@ -53,7 +65,7 @@ Hemlata Verna（2013）关注如何在云环境中通过回收、复用、减少
 
 云计算没有唯一权威定义，但 Kimball 和 Ross（2013）提出：“云计算是通过互联网，以按使用付费的定价模型，自助供应并按需交付计算资源和应用。”
 
-从定义上看，云是一种自助系统，允许最终用户在云计算环境中设置应用和服务，而无需 IT 服务提供商介入。云计算通过聚合计算资源并提供系统的单一视图来处理大规模计算能力。云带来了新的特性和可能性，改善用户体验，同时也为 IT 产生了新的市场细分和商业机会。许多组织围绕云构建业务，不仅使用云服务，也在该环境中提供业务方案。
+从定义上看，云是一种自助系统，允许最终用户在云计算环境中设置应用和服务，而无需 IT 服务提供商介入（Armbrust et al., 2010）。云计算通过聚合计算资源并提供系统的单一视图来处理大规模计算能力。云带来了新的特性和可能性，改善用户体验，同时也为 IT 产生了新的市场细分和商业机会。许多组织围绕云构建业务，不仅使用云服务，也在该环境中提供业务方案。
 
 与其他服务类似，至少可以识别两个直接相关的参与者：
 
@@ -70,13 +82,13 @@ Hemlata Verna（2013）关注如何在云环境中通过回收、复用、减少
 
 如今，公司收集的数据比以往更多，数据来源也更加多样，包括基于云的应用，甚至企业自身的数据集市。为了做出良好决策、获得洞见并取得竞争优势，公司需要及时地正确分析数据。
 
-传统数据仓库架构广泛存在于大量处理海量异构数据集的公司中，但它是一个非常封闭且复杂的模型，难以用企业当前所需的敏捷性做出响应。进行分析的人员需要等待数小时甚至数天，让数据流入数据仓库后才能用于分析。在大多数情况下，处理这些数据所需的存储和计算资源不足，或始终保持不变，这会导致系统挂起或崩溃。
+传统数据仓库架构广泛存在于大量处理海量异构数据集的公司中，但它是一个非常封闭且复杂的模型，难以用企业当前所需的敏捷性做出响应（Tereso and Bernardino, 2011）。进行分析的人员需要等待数小时甚至数天，让数据流入数据仓库后才能用于分析。在大多数情况下，处理这些数据所需的存储和计算资源不足，或始终保持不变，这会导致系统挂起或崩溃（Goutas et al., 2016）。
 
 迁移到云端时，一个主要顾虑是本地数据仓库和云数据仓库系统需要共存一段时间，因为一次性迁移整个数据仓库并不是好主意。为缓解这一顾虑，可以使用数据虚拟化方案，帮助迁移过程并支持两个数据仓库系统在迁云期间共存。
 
-云数据仓库产生于三种趋势的汇聚：数据来源、数据量和复杂性的巨大变化；数据访问和分析需求；以及提高数据访问、分析和存储效率的技术进步。传统数据仓库系统并非为处理今天数据的规模、多样性和复杂性而设计。
+云数据仓库产生于三种趋势的汇聚：数据来源、数据量和复杂性的巨大变化；数据访问和分析需求；以及提高数据访问、分析和存储效率的技术进步。传统数据仓库系统并非为处理今天数据的规模、多样性和复杂性而设计（Almeida et al., 2008）。
 
-云中的数据仓库是通过互联网消费信息的数据库，本质上是一种数据库即服务（DBaaS）。云数据仓库为组织使用和利用先进技术提供了一种成本有效的方式，避免为了购买、安装和配置所需硬件、软件和基础设施而承担高额前期成本。
+云中的数据仓库是通过互联网消费信息的数据库，本质上是一种数据库即服务（DBaaS）。云数据仓库为组织使用和利用先进技术提供了一种成本有效的方式，避免为了购买、安装和配置所需硬件、软件和基础设施而承担高额前期成本（Talia, 2013）。
 
 下一节分析两个最流行的云数据仓库市场方案。
 
@@ -86,33 +98,33 @@ Hemlata Verna（2013）关注如何在云环境中通过回收、复用、减少
 
 ### 5.1 Amazon Redshift
 
-Gartner 报告称，Amazon Web Services（AWS）通常被认为是领先的云数据仓库平台即服务（platform-as-a-service）提供商。Amazon Redshift 被 Gartner 评为领导者，它是一个快速、全托管、PB 级数据仓库，可以用现有商业智能工具，以简单且成本有效的方式分析所有数据。
+Gartner 报告称，Amazon Web Services（AWS）通常被认为是领先的云数据仓库平台即服务（platform-as-a-service）提供商（Gartner, 2016a）。Amazon Redshift 被 Gartner 评为领导者，它是一个快速、全托管、PB 级数据仓库，可以用现有商业智能工具，以简单且成本有效的方式分析所有数据。
 
-Amazon Redshift 引擎是一个符合 SQL 的 MPP 查询处理和数据库管理系统，设计用于支持分析工作负载。存储和计算分布在一个或多个计算节点上。
+Amazon Redshift 引擎是一个符合 SQL 的 MPP 查询处理和数据库管理系统，设计用于支持分析工作负载。存储和计算分布在一个或多个计算节点上（Gupta et al., 2015）。
 
 Amazon Redshift 数据仓库的核心基础设施是集群，集群由一个 leader node 和一个或多个 compute node 组成。leader node 接受来自客户端应用的连接，并把工作分派给 compute node：它解析并生成数据库操作的执行计划，根据执行计划编译代码，将编译后的代码分发给 compute node，并给每个节点分配一部分数据。
 
-![图 1：Amazon Redshift 系统架构。](assets/figure-01-redshift-architecture.png)
+![图 1：Amazon Redshift 系统架构。来源：aws.amazon.com/redshift。](assets/figure-01-redshift-architecture.png)
 
-只有当查询引用存储在 compute node 上的表时，leader node 才会把 SQL 语句分发到 compute node；否则，语句只在 leader node 上运行。
+只有当查询引用存储在 compute node 上的表时，leader node 才会把 SQL 语句分发到 compute node；否则，语句只在 leader node 上运行（“Data Warehouse System Architecture - Amazon Redshift,” n.d.）。
 
 compute node 执行 leader node 发送的编译代码，并把结果返回用于最终聚合。每个 compute node 都有专用 CPU、内存和存储，因此可以通过升级 compute node 或增加新节点来扩展集群。每个 compute node 的最小存储为 160GB，并可扩展到 16TB，以支持 PB 级或更大数据。compute node 被划分为 slice，每个 slice 分配该节点一部分内存和磁盘空间，并处理分配给该节点的一部分工作负载。leader node 管理数据和工作负载向 slice 的分布，随后这些 slice 并行完成操作。
 
-一个集群包含一个或多个数据库。Amazon Redshift 是关系数据库管理系统，提供典型 RDBMS 的功能，包括 OLTP 相关能力，但它针对超大数据集的高速性能分析和报表进行了优化。其数据库引擎基于 PostgreSQL。Amazon Redshift 另一个重要特征是列式数据库：每条记录不是作为唯一数据块保存，而是存储在独立列中。当查询只选择有限列子集而非完整记录时，查询性能可以显著提高。
+一个集群包含一个或多个数据库。Amazon Redshift 是关系数据库管理系统，提供典型 RDBMS 的功能，包括 OLTP 相关能力，但它针对超大数据集的高速性能分析和报表进行了优化（“Data Warehouse System Architecture - Amazon Redshift,” n.d.）。其数据库引擎基于 PostgreSQL。Amazon Redshift 另一个重要特征是列式数据库：每条记录不是作为唯一数据块保存，而是存储在独立列中。当查询只选择有限列子集而非完整记录时，查询性能可以显著提高。
 
 Redshift 的数据仓库功能可与高端数据库相比。易用性和可扩展性是该方案的显著优势。
 
 ### 5.2 Microsoft Azure SQL Data Warehouse
 
-Microsoft Azure SQL Data Warehouse 是基于云、可横向扩展的数据库，能够处理海量关系型和非关系型数据。它是一个大规模并行处理（MPP）的分布式数据库系统，提供 SaaS、PaaS 和 IaaS 服务，并支持多种编程语言、工具和框架，包括非 Microsoft 软件。
+Microsoft Azure SQL Data Warehouse 是基于云、可横向扩展的数据库，能够处理海量关系型和非关系型数据。它是一个大规模并行处理（MPP）的分布式数据库系统，提供 SaaS、PaaS 和 IaaS 服务，并支持多种编程语言、工具和框架，包括非 Microsoft 软件（“SQL Data Warehouse | Microsoft Azure,” n.d.）。
 
-SQL Data Warehouse 基于 SQL Server 关系数据库引擎，并与用户可能熟悉的工具集成，包括 Analysis Services、Integration Services、Reporting Services 和基于云的工具。
+SQL Data Warehouse 基于 SQL Server 关系数据库引擎，并与用户可能熟悉的工具集成，包括 Analysis Services、Integration Services、Reporting Services 和基于云的工具（“SQL Data Warehouse | Microsoft Azure,” n.d.）。
 
-Microsoft Azure SQL Data Warehouse 由 Control Node、Compute Node 和 Storage 组成。它还有一个名为 Data Movement Service（DMS）的服务，负责节点之间的数据移动。
+Microsoft Azure SQL Data Warehouse 由 Control Node、Compute Node 和 Storage 组成。它还有一个名为 Data Movement Service（DMS）的服务，负责节点之间的数据移动（“SQL Data Warehouse | Microsoft Azure,” n.d.）。
 
 与 Amazon Redshift 的 leader node 类似，Azure Control Node 管理并优化查询，负责协调整个并行查询运行所需的数据移动和计算。当请求发送到 SQL Data Warehouse 时，control node 会把请求转换为分别在各 compute node 上并行运行的查询。
 
-![图 2：Microsoft Azure SQL Data Warehouse 系统架构。](assets/figure-02-azure-sql-dw-architecture.png)
+![图 2：Microsoft Azure SQL Data Warehouse 系统架构。来源：“SQL Data Warehouse | Microsoft Azure,” n.d.。](assets/figure-02-azure-sql-dw-architecture.png)
 
 compute node 是存储数据并处理查询的 SQL 数据库。添加数据时，数据会分布到 compute node；请求数据时，这些节点作为 worker 并行运行查询。处理完成后，它们把结果传回 control node，由其聚合结果并将最终结果返回给用户。
 
@@ -136,17 +148,17 @@ Redshift 和 Azure SQL Data Warehouse 都支持 PB 级系统。两者都有 lead
 
 比较公有云采用情况，特别是 AWS 和 Azure，可以看到 AWS 是 2017 年 RightScale 调查中多数受访用户采用的首位云方案。
 
-![图 3：2017 年公有云采用率。](assets/figure-03-public-cloud-adoption-2017.png)
+![图 3：2017 年公有云采用率。来源：“RightScale 2017 - State of the cloud report,” 2017。](assets/figure-03-public-cloud-adoption-2017.png)
 
 虽然 AWS 继续领先于公有云采用率，57% 的受访者当前在 AWS 上运行应用，但这一数字与 2016 年相同。相对地，过去一年中，在第二和第三大公有云提供商 Azure 与 Google 上运行应用的受访者比例显著增长。Azure 总体采用率从 20% 增长到 34%，缩小了 AWS 的领先优势；Google 也从 10% 增长到 15%。
 
-![图 4：2017 年与 2016 年公有云采用率对比。](assets/figure-04-public-cloud-adoption-2017-vs-2016.png)
+![图 4：2017 年与 2016 年公有云采用率对比。来源：“RightScale 2017 - State of the cloud report,” 2017。](assets/figure-04-public-cloud-adoption-2017-vs-2016.png)
 
 表 1 展示系统属性比较。Redshift 和 Azure SQL 都基于关系数据库管理系统（RDBMS）数据库模型，并支持关系数据模型。
 
 Amazon Redshift 围绕业界标准 SQL 构建，并增加了管理超大数据集和支持高性能分析的功能。虽然它基于 PostgreSQL，但存在一些不支持的特性、数据类型和函数。一些 SQL 特性也以不同方式实现，例如 `CREATE TABLE`、`ALTER TABLE`、`INSERT`、`UPDATE` 和 `DELETE`。
 
-Amazon Redshift 不支持 tablespace、表分区、继承和某些约束。其 `CREATE TABLE` 实现允许用户为表定义排序和分布算法，以优化并行处理。不支持 `ALTER COLUMN` 操作。`ADD COLUMN` 在每条 `ALTER TABLE` 语句中只支持添加一列。使用 `INSERT`、`UPDATE` 和 `DELETE` 时，不支持 `WITH`。完整的不支持特性、数据类型和函数列表，原文建议查阅 AWS 文档，尤其是 Amazon Redshift 与 PostgreSQL 相关文档。
+Amazon Redshift 不支持 tablespace、表分区、继承和某些约束。其 `CREATE TABLE` 实现允许用户为表定义排序和分布算法，以优化并行处理。不支持 `ALTER COLUMN` 操作。`ADD COLUMN` 在每条 `ALTER TABLE` 语句中只支持添加一列。使用 `INSERT`、`UPDATE` 和 `DELETE` 时，不支持 `WITH`。完整的不支持特性、数据类型和函数列表，原文建议查阅 AWS 文档，尤其是 Amazon Redshift 与 PostgreSQL 相关文档（“Amazon Redshift and PostgreSQL - Amazon Redshift,” n.d.）。
 
 **表 1：Redshift 与 Azure SQL Data Warehouse 比较。**
 
@@ -211,7 +223,8 @@ Redshift 和 Azure SQL Data Warehouse 提供许多类似能力，因此不必简
 - Armbrust, M., Fox, A., Griffith, R., Joseph, A. D., Katz, R., Konwinski, A., Lee, G., Patterson, D., Rabkin, A., Stoica, I. and Zaharia, M. "A View of Cloud Computing." Communications of the ACM 53, pages 50-58, 2010.
 - Combining Hadoop/Elastic MapReduce with AWS Redshift Data Warehouse. URL: http://atbrox.com/2013/02/25/combining-hadoop-elastic-mapreduce-with-aws-redshift-data-warehouse/, accessed 2017-09-03.
 - Data Warehouse System Architecture - Amazon Redshift. URL: https://docs.aws.amazon.com/redshift/latest/dg/c_high_level_system_architecture.html, accessed 2017-01-01.
-- Gartner. "Magic Quadrant for Data Warehouse and Database Management Solutions for Analytics." 2016.
+- Database Manag. Solut. Anal. URL: https://www.gartner.com/doc/reprints?id=1-2ZFVZ5B&ct=160225&st=sb, accessed 2017-01-02.（译者注：`source.pdf` 中该条参考文献即从这一残缺片段开始，条目前部缺失；此处按原文保留，不补造。）
+- Gartner. "Magic Quadrant for Data Warehouse and Database Management Solutions for Analytics." [WWW Document]. *Magic Quadr. Data Wareh.*, 2016.
 - Goutas, L., Sutanto, J. and Aldarbesti, H. "The Building Blocks of a Cloud Strategy: Evidence from Three SaaS Providers." Communications of the ACM 59, pages 90-97, 2016.
 - Gupta, A., Agarwal, D., Tan, D., Kulesza, J., Pathak, R., Stefani, S. and Srinivasan, V. "Amazon Redshift and the Case for Simpler Data Warehouses." SIGMOD '15, ACM, New York, NY, pages 1917-1923, 2015.
 - Hemlata Verna. "Data-warehousing on Cloud Computing." International Journal of Advanced Research in Computer Engineering & Technology (IJARCET), Volume 2, Issue 2, February 2013.
@@ -220,8 +233,8 @@ Redshift 和 Azure SQL Data Warehouse 提供许多类似能力，因此不必简
 - Mathur, A., Mathur, M. and Upadhyay, P. "Cloud Based Distributed Databases: The Future Ahead." International Journal on Computer Science and Engineering (IJCSE), 3(6), pages 2477-2481, 2011.
 - Miller, J. A., Bowman, C., Harish, V. G. and Quinn, S. "Open Source Big Data Analytics Frameworks Written in Scala." IEEE International Congress on Big Data, 2016, pages 389-393.
 - Morshed, S. J., Rana, J. and Milrad, M. "Open Source Initiatives and Frameworks Addressing Distributed Real-Time Data Analytics." IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW), 2016, pages 1481-1484.
-- Popeanga, J. "Shared-Nothing Cloud Data Warehouse Architecture." Database Systems Journal, Vol. V, No. 4, 2014.
+- Popeangã, J. "Shared-Nothing Cloud Data Warehouse Architecture." Database Systems Journal, Vol. V, No. 4, 2014.
 - RightScale 2017 - State of the Cloud Report. URL: https://assets.rightscale.com/uploads/pdfs/RightScale-2017-State-of-the-Cloud-Report.pdf, accessed 2017-08-11.
 - SQL Data Warehouse, Microsoft Azure. URL: https://azure.microsoft.com/en-us/services/sql-data-warehouse/, accessed 2016-11-13.
-- Talia, D. "Clouds for Scalable Big Data Analytics." Computer 46, pages 98-101, 2013.
+- Talia, D. "Clouds for Scalable Big Data Analytics." Computer 46, pages 98-101, 2013. DOI: `10.1109/MC.2013.162`.
 - Tereso, M. and Bernardino, J. "Open source business intelligence tools for SMEs." Information Systems and Technologies (CISTI), 6th Iberian Conference, IEEE, 2011, pages 1-4.

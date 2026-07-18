@@ -15,7 +15,7 @@ Resolve conflicts only within the same information type:
 | Title, authors, year, source URL, topics, reading status, and rating | `paper.yaml` |
 | Page policy, per-paper exceptions, and skip reasons | `config/policy.yaml` |
 | Controlled areas and topics | `config/taxonomy.yaml` |
-| Current accepted hashes, review action, and waivers | `config/acceptance.yaml` |
+| Current accepted hashes, content-bound review receipt, review action, and waivers | `config/acceptance.yaml` |
 | Config schemas and controlled codes | `scripts/project_config.py` |
 | Operation scope and write authority | The user's current request and the Autonomy section below |
 | Current procedures | Active documents under `docs/` |
@@ -50,12 +50,13 @@ Before acting, read only the document or documents listed for the task:
 - Full processing of a newly added paper includes rating after translation acceptance; do not call the paper complete while its rating is missing unless the evidence gap is reported as a blocker.
 - Do not translate a missing PDF or a PDF over the configured page limit without an explicit user override.
 - Do not regenerate an accepted translation merely to change wording; make evidence-backed, scoped repairs.
+- Default review scope is newly added papers, changed accepted content, and papers named by concrete new evidence. Do not start a repository-wide content re-review or bulk historical rewrite unless the user's current request explicitly authorizes that scope.
 - Preserve complete references, formulas, tables, algorithms, code, and semantically necessary figures. Whole-page screenshots and QA residue do not belong in the reading path.
 - Preserve unrelated user changes and ignored review artifacts.
 
 ## Autonomy
 
-For audit/review, explanation, diagnosis, rule design, or planning requests, inspect relevant files and report without modifying papers. Full processing of a newly added paper carries standing authorization to write its evidence-backed `rating` after acceptance; rating an existing paper outside that lifecycle still requires an explicitly named scope. Only `review-and-repair`, `accept`, or another explicit change authorization may edit a reviewed paper or its status. For change, build, fix, translate, rate, or archive requests, make in-scope local edits and run non-destructive validation. Ask before external publication, destructive cleanup, acquiring paid material, or materially expanding scope.
+For audit/review, explanation, diagnosis, rule design, or planning requests, inspect relevant files and report without modifying papers. Full processing of a newly added paper carries standing authorization to write its evidence-backed `rating` after acceptance; rating an existing paper outside that lifecycle still requires an explicitly named scope. Only `review-and-repair`, `accept`, or another explicit change authorization may edit a reviewed paper or its status. Validator or workflow maintenance may run repository-wide non-destructive checks, but those checks do not authorize repository-wide content review or edits: repair only papers identified by concrete findings within the authorized scope, and ask before expanding to a full historical re-review. For change, build, fix, translate, rate, or archive requests, make in-scope local edits and run non-destructive validation. Ask before external publication, destructive cleanup, acquiring paid material, or materially expanding scope.
 
 ## Commands
 
@@ -63,13 +64,14 @@ For audit/review, explanation, diagnosis, rule design, or planning requests, ins
 make validate       # fast metadata, status/file, hash, and translation-structure checks
 make deep-validate  # full PDF, listing, image, reference, and coverage audit
 make paper-check PAPER_ID=<paper-id>  # scoped deep gate for one paper during a parallel batch
+python3 scripts/papers.py review-queue  # risk-first queue for deeper PDF re-review
 make catalog        # regenerate CATALOG.md from paper.yaml files
 make check          # fast submission gate and generated-file check
 make deep-check     # full repository audit; reserve for validator/policy changes or an explicit audit
 make diff-check     # whitespace gate including untracked translation files
 ```
 
-Before finishing an integrated repository change, run `make check` and `make diff-check`. In a Codex translation batch, translation and review subagents use `make paper-check` while the root agent owns shared state, per-round checkpoints, and final integration. Paper acceptance always runs the deep validator for that paper, so ordinary translation batches do not run `make deep-check`. Reserve `make deep-check` for validator changes, project-wide translation-policy changes that may affect historical papers, or an explicit full-repository audit. If a required tool or source is unavailable, state the exact unrun check and why.
+Before finishing an integrated repository change, run `make check` and `make diff-check`. In a Codex translation batch, translation and review subagents use `make paper-check`; an independent reviewer then emits a content-bound review receipt, while the root agent owns accept, shared state, per-round checkpoints, and final integration. Paper acceptance always runs the deep validator for that paper and rejects content changed after the receipt, so ordinary translation batches do not run `make deep-check`. Reserve `make deep-check` for validator changes, project-wide translation-policy changes that may affect historical papers, or an explicit full-repository audit. A full mechanical check is not standing authority to re-review or rewrite every historical translation; report impact and keep remediation scoped unless the user explicitly requests a full corpus pass. If a required tool or source is unavailable, state the exact unrun check and why.
 
 ## Completion report
 

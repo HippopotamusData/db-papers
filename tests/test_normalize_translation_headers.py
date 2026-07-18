@@ -73,6 +73,17 @@ class NormalizeTranslationHeadersTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exactly one H1"):
             normalize_text("# One\n\n# Two\n", "Canonical")
 
+    def test_hidden_html_comment_heading_is_not_counted(self) -> None:
+        source = (
+            "<!--\n# Hidden fake title\n## 译者说明\n"
+            f"{TRANSLATOR_NOTE}\n-->\n\n"
+            "# Visible Title\n"
+        )
+        normalized = normalize_text(source, "Canonical")
+        self.assertIn("# Canonical（中文译文）", normalized)
+        self.assertIn("# Hidden fake title", normalized)
+        self.assertEqual(normalized.count(f"## 译者说明\n\n{TRANSLATOR_NOTE}"), 1)
+
     def test_scoped_check_ignores_another_in_progress_translation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -11,9 +11,15 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
-Lei Chang, Zhanwei Wang, Tao Ma, Lirong Jian, Lili Ma, Alon Goldshuv, Luke Lonergan, Jeffrey Cohen, Caleb Welton, Gavin Sherry, Milind Bhandarkar
+## 作者与机构
 
-Pivotal Inc
+Lei Chang、Zhanwei Wang、Tao Ma、Lirong Jian、Lili Ma、Alon Goldshuv、Luke Lonergan、Jeffrey Cohen、Caleb Welton、Gavin Sherry、Milind Bhandarkar；Pivotal Inc。
+
+联系邮箱：`{lchang, zwang, tma, ljian, lma, agoldshuv, llonergan, jcohen, cwelton, gsherry, mbhandarkar}@gopivotal.com`
+
+## 出版信息
+
+SIGMOD’14，June 22–27, 2014，Snowbird, UT, USA。ACM ISBN 978-1-4503-2376-5/14/06。doi:[10.1145/2588555.2595636](https://doi.org/10.1145/2588555.2595636)。
 
 ## 摘要
 

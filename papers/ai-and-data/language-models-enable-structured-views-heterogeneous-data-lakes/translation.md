@@ -11,6 +11,20 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
+## 作者与单位
+
+- Simran Arora（Stanford University，`simarora@stanford.edu`）
+- Brandon Yang（Stanford University，`bcyang@stanford.edu`；共同贡献）
+- Sabri Eyuboglu（Stanford University，`eyuboglu@stanford.edu`；共同贡献）
+- Avanika Narayan（Stanford University，`avanikan@stanford.edu`）
+- Andrew Hojel（Stanford University，`ahojel@stanford.edu`）
+- Immanuel Trummer（Cornell University，`itrummer@cornell.edu`）
+- Christopher Ré（Stanford University，`chrismre@stanford.edu`）
+
+本文采用 Creative Commons BY-NC-ND 4.0 International License（<https://creativecommons.org/licenses/by-nc-nd/4.0/>）。超出该许可范围的使用，请联系 `info@vldb.org` 获取许可。版权归权利所有者及论文署名者所有，出版权许可给 VLDB Endowment。
+
+刊载于 *Proceedings of the VLDB Endowment*，Vol. 17, No. 2，ISSN 2150-8097；DOI：<https://doi.org/10.14778/3626292.3626294>。
+
 ## 摘要
 
 数据管理领域的一个长期目标，是开发无需用户参与、输入文档即可输出可查询表格的系统。潜在文档种类极其繁多，因此当前最先进的系统会采用简化假设，并使用特定领域的训练。我们探讨能否利用大语言模型（large language model，LLM）的上下文学习能力，在保持通用性的同时解决这一问题。我们提出并评估了由 LLM 驱动的原型系统 Evaporate。我们发现该系统可以采用两种实现策略：提示 LLM 直接从文档中抽取值，或者提示 LLM 合成执行抽取的代码。评估表明，这两种方法之间存在成本—质量权衡。代码合成成本低，但准确率远低于让 LLM 直接处理每篇文档。为了在保持低成本的同时提高质量，我们提出扩展实现 Evaporate-Code+，其质量优于直接抽取。核心洞见是生成许多候选函数，并利用弱监督对其抽取结果进行集成。Evaporate-Code+ 仅让 LLM 以次线性规模遍历文档，却优于当前最先进的系统。在 16 个真实评估场景中，这相当于让 LLM 需要处理的文档数量减少 110 倍。

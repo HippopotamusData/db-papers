@@ -5,7 +5,7 @@ set -uo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 PYTHON=${PYTHON:-python3}
-target_paper_id=${PAPER_ID:-}
+target_paper_id=
 deep_validation=${DEEP_VALIDATION:-0}
 acceptance_discovery=0
 acceptance_evidence_file=
@@ -13,7 +13,7 @@ acceptance_paper_id=
 acceptance_target_status=
 acceptance_recorded_waivers=
 
-for internal_name in ACCEPTANCE_DISCOVERY ACCEPTANCE_EVIDENCE_FILE ACCEPTANCE_PAPER_ID ACCEPTANCE_RECORDED_WAIVERS ACCEPTANCE_TARGET_STATUS; do
+for internal_name in ACCEPTANCE_DISCOVERY ACCEPTANCE_EVIDENCE_FILE ACCEPTANCE_PAPER_ID ACCEPTANCE_RECORDED_WAIVERS ACCEPTANCE_TARGET_STATUS PAPER_ID SKIP_METADATA_VALIDATION; do
   if [[ -n "${!internal_name+x}" ]]; then
     echo "ERROR: $internal_name is an internal preflight option, not an ambient environment interface" >&2
     exit 1
@@ -22,6 +22,14 @@ done
 
 while (( $# > 0 )); do
   case "$1" in
+    --paper-id)
+      if (( $# < 2 )); then
+        echo "ERROR: --paper-id requires a value" >&2
+        exit 1
+      fi
+      target_paper_id=$2
+      shift 2
+      ;;
     --acceptance-discovery)
       acceptance_discovery=1
       shift
@@ -117,11 +125,9 @@ if ! "$PYTHON" --version >/dev/null 2>&1; then
 fi
 
 (( failures == 0 )) || exit 1
-if [[ "${SKIP_METADATA_VALIDATION:-0}" != "1" ]]; then
-  metadata_args=(validate)
-  [[ -n "$target_paper_id" ]] && metadata_args+=(--paper-id "$target_paper_id")
-  "$PYTHON" scripts/papers.py "${metadata_args[@]}" || exit 1
-fi
+metadata_args=(validate)
+[[ -n "$target_paper_id" ]] && metadata_args+=(--paper-id "$target_paper_id")
+"$PYTHON" scripts/papers.py "${metadata_args[@]}" || exit 1
 validation_tmp=$(mktemp -d "${TMPDIR:-/tmp}/db-papers-validation.XXXXXX")
 manifest="$validation_tmp/manifest"
 trap 'rm -rf "$validation_tmp"' EXIT
@@ -139,7 +145,7 @@ IFS=$'\x1f' read -r manifest_kind source_name translation_name require_complete_
   exit 1
 }
 
-while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acceptance_waivers skip_reason paper_title quality_severity; do
+while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acceptance_waivers skip_reason paper_title quality_severity review_grade; do
   [[ "$manifest_kind" == "paper" ]] || {
     fail "validation manifest contains an invalid row"
     continue
@@ -193,30 +199,36 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
 
   [[ -f "$translation" ]] || continue
 
-  fence_count=$(rg -c '^```' "$translation" 2>/dev/null || true)
+  visible_translation="$validation_tmp/visible-${paper_id}.md"
+  if ! "$PYTHON" scripts/markdown_visibility.py "$translation" "$visible_translation"; then
+    fail "$translation reader-visible Markdown preparation failed"
+    continue
+  fi
+
+  fence_count=$(rg -c '^```' "$visible_translation" 2>/dev/null || true)
   (( fence_count % 2 == 0 )) || fail "$translation has unbalanced fenced code blocks"
 
-  if [[ "$allow_whole_page_images" == "false" ]] && rg -q -i '!\[[^]]*\]\([^)]*(original-)?page[-_ ]?[0-9]|整页截图' "$translation"; then
+  if [[ "$allow_whole_page_images" == "false" ]] && rg -q -i '!\[[^]]*\]\([^)]*(original-)?page[-_ ]?[0-9]|整页截图' "$visible_translation"; then
     quality_issue "$translation contains a whole-page screenshot"
   fi
 
-  if rg -q -i '覆盖索引|图像资源索引|仍需人工确认|未嵌入项|contact[ -]?sheet|crop candidate|rework log|本轮|视觉确认|PDF[[:space:]]*抽取|请结合[^。\n]*source\.pdf[^。\n]*(补齐|还原)|QA[[:space:]]*(记录|说明|残留)' "$translation"; then
+  if rg -q -i '覆盖索引|图像资源索引|仍需人工确认|未嵌入项|contact[ -]?sheet|crop candidate|rework log|本轮|视觉确认|PDF[[:space:]]*抽取|请结合[^。\n]*source\.pdf[^。\n]*(补齐|还原)|QA[[:space:]]*(记录|说明|残留)' "$visible_translation"; then
     quality_issue "$translation contains review or workflow residue"
   fi
 
-  if rg -q '^#{1,4} .*(还原覆盖|公式覆盖说明|步骤保留|表格转写|图表、公式与代码清单|公式与算法自检)' "$translation"; then
+  if rg -q '^#{1,4} .*(还原覆盖|公式覆盖说明|步骤保留|表格转写|图表、公式与代码清单|公式与算法自检)' "$visible_translation"; then
     quality_issue "$translation contains workflow-style headings"
   fi
 
-  if rg -q -i '(^|[^[:alpha:]])(TODO|FIXME|TBD)([^[:alpha:]]|$)|待补译|待返工|仍需补充|人工确认后通过' "$translation"; then
+  if rg -q -i '(^|[^[:alpha:]])(TODO|FIXME|TBD)([^[:alpha:]]|$)|待补译|待返工|仍需补充|人工确认后通过' "$visible_translation"; then
     quality_issue "$translation contains unfinished-work markers"
   fi
 
-  if rg -q '^[[:space:]]*[0-9]+\.[[:space:]]+\[[0-9]+\]' "$translation"; then
+  if rg -q '^[[:space:]]*[0-9]+\.[[:space:]]+\[[0-9]+\]' "$visible_translation"; then
     quality_issue "$translation contains double-numbered references"
   fi
 
-  narrative_issues=$("$PYTHON" scripts/validate_narrative_voice.py "$translation")
+  narrative_issues=$("$PYTHON" scripts/validate_narrative_voice.py "$visible_translation")
   narrative_status=$?
   if (( narrative_status == 1 )); then
     quality_issue "$translation contains ambiguous bare-author narration: $narrative_issues"
@@ -224,7 +236,11 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     fail "$translation narrative-voice validation failed (exit=$narrative_status)"
   fi
 
-  github_math_issues=$("$PYTHON" scripts/validate_github_math.py "$translation")
+  github_math_args=("$visible_translation")
+  if [[ "$reading_status" == "draft" ]]; then
+    github_math_args=(--reject-math-code-spans "$visible_translation")
+  fi
+  github_math_issues=$("$PYTHON" scripts/validate_github_math.py "${github_math_args[@]}")
   github_math_status=$?
   if (( github_math_status == 1 )); then
     fail "$translation contains non-portable math syntax: $github_math_issues"
@@ -232,23 +248,23 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     fail "$translation portable math validation failed (exit=$github_math_status)"
   fi
 
-  h1=$(awk '/^# /{print; exit}' "$translation")
+  h1=$(awk '/^# /{print; exit}' "$visible_translation")
   [[ "$h1" == "# ${paper_title}（中文译文）" ]] || quality_issue "$translation H1 must exactly match paper.yaml title plus （中文译文）"
-  rg -q '^## 译者说明$' "$translation" || quality_issue "$translation is missing the standard translator-note heading"
-  rg -q '^本文依据同目录的 `source\.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。$' "$translation" || quality_issue "$translation is missing the standard translator-note sentence"
+  rg -q '^## 译者说明$' "$visible_translation" || quality_issue "$translation is missing the standard translator-note heading"
+  rg -q '^本文依据同目录的 `source\.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。$' "$visible_translation" || quality_issue "$translation is missing the standard translator-note sentence"
 
-  duplicate_images=$(rg -o '!\[[^]]*\]\([^)]*\)' "$translation" 2>/dev/null | sed -E 's/^.*\(([^)]+)\)$/\1/' | sort | uniq -d)
+  duplicate_images=$(rg -o '!\[[^]]*\]\([^)]*\)' "$visible_translation" 2>/dev/null | sed -E 's/^.*\(([^)]+)\)$/\1/' | sort | uniq -d)
   [[ -z "$duplicate_images" ]] || quality_issue "$translation contains duplicate image references: $duplicate_images"
 
-  broken_images=$(perl -MFile::Basename=dirname -MFile::Spec -ne '
+  broken_images=$(TRANSLATION_BASE="$dir" perl -MFile::Spec -ne '
     while (/!\[[^\]]*\]\((<[^>]+>|[^)[:space:]]+)/g) {
       $path = $1;
       $path =~ s/^<|>$//g;
       next if $path =~ m{^(https?:|data:)};
-      $full = File::Spec->rel2abs($path, dirname($ARGV));
+      $full = File::Spec->rel2abs($path, $ENV{TRANSLATION_BASE});
       print "$path\n" unless -e $full;
     }
-  ' "$translation")
+  ' "$visible_translation")
   [[ -z "$broken_images" ]] || quality_issue "$translation has broken image references: $broken_images"
 
   if [[ "$deep_validation" != "1" ]]; then
@@ -272,7 +288,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
   if ! pdftotext -layout "$pdf" "$source_text" 2>/dev/null; then
     fail "$pdf text extraction failed"
   else
-    listing_issues=$("$PYTHON" scripts/validate_listings.py "$source_text" "$translation")
+    listing_issues=$("$PYTHON" scripts/validate_listings.py "$source_text" "$visible_translation")
     listing_status=$?
     if (( listing_status != 0 )); then
       if (( listing_status == 1 )); then
@@ -288,13 +304,15 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     fi
 
     source_chars=$(tr -d '[:space:]' < "$source_text" | wc -m | tr -d ' ')
-    translated_chars=$(sed '/^!\[/d;/^---$/d;/^[a-z_]*:/d' "$translation" | tr -d '[:space:]' | wc -m | tr -d ' ')
+    translated_chars=$(sed '/^!\[/d;/^---$/d;/^[a-z_]*:/d' "$visible_translation" | tr -d '[:space:]' | wc -m | tr -d ' ')
     if awk -v s="$source_chars" -v t="$translated_chars" 'BEGIN { exit !(s > 0 && t / s < 0.25) }'; then
       quality_issue "$translation has suspiciously low source/translation coverage ($translated_chars/$source_chars)"
     fi
 
     abridgement_stderr="$validation_tmp/abridgement-${paper_id}.stderr"
-    abridgement_candidate=$("$PYTHON" scripts/pdf_metrics.py abridgement "$pdf" "$translation" 2>"$abridgement_stderr")
+    abridgement_args=(abridgement "$pdf" "$visible_translation")
+    [[ "$review_grade" == "true" ]] || abridgement_args+=(--legacy-accepted-reference-boundary)
+    abridgement_candidate=$("$PYTHON" scripts/pdf_metrics.py "${abridgement_args[@]}" 2>"$abridgement_stderr")
     abridgement_status=$?
     if (( abridgement_status != 0 )); then
       abridgement_error=$(tr '\n\r\t' '   ' < "$abridgement_stderr")
@@ -312,11 +330,16 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     source_table_numbers=$(perl -ne 'while (/(?:^|\f|\s{2,})Table\s+(\d+)\s*[:.]/ig) { print "$1\n" }' "$source_text" | sort -nu)
     while IFS= read -r table_number; do
       [[ -z "$table_number" ]] && continue
-      rg -q "(表|Table)[[:space:]]*${table_number}([^0-9]|$)" "$translation" || quality_issue "$translation does not identify source Table $table_number"
+      rg -q "(表|Table)[[:space:]]*${table_number}([^0-9]|$)" "$visible_translation" || quality_issue "$translation does not identify source Table $table_number"
     done <<< "$source_table_numbers"
 
     resource_args=("$dir" "$source_text")
     [[ "$require_complete_references" == "true" ]] && resource_args+=(--require-complete-references)
+    if [[ "$review_grade" == "true" ]]; then
+      resource_args+=(--require-inline-citations)
+    else
+      resource_args+=(--legacy-accepted-resource-structure)
+    fi
     [[ "$allow_whole_page_images" == "true" ]] && resource_args+=(--allow-whole-page-images)
     resource_issues=$("$PYTHON" scripts/validate_resources.py "${resource_args[@]}")
     resource_status=$?

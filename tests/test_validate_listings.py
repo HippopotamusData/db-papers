@@ -48,6 +48,16 @@ class ListingValidationTests(unittest.TestCase):
         self.assertTrue(errors)
         self.assertEqual(risks, [])
 
+    def test_hidden_html_comment_cannot_supply_listing_payload(self) -> None:
+        translation = (
+            "<!--\n"
+            "**清单 1：探测。**\n\n"
+            "```sql\nSELECT key FROM table WHERE value > 1;\n```\n"
+            "-->\n"
+        )
+        errors, _risks = listing_findings(self.source, translation)
+        self.assertIn("Listing 1 has no labeled fenced payload", errors)
+
     def test_unrelated_same_language_listing_is_a_review_risk(self) -> None:
         source = (
             "SELECT customer_id, order_total FROM customer_orders "

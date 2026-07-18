@@ -213,6 +213,35 @@ y &= 2
 """
         self.assertEqual(self.codes(text), [])
 
+    def test_active_review_rejects_strong_math_like_code_spans(self) -> None:
+        text = (
+            "复杂度为 `O(f(n)/W)`，范围是 `[Z_R, Z_S]`，"
+            "条件为 `q∈Q`，代码标识仍是 `commit_ts`。\n"
+        )
+        self.assertEqual(self.codes(text), [])
+        self.assertEqual(
+            [
+                issue.code
+                for issue in validate_text(
+                    text,
+                    reject_math_code_spans=True,
+                )
+            ],
+            ["GHM029", "GHM029", "GHM029"],
+        )
+
+    def test_active_review_math_code_scan_ignores_block_code_and_literals(self) -> None:
+        text = (
+            "合法标识 `a_k`、SQL `a >= b` 与数据 `{1, 2}`。\n\n"
+            "```text\n"
+            "`O(n)` and q∈Q are literal code payloads\n"
+            "```\n"
+        )
+        self.assertEqual(
+            validate_text(text, reject_math_code_spans=True),
+            [],
+        )
+
     def test_backslash_does_not_escape_code_span_closing_ticks(self) -> None:
         cases = ["`literal $x$\\`\n", "``literal $x$\\``\n"]
         for text in cases:

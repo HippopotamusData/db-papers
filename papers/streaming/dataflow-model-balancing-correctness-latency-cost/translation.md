@@ -294,6 +294,8 @@ PCollection<KV<String, Integer>> output = input
   .apply(Sum.integersPerKey());
 ```
 
+> **译者注：** 此代码片段按原文保留；原文在 `FixedWindows.of(2, MINUTES)` 之后少一个右括号，因而括号并不配平。
+
 若未指定触发策略，系统会使用默认触发器，其效果如下：
 
 ```java

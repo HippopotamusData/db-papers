@@ -15,6 +15,10 @@ Sage A. Weil、Scott A. Brandt、Ethan L. Miller、Darrell D. E. Long、Carlos M
 
 美国加州大学圣克鲁兹分校
 
+电子邮件：`{sage, scott, elm, darrell, carlosm}@cs.ucsc.edu`
+
+**出版信息：** OSDI '06，第 7 届 USENIX Symposium on Operating Systems Design and Implementation。
+
 ## 摘要
 
 我们开发了 Ceph，一种具有出色性能、可靠性和可扩展性的分布式文件系统。Ceph 用面向异构动态集群、不可靠对象存储设备（OSD）的伪随机数据分布函数 CRUSH 替代分配表，最大限度地分离数据管理与元数据管理。我们利用设备智能，把数据复制、故障检测和恢复分发给半自治 OSD；这些 OSD 运行特制的本地对象文件系统。动态分布式元数据集群提供极为高效的元数据管理，并能无缝适应各种通用计算和科学计算文件系统工作负载。多种工作负载下的性能测量表明，Ceph 具有出色的 I/O 性能和可扩展的元数据管理能力，每秒可支持超过 250,000 次元数据操作。

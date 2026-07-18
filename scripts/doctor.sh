@@ -5,6 +5,7 @@ set -uo pipefail
 failures=0
 PYTHON=${PYTHON:-python3}
 MATHJAX_MODULE=${MATHJAX_MODULE:-node_modules/mathjax}
+REQUIRE_GITHUB=${REQUIRE_GITHUB:-0}
 
 require_command() {
   local command_name=$1
@@ -19,6 +20,9 @@ require_command() {
 for command_name in make rg pdfinfo pdftotext pdftoppm perl sed awk find sort mktemp node npm; do
   require_command "$command_name"
 done
+if [[ "$REQUIRE_GITHUB" == "1" ]]; then
+  require_command gh
+fi
 
 if [[ "$PYTHON" == */* ]]; then
   if [[ -x "$PYTHON" ]]; then
@@ -36,6 +40,18 @@ fi
 
 if [[ -x "$PYTHON" ]] || command -v "$PYTHON" >/dev/null 2>&1; then
   "$PYTHON" --version
+fi
+
+if [[ "$REQUIRE_GITHUB" == "1" ]] && command -v gh >/dev/null 2>&1; then
+  if ! gh auth status --hostname github.com >/dev/null 2>&1; then
+    echo "ERROR: GitHub CLI is not authenticated; accept requires GitHub Markdown audit" >&2
+    failures=$((failures + 1))
+  elif ! gh api --hostname github.com --method POST markdown -f text='$x$' -f mode=gfm >/dev/null 2>&1; then
+    echo "ERROR: GitHub Markdown API canary failed; check authentication and network" >&2
+    failures=$((failures + 1))
+  else
+    echo "GitHub Markdown API: authenticated canary passed"
+  fi
 fi
 command -v make >/dev/null 2>&1 && make --version 2>&1 | head -n 1
 command -v rg >/dev/null 2>&1 && rg --version 2>&1 | head -n 1

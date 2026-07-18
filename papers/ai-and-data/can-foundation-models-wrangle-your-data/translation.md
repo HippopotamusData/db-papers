@@ -11,9 +11,12 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
-Avanika Narayan，Ines Chami，Laurel Orr，Christopher Ré
+## 作者与单位
 
-Stanford University；Numbers Station
+- Avanika Narayan（Stanford University，`avanika@cs.stanford.edu`）
+- Ines Chami（Numbers Station，`ines.chami@numbersstation.ai`）
+- Laurel Orr（Stanford University，`lorr1@cs.stanford.edu`）
+- Christopher Ré（Stanford University，`chrismre@cs.stanford.edu`）
 
 ## 摘要
 
@@ -22,6 +25,10 @@ Stanford University；Numbers Station
 **PVLDB 引用格式：** Avanika Narayan, Ines Chami, Laurel Orr, and Christopher Ré. Can Foundation Models Wrangle Your Data?. PVLDB, 16(4): 738–746, 2022. doi:10.14778/3574245.3574258
 
 **PVLDB 工件可用性：** 源代码、数据和/或其他工件已公开于 https://github.com/HazyResearch/fm_data_tasks 。
+
+> 本文采用 Creative Commons BY-NC-ND 4.0 International License（<https://creativecommons.org/licenses/by-nc-nd/4.0/>）。超出该许可范围的使用，请联系 `info@vldb.org` 获取许可。版权归权利所有者及论文署名者所有，出版权许可给 VLDB Endowment。
+
+刊载于 *Proceedings of the VLDB Endowment*，Vol. 16, No. 4，ISSN 2150-8097；DOI：<https://doi.org/10.14778/3574245.3574258>。
 
 ## 1. 引言
 

@@ -15,9 +15,11 @@ source: source.pdf
 
 Klaus Iglberger、Georg Hager、Jan Treibig、Ulrich Rüde
 
-- 埃尔朗根-纽伦堡大学科学计算中心（Central Institute for Scientific Computing）
-- 埃尔朗根地区计算中心（Erlangen Regional Computing Center）
-- 埃尔朗根-纽伦堡大学系统仿真教席（Chair for System Simulation）
+- Klaus Iglberger、Ulrich Rüde：埃尔朗根-纽伦堡大学科学计算中心（Central Institute for Scientific Computing），91058 Erlangen, Germany
+- Georg Hager、Jan Treibig：埃尔朗根地区计算中心（Erlangen Regional Computing Center），埃尔朗根-纽伦堡大学，91058 Erlangen, Germany
+- Ulrich Rüde：埃尔朗根-纽伦堡大学系统仿真教席（Chair for System Simulation），91058 Erlangen, Germany
+
+**版本信息：** arXiv:1104.1729v1 [cs.PF]，2011 年 4 月 9 日。PDF 首页另标注日期 November 26, 2024。
 
 ## 摘要
 
@@ -77,7 +79,9 @@ inline const Vector operator+(const Vector& a, const Vector& b)
 }
 ```
 
-这个实现直观且灵活，例如可以串接多个向量加法。但与手写 C 代码相比，它会因为临时向量 `tmp` 而损失性能。创建 `tmp` 涉及动态内存分配、从临时对象复制到目标向量，以及内存释放；额外内存占用还会干扰缓存局部性。手写实现则不需要这些开销：
+这个实现直观且灵活，例如可以串接多个向量加法。但与手写 C 代码相比，它会因为原文所称“第 6 行的临时向量 `tmp`”而损失性能。创建 `tmp` 涉及动态内存分配、从临时对象复制到目标向量，以及内存释放；额外内存占用还会干扰缓存局部性。手写实现则不需要这些开销：
+
+> **原文一致性说明：** 原文把临时向量 `tmp` 指向代码清单 2 的第 6 行；该行实际向 `tmp[i]` 写入结果，而 `tmp` 的声明位于第 3 行。译文保留原行号并说明这一指代差异。
 
 **代码清单 3. C 风格手写向量加法**
 
@@ -254,6 +258,8 @@ C = A * B;
 
 ![图 2. 五种稠密矩阵乘法实现的性能比较。](assets/figure-02-matrix-multiplication-performance.png)
 
+> **原文一致性说明：** 图 2 的原文图注写作“五种实现”，但图中与相邻正文实际列出六种实现；此处分别保留原文图注和正文表述。
+
 **表 1. 稠密矩阵乘法的 LIKWID 性能分析（N=5000）**
 
 | 实现 | 内存带宽 MB/s | retired 指令数（10^11） | 算术操作数（10^11） | CPI |
@@ -346,6 +352,8 @@ C = A * B;
 
 ![图 4. 稠密矩阵与稀疏矩阵乘法的性能比较。](assets/figure-04-dense-sparse-matrix-performance.png)
 
+> **原文一致性说明：** 图 4 右下子图在源 PDF 中标作 “10% Filled”，而图注及相邻正文将右列描述为 40% 填充率；图像按原文保留。
+
 要达到高性能，应当识别右操作数稀疏矩阵的数据结构，并尽可能以缓存高效的方式使用和重用其元素。但由于抽象掉了实际操作和数据类型，这是不可能的。所以，当前 ET 方法论禁止了针对这一操作的任何可能性能优化。
 
 需要注意，我们专门选择这个操作，是为了说明抽象掉数据类型和操作会严重损害性能。如果稀疏矩阵按列存储，性能损失会小得多。然而，ET 库通常作为黑盒系统提供，不能指望库用户事先知道应当（完全）避免某些数据结构组合。
@@ -360,18 +368,18 @@ $$
 A \cdot (a + b + c)
 $$
 
-问题很明显：矩阵-向量乘法会多次使用右侧向量。如果不先计算 `a + b + c` 的结果，就会重复计算这些加法，必然损失性能。
+问题很明显：矩阵-向量乘法会多次使用右侧向量。如果不先计算 $a+b+c$ 的结果，就会重复计算这些加法，必然损失性能。
 
-**代码清单 18. 经典运算符重载中的 `d = A * (a + b + c)`**
+**代码清单 18. 经典运算符重载中的 $d=A\cdot(a+b+c)$**
 
 ```cpp
-class ic::Matrix<double> A(N, N);
-class ic::Vector<double> a(N), b(N), c(N), d(N);
+classic::Matrix<double> A(N, N);
+classic::Vector<double> a(N), b(N), c(N), d(N);
 // ... 初始化矩阵和向量
 d = A * (a + b + c);
 ```
 
-**代码清单 19. Blitz++ 中的 `d = A * (a + b + c)`**
+**代码清单 19. Blitz++ 中的 $d=A\cdot(a+b+c)$**
 
 ```cpp
 blitz::Array<real,2> A(N, N);
@@ -383,7 +391,7 @@ tmp = a + b + c;
 d = blitz::sum(A(i,j) * tmp(j), j);
 ```
 
-**代码清单 20. Boost uBLAS 中的 `d = A * (a + b + c)`**
+**代码清单 20. Boost uBLAS 中的 $d=A\cdot(a+b+c)$**
 
 ```cpp
 boost::numeric::ublas::matrix<real> A(N, N);
@@ -392,7 +400,7 @@ boost::numeric::ublas::vector<real> a(N), b(N), c(N), d(N);
 noalias(d) = prod(A, (a + b + c));
 ```
 
-**代码清单 21. Blaze 中的 `d = A * (a + b + c)`**
+**代码清单 21. Blaze 中的 $d=A\cdot(a+b+c)$**
 
 ```cpp
 pe::MatrixMxN<double> A(N, N);
@@ -405,9 +413,9 @@ d = A * (a + b + c);
 
 无论 $N$ 较小还是较大，两个传统的基于 ET 的库表现都不好。尤其对大 $N$ 而言，经典运算符重载虽然在求值过程中总共需要三个临时对象，却快于 Boost uBLAS，尤其快于 Blitz++。Blaze 使用一个临时对象保存向量加法的中间结果，再调用优化的 `dgemv` 执行矩阵-向量乘法，因而具有明显的性能优势。
 
-![图 5. 复杂表达式 A * (a + b + c) 的性能比较。](assets/figure-05-complex-expression-matvec-performance.png)
+![图 5. 复杂表达式 A · (a + b + c) 的性能比较。](assets/figure-05-complex-expression-matvec-performance.png)
 
-**表 2. 复杂表达式 `A * (a + b + c)` 的 LIKWID 分析（N=5000）**
+**表 2. 复杂表达式 $A\cdot(a+b+c)$ 的 LIKWID 分析（ $N=5000$ ）**
 
 | 实现 | 内存带宽 MB/s | retired 指令数（10^8） | 算术操作数（10^7） | CPI | L1 数据缓存行替换（10^6） |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -427,9 +435,9 @@ $$
 
 为了高效执行矩阵乘法，左、右矩阵表达式都必须先求值。Blitz++ 同样无法用单条语句计算该表达式，因而会生成两个显式临时矩阵。图 6 展示经典运算符重载、Blitz++、Boost uBLAS 和 Blaze 在缓存内与缓存外的结果。Blitz++ 总是优于不创建任何中间临时对象、因而会反复求值矩阵加法和减法的 Boost uBLAS。但两者都远远慢于 Blaze；Blaze 内部创建两个临时对象来保存矩阵加法和减法的中间结果，然后调用 `dgemm` 执行矩阵乘法。特别惊人的是，对大 $N$ 而言，Blitz++ 和 Boost uBLAS 都被经典运算符重载遥遥超过，因为后者创建了必要的临时对象，并为矩阵乘法使用了更快的 kernel。
 
-![图 6. 复杂表达式 (A + B) * (C - D) 的性能比较。](assets/figure-06-complex-expression-matmul-performance.png)
+![图 6. 复杂表达式 (A + B) · (C − D) 的性能比较。](assets/figure-06-complex-expression-matmul-performance.png)
 
-**表 3. 复杂表达式 `(A + B) * (C - D)` 的 LIKWID 分析（N=5000）**
+**表 3. 复杂表达式 $(A+B)\cdot(C-D)$ 的 LIKWID 分析（ $N=5000$ ）**
 
 | 实现 | 内存带宽 MB/s | retired 指令数（10^11） | 算术操作数（10^11） | CPI | L1 数据缓存行替换（10^9） |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -451,7 +459,7 @@ ET 本身显然不能普遍提供高性能。但把高性能代码与 C++ 运算
 
 Blaze 的 smart ET 实现与其他 ET 框架采取完全不同的方法，以实现性能与语法的结合。Blaze 完全放弃了“ET 本身是性能优化”的观念。ET 只作为一种解析功能：它理解给定数学表达式的结构，知道子表达式需要按何种顺序求值（包括创建临时对象；参见第 7 节）<sup>5</sup>，并选择合适的高度优化 kernel。这些 kernel 基于对数据类型和操作的详细知识，提供手工实现的、针对特定体系结构的性能优化。
 
-*<sup>5</sup> 子表达式的智能求值顺序可以用 `A * B * v` 说明，其中 `A` 和 `B` 是矩阵，`v` 是向量。通常按从左到右的顺序求值，会先执行矩阵-矩阵乘法，再执行矩阵-向量乘法。但如果先求右侧子表达式，就能用第二次矩阵-向量乘法取代矩阵-矩阵乘法，从而大幅提升性能。*
+> **原文脚注 5：** 子表达式的智能求值顺序可以用 $A\cdot B\cdot v$ 说明，其中 $A$ 和 $B$ 是矩阵， $v$ 是向量。通常按从左到右的顺序求值，会先执行矩阵-矩阵乘法，再执行矩阵-向量乘法。但如果先求右侧子表达式，就能用第二次矩阵-向量乘法取代矩阵-矩阵乘法，从而大幅提升性能。
 
 本节只对 Smart Expression Templates 方法论作粗略概述。我们不会深入非常复杂的 C++ 实现；该实现及其详细讨论将在单独的文章中发表。这里只聚焦两个关键概念来解释 smart ET 方法：选择性创建中间临时对象，以及集成优化后的计算 kernel。
 
@@ -468,6 +476,8 @@ Vector a, b;
 // 初始化 a 和 b
 Vector c = a + b;  // 等价于 Vector c(a + b);
 ```
+
+> **原文一致性说明：** 代码清单 22 的原文标题写作“三个稠密向量相加”，但清单代码实际只计算 `a + b`；标题与代码均按源 PDF 保留。
 
 与代码清单 1 中的稠密向量加法不同，这里不是赋值，而是初始化稠密向量 `c`。在这种情况下，所有实现之间都没有性能差异；即使经典运算符重载也与基于 ET 的库具有相同性能。其原因是“具名返回值”（named return value，NRV）优化（参见 ARM [7] 的第 12.1.1c 节或文献 [14]）。代码清单 23 给出代码清单 2 中加法运算符经编译器优化后的实现。如果编译器对代码应用 NRV（由显式复制构造函数的存在触发），局部变量 `tmp` 就会被一个指向调用者中最终返值目标的引用所替换，函数也不再返回临时对象，而是返回 `void`。
 

@@ -39,7 +39,7 @@ paper.yaml       标题、作者、年份、来源、主题和阅读状态
 
 目录中的阅读状态表示：
 
-- `translated`：译文已经完成并经过逐节核对
+- `translated`：译文文件与验收快照一致；带内容绑定 review receipt 的条目已经独立逐项核对，历史 receiptless 条目仍按风险队列持续复审
 - `draft`：译文尚未完成验收
 - `source_only`：仅保存原文，暂未提供译文
 - `skipped`：保留论文记录和原文，但当前不提供译文

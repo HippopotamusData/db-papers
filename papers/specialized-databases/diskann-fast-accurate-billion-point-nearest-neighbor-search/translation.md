@@ -11,9 +11,17 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
-Suhas Jayaram Subramanya[^author]、Devvrit[^author]、Rohan Kadekodi[^author]、Ravishankar Krishaswamy、Harsha Vardhan Simhadri
+Suhas Jayaram Subramanya[^author]（Carnegie Mellon University，suhas@cmu.edu）
 
-Carnegie Mellon University；University of Texas at Austin；Microsoft Research India
+Devvrit[^author]（University of Texas at Austin，devvrit.03@gmail.com）
+
+Rohan Kadekodi[^author]（University of Texas at Austin，rak@cs.texas.edu）
+
+Ravishankar Krishaswamy（Microsoft Research India，rakri@microsoft.com）
+
+Harsha Vardhan Simhadri（Microsoft Research India，harshasi@microsoft.com）
+
+第 33 届神经信息处理系统大会（NeurIPS 2019），加拿大温哥华。
 
 ## 摘要
 

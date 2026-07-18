@@ -1,7 +1,7 @@
 PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 MATHJAX_MODULE ?= node_modules/mathjax
 
-.PHONY: catalog catalog-check metadata-check normalize-headers normalize-headers-check fix-math math-check math-audit-github math-audit-github-changed math-audit-katex validate deep-validate paper-check diff-check test doctor check deep-check
+.PHONY: catalog catalog-check metadata-check normalize-headers normalize-headers-check fix-math math-check math-audit-github math-audit-github-changed math-audit-katex validate deep-validate paper-check review-queue diff-check test doctor doctor-accept check deep-check
 
 catalog:
 	$(PYTHON) scripts/papers.py catalog
@@ -43,14 +43,17 @@ math-audit-katex:
 	find papers -mindepth 3 -maxdepth 3 -name translation.md -exec $(PYTHON) scripts/verify_math_rendering.py --katex-module "$(KATEX_MODULE)" {} +
 
 validate:
-	PYTHON=$(PYTHON) bash scripts/validate_translations.sh
+	env -u PAPER_ID -u SKIP_METADATA_VALIDATION PYTHON=$(PYTHON) bash scripts/validate_translations.sh
 
 deep-validate:
-	DEEP_VALIDATION=1 PYTHON=$(PYTHON) bash scripts/validate_translations.sh
+	env -u PAPER_ID -u SKIP_METADATA_VALIDATION DEEP_VALIDATION=1 PYTHON=$(PYTHON) bash scripts/validate_translations.sh
 
 paper-check:
 	@test -n "$(PAPER_ID)" || { echo "ERROR: PAPER_ID is required" >&2; exit 1; }
-	PAPER_ID="$(PAPER_ID)" DEEP_VALIDATION=1 PYTHON=$(PYTHON) bash scripts/validate_translations.sh
+	env -u PAPER_ID -u SKIP_METADATA_VALIDATION DEEP_VALIDATION=1 PYTHON=$(PYTHON) bash scripts/validate_translations.sh --paper-id "$(PAPER_ID)"
+
+review-queue:
+	$(PYTHON) scripts/papers.py review-queue
 
 diff-check:
 	bash scripts/check_diff.sh
@@ -60,6 +63,9 @@ test:
 
 doctor:
 	PYTHON=$(PYTHON) bash scripts/doctor.sh
+
+doctor-accept:
+	REQUIRE_GITHUB=1 PYTHON=$(PYTHON) bash scripts/doctor.sh
 
 check: test validate catalog-check normalize-headers-check math-check
 

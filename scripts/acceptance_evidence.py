@@ -55,7 +55,7 @@ def _subjects(value: str) -> list[str]:
     return subjects
 
 
-def candidate_findings(category: str, candidate: str) -> list[str]:
+def _candidate_findings_v1(category: str, candidate: str) -> list[str]:
     """Return stable rule-and-subject identities for one raw diagnostic.
 
     Source and translation hashes already bind the reviewed content.  Finding
@@ -139,6 +139,52 @@ def candidate_findings(category: str, candidate: str) -> list[str]:
     if match:
         return [f"source-reference-ocr-normalization:{_subject(match.group(1))}:1"]
 
+    match = re.fullmatch(
+        r"source reference identifiers were normalized by ordered contiguous "
+        r"OCR evidence: (.+)",
+        diagnostic,
+    )
+    if match:
+        findings: list[str] = []
+        for mapping in match.group(1).split(", "):
+            mapping_match = re.fullmatch(
+                r"([A-Za-z0-9]{1,2})->([1-9]\d*)",
+                mapping,
+            )
+            if mapping_match is None:
+                raise ValueError(
+                    f"unknown resources waiver candidate: {candidate}"
+                )
+            source_identifier, normalized_identifier = mapping_match.groups()
+            findings.append(
+                "source-reference-ocr-normalization:"
+                f"{_subject(source_identifier)}:{normalized_identifier}"
+            )
+        return findings
+
+    match = re.fullmatch(
+        r"source reference identifiers were normalized by complete ordered "
+        r"delimiter-OCR evidence: (.+)",
+        diagnostic,
+    )
+    if match:
+        findings = []
+        for mapping in match.group(1).split(", "):
+            mapping_match = re.fullmatch(
+                r"([\[\]()<>A-Za-z0-9.]{1,5})->([1-9]\d*)",
+                mapping,
+            )
+            if mapping_match is None:
+                raise ValueError(
+                    f"unknown resources waiver candidate: {candidate}"
+                )
+            source_identifier, normalized_identifier = mapping_match.groups()
+            findings.append(
+                "source-reference-ocr-normalization:"
+                f"{_subject(source_identifier)}:{normalized_identifier}"
+            )
+        return findings
+
     grouped_rules = (
         (
             r"source has duplicate reference identifier candidates: (.+)",
@@ -160,6 +206,11 @@ def candidate_findings(category: str, candidate: str) -> list[str]:
             r"source numbered top-level section headings have no "
             r"translation-side heading candidates: (.+)",
             "missing-section-heading",
+        ),
+        (
+            r"source body citation identifiers have no "
+            r"translation-side candidate: (.+)",
+            "missing-inline-citation",
         ),
     )
     for pattern, rule in grouped_rules:
@@ -213,10 +264,38 @@ def candidate_findings(category: str, candidate: str) -> list[str]:
     raise ValueError(f"unknown resources waiver candidate: {candidate}")
 
 
-def findings_for_candidates(category: str, candidates: Iterable[str]) -> list[str]:
+WAIVER_FINDING_PARSERS = {
+    1: _candidate_findings_v1,
+}
+
+
+def candidate_findings(
+    category: str,
+    candidate: str,
+    *,
+    evidence_version: int = WAIVER_EVIDENCE_VERSION,
+) -> list[str]:
+    parser = WAIVER_FINDING_PARSERS.get(evidence_version)
+    if parser is None:
+        raise ValueError(
+            f"unsupported waiver evidence_version: {evidence_version!r}"
+        )
+    return parser(category, candidate)
+
+
+def findings_for_candidates(
+    category: str,
+    candidates: Iterable[str],
+    *,
+    evidence_version: int = WAIVER_EVIDENCE_VERSION,
+) -> list[str]:
     findings: dict[str, str] = {}
     for candidate in normalize_candidates(candidates):
-        for finding in candidate_findings(category, candidate):
+        for finding in candidate_findings(
+            category,
+            candidate,
+            evidence_version=evidence_version,
+        ):
             if not FINDING_RE.fullmatch(finding):
                 raise ValueError(f"invalid waiver finding identity: {finding!r}")
             previous = findings.get(finding)
@@ -229,16 +308,25 @@ def findings_for_candidates(category: str, candidates: Iterable[str]) -> list[st
     return sorted(findings)
 
 
-def waiver_fingerprint(category: str, candidates: Iterable[str]) -> str:
+def waiver_fingerprint(
+    category: str,
+    candidates: Iterable[str],
+    *,
+    evidence_version: int = WAIVER_EVIDENCE_VERSION,
+) -> str:
     if category not in WAIVER_CATEGORIES:
         raise ValueError(f"unknown waiver category: {category!r}")
-    findings = findings_for_candidates(category, candidates)
+    findings = findings_for_candidates(
+        category,
+        candidates,
+        evidence_version=evidence_version,
+    )
     if not findings:
         raise ValueError(f"waiver category {category!r} must contain at least one candidate")
     payload = json.dumps(
         {
             "category": category,
-            "evidence_version": WAIVER_EVIDENCE_VERSION,
+            "evidence_version": evidence_version,
             "findings": findings,
         },
         ensure_ascii=False,
@@ -258,8 +346,16 @@ def build_waiver_records(observed: dict[str, Iterable[str]]) -> dict[str, dict[s
             continue
         records[category] = {
             "evidence_version": WAIVER_EVIDENCE_VERSION,
-            "fingerprint": waiver_fingerprint(category, candidates),
-            "findings": findings_for_candidates(category, candidates),
+            "fingerprint": waiver_fingerprint(
+                category,
+                candidates,
+                evidence_version=WAIVER_EVIDENCE_VERSION,
+            ),
+            "findings": findings_for_candidates(
+                category,
+                candidates,
+                evidence_version=WAIVER_EVIDENCE_VERSION,
+            ),
             "candidates": candidates,
         }
     return records
@@ -301,10 +397,13 @@ def validate_waiver_records(value: Any, label: str = "waivers") -> dict[str, dic
                 details.append(f"unknown keys: {', '.join(sorted(extra))}")
             raise ValueError(f"{label}.{category}: {'; '.join(details)}")
         evidence_version = record["evidence_version"]
-        if type(evidence_version) is not int or evidence_version != WAIVER_EVIDENCE_VERSION:
+        if (
+            type(evidence_version) is not int
+            or evidence_version not in WAIVER_FINDING_PARSERS
+        ):
             raise ValueError(
-                f"{label}.{category}.evidence_version must be integer "
-                f"{WAIVER_EVIDENCE_VERSION}"
+                f"{label}.{category}.evidence_version must be a supported integer: "
+                + ", ".join(str(version) for version in sorted(WAIVER_FINDING_PARSERS))
             )
         candidates = record["candidates"]
         if not isinstance(candidates, list):
@@ -321,7 +420,11 @@ def validate_waiver_records(value: Any, label: str = "waivers") -> dict[str, dic
             isinstance(finding, str) for finding in findings
         ):
             raise ValueError(f"{label}.{category}.findings must be a list of strings")
-        derived_findings = findings_for_candidates(category, normalized)
+        derived_findings = findings_for_candidates(
+            category,
+            normalized,
+            evidence_version=evidence_version,
+        )
         if findings != derived_findings:
             raise ValueError(
                 f"{label}.{category}.findings must exactly match sorted diagnostic identities"
@@ -331,7 +434,11 @@ def validate_waiver_records(value: Any, label: str = "waivers") -> dict[str, dic
             raise ValueError(
                 f"{label}.{category}.fingerprint must be a lowercase SHA-256 digest"
             )
-        expected = waiver_fingerprint(category, normalized)
+        expected = waiver_fingerprint(
+            category,
+            normalized,
+            evidence_version=evidence_version,
+        )
         if fingerprint != expected:
             raise ValueError(
                 f"{label}.{category}.fingerprint does not match its candidates"
@@ -405,12 +512,16 @@ def compare_waiver_records(
                 f"missing:{category}:{current['fingerprint']}:{' | '.join(current['candidates'])}"
             )
         elif current is None and expected is not None:
-            mismatches.append(f"unused:{category}:{expected.get('fingerprint', '')}")
-        elif (
-            expected["evidence_version"] != current["evidence_version"]
-            or expected["fingerprint"] != current["fingerprint"]
-            or expected["findings"] != current["findings"]
-        ):
+            # A newer validator may retire a conservative risk.  The recorded
+            # waiver remains historical review provenance and does not make
+            # otherwise unchanged accepted content invalid.
+            continue
+        elif expected["evidence_version"] != current["evidence_version"]:
+            mismatches.append(
+                f"changed:{category}:{expected.get('fingerprint', '')}:"
+                f"{current.get('fingerprint', '')}:{' | '.join(current.get('candidates', []))}"
+            )
+        elif not set(current["findings"]).issubset(expected["findings"]):
             mismatches.append(
                 f"changed:{category}:{expected.get('fingerprint', '')}:"
                 f"{current.get('fingerprint', '')}:{' | '.join(current.get('candidates', []))}"

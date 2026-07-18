@@ -15,6 +15,8 @@ Chuangxian Wei, Bin Wu, Sheng Wang, Renjie Lou, Chaoqun Zhan, Feifei Li, Yuanzhe
 
 Alibaba Group
 
+邮箱：`{chuangxian.wcx,binwu.wb,sh.wang,json.lrj,lizhe.zcq,lifeifei,yuanzhe.cyz}@alibaba-inc.com`
+
 ## 摘要
 
 随着图像、视频和音频等非结构化数据爆炸式增长，非结构化数据分析已广泛用于各种现实应用。许多数据库系统开始纳入非结构化数据分析能力，以满足这类需求。然而，在多数系统中，针对非结构化数据和结构化数据的查询仍被视为彼此分离的任务，涉及两类数据的混合查询尚未得到充分支持。

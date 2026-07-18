@@ -13,13 +13,16 @@ import pypdf
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
+from markdown_visibility import reader_visible_markdown
+from reference_sections import select_reference_heading
+
 
 PYPDF_VERSION = "6.14.2"
 PDF_METRICS_VERSION = 1
 WORD_RE = re.compile(r"\b[A-Za-z]+(?:[-'][A-Za-z]+)*\b")
 SOURCE_REFERENCE_HEADING_RE = re.compile(
-    r"\s*(?:\d+(?:\.\d+)*[.\s]+)?(?:REFERENCES|BIBLIOGRAPHY)\s*",
-    re.IGNORECASE,
+    r"^\s*(?:\d+(?:\.\d+)*[.\s]+)?(?:REFERENCES|BIBLIOGRAPHY)\s*$",
+    re.IGNORECASE | re.MULTILINE,
 )
 TRANSLATION_REFERENCE_HEADING_RE = re.compile(
     r"\s*#{1,6}\s*(?:\d+(?:\.\d+)*[.\s]+)?"
@@ -37,27 +40,46 @@ def _require_pinned_pypdf() -> None:
         )
 
 
-def source_word_count_from_text(text: str) -> int:
-    count = 0
-    for line in text.splitlines():
-        if SOURCE_REFERENCE_HEADING_RE.fullmatch(line):
-            break
-        count += len(WORD_RE.findall(line))
-    return count
+def source_word_count_from_text(
+    text: str,
+    *,
+    evidence_backed_boundary: bool = True,
+) -> int:
+    lines = text.splitlines()
+    heading = (
+        select_reference_heading(text, SOURCE_REFERENCE_HEADING_RE)
+        if evidence_backed_boundary
+        else SOURCE_REFERENCE_HEADING_RE.search(text)
+    )
+    if heading is None:
+        return sum(len(WORD_RE.findall(line)) for line in lines)
+    return sum(
+        len(WORD_RE.findall(line))
+        for line in text[: heading.start()].splitlines()
+        if not SOURCE_REFERENCE_HEADING_RE.fullmatch(line)
+    )
 
 
-def source_word_count(source_pdf: Path) -> int:
+def source_word_count(
+    source_pdf: Path,
+    *,
+    evidence_backed_boundary: bool = True,
+) -> int:
     _require_pinned_pypdf()
     logging.getLogger("pypdf").setLevel(logging.ERROR)
     reader = PdfReader(source_pdf, strict=False)
     text = "\n".join((page.extract_text() or "") for page in reader.pages)
-    count = source_word_count_from_text(text)
+    count = source_word_count_from_text(
+        text,
+        evidence_backed_boundary=evidence_backed_boundary,
+    )
     if count < 1:
         raise ValueError(f"{source_pdf} produced no source words")
     return count
 
 
 def translation_cjk_count_from_text(text: str) -> int:
+    text = reader_visible_markdown(text)
     count = 0
     for line in text.splitlines():
         if TRANSLATION_REFERENCE_HEADING_RE.fullmatch(line):
@@ -94,9 +116,18 @@ def abridgement_candidate_from_counts(
     )
 
 
-def abridgement_candidate(source_pdf: Path, translation: Path) -> str | None:
+def abridgement_candidate(
+    source_pdf: Path,
+    translation: Path,
+    *,
+    evidence_backed_boundary: bool = True,
+) -> str | None:
     return abridgement_candidate_from_counts(
-        translation_cjk_count(translation), source_word_count(source_pdf)
+        translation_cjk_count(translation),
+        source_word_count(
+            source_pdf,
+            evidence_backed_boundary=evidence_backed_boundary,
+        ),
     )
 
 
@@ -106,10 +137,19 @@ def main() -> int:
     abridgement_parser = subparsers.add_parser("abridgement")
     abridgement_parser.add_argument("source_pdf", type=Path)
     abridgement_parser.add_argument("translation", type=Path)
+    abridgement_parser.add_argument(
+        "--legacy-accepted-reference-boundary",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
     args = parser.parse_args()
 
     try:
-        candidate = abridgement_candidate(args.source_pdf, args.translation)
+        candidate = abridgement_candidate(
+            args.source_pdf,
+            args.translation,
+            evidence_backed_boundary=not args.legacy_accepted_reference_boundary,
+        )
     except (OSError, PdfReadError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2

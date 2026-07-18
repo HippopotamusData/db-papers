@@ -11,6 +11,19 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
+## 作者与出版信息
+
+- Wei Zhou，Shanghai Jiao Tong University，weizhoudb@sjtu.edu.cn
+- Peng Sun，Baisheng (Shenzhen) Technology Co., Ltd.，sunpeng@dbaiops.com
+- Xuanhe Zhou（通讯作者），Shanghai Jiao Tong University，zhouxuanhe@sjtu.edu.cn
+- Qianglei Zang，Baisheng (Shenzhen) Technology Co., Ltd.，zangqianglei@dbaiops.com
+- Ji Xu，Baisheng (Shenzhen) Technology Co., Ltd.，xuji@dbaiops.com
+- Tieying Zhang，Bytedance，tieying.zhang@bytedance.com
+- Guoliang Li，Tsinghua University，liguoliang@tsinghua.edu.cn
+- Fan Wu，Shanghai Jiao Tong University，fwu@cs.sjtu.edu.cn
+
+PVLDB 引用信息：Wei Zhou, Peng Sun, Xuanhe Zhou, Qianglei Zang, Ji Xu, Tieying Zhang, Guoliang Li, and Fan Wu. DBAIOps: A Reasoning LLM-Enhanced Database Operation and Maintenance System using Knowledge Graphs. *PVLDB*, 19(6): 1319–1331, 2026. DOI: `10.14778/3797919.3797937`。
+
 ## 摘要
 
 数据库系统的运行与维护（operation and maintenance，O&M）对于保证系统可用性和性能至关重要；有效的诊断与恢复通常需要专家经验，例如识别指标与异常之间的关系。然而，包括商业产品在内的现有自动化数据库运维方法无法有效利用专家经验。一方面，基于规则的方法仅支持基础运维任务（例如基于指标的异常检测）；这些方法主要由数值方程组成，无法有效纳入文字形式的运维经验（例如手册中的故障排查指南）。另一方面，基于大语言模型（LLM）的方法会检索碎片化信息（例如标准文档加 RAG），经常产生不准确或泛化的结果。
@@ -338,7 +351,7 @@ $$
 1. **图推断与邻近发现。** 给定完整图 $G$，DBAIOps 使用图查询语言 Cypher 进行推断，启动图探索。系统从检测函数取值为真的异常模型顶点 $v _ {\mathrm{anomaly}}$ 出发，遍历相连的顶点和边，收集并聚合相关诊断信息。探索沿相关边到达指标顶点以执行统计分析，并沿包含边到达经验顶点以收集诊断知识。同义边通过连接不同子图中语义等价的标签顶点来增强图探索，将碎片化经验关联起来以处理复杂根因。在 $k$ 跳范围内迭代之后，系统得到边密度更高的已探索图 $G'$（ $|E'|\gt{}|E|$），为复杂异常形成连通性更强的结构。
 2. **基于统计的图裁剪。** 获取已探索图 $G'$ 上的指标后，DBAIOps 使用自适应检测函数（ADF）评估收集的指标是否表现出异常模式，并据此裁剪图。对包含 $T$ 个时间步的指标序列 $\mathbf{m}=[m_1,m_2,\ldots,m_T]$，ADF 分五步执行。
 
-**步骤 1：波动性计算。** 首先计算标准差 $\sigma(\mathbf{m})$，度量指标序列的波动幅度。然后计算系数：
+**步骤 1：波动性计算。** 我们首先计算标准差 $\sigma(\mathbf{m})$，度量指标序列的波动幅度。然后，我们计算系数：
 
 $$
 C_V=\rho_V/\rho_R
@@ -346,7 +359,7 @@ $$
 
 其中， $\rho_V$ 表示波动模式的自相关， $\rho_R$ 表示随机波动的自相关，用于量化波动随时间延续的程度。
 
-**步骤 2：计算动态基线 $B_t$ 和偏差 $D$。** 系统为每个时间区间 $t$ 推导动态基线 $B_t$。为保持适应性，不同数据库的基线每小时更新一次。偏差为：
+**步骤 2：计算动态基线 $B_t$ 和偏差 $D$。** 我们为每个时间区间 $t$ 推导动态基线 $B_t$。为保持适应性，不同数据库的基线每小时更新一次。偏差为：
 
 $$
 D=|m_t-B_t|
@@ -366,7 +379,7 @@ $$
 
 在第一种情况下，偏离 $B_t$ 越小，函数值越大；反之，较大偏离表示潜在异常。
 
-**步骤 4：计算权重。** 系统根据 $\sigma$ 和阈值 $\theta$ 动态计算波动权重：
+**步骤 4：计算权重。** 我们根据 $\sigma$ 和阈值 $\theta$ 动态计算波动权重：
 
 $$
 w_1=\frac{\sigma}{\sigma+\theta},\qquad w_2=1-w_1
@@ -374,7 +387,7 @@ $$
 
 当 $\sigma\gt{}\theta$ 时，DBAIOps 给波动性分配更高权重，表示指标中的较大波动更值得关注。
 
-**步骤 5：加权状态评估。** 最终异常分数为：
+**步骤 5：加权状态评估。** 我们计算的最终异常分数为：
 
 $$
 S=w_1\cdot\sigma(\mathbf{m})+w_2\cdot F _ {\mathrm{state}}(m_t,B_t)
@@ -382,7 +395,7 @@ $$
 
 图探索根据该分数裁剪：如果 $S$ 超过环境阈值，则把指标标记为异常，并沿相关边继续探索；否则在当前顶点终止，从而保证只在异常区域进行高效遍历。
 
-**示例 6.1。** 如图 5 所示，日志文件同步异常的图探索分两个关键步骤。首先，在“图推断与邻近发现”阶段，DBAIOps 把 LOG FILE SYNC 顶点作为起点，执行 Cypher 查询遍历相关边，并把搜索扩展到其他图片段，通过相同标签值发现 REDO ALLOCATION 异常模型等隐藏连接。其次，在“基于统计的图裁剪”阶段，DBAIOps 验证并滤除这些扩展顶点中模式正常的顶点。例如，分析指标 I/O Latency 时，动态基线 $B_t\approx15$、当前偏差 $D\approx43$；系统算出异常分数超过阈值（ $\sigma\gt{}\theta$）。因此，保留并合并相关 REDO ALLOCATION 子图，同时剪除统计上正常的分支。系统由此可以探索图并抽取诊断所需的全部相关信息。
+**示例 6.1。** 如图 5 所示，日志文件同步异常的图探索分两个关键步骤。首先，在“图推断与邻近发现”阶段，DBAIOps 把 LOG FILE SYNC 顶点作为起点，执行 Cypher 查询遍历相关边，并把搜索扩展到其他图片段，通过相同标签值发现 REDO ALLOCATION 异常模型等隐藏连接。其次，在“基于统计的图裁剪”阶段，DBAIOps 验证并滤除这些扩展顶点中模式正常的顶点。例如，分析指标 I/O Latency 时，动态基线 $B_t\approx15$、当前偏差 $D\approx43$；系统算出异常分数超过阈值（ $\sigma\gt{}\theta$）。因此，保留并合并相关 REDO ALLOCATION 子图，同时剪除统计上正常的分支。我们由此可以探索图并抽取诊断所需的全部相关信息。
 
 ### 6.2 图增强 LLM 诊断
 
@@ -497,7 +510,7 @@ $$
 3. **使用中等规模推理模型的 DBAIOps，可以达到与大规模推理模型相近的诊断准确率。** DBAIOps（DeepSeek-R1 32B）在各数据库系统上的平均诊断性能为 0.92，与 DBAIOps（DeepSeek-R1 671B）的 0.94 相近。原因是，异常模型和运维知识图谱联合处理后的数据向模型提供了有用信息，降低了识别正确根因的难度。因此，只要处理后的数据中包含所需信息，中等规模推理模型也能取得良好表现。
 4. **DBAIOps 在不同异常上始终取得更高的 HEval。** 在 Oracle 的 LOG SYNCHRONIZATION DELAY 异常上，DBAIOps 比“规则工具 + DBA”高 29.00%；在 PostgreSQL 的 BACKEND PROCESS FLUSHES DIRTY PAGES 异常上，它比 DeepSeek-R1 32B 高 48.00%。这说明 DBAIOps 的集成设计——结构化异常模型、基于知识图谱的推理和受证据约束的 LLM 分析——在异构异常类型上比基线方法产生明显更可靠的诊断（详见第 7.4 节）。
 
-我们还评估了不同方法在各类数据库异常上的详细诊断性能。图 7 给出了四个场景的结果。不同异常下 LLM 的有效性不同，但 DBAIOps 能稳定提高其诊断性能：DBAIOps 在不同异常上的平均诊断性能达到 0.87。相比之下，DeepSeek-R1 32B 在 CPU Spikes 上表现较好，平均诊断性能为 0.59；在 Excessive Dirty Page Writes 上表现很差，平均诊断性能仅为 0.12。这说明仅依赖 LLM 无法有效诊断多样异常，需要像 DBAIOps 一样整合运维知识图谱来提高诊断准确率。
+我们还评估了不同方法在各类数据库异常上的详细诊断性能。图 7 给出了四个场景的结果。我们注意到，不同异常下 LLM 的有效性不同，但 DBAIOps 能稳定提高其诊断性能：DBAIOps 在不同异常上的平均诊断性能达到 0.87。相比之下，DeepSeek-R1 32B 在 CPU Spikes 上表现较好，平均诊断性能为 0.59；在 Excessive Dirty Page Writes 上表现很差，平均诊断性能仅为 0.12。这说明仅依赖 LLM 无法有效诊断多样异常，需要像 DBAIOps 一样整合运维知识图谱来提高诊断准确率。
 
 ![图 7：不同场景中的诊断性能分布](assets/figure-07.png)
 
@@ -528,7 +541,7 @@ $$
 
 **图 8：DBAIOps 变体的延迟分析。**
 
-我们进一步分析 DBAIOps 及其变体的延迟开销，把时间分解为三个阶段：（1）异常检测：触发用于诊断的异常模型；（2）经验准备：从两阶段图探索中检索并处理诊断信息；（3）LLM 诊断：使用收集到的诊断信息，指导 LLM 生成诊断报告。图 8 显示，大多数时间花在 LLM 诊断上，在 Oracle 和 MySQL 异常中平均占 88.47%（135.75 秒）。相比之下，异常检测平均只占 4.01%（不超过 5 秒），而且完全不使用 LLM。这说明 DBAIOps 无需等待 LLM 处理即可快速识别异常，适用于快速检测十分重要的真实场景。
+我们进一步分析 DBAIOps 及其变体的延迟开销，把时间分解为三个阶段：（1）异常检测：触发用于诊断的异常模型；（2）经验准备：从两阶段图探索中检索并处理诊断信息；（3）LLM 诊断：使用收集到的诊断信息，指导 LLM 生成诊断报告。对于图 8 的结果，我们观察到大多数时间花在 LLM 诊断上，在 Oracle 和 MySQL 异常中平均占 88.47%（135.75 秒）。相比之下，异常检测平均只占 4.01%（不超过 5 秒），而且完全不使用 LLM。这说明 DBAIOps 无需等待 LLM 处理即可快速识别异常，适用于快速检测十分重要的真实场景。
 
 ![图 9：输入提示和输出报告的 token 数量](assets/figure-09.png)
 
@@ -538,7 +551,7 @@ $$
 
 ### 7.4 真实案例分析
 
-我们针对两个代表性异常，评估 DBAIOps 和基线方法生成的诊断报告：Oracle 的 LOG SYNCHRONIZATION DELAY，以及 PostgreSQL 的 BACKEND PROCESS FLUSHES DIRTY PAGES。如表 7 所示，我们使用第 7.1 节 HEval 的三项准则——根因召回率、理论一致性和证据真实性——分别评估每个异常的两份诊断报告。完整报告见原论文工件。
+我们针对两个代表性异常，评估 DBAIOps 和基线方法生成的诊断报告：Oracle 的 LOG SYNCHRONIZATION DELAY，以及 PostgreSQL 的 BACKEND PROCESS FLUSHES DIRTY PAGES。如表 7 所示，我们使用第 7.1 节 HEval 的三项准则——根因召回率、理论一致性和证据真实性——分别评估每个异常的两份诊断报告。完整报告见我们的[工件](https://github.com/weAIDB/DBAIOps/blob/master/Appendix_Diagnosis_Report.pdf)。
 
 **表 7：DBAIOps 和基线方法生成的诊断报告案例研究。**
 
@@ -570,7 +583,7 @@ $$
 
 ## 8 结论
 
-本文提出首个混合数据库运维系统 DBAIOps。它结合知识图谱和推理型 LLM 的优势，为金融和医疗等领域的 25 种数据库提供真实运维支持。我们构建了异构图模型，使结构化运维经验能够在不同数据库系统间复用；基于细粒度指标层次设计了一组异常模型，用来捕获显式和隐式指标相关性；提出两阶段图探索机制，自适应探索诊断路径，并为新观测到的异常积累经验；还引入长期推理机制，通过自适应图遍历上下文和基于 LLM 的推断指导诊断。大量实验验证了 DBAIOps 的有效性：与传统方法和基于 LLM 的方法相比，它取得了更高的根因准确率和报告质量。
+本文中，我们提出首个混合数据库运维系统 DBAIOps。它结合知识图谱和推理型 LLM 的优势，为金融和医疗等领域的 25 种数据库提供真实运维支持。我们构建了异构图模型，使结构化运维经验能够在不同数据库系统间复用；基于细粒度指标层次设计了一组异常模型，用来捕获显式和隐式指标相关性；提出两阶段图探索机制，自适应探索诊断路径，并为新观测到的异常积累经验；还引入长期推理机制，通过自适应图遍历上下文和基于 LLM 的推断指导诊断。大量实验验证了 DBAIOps 的有效性：与传统方法和基于 LLM 的方法相比，它取得了更高的根因准确率和报告质量。
 
 ## 致谢
 

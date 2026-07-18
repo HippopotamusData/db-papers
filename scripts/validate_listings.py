@@ -8,6 +8,8 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from markdown_visibility import reader_visible_markdown
+
 
 PUNCTUATED_SOURCE_CAPTION_RE = re.compile(
     r"(?:^[ \t\f]*|[ \t]{2,})(?i:Listing)[ \t]+([1-9]\d*)"
@@ -112,6 +114,7 @@ def adjacent_fenced_blocks(
 
 
 def listing_findings(source_text: str, translation_text: str) -> tuple[list[str], list[str]]:
+    translation_text = reader_visible_markdown(translation_text)
     source_numbers = source_listing_numbers(source_text)
     if not source_numbers:
         return [], []

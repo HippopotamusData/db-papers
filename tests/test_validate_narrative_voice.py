@@ -44,6 +44,14 @@ class NarrativeVoiceValidationTests(unittest.TestCase):
         text = "## 作者\n作者：Alice\n作者单位：Example University\n```text\n作者提出\n```\n"
         self.assertEqual(find_ambiguous_author_narration(text), [])
 
+    def test_hidden_html_comment_is_not_reader_visible_narration(self) -> None:
+        self.assertEqual(
+            find_ambiguous_author_narration(
+                "<!-- 作者提出一种隐藏方法。 -->\n正文。\n"
+            ),
+            [],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,9 +11,7 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
-作者：Michael Armbrust、Ali Ghodsi、Reynold Xin、Matei Zaharia
-
-机构：Databricks、加州大学伯克利分校、斯坦福大学
+作者单位：Michael Armbrust（Databricks）；Ali Ghodsi（Databricks、加州大学伯克利分校）；Reynold Xin（Databricks）；Matei Zaharia（Databricks、斯坦福大学）
 
 会议：第 11 届创新数据系统研究会议（CIDR '21），2021 年 1 月 11-15 日，线上
 

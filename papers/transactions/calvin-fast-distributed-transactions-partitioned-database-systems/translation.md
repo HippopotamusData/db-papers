@@ -13,11 +13,11 @@ source: source.pdf
 
 ## 出版信息
 
-Alexander Thomson、Thaddeus Diamond、Shu-Chun Weng、Kun Ren、Philip Shao、Daniel J. Abadi
+Alexander Thomson（`thomson@cs.yale.edu`）、Thaddeus Diamond（`diamond@cs.yale.edu`）、Shu-Chun Weng（`scweng@cs.yale.edu`）、Kun Ren（`kun@cs.yale.edu`）、Philip Shao（`shao-philip@cs.yale.edu`）、Daniel J. Abadi（`dna@cs.yale.edu`）
 
 耶鲁大学
 
-SIGMOD '12，2012 年 5 月 20 至 24 日，美国亚利桑那州斯科茨代尔。版权 © 2012 ACM，ISBN 978-1-4503-1247-9/12/05。
+SIGMOD '12，2012 年 5 月 20 至 24 日，美国亚利桑那州斯科茨代尔。版权 © 2012 ACM，ISBN 978-1-4503-1247-9/12/05，价格 \$10.00。
 
 允许免费制作本文全部或部分内容的数字或纸质副本，供个人或课堂使用，前提是副本不用于营利或商业目的，并在首页保留本声明和完整引文。复制用于其他目的、再版、发布到服务器或分发到邮件列表，须事先获得明确许可并可能支付费用。
 

@@ -75,6 +75,14 @@ STRONG_MATH_PREFIX_RE = re.compile(
 VOID_HTML_TAGS = frozenset(
     {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 )
+MATH_CODE_OPERATOR_RE = re.compile(
+    r"[∈∉≤≥≈≠±×÷∞∑∏√∧∨∪∩⊆⊂→←↔]"
+)
+MATH_CODE_BIG_O_RE = re.compile(r"^\s*[OΘΩ]\s*\([^`\r\n]+\)\s*$")
+MATH_CODE_SUBSCRIPT_LIST_RE = re.compile(
+    r"^\s*\[\s*[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9]+"
+    r"(?:\s*,\s*[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9]+)+\s*\]\s*$"
+)
 
 
 @dataclass(frozen=True)
@@ -275,6 +283,46 @@ def _mask_inline_code(
             _mask_range(chars, cursor, closing_end)
             cursor = closing_end
     return chars, issues
+
+
+def math_like_code_span_issues(text: str) -> list[MathIssue]:
+    """Find strong evidence that mathematical prose was hidden as inline code.
+
+    Ordinary identifiers, SQL fragments, and literal data remain valid code
+    spans. This intentionally narrow detector only reports mathematical
+    operators, complete asymptotic expressions, or bracketed subscript-vector
+    notation. Ambiguous single identifiers still require source-PDF review.
+    """
+
+    chars, _block_issues = _mask_block_code(text)
+    issues: list[MathIssue] = []
+    cursor = 0
+    while cursor < len(chars):
+        if chars[cursor] != "`" or _escaped(chars, cursor):
+            cursor += 1
+            continue
+        run_length = _tick_run(chars, cursor)
+        closing = _find_exact_tick_close(chars, cursor + run_length, run_length)
+        if closing is None:
+            cursor += run_length
+            continue
+        closing_end = closing + run_length
+        payload = text[cursor + run_length : closing]
+        normalized = re.sub(r"[ \t\r\n]+", " ", payload)
+        if (
+            MATH_CODE_OPERATOR_RE.search(normalized)
+            or MATH_CODE_BIG_O_RE.fullmatch(normalized)
+            or MATH_CODE_SUBSCRIPT_LIST_RE.fullmatch(normalized)
+        ):
+            issues.append(
+                MathIssue(
+                    cursor,
+                    "GHM029",
+                    "math-like content is inside a Markdown code span; verify it against source.pdf and use an ordinary math node",
+                )
+            )
+        cursor = closing_end
+    return issues
 
 
 def _mask_inline_html_code(chars: list[str]) -> list[str]:
@@ -1464,10 +1512,16 @@ def _alternative_delimiter_issues(text: str) -> list[MathIssue]:
     return issues
 
 
-def validate_text(text: str) -> list[MathIssue]:
+def validate_text(
+    text: str,
+    *,
+    reject_math_code_spans: bool = False,
+) -> list[MathIssue]:
     fragments, issues = _parse_math(text)
     issues.extend(_alternative_delimiter_issues(text))
     issues.extend(_markdown_container_issues(text))
+    if reject_math_code_spans:
+        issues.extend(math_like_code_span_issues(text))
     environment: dict[str, object] = {}
     MARKDOWN.parse(text, environment)
     references = environment.get("references", {})
@@ -1492,10 +1546,17 @@ def _line_column(text: str, offset: int) -> tuple[int, int]:
     return line, column
 
 
-def validate_path(path: Path) -> list[str]:
+def validate_path(
+    path: Path,
+    *,
+    reject_math_code_spans: bool = False,
+) -> list[str]:
     text = path.read_text(encoding="utf-8")
     messages = []
-    for issue in validate_text(text):
+    for issue in validate_text(
+        text,
+        reject_math_code_spans=reject_math_code_spans,
+    ):
         line, column = _line_column(text, issue.offset)
         messages.append(f"{path}:{line}:{column}: {issue.code} {issue.message}")
     return messages
@@ -1503,13 +1564,26 @@ def validate_path(path: Path) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--reject-math-code-spans",
+        action="store_true",
+        help=(
+            "reject strong math-like inline-code candidates during active "
+            "draft review"
+        ),
+    )
     parser.add_argument("paths", nargs="+", type=Path)
     args = parser.parse_args()
 
     messages: list[str] = []
     try:
         for path in args.paths:
-            messages.extend(validate_path(path))
+            messages.extend(
+                validate_path(
+                    path,
+                    reject_math_code_spans=args.reject_math_code_spans,
+                )
+            )
     except (OSError, UnicodeError) as error:
         print(f"ERROR: portable math validation could not read input: {error}", file=sys.stderr)
         return 2

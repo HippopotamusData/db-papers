@@ -7,6 +7,8 @@ import re
 import sys
 from pathlib import Path
 
+from markdown_visibility import reader_visible_markdown
+
 
 AUTHOR_METADATA = re.compile(r"^(?:[-*]\s*)?(?:\*\*)?作者(?:单位|贡献)?[:：]")
 QUALIFIED_AUTHOR = re.compile(
@@ -16,6 +18,7 @@ QUALIFIED_AUTHOR = re.compile(
 
 
 def find_ambiguous_author_narration(text: str) -> list[tuple[int, str]]:
+    text = reader_visible_markdown(text)
     findings: list[tuple[int, str]] = []
     in_fence = False
     for line_number, line in enumerate(text.splitlines(), start=1):

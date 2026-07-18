@@ -13,7 +13,8 @@ source: source.pdf
 
 作者：Orson R. L. Peters<br>
 邮箱：orsonpeters@gmail.com<br>
-单位：莱顿大学
+单位：莱顿大学<br>
+版本：arXiv:2106.05123v1 [cs.DS]，2021 年 6 月 9 日
 
 ## 摘要
 
@@ -162,7 +163,7 @@ int* part_right(int* l, int* r) {
 
 ### 4.1. 防止快速排序的 $O(n^2)$ 最坏情况
 
-模式破坏快速排序把不平衡程度超过 $p$ 的分区称为坏分区，其中 $p$ 是轴所在的百分位，例如完美分区时 $p=\frac12$。算法最初把一个计数器设为 $\log n$。每次遇到坏分区时，它都会在递归前递减计数器[^per-subtree-counter]。若一次递归调用开始时计数器已为 0，则改用堆排序处理该子序列，而不再使用快速排序。
+模式破坏快速排序把分区比例比阈值 $p$ 更不平衡的操作称为坏分区；这里 $p$ 表示轴所在的百分位，例如完美分区时 $p=\frac12$。算法最初把一个计数器设为 $\log n$。每次遇到坏分区时，它都会在递归前递减计数器[^per-subtree-counter]。若一次递归调用开始时计数器已为 0，则改用堆排序处理该子序列，而不再使用快速排序。
 
 **引理 5.** pdqsort 在坏分区上花费的时间至多为 $O(n\log n)$。
 
@@ -296,7 +297,7 @@ for (int i = 0; i < std::min(num_l, num_r); ++i) {
 
 ### 6.1. 方法
 
-我们评估以下算法：带块分区的模式破坏快速排序（BPDQ）、不带块分区的版本（PDQ）、libstdc++ 的 `std::sort` 所实现的 introsort（STD）、Timothy van Slyke 的 C++ Timsort [15] 实现 [16]（TIM）、BlockQuicksort（BQ），以及 In-Place Super Scalar Samplesort [3] 的顺序版本（ $\mathrm{IS}^{4}\mathrm{O}$）。据我们所知，最后一种算法代表当时大规模数据顺序、原地比较排序的最佳水平。
+我们评估以下算法：带块分区的模式破坏快速排序（BPDQ）、不带块分区的版本（PDQ）、libstdc++ 的 `std::sort` 所实现的 introsort（STD）、Timothy van Slyke 的 C++ Timsort [15] 实现 [16]（TIM）、BlockQuicksort（BQ），以及 In-Place Super Scalar Samplesort [3] 的顺序版本（ $\mathrm{IS}^{4}\mathrm{o}$）。据我们所知，最后一种算法代表当时大规模数据顺序、原地比较排序的最佳水平。
 
 与 BlockQuicksort 的比较尤其重要，因为它是衡量本文新方法的基准。BlockQuicksort 代码仓库定义了多个版本，其中一个同样采用 Hoare 风格的相向指针分区和 Tukey ninther 轴选择。我们选择这个最接近的版本，因为它与本文算法最相似。BlockQuicksort 的作者还提出了自己的重复元素处理方案；为比较他们的方法与本文方法的效果，我们也启用了该方案。
 
@@ -322,7 +323,7 @@ for (int i = 0; i < std::min(num_l, num_r); ++i) {
 
 由这些观察可以安全地说，模式破坏快速排序的启发式规则只有极小开销，甚至没有开销。
 
-缓存方面的行为值得注意。在本测试系统上，`sizeof(std::string)` 为 32；`STR` 基准中，所有基于快速排序的算法在 $n\approx2^{16}$ 附近都出现明显的斜率变化，此时 1.5 MB 的 L1 缓存恰好被填满。奇怪的是，即使 `INT` 输入规模远超任何 CPU 缓存，也从未出现这种斜率变化。对 `BIGSTR`，斜率变化出现得稍早，约在 $n=2^{12}$。Timsort 似乎几乎不受影响，但这方面明显的赢家是 $\mathrm{IS}^{4}\mathrm{O}$，它看起来基本上与缓存无关。
+缓存方面的行为值得注意。在本测试系统上，`sizeof(std::string)` 为 32；`STR` 基准中，所有基于快速排序的算法在 $n\approx2^{16}$ 附近都出现明显的斜率变化，此时 1.5 MB 的 L1 缓存恰好被填满。奇怪的是，即使 `INT` 输入规模远超任何 CPU 缓存，也从未出现这种斜率变化。对 `BIGSTR`，斜率变化出现得稍早，约在 $n=2^{12}$。Timsort 似乎几乎不受影响，但这方面明显的赢家是 $\mathrm{IS}^{4}\mathrm{o}$，它看起来基本上与缓存无关。
 
 我们原本就知道块分区并非总有收益。即使数据类型的比较可以无分支完成，它仍不一定更快。当数据具有很强的模式、分支预测器几乎每次都能猜对时（例如 `MERGE-INT` 中的 PDQ），传统分区仍可能快得多。
 
@@ -336,7 +337,7 @@ for (int i = 0; i < std::min(num_l, num_r); ++i) {
 
 ## 7. 结论与未来研究
 
-我们得出结论：本文提出的启发式规则和技术开销很小，并能有效处理多种输入模式。对于中小规模输入或中小数据类型，模式破坏快速排序通常是综合最佳选择。它与其他快速排序变体都会受困于大到无法装入缓存的数据集，而 $\mathrm{IS}^{4}\mathrm{O}$ 在此场景表现出色；但后者在较小规模上性能较差。未来研究或许可以结合这两类算法各自的优点。
+我们得出结论：本文提出的启发式规则和技术开销很小，并能有效处理多种输入模式。对于中小规模输入或中小数据类型，模式破坏快速排序通常是综合最佳选择。它与其他快速排序变体都会受困于大到无法装入缓存的数据集，而 $\mathrm{IS}^{4}\mathrm{o}$ 在此场景表现出色；但后者在较小规模上性能较差。未来研究或许可以结合这两类算法各自的优点。
 
 ## 参考文献
 
@@ -366,7 +367,7 @@ for (int i = 0; i < std::min(num_l, num_r); ++i) {
 
 ![INT 基准：UNIFORM、SORT50、SORT90、SORT99、ASC、DESC](assets/figure-5-benchmark.png)
 
-**图 5.** `INT` 基准：`UNIFORM`、`SORT50`、`SORT90`、`SORT99`、`ASC`、`DESC`。纵轴为耗时除以 $n\log_2 n$ 后的周期数，横轴为输入规模 $n$；图例为 PDQ、BPDQ、STD、TIM、BQ、 $\mathrm{IS}^{4}\mathrm{O}$。
+**图 5.** `INT` 基准：`UNIFORM`、`SORT50`、`SORT90`、`SORT99`、`ASC`、`DESC`。纵轴为耗时除以 $n\log_2 n$ 后的周期数，横轴为输入规模 $n$；图例为 PDQ、BPDQ、STD、TIM、BQ、 $\mathrm{IS}^{4}\mathrm{o}$。
 
 ![INT 基准续：DUPSQ、DUP8、MOD8、ONES、ORGAN、MERGE](assets/figure-6-benchmark.png)
 
@@ -374,7 +375,7 @@ for (int i = 0; i < std::min(num_l, num_r); ++i) {
 
 ![STR 基准：UNIFORM、SORT50、SORT90、SORT99、ASC、DESC](assets/figure-7-benchmark.png)
 
-**图 7.** `STR` 基准：`UNIFORM`、`SORT50`、`SORT90`、`SORT99`、`ASC`、`DESC`。纵轴为耗时除以 $n\log_2 n$ 后的周期数，横轴为输入规模 $n$；图例为 PDQ、BPDQ、STD、TIM、BQ、 $\mathrm{IS}^{4}\mathrm{O}$。
+**图 7.** `STR` 基准：`UNIFORM`、`SORT50`、`SORT90`、`SORT99`、`ASC`、`DESC`。纵轴为耗时除以 $n\log_2 n$ 后的周期数，横轴为输入规模 $n$；图例为 PDQ、BPDQ、STD、TIM、BQ、 $\mathrm{IS}^{4}\mathrm{o}$。
 
 ![STR 基准续：DUPSQ、DUP8、MOD8、ONES、ORGAN、MERGE](assets/figure-8-benchmark.png)
 
@@ -382,7 +383,7 @@ for (int i = 0; i < std::min(num_l, num_r); ++i) {
 
 ![BIGSTR 基准：UNIFORM、SORT50、SORT90、SORT99、ASC、DESC](assets/figure-9-benchmark.png)
 
-**图 9.** `BIGSTR` 基准：`UNIFORM`、`SORT50`、`SORT90`、`SORT99`、`ASC`、`DESC`。纵轴为耗时除以 $n\log_2 n$ 后的周期数，横轴为输入规模 $n$；图例为 PDQ、BPDQ、STD、TIM、BQ、 $\mathrm{IS}^{4}\mathrm{O}$。
+**图 9.** `BIGSTR` 基准：`UNIFORM`、`SORT50`、`SORT90`、`SORT99`、`ASC`、`DESC`。纵轴为耗时除以 $n\log_2 n$ 后的周期数，横轴为输入规模 $n$；图例为 PDQ、BPDQ、STD、TIM、BQ、 $\mathrm{IS}^{4}\mathrm{o}$。
 
 ![BIGSTR 基准续：DUPSQ、DUP8、MOD8、ONES、ORGAN、MERGE](assets/figure-10-benchmark.png)
 

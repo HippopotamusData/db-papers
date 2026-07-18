@@ -11,11 +11,11 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
-Raghav Sethi、Martin Traverso、Dain Sundstrom、David Phillips、Wenlei Xie、Yutian Sun、Nezih Yigitbasi、Haozhun Jin、Eric Hwang、Nileema Shingte、Christopher Berner
+Raghav Sethi、Martin Traverso[^author-affiliation]、Dain Sundstrom[^author-affiliation]、David Phillips[^author-affiliation]、Wenlei Xie、Yutian Sun、Nezih Yigitbasi、Haozhun Jin、Eric Hwang、Nileema Shingte[^author-affiliation]、Christopher Berner[^author-affiliation]
 
 Facebook, Inc.
 
-Martin Traverso、Dain Sundstrom、David Phillips、Nileema Shingte 和 Christopher Berner 在贡献期间供职于 Facebook, Inc.
+[^author-affiliation]: 带此标记的人员在参与本文工作期间供职于 Facebook, Inc.
 
 ## 摘要
 

@@ -11,6 +11,14 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
+## 作者与出处
+
+- Thomas Neumann（慕尼黑工业大学，`neumann@in.tum.de`）
+- Viktor Leis（慕尼黑工业大学，`leis@in.tum.de`）
+- Alfons Kemper（慕尼黑工业大学，`kemper@in.tum.de`）
+
+本文发表于 BTW 2017，收录于 B. Mitschang 等人编的 *Datenbanksysteme für Business, Technologie und Web*，Lecture Notes in Informatics（LNI），Gesellschaft für Informatik，Bonn，2017 年，第 31–50 页。
+
 ## 摘要
 
 SQL 已经演化成一种几乎完全正交（orthogonal）的查询语言，允许在查询的几乎所有位置出现任意深度嵌套的子查询。为了避免递归求值策略带来的难以接受的 $O(n^2)$ 运行时间，需要一种扩展关系代数，将这类子查询翻译成非标准连接算子。本文聚焦于传统教材中的内连接、外连接和反/半连接之外的非标准连接算子。HyPer 中传统连接算子的实现已在既有论文中讨论，本文仅作引用。本文覆盖两个新的连接算子 - 标记连接（mark join）和单值连接（single join） - 的逻辑和物理两个层面：在逻辑层面，展示它们的翻译方式和重排序可能性，以便有效优化得到的查询计划；在物理层面，描述这些新连接的基于哈希和分块嵌套循环（block-nested loop）实现。基于数据库系统 HyPer，本文给出完整查询翻译和优化流水线的蓝图。通过分析两个著名基准 TPC-H 和 TPC-DS，本文证明高级连接算子具有实际必要性，因为这些连接变体都会在这些查询集中出现。
@@ -112,7 +120,7 @@ $$
 \Pi _ {Title,Name}(\sigma _ {PersID=Lecturer}(Courses \times Professors))
 $$
 
-之后的优化阶段会把这个规范翻译转换成更高效的计划，例如把选择和笛卡尔积合并为连接。不幸的是，这种简单的教材式翻译不足以处理真实查询。
+之后的优化阶段会把这个规范翻译转换成更高效的计划，例如把选择和笛卡尔积合并为连接。不幸的是，这种简单的教材式翻译不足以处理真实查询；下文会通过例子说明这一点，并在此过程中引入高效处理各种结构所需的其他连接算子。为便于阅读，后续例子不再写出最终投影，而只聚焦实际算子。
 
 ### 3.1 依赖连接（Dependent Join）
 
@@ -136,6 +144,8 @@ $$
 
 当然，查询优化器会尽快尝试消除依赖连接，例如使用 [NK15] 中的技术。但初始的关系代数翻译步骤需要依赖连接，使用普通笛卡尔积是不正确的。有些系统在这里使用嵌套循环连接，但并不显式标注它是依赖连接；然而从性能角度看，嵌套循环连接通常非常不理想。一般更好的做法是先引入依赖连接，再通过去嵌套技术把它转换成更高效的普通连接。
 
+> 原文脚注 4：一些 DBMS 要求用额外语法明确表示这种相关性，例如 PostgreSQL 的 `LATERAL`；HyPer 等其他系统则直接接受上述查询。
+
 ### 3.2 单值连接（Single Join）
 
 相关子查询是规范翻译中的一类问题，第二类问题是标量子查询（scalar subquery）。在 SQL 中，只要子查询恰好产生一列且最多一行，就可以用它计算标量值。例如：
@@ -156,7 +166,7 @@ from Professors p
 $$
 T_1 \Join^1_p T_2 :=
 \begin{cases}
-\text{runtime error}, & \text{if some } t_1 \in T_1 \text{ has more than one matching } t_2 \in T_2 \\
+\text{runtime error}, & \text{if } \exists t_1 \in T_1:\left|\lbrace{}t_1\rbrace{} \Join_p T_2\right| \gt 1 \\
 T_1 \mathbin{\Join _ {\mathrm{left}}} _ p T_2, & \text{otherwise}
 \end{cases}
 $$
@@ -175,7 +185,7 @@ Professors \Join^1 _ {PersId=Boss}
 \sigma _ {JobTitle='personal assistant'}(Assistants)
 $$
 
-引入单值连接同时有性能和正确性理由。在性能方面，基于哈希的单值连接理想情况下运行时间为 $O(n)$，明显优于递归求值的 $O(n^2)$。在正确性方面，一般不能用其他连接实现替代，因为其他实现不会在发现多个连接伙伴时报错。少数例外是：如果已知子查询最多产生一个元组，例如绑定主键或单元组聚合，则可以用其他算子替代单值连接。但这些属于后续优化；初始翻译步骤总是把标量子查询翻译为单值连接。
+引入单值连接同时有性能和正确性理由。在性能方面，基于哈希的单值连接理想情况下运行时间为 $O(n)$，明显优于递归求值的 $O(n^2)$。在正确性方面，一般不能用其他连接实现替代，因为其他实现不会在发现多个连接伙伴时报错。少数例外是：如果已知子查询最多产生一个元组，例如绑定主键或单元组聚合，则可以用普通左外连接 $T_1 \mathbin{\Join _ {\mathrm{left}}} _ p T_2$ 替代单值连接。但这些属于后续优化；初始翻译步骤总是把标量子查询翻译为单值连接。
 
 ### 3.3 标记连接（Mark Join）
 
@@ -233,7 +243,7 @@ $$
 
 1. 从左到右翻译 `FROM` 子句。
    - 对每个条目生成一个算子树。
-   - 如果没有相关性，就用普通连接或笛卡尔积与前一个树组合；否则使用依赖连接。
+   - 如果没有相关性，就用笛卡尔积 $\times$ 与前一个树组合；否则使用依赖连接 $\Join^{dep}$。
    - 结果是一个单一算子树。
 2. 翻译 `WHERE` 子句，如果存在。
    - 对 `exists`、`not exists`、`unique` 和量化子查询，用标记连接把子查询添加到当前树之上，并用标记属性翻译表达式本身。
@@ -259,6 +269,8 @@ $$
 图 1 给出 HyPer 优化器的高层概览。SQL 抽象语法树（AST）到关系代数的翻译由语义分析组件完成。在这一步只引入内连接、外连接、左标记连接和单值连接。所有其他变体都在后续优化阶段中出现，用于提升性能。
 
 ![图 1：HyPer 优化流程概览](assets/figure-01-final.png)
+
+*图 1：优化流程概览（Overview over optimization process）。*
 
 
 ### 4.1 去嵌套（Unnesting）
@@ -295,7 +307,9 @@ $$
 
 对大多数连接类型，HyPer 都有左变体和右变体，例如左标记连接和右标记连接。两个变体在语义上产生相同结果，只是左右输入互换。但它们的性能不同。
 
-例如在基于哈希的执行中，哈希表由左输入构建，右输入元组用于探测哈希表。由于哈希表插入通常比查找慢，出于性能原因，HyPer 的查询优化器会交换连接参数顺序，使较小输入位于左侧。这里的较小基于基数估计判断。总结来说，为每种连接提供两个方向的变体，会给优化器带来选择自由度，从而改善查询性能。
+例如在基于哈希的执行中，哈希表由左输入构建，右输入元组用于探测哈希表。由于哈希表插入通常比查找慢，出于性能原因，HyPer 的查询优化器会交换连接参数顺序，使较小输入位于左侧。这里的“较小”基于基数估计判断。总结来说，为每种连接提供两个方向的变体，会给优化器带来选择自由度，从而改善查询性能。
+
+> 原文脚注 5：与本文约定相反，一些系统对右侧输入做哈希。原文脚注 6：“较小”由基数估计确定。
 
 ### 4.4 其他优化（Other Optimizations）
 
@@ -309,7 +323,7 @@ where exists (select *
               where Lecturer = PersId)
 ```
 
-最初用标记连接表达，之后在优化步骤中被替换为半连接。
+最初用标记连接表达，之后在优化步骤中被替换为半连接 $(Professors \ltimes Courses)$。
 
 另一项优化是把外连接翻译为内连接。这在存在拒绝空值（null-rejecting）谓词时可行，例如：
 
@@ -337,7 +351,7 @@ from Professors
 
 ### 5.1 常规等值连接（Regular Equi-Joins）
 
-为了突出不同连接之间的差异，先从常规基于哈希的等值连接开始。这里只描述内存内情形，因此代码较短，并作为不同变体的基础。为简单起见，假设计算 $R _ {a=b} S$：
+为了突出不同连接之间的差异，先从常规基于哈希的等值连接开始。这里只描述内存内情形，因此代码较短，并作为不同变体的基础。为简单起见，假设计算 $R \Join _ {a=b} S$：
 
 ```text
 List. 1: Equality Hash Join
@@ -354,7 +368,7 @@ for each s in S
 
 ### 5.2 混合类型连接（Joins with Mixed Types）
 
-即使是简单等值连接，如果涉及混合数据类型也会变复杂。在 $R _ {a=b} S$ 的例子中，如果 `a` 的数据类型是 `numeric(6,3)`，而 `b` 的数据类型是 `integer`，应该如何组织哈希表？数值的内部表示很不同，但仍需保证 `3` 能与 `3.000` 连接，而不能与 `3.001` 连接。若直接使用不同数据类型的原生哈希函数，通常无法满足这一点。
+即使是简单等值连接，如果涉及混合数据类型也会变复杂。在 $R \Join _ {a=b} S$ 的例子中，如果 `a` 的数据类型是 `numeric(6,3)`，而 `b` 的数据类型是 `integer`，应该如何组织哈希表？数值的内部表示很不同，但仍需保证 `3` 能与 `3.000` 连接，而不能与 `3.001` 连接。若直接使用不同数据类型的原生哈希函数，通常无法满足这一点。
 
 关键洞察是：应在限制最强的数据类型上执行连接，本例中为 `integer`。任何不能精确表示为整数的值都不可能有连接伙伴，因此可以从哈希表中省略。假设 `b` 具有限制最强的数据类型，则伪代码如下：
 
@@ -379,6 +393,8 @@ for each s in S
 外连接输出与内连接相同的元组，此外还输出所有没有找到连接伙伴的元组。这可以通过标记元组实现。如图 2 所示，每个哈希表条目有一个额外字节，初始值为 0；一旦找到连接伙伴，就设为 1。这样连接完成后可以输出所有没有连接伙伴的元组。对右侧元组而言，是否有连接伙伴可以立即知道。下面给出全外连接伪代码；左外连接和右外连接是该算法的直接子集。
 
 ![图 2](assets/figure-02-precise2.png)
+
+*图 2：外连接示例（Outer Join Example）。*
 
 
 ```text
@@ -513,10 +529,11 @@ for each r in H
 
 ### 5.7 非等值连接（Non-Equi Joins）
 
-等值连接最常见，但并不是唯一的连接类型。一般而言，连接谓词可以是任意表达式，而这并不总能用哈希连接求值。在讨论一般情形前，先考虑“近似”等值连接，例如 $R _ {a=b \land c\gt{}d} S$。这类谓词有一个等值部分，可以用哈希连接求值，而且通常应该这样做。但对非等值部分必须小心处理。对内连接，可以拆分谓词：
+等值连接最常见，但并不是唯一的连接类型。一般而言，连接谓词可以是任意表达式，而这并不总能用哈希连接求值。在讨论一般情形前，先考虑“近似”等值连接，例如 $R \Join _ {a=b \land c\gt{}d} S$。这类谓词有一个等值部分，可以用哈希连接求值，而且通常应该这样做。但对非等值部分必须小心处理。对内连接，可以拆分谓词：
 
 $$
-R _ {a=b \land c\gt{}d} S \equiv \sigma _ {c\gt{}d}(R _ {a=b} S)
+R \Join _ {a=b \land c\gt{}d} S \equiv
+\sigma _ {c\gt{}d}(R \Join _ {a=b} S)
 $$
 
 这很容易回答。但对外连接等情形，这种拆分是不正确的，额外限制必须在连接过程中直接求值，以避免错误结果。对于 HyPer 这类编译型数据库系统 [Ne11]，这种组合求值很自然；但 Vectorwise [ZB12] 之类系统需要额外逻辑，才能在哈希连接中求值任意表达式。注意，连接条件的非等值部分也可能返回 `NULL`，这对标记连接相关；如果当前标记为 `FALSE`，该结果会产生 `NULL` 标记。
@@ -550,6 +567,8 @@ function joinBuffer(B):
     clear B
 ```
 
+> 原文伪代码在 `for each s in S` 循环内写作 `if S is not marked`；结合循环变量和后文“输出 `S` 中所有未标记元组”的说明，此处显然应检查当前元组 `s`。上面为忠实保留源文，仍未擅自改写伪代码。
+
 该连接初始化一个空缓冲区，然后把尽可能多的 `R` 元组装入缓冲区。缓冲区满时调用 `joinBuffer`，将 `S` 的所有元组与当前缓冲区内容连接，标记连接伙伴并输出结果。读完 `S` 后，缓冲区中所有未标记元组会补齐 `NULL` 后输出，缓冲区被清空。该过程持续到 `R` 完全处理完。最后，`S` 中所有未标记元组补齐 `NULL` 后输出。
 
 虽然这是不同算法，但标记逻辑与等值情形相同。主要问题是如何实现这些标记。标记左侧很容易，只需为缓冲区中的每个元组使用一个字节。但标记右侧很困难，因为右侧会被多次读取，且不会全部物化在内存中。一种做法是维护一个额外向量并在需要时写到磁盘，但代价昂贵。HyPer 改用一种关联数据结构，为每个元组分配一个比特值，并使用区间压缩。其思想是：通常要么很少元组满足条件，要么几乎所有元组都满足条件；由于区间压缩，这两种情况都会得到较小的数据结构。
@@ -564,17 +583,17 @@ function joinBuffer(B):
 
 | 连接类型 | TPC-H 优化前 | TPC-H 优化后 | TPC-DS 优化前 | TPC-DS 优化后 |
 | --- | --- | --- | --- | --- |
-| inner | yes | yes | yes | yes |
-| left outer | yes | no | yes | yes |
-| right outer | no | no | no | yes |
-| full outer | no | no | yes | yes |
-| single | no | no | yes | yes |
-| left mark | yes | no | yes | yes |
-| right mark | - | no | - | yes |
-| left semi | - | yes | - | yes |
-| right semi | - | yes | - | yes |
-| left anti semi | - | yes | - | yes |
-| right anti semi | - | yes | - | no |
+| inner（ $\Join$ ） | yes | yes | yes | yes |
+| left outer（ $\mathbin{\Join _ {\mathrm{left}}}$ ） | yes | no | yes | yes |
+| right outer（ $\mathbin{\Join _ {\mathrm{right}}}$ ） | no | no | no | yes |
+| full outer（ $\mathbin{\Join _ {\mathrm{full}}}$ ） | no | no | yes | yes |
+| single（ $\Join^1$ ） | no | no | yes | yes |
+| left mark（ $\Join^M$ ） | yes | no | yes | yes |
+| right mark（ ${}^M\Join$ ） | - | no | - | yes |
+| left semi（ $\ltimes$ ） | - | yes | - | yes |
+| right semi（ $\rtimes$ ） | - | yes | - | yes |
+| left anti semi（ $\bar{\ltimes}$ ） | - | yes | - | yes |
+| right anti semi（ $\bar{\rtimes}$ ） | - | yes | - | no |
 | group join | - | yes | - | yes |
 
 表中标记为 `-` 的条目不会由翻译阶段引入。巧合的是，TPC 查询中所有连接类型都会在优化前或优化后出现。TPC-H 查询数量少于 TPC-DS，且通常复杂度较低。在 TPC-H 中不会出现单值连接，所有左标记连接都可以翻译成四种左/右半连接或反半连接。相比之下，在 TPC-DS 中，即使优化后，有时仍需要单值连接和标记连接。表格还显示，查询优化器会选择右变体和左变体。总体而言，表 1 表明连接变体的“动物园”确实是必要的，查询优化器会从拥有这些变体中获益。
@@ -613,34 +632,34 @@ HyPer 连接的物理求值已在既有论文中描述。Albutiu 等人 [AKN12] 
 
 [AKN12] Albutiu, Martina-Cezara; Kemper, Alfons; Neumann, Thomas: Massively Parallel Sort-Merge Joins in Main Memory Multi-Core Database Systems. PVLDB, 5(10):1064-1075, 2012.
 
-[AKN13] Albutiu, Martina-Cezara; Kemper, Alfons; Neumann, Thomas: Extending the MPSM Join. BTW 2013, pp. 57-71, 2013.
+[AKN13] Albutiu, Martina-Cezara; Kemper, Alfons; Neumann, Thomas: Extending the MPSM Join. In: Datenbanksysteme für Business, Technologie und Web (BTW), 15. Fachtagung des GI-Fachbereichs "Datenbanken und Informationssysteme" (DBIS), 11.-15.3.2013 in Magdeburg, Germany. Proceedings. pp. 57-71, 2013.
 
-[Ba15] Balkesen, Cagri; Teubner, Jens; Alonso, Gustavo; Ozsu, M. Tamer: Main-Memory Hash Joins on Modern Processor Architectures. IEEE TKDE, 27(7):1754-1766, 2015.
+[Ba15] Balkesen, Cagri; Teubner, Jens; Alonso, Gustavo; Özsu, M. Tamer: Main-Memory Hash Joins on Modern Processor Architectures. IEEE Trans. Knowl. Data Eng., 27(7):1754-1766, 2015.
 
-[GJ01] Galindo-Legaria, Cesar A.; Joshi, Milind: Orthogonal Optimization of Subqueries and Aggregation. SIGMOD 2001, pp. 571-581, 2001.
+[GJ01] Galindo-Legaria, César A.; Joshi, Milind: Orthogonal Optimization of Subqueries and Aggregation. In (Mehrotra, Sharad; Sellis, Timos K., eds): Proceedings of the 2001 ACM SIGMOD international conference on Management of data, Santa Barbara, CA, USA, May 21-24, 2001. ACM, pp. 571-581, 2001.
 
-[HGS16] Holsch, Jurgen; Grossniklaus, Michael; Scholl, Marc H.: Optimization of Nested Queries using the NF2 Algebra. SIGMOD 2016, pp. 1765-1780, 2016.
+[HGS16] Hölsch, Jürgen; Grossniklaus, Michael; Scholl, Marc H.: Optimization of Nested Queries using the NF2 Algebra. In: Proceedings of the 2016 International Conference on Management of Data, SIGMOD Conference 2016, San Francisco, CA, USA, June 26 - July 01, 2016. pp. 1765-1780, 2016.
 
-[La13] Lang, Harald; Leis, Viktor; Albutiu, Martina-Cezara; Neumann, Thomas; Kemper, Alfons: Massively Parallel NUMA-aware Hash Joins. IMDM 2013, pp. 1-12, 2013.
+[La13] Lang, Harald; Leis, Viktor; Albutiu, Martina-Cezara; Neumann, Thomas; Kemper, Alfons: Massively Parallel NUMA-aware Hash Joins. In: Proceedings of the 1st International Workshop on In Memory Data Management and Analytics, IMDM 2013, Riva Del Garda, Italy, August 26, 2013. pp. 1-12, 2013.
 
-[Le14] Leis, Viktor; Boncz, Peter A.; Kemper, Alfons; Neumann, Thomas: Morsel-driven parallelism: a NUMA-aware query evaluation framework for the many-core age. SIGMOD 2014, pp. 743-754, 2014.
+[Le14] Leis, Viktor; Boncz, Peter A.; Kemper, Alfons; Neumann, Thomas: Morsel-driven parallelism: a NUMA-aware query evaluation framework for the many-core age. In (Dyreson, Curtis E.; Li, Feifei; Özsu, M. Tamer, eds): International Conference on Management of Data, SIGMOD 2014, Snowbird, UT, USA, June 22-27, 2014. ACM, pp. 743-754, 2014.
 
 [Le15] Leis, Viktor; Gubichev, Andrey; Mirchev, Atanas; Boncz, Peter A.; Kemper, Alfons; Neumann, Thomas: How Good Are Query Optimizers, Really? PVLDB, 9(3):204-215, 2015.
 
-[MN08] Moerkotte, Guido; Neumann, Thomas: Dynamic programming strikes back. SIGMOD 2008, pp. 539-552, 2008.
+[MN08] Moerkotte, Guido; Neumann, Thomas: Dynamic programming strikes back. In: Proceedings of the ACM SIGMOD International Conference on Management of Data, SIGMOD 2008, Vancouver, BC, Canada, June 10-12, 2008. pp. 539-552, 2008.
 
 [MN11] Moerkotte, Guido; Neumann, Thomas: Accelerating Queries with Group-By and Join by Groupjoin. PVLDB, 4(11):843-851, 2011.
 
 [Mo14] Moerkotte, Guido: Building Query Compiler [Draft]. December 8, 2014.
 
-[Ne09] Neumann, Thomas: Query simplification: graceful degradation for join-order optimization. SIGMOD 2009, pp. 403-414, 2009.
+[Ne09] Neumann, Thomas: Query simplification: graceful degradation for join-order optimization. In: Proceedings of the ACM SIGMOD International Conference on Management of Data, SIGMOD 2009, Providence, Rhode Island, USA, June 29 - July 2, 2009. pp. 403-414, 2009.
 
 [Ne11] Neumann, Thomas: Efficiently Compiling Efficient Query Plans for Modern Hardware. PVLDB, 4(9):539-550, 2011.
 
-[NK15] Neumann, Thomas; Kemper, Alfons: Unnesting Arbitrary Queries. BTW 2015, pp. 383-402, 2015.
+[NK15] Neumann, Thomas; Kemper, Alfons: Unnesting Arbitrary Queries. In: Datenbanksysteme für Business, Technologie und Web (BTW), 16. Fachtagung des GI-Fachbereichs "Datenbanken und Informationssysteme" (DBIS), 4.-6.3.2015 in Hamburg, Germany. Proceedings. pp. 383-402, 2015.
 
 [RAD15] Richter, Stefan; Alvarez, Victor; Dittrich, Jens: A Seven-Dimensional Analysis of Hashing Methods and its Implications on Query Processing. PVLDB, 9(3):96-107, 2015.
 
-[SCD16] Schuh, Stefan; Chen, Xiao; Dittrich, Jens: An Experimental Comparison of Thirteen Relational Equi-Joins in Main Memory. SIGMOD 2016, pp. 1961-1976, 2016.
+[SCD16] Schuh, Stefan; Chen, Xiao; Dittrich, Jens: An Experimental Comparison of Thirteen Relational Equi-Joins in Main Memory. In: Proceedings of the 2016 International Conference on Management of Data, SIGMOD Conference 2016, San Francisco, CA, USA, June 26 - July 01, 2016. pp. 1961-1976, 2016.
 
 [ZB12] Zukowski, Marcin; Boncz, Peter A.: Vectorwise: Beyond Column Stores. IEEE Data Engineering Bulletin, 35(1):21-27, 2012.

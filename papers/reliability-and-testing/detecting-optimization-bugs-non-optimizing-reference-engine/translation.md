@@ -16,6 +16,18 @@ source: source.pdf
 - Manuel Rigger（`manuel.rigger@inf.ethz.ch`），苏黎世联邦理工学院计算机科学系，瑞士苏黎世
 - Zhendong Su（`zhendong.su@inf.ethz.ch`），苏黎世联邦理工学院计算机科学系，瑞士苏黎世
 
+## 出版信息
+
+arXiv:2007.08292v1 [cs.SE]，16 Jul 2020。
+
+Manuel Rigger and Zhendong Su. 2020. “Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction.” Proceedings of the 28th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering（ESEC/FSE ’20），November 8–13, 2020，Virtual Event, USA。ACM，New York, NY, USA，13 pages。doi:[10.1145/3368089.3409710](https://doi.org/10.1145/3368089.3409710)。
+
+## 版权与许可
+
+在副本不用于营利或商业优势、且首页保留本通知和完整引文的前提下，可免费为个人或课堂用途制作本文全部或部分内容的数字或纸质副本。由其他权利人拥有的组成部分版权必须受到尊重；注明出处的摘要摘录被允许。其他复制、再版、张贴到服务器或向列表再分发的行为，必须事先获得明确许可并且/或者付费。许可请求请发送至 `permissions@acm.org`。
+
+ESEC/FSE ’20，November 8–13, 2020，Virtual Event, USA。© 2020，版权由所有者/著作权人持有；出版权许可给 ACM。ACM ISBN 978-1-4503-7043-1/20/11，定价 \$15.00。DOI：[10.1145/3368089.3409710](https://doi.org/10.1145/3368089.3409710)。
+
 ## 摘要
 
 数据库管理系统（DBMS）无处不在。为了高效访问数据，它们会应用复杂的优化。错误的优化可能导致逻辑错误（logic bugs），使查询计算出不正确的结果集。本文提出非优化参考引擎构造（Non-Optimizing Reference Engine Construction，NoREC），一种用于检测 DBMS 优化错误的全自动方法。
@@ -113,9 +125,9 @@ SELECT * FROM t0 WHERE ϕ;
 SELECT (ϕ IS TRUE) FROM t0;
 ```
 
-这个查询没有 `WHERE` 条件。因此，DBMS 必须取回所选表中的每条记录，实际上禁用了大多数原本可以应用的优化。此外，该查询把 `ϕ` 作为布尔谓词，在表中每条记录上求值。对于优化查询结果集中的每条记录——也就是 `WHERE` 子句求值为 TRUE 的记录——这个谓词也应求值为 TRUE，因为无论谓词用在何处，它都必须一致地产生相同值。因此，结果集必须包含两个 TRUE 和一个 FALSE。
+这个查询没有 `WHERE` 条件。因此，DBMS 必须取回所选表中的每条记录，实际上禁用了大多数原本可以应用的优化。此外，该查询把 $\phi$ 作为布尔谓词，在表中每条记录上求值。对于优化查询结果集中的每条记录——也就是 `WHERE` 子句求值为 TRUE 的记录——这个谓词也应求值为 TRUE，因为无论谓词用在何处，它都必须一致地产生相同值。因此，结果集必须包含两个 TRUE 和一个 FALSE。
 
-在步骤 3 中，我们把两个查询都交给 DBMS，并比较两个结果集，即把 `rs1` 或 `rs2` 与 `rs3` 比较。对优化查询，我们计算记录数：正确执行时 $|rs1|=2$，错误执行时 $|rs2|=3$。对未优化查询，我们计算结果集中 TRUE 值的数量，即 $|\sigma _ {column1=TRUE}(rs3)|=2$；该数量应等于优化查询取回的记录数。错误执行时 $2 \ne 3$，NoREC 因而检测到查询优化器中的错误。
+在步骤 3 中，我们把两个查询都交给 DBMS，并比较两个结果集，即把 `rs1` 或 `rs2` 与 `rs3` 比较。对优化查询，我们计算记录数：正确执行时 $|rs1|=2$，错误执行时 $|rs2|=3$。对未优化查询，我们计算结果集中 TRUE 值的数量，即 $|\sigma _ {\mathrm{column1}=\mathrm{TRUE}}(rs3)|=2$；该数量应等于优化查询取回的记录数。错误执行时 $2 \ne 3$，NoREC 因而检测到查询优化器中的错误。
 
 ![图 1：本方法的核心是把优化查询（步骤 1）翻译为未优化查询（步骤 2），从而自动检测优化错误（步骤 3）。](./assets/figure-01.png)
 
@@ -186,7 +198,7 @@ SELECT SUM(count) FROM (SELECT ϕ IS TRUE) AS count FROM t0
 
 **非确定性函数。** 查询即使没有歧义，也可能因非确定性函数而在优化查询与未优化查询之间产生不同结果。这类函数包括随机数生成器和返回当前时间的函数。为了防止误报，我们禁用了它们的生成。
 
-**短路求值。** 本方法不适合检测“优化掉”异常或错误的优化缺陷，因为 SQL 没有规定 `AND` 和 `OR` 运算符是否必须短路。我们发现 DBMS 对优化查询与未优化查询可能采用不一致的处理。考虑谓词 $\phi _ {ok}\ \mathrm{AND}\ \phi _ {err}$，其中 $\phi _ {err}$ 一旦执行就会报错。如果先执行 $\phi _ {ok}$ 且结果为 FALSE，DBMS 可能不再求值 $\phi _ {err}$，语句便不会出错；否则，执行 $\phi _ {err}$ 就会报错。因此，本方法无法检测那些使预期错误不再发生的错误优化。
+**短路求值。** 本方法不适合检测“优化掉”异常或错误的优化缺陷，因为 SQL 没有规定 `AND` 和 `OR` 运算符是否必须短路。我们发现 DBMS 对优化查询与未优化查询可能采用不一致的处理。考虑谓词 $\phi _ {\mathrm{ok}}\ \mathrm{AND}\ \phi _ {\mathrm{err}}$，其中 $\phi _ {\mathrm{err}}$ 一旦执行就会报错。如果先执行 $\phi _ {\mathrm{ok}}$ 且结果为 FALSE，DBMS 可能不再求值 $\phi _ {\mathrm{err}}$，语句便不会出错；否则，执行 $\phi _ {\mathrm{err}}$ 就会报错。因此，本方法无法检测那些使预期错误不再发生的错误优化。
 
 **其他特性。** 本方法既不直接适用于 `DISTINCT` 子句，也不直接适用于聚合函数、窗口函数等跨多条记录计算结果的查询；这也是 PQS 的一项限制。这些特性同样会被优化，因而其实现也可能存在优化错误。我们相信，把优化查询翻译为未优化查询的高层思想可以扩展到这些场景。
 

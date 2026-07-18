@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,6 +14,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate_github_math import MathExpression  # noqa: E402
 from verify_math_rendering import (  # noqa: E402
+    _github_html,
     _github_sequence_failures,
     _load_expressions,
     _normalized_actual_renderer_text,
@@ -76,6 +79,20 @@ class VerifyMathRenderingTests(unittest.TestCase):
         self.assertEqual(len(failures), 1)
         self.assertIn("paper.md:3", failures[0])
         self.assertIn("occurrence 3", failures[0])
+
+    def test_github_audit_is_pinned_to_github_dot_com(self) -> None:
+        commands: list[list[str]] = []
+
+        def succeed(command, **_kwargs):
+            commands.append(command)
+            return subprocess.CompletedProcess(command, 0, "<p>ok</p>", "")
+
+        with patch("verify_math_rendering.subprocess.run", side_effect=succeed):
+            self.assertEqual(_github_html("$x$", "owner/repo"), "<p>ok</p>")
+        self.assertEqual(
+            commands[0][0:5],
+            ["gh", "api", "--hostname", "github.com", "--method"],
+        )
 
     def test_github_comparison_does_not_hide_entity_rewrites(self) -> None:
         text = "$x&#X2B;y$\n"

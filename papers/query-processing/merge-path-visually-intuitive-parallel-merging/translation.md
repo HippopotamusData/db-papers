@@ -11,9 +11,13 @@ source: source.pdf
 
 本文依据同目录的 `source.pdf` 翻译。章节、图表、公式、算法、代码与参考文献按原文结构保留。
 
+## 作者
+
 Oded Green、Saher Odeh、Yitzhak Birk
 
 作者单位：Oded Green 所属佐治亚理工学院计算学院（美国佐治亚州亚特兰大）；三人均属 Technion - Israel Institute of Technology 电气工程系（以色列海法）。通讯作者为 Oded Green，邮箱：ogreen@gatech.edu。
+
+**版本信息**：arXiv:1406.2628v2 [cs.DC]，2014 年 6 月 20 日。
 
 ## 摘要
 
@@ -129,7 +133,7 @@ $$
 
 情形 1，向右：下一点为 $(i,j+1)$。由定义 1， $M[i,j]=1$。由归纳假设，或者 $i=1$，或者 $M[i-1,j]=0$。若 $i=1$，新点就是新反对角线上满足 $M[i,j]=1$ 的最高点；否则由命题 11， $M[i-1,j+1]=0$，所以 $(i,j+1)$ 是其反对角线上满足 $M[i,j]=1$ 的最高点。
 
-情形 2，向下：下一点为 $(i+1,j)$。由定义 1， $M[i,j]=0$。由归纳假设，或者 $j=1$，或者 $M[i,j-1]=1$。若 $j=1$，新点就是新反对角线的最低点；由于 $M[i,j]=0$，由命题 11 可知整条反对角线均为 0。否则 $M[i,j-1]=1$，由命题 10 得 $M[i+1,j-1]=1$。因此， $(i,j+1)$ 是其反对角线上满足 $M[i+1,j-1]=1$ 的最高点。
+情形 2，向下：下一点为 $(i+1,j)$。由定义 1， $M[i,j]=0$。由归纳假设，或者 $j=1$，或者 $M[i,j-1]=1$。若 $j=1$，新点就是新反对角线的最低点；由于 $M[i,j]=0$，由命题 11 可知整条反对角线均为 0。否则 $M[i,j-1]=1$，由命题 10 得 $M[i+1,j-1]=1$。因此， $(i,j+1)$ 是其反对角线上满足 $M[i+1,j-1]=1$ 的最高点。这里的 $(i,j+1)$ 是原文写法，与本情形开头定义的下一点 $(i+1,j)$ 不一致。
 
 **算法 1：`ParallelMerge(A, B, S, p)`**
 
@@ -185,11 +189,18 @@ end while
 return {a_start, b_start}
 ```
 
-该并行归并排序的时间复杂度在原文中写为：
+原文算法 2 的形参名是 `threadid`，但第一行使用了未定义的 `i`；此外，原文把 `a_bottom` 初始化为 `b_top`。译文保留算法框的字面内容，不擅自推断实现修正。
+
+该并行归并排序的时间复杂度首先写为：
 
 $$
-O\negthinspace{}\left(\frac{N}{p}\log\frac{N}{p}+\frac{N}{p}\log p+\log p\log N\right)
-=O\negthinspace{}\left(\frac{N}{/p}\log N+\log p\log n\right).
+O\negthinspace{}\left(\frac{N}{p}\log\frac{N}{p}+\frac{N}{p}\log p+\log p\log N\right).
+$$
+
+原文随后给出的等价变形含有 `N//p`、小写 `n` 和未闭合括号等排版错误。由上面的完整表达式合并前两项，可得：
+
+$$
+O\negthinspace{}\left(\frac{N}{p}\log N+\log p\log N\right).
 $$
 
 第一个表达式中，第一项对应每个核心并发地对 $N/p$ 个输入元素执行顺序排序，后两项对应随后各轮并行合并。
@@ -297,6 +308,8 @@ for k = 1 to MAX_iterations do
     Barrier
 end for
 ```
+
+原文算法 3 在外层 `k` 循环内写的是 `if k = p then update startingPoint`；该条件不会在每次线段迭代后更新起点，和正文描述存在不一致。这里保留原算法框并明确标出这一源文异常。
 
 ![图 3：缓存高效并行排序的第一阶段](assets/figure-03-cache-sort-first-stage.png)
 

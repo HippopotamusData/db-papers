@@ -7,8 +7,10 @@ import argparse
 import contextlib
 import fcntl
 import hashlib
+import json
 import os
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -32,14 +34,18 @@ from project_config import (
     ALLOW_WHOLE_PAGE_IMAGES_IN_READING_PATH,
     GIT_SHA_RE,
     METADATA_FILE,
-    MIGRATION_REVIEWERS,
+    REVIEW_IDENTITY_ASSURANCE,
+    REQUIRED_REVIEW_CHECKS,
     REQUIRE_COMPLETE_REFERENCES,
+    REVIEW_RECEIPT_SCHEMA_VERSION,
     RUNTIME_REVIEW_ACTIONS,
     SHA256_RE,
     SLUG_RE,
     SOURCE_FILE,
     TARGET_LANGUAGE,
     TRANSLATION_FILE,
+    acceptance_entry_fingerprint,
+    assets_manifest,
     assets_manifest_sha256,
     configured_paths,
     effective_page_limit,
@@ -48,11 +54,16 @@ from project_config import (
     load_taxonomy,
     load_yaml,
     load_yaml_text,
+    review_receipt_fingerprint,
+    review_gate_manifest_sha256,
+    review_metadata_sha256,
     sha256_file,
     skip_reason as configured_skip_reason,
     validate_acceptance_ledger,
+    validate_review_receipt,
 )
 from validation_policy import quality_issue_severity
+from validate_github_math import math_like_code_span_issues
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -71,6 +82,16 @@ RATING_DIMENSIONS = {
 RATING_KEYS = {"score", *RATING_DIMENSIONS}
 VALID_RATING_SCORES = {Decimal(step) / 2 for step in range(2, 11)}
 VALIDATION_FIELD_SEPARATOR = "\x1f"
+VALIDATION_INTERNAL_ENV_KEYS = (
+    "ACCEPTANCE_DISCOVERY",
+    "ACCEPTANCE_EVIDENCE_FILE",
+    "ACCEPTANCE_PAPER_ID",
+    "ACCEPTANCE_RECORDED_WAIVERS",
+    "ACCEPTANCE_TARGET_STATUS",
+    "PAPER_ID",
+    "SKIP_METADATA_VALIDATION",
+)
+ACCEPTANCE_JOURNAL_SCHEMA_VERSION = 1
 
 
 class IndentedSafeDumper(yaml.SafeDumper):
@@ -93,6 +114,7 @@ def dump_yaml(data: dict[str, Any]) -> str:
 def atomic_write_text(path: Path, content: str) -> None:
     """Replace one text file atomically; callers coordinate multi-file rollback."""
     temporary_name: str | None = None
+    existing_mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else None
     try:
         with tempfile.NamedTemporaryFile(
             mode="w",
@@ -102,13 +124,299 @@ def atomic_write_text(path: Path, content: str) -> None:
             delete=False,
         ) as handle:
             temporary_name = handle.name
+            if existing_mode is not None:
+                os.fchmod(handle.fileno(), existing_mode)
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
         Path(temporary_name).replace(path)
+        directory_fd = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
     finally:
         if temporary_name:
             Path(temporary_name).unlink(missing_ok=True)
+
+
+def _acceptance_journal_path(root: Path) -> Path:
+    return root / "config/.acceptance-transaction.yaml"
+
+
+def _acceptance_cleanup_marker_path(root: Path) -> Path:
+    return root / "config/.acceptance-transaction.cleanup.yaml"
+
+
+def _acceptance_transaction_markers(root: Path) -> list[Path]:
+    return [
+        path
+        for path in (
+            _acceptance_journal_path(root),
+            _acceptance_cleanup_marker_path(root),
+        )
+        if path.exists() or path.is_symlink()
+    ]
+
+
+def _unfinished_acceptance_marker(root: Path) -> Path | None:
+    markers = _acceptance_transaction_markers(root)
+    if len(markers) > 1:
+        rendered = ", ".join(path.relative_to(root).as_posix() for path in markers)
+        raise ValueError(
+            "multiple acceptance transaction markers exist; refusing to choose "
+            f"between them: {rendered}"
+        )
+    return markers[0] if markers else None
+
+
+def _fsync_directory(path: Path) -> None:
+    directory_fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
+
+
+def _acceptance_journal_fingerprint(journal: dict[str, Any]) -> str:
+    payload = dict(journal)
+    payload.pop("fingerprint", None)
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _build_acceptance_journal(
+    *,
+    paper_id: str,
+    ledger_path: Path,
+    original_ledger: str,
+    accepted_ledger: str,
+    metadata_path: Path,
+    original_metadata: str,
+    accepted_metadata: str,
+    source: Path,
+    source_sha256: str,
+    translation: Path,
+    translation_sha256: str,
+    assets_manifest_sha256_value: str,
+    policy_path: Path,
+    policy_sha256: str,
+    review_gate_sha256: str,
+    git_head: str,
+) -> dict[str, Any]:
+    journal: dict[str, Any] = {
+        "schema_version": ACCEPTANCE_JOURNAL_SCHEMA_VERSION,
+        "paper_id": paper_id,
+        "files": {
+            ledger_path.relative_to(ROOT).as_posix(): {
+                "original": original_ledger,
+                "accepted": accepted_ledger,
+            },
+            metadata_path.relative_to(ROOT).as_posix(): {
+                "original": original_metadata,
+                "accepted": accepted_metadata,
+            },
+        },
+        "context": {
+            "source_path": source.relative_to(ROOT).as_posix(),
+            "source_sha256": source_sha256,
+            "translation_path": translation.relative_to(ROOT).as_posix(),
+            "translation_sha256": translation_sha256,
+            "assets_manifest_sha256": assets_manifest_sha256_value,
+            "translation_policy_path": policy_path.relative_to(ROOT).as_posix(),
+            "translation_policy_sha256": policy_sha256,
+            "review_gate_manifest_sha256": review_gate_sha256,
+            "git_head": git_head,
+        },
+    }
+    journal["fingerprint"] = _acceptance_journal_fingerprint(journal)
+    return journal
+
+
+def _validate_acceptance_journal(
+    journal: Any,
+    *,
+    root: Path,
+    label: str,
+) -> dict[str, Any]:
+    if not isinstance(journal, dict):
+        raise ValueError(f"{label}: YAML root must be a mapping")
+    expected_keys = {
+        "schema_version",
+        "paper_id",
+        "files",
+        "context",
+        "fingerprint",
+    }
+    if set(journal) != expected_keys:
+        missing = expected_keys - journal.keys()
+        unknown = journal.keys() - expected_keys
+        details: list[str] = []
+        if missing:
+            details.append("missing keys: " + ", ".join(sorted(missing)))
+        if unknown:
+            details.append("unknown keys: " + ", ".join(sorted(unknown)))
+        raise ValueError(f"{label}: {'; '.join(details)}")
+    if (
+        type(journal["schema_version"]) is not int
+        or journal["schema_version"] != ACCEPTANCE_JOURNAL_SCHEMA_VERSION
+    ):
+        raise ValueError(
+            f"{label}.schema_version must be integer "
+            f"{ACCEPTANCE_JOURNAL_SCHEMA_VERSION}"
+        )
+    paper_id = journal["paper_id"]
+    if not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id):
+        raise ValueError(f"{label}.paper_id must be kebab-case")
+    files = journal["files"]
+    if not isinstance(files, dict):
+        raise ValueError(f"{label}.files must be a mapping")
+    metadata_matches = sorted(
+        root.glob(f"papers/*/{paper_id}/{METADATA_FILE}")
+    )
+    if len(metadata_matches) != 1:
+        raise ValueError(
+            f"{label}: paper id must resolve exactly once: {paper_id}"
+        )
+    expected_paths = {
+        (root / "config/acceptance.yaml").relative_to(root).as_posix(),
+        metadata_matches[0].relative_to(root).as_posix(),
+    }
+    if set(files) != expected_paths:
+        raise ValueError(
+            f"{label}.files must contain exactly the acceptance ledger "
+            "and the paper metadata"
+        )
+    for relative_path, record in files.items():
+        if not isinstance(record, dict) or set(record) != {"original", "accepted"}:
+            raise ValueError(
+                f"{label}.files.{relative_path} must contain only "
+                "original and accepted"
+            )
+        for state in ("original", "accepted"):
+            if not isinstance(record[state], str):
+                raise ValueError(
+                    f"{label}.files.{relative_path}.{state} must be text"
+                )
+        if record["original"] == record["accepted"]:
+            raise ValueError(
+                f"{label}.files.{relative_path} must describe a real change"
+            )
+    context = journal["context"]
+    expected_context_keys = {
+        "source_path",
+        "source_sha256",
+        "translation_path",
+        "translation_sha256",
+        "assets_manifest_sha256",
+        "translation_policy_path",
+        "translation_policy_sha256",
+        "review_gate_manifest_sha256",
+        "git_head",
+    }
+    if not isinstance(context, dict) or set(context) != expected_context_keys:
+        raise ValueError(
+            f"{label}.context must contain exactly the acceptance input snapshot"
+        )
+    paper_dir = metadata_matches[0].parent
+    expected_context_paths = {
+        "source_path": (paper_dir / SOURCE_FILE).relative_to(root).as_posix(),
+        "translation_path": (paper_dir / TRANSLATION_FILE)
+        .relative_to(root)
+        .as_posix(),
+        "translation_policy_path": "docs/translation-policy.md",
+    }
+    for key, expected in expected_context_paths.items():
+        if context[key] != expected:
+            raise ValueError(f"{label}.context.{key} must be {expected!r}")
+    for key in (
+        "source_sha256",
+        "translation_sha256",
+        "assets_manifest_sha256",
+        "translation_policy_sha256",
+        "review_gate_manifest_sha256",
+    ):
+        if not isinstance(context[key], str) or not SHA256_RE.fullmatch(context[key]):
+            raise ValueError(f"{label}.context.{key} must be lowercase SHA-256")
+    if not isinstance(context["git_head"], str) or not GIT_SHA_RE.fullmatch(
+        context["git_head"]
+    ):
+        raise ValueError(f"{label}.context.git_head must be a lowercase Git SHA")
+    fingerprint = journal["fingerprint"]
+    if (
+        not isinstance(fingerprint, str)
+        or fingerprint != _acceptance_journal_fingerprint(journal)
+    ):
+        raise ValueError(f"{label}.fingerprint does not match the journal")
+    return journal
+
+
+def _write_acceptance_journal(journal: dict[str, Any]) -> Path:
+    journal_path = _acceptance_journal_path(ROOT)
+    if _acceptance_transaction_markers(ROOT):
+        raise ValueError(
+            "an unfinished acceptance transaction already exists; "
+            "run recover-acceptance first"
+        )
+    atomic_write_text(journal_path, dump_yaml(journal))
+    recorded = _validate_acceptance_journal(
+        load_yaml_text(journal_path.read_text(encoding="utf-8"), str(journal_path)),
+        root=ROOT,
+        label=str(journal_path),
+    )
+    if recorded != journal:
+        raise ValueError("acceptance transaction journal failed verification")
+    return journal_path
+
+
+def _remove_acceptance_journal(
+    marker_path: Path,
+    expected_content: str,
+) -> None:
+    """Durably retire a journal without losing the only recovery record.
+
+    The active journal is first renamed to a cleanup marker and that rename is
+    directory-synced.  Only then may the cleanup marker be unlinked.  If the
+    first sync fails, recovery can consume the marker.  If only the final sync
+    fails after a successful unlink, the requested transaction state is already
+    complete; a crash can at worst resurrect the durable cleanup marker.
+    """
+
+    journal_path = _acceptance_journal_path(ROOT)
+    cleanup_path = _acceptance_cleanup_marker_path(ROOT)
+    if marker_path == journal_path:
+        if cleanup_path.exists() or cleanup_path.is_symlink():
+            raise OSError(
+                f"cleanup marker already exists at {cleanup_path.relative_to(ROOT)}"
+            )
+        marker_path.replace(cleanup_path)
+        marker_path = cleanup_path
+    elif marker_path != cleanup_path:
+        raise OSError(f"unexpected acceptance transaction marker: {marker_path}")
+
+    if marker_path.read_text(encoding="utf-8") != expected_content:
+        raise OSError("transaction marker changed concurrently; refusing to remove it")
+
+    # This is the recovery anchor: failure leaves the marker visible and usable.
+    _fsync_directory(marker_path.parent)
+    if marker_path.read_text(encoding="utf-8") != expected_content:
+        raise OSError("transaction marker changed concurrently; refusing to remove it")
+
+    marker_path.unlink()
+    try:
+        _fsync_directory(marker_path.parent)
+    except OSError as exc:
+        print(
+            "WARNING: acceptance transaction state is complete, but cleanup "
+            "directory sync failed after the durable marker was removed; a "
+            f"stale cleanup marker may reappear after a crash: {exc}",
+            file=sys.stderr,
+        )
 
 
 def records() -> list[tuple[Path, dict[str, Any]]]:
@@ -197,6 +505,19 @@ def parse_translation_frontmatter(path: Path) -> dict[str, Any]:
 
 def validate(paper_id: str | None = None) -> int:
     errors: list[str] = []
+    transaction_markers = _acceptance_transaction_markers(ROOT)
+    if transaction_markers:
+        rendered_markers = ", ".join(
+            path.relative_to(ROOT).as_posix() for path in transaction_markers
+        )
+        print(
+            "ERROR: unfinished acceptance transaction marker exists at "
+            f"{rendered_markers}; run "
+            "`scripts/papers.py recover-acceptance --mode commit` or "
+            "`--mode rollback`",
+            file=sys.stderr,
+        )
+        return 1
     try:
         taxonomy = load_taxonomy(ROOT / "config/taxonomy.yaml")
         paths = configured_paths(ROOT)
@@ -375,6 +696,21 @@ def validate(paper_id: str | None = None) -> int:
                         path,
                         "assets changed after acceptance; set status to draft and review again",
                     )
+                receipt = ledger_entry.get("review_receipt")
+                if receipt:
+                    if (
+                        receipt["review_metadata_sha256"]
+                        != review_metadata_sha256(
+                            data,
+                            receipt["schema_version"],
+                        )
+                    ):
+                        add_error(
+                            errors,
+                            path,
+                            "title/authors/year/source_url changed after review; "
+                            "set status to draft and review again",
+                        )
         elif ledger_entry and reading_status not in {"draft"}:
             add_error(errors, path, "acceptance-ledger entry is only allowed for translated or re-reviewing draft papers")
 
@@ -417,6 +753,60 @@ def validate(paper_id: str | None = None) -> int:
 def status_rows() -> int:
     for path, data in records():
         print(f"{path.parent.relative_to(ROOT)}\t{data['reading_status']}")
+    return 0
+
+
+def review_queue(limit: int | None = None) -> int:
+    """Print a deterministic risk-first queue for deeper PDF review."""
+
+    paths = configured_paths(ROOT)
+    acceptance = load_acceptance_ledger(paths["acceptance_ledger"])["entries"]
+    queue: list[tuple[int, str, list[str]]] = []
+    for metadata_path, data in records():
+        if data.get("reading_status") != "translated":
+            continue
+        paper_id = metadata_path.parent.name
+        entry = acceptance[paper_id]
+        score = 0
+        reasons: list[str] = []
+        if "review_receipt" not in entry:
+            score += 100
+            reasons.append("no-content-bound-receipt")
+        if entry["reviewer"] == "historical-v2-reviewer-unrecorded":
+            score += 50
+            reasons.append("historical-reviewer-unrecorded")
+        waivers = entry.get("waivers", {})
+        waiver_weights = {"abridgement": 30, "listings": 20, "resources": 10}
+        for category, weight in waiver_weights.items():
+            if category in waivers:
+                score += weight
+                findings = len(waivers[category].get("findings", []))
+                score += min(findings, 20)
+                reasons.append(f"{category}-waiver:{findings}")
+        asset_count = len(assets_manifest(metadata_path.parent, ROOT))
+        if asset_count:
+            score += min(asset_count, 10)
+            reasons.append(f"assets:{asset_count}")
+        rating = data.get("rating")
+        if isinstance(rating, dict) and rating.get("score") in {4.5, 5.0}:
+            score += 5
+            reasons.append(f"high-reading-value:{rating['score']}")
+        translation_path = metadata_path.parent / TRANSLATION_FILE
+        if translation_path.is_file():
+            math_code_spans = len(
+                math_like_code_span_issues(
+                    translation_path.read_text(encoding="utf-8")
+                )
+            )
+            if math_code_spans:
+                score += 15 + min(math_code_spans, 20)
+                reasons.append(f"math-like-code-spans:{math_code_spans}")
+        queue.append((score, paper_id, reasons))
+    queue.sort(key=lambda item: (-item[0], item[1]))
+    print("priority\tpaper_id\treasons")
+    selected = queue if limit is None else queue[:limit]
+    for score, paper_id, reasons in selected:
+        print(f"{score}\t{paper_id}\t{','.join(reasons)}")
     return 0
 
 
@@ -736,6 +1126,11 @@ def validation_manifest(
             if reading_status in {"draft", "translated"}
             else ""
         )
+        review_grade = bool(
+            reading_status == "draft"
+            or slug == preflight_paper_id
+            or (entry and "review_receipt" in entry)
+        )
         fields = [
             "paper",
             path.parent.relative_to(ROOT).as_posix(),
@@ -745,6 +1140,7 @@ def validation_manifest(
             configured_skip_reason(policy, slug),
             title,
             severity,
+            str(review_grade).lower(),
         ]
         if not emit(fields):
             return 1
@@ -858,6 +1254,288 @@ def current_git_head(root: Path) -> str:
     return head
 
 
+def _capture_review_snapshot(paper_id: str) -> dict[str, Any]:
+    """Capture every mutable input that must stay stable while the deep gate runs."""
+
+    if not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id):
+        raise ValueError(f"paper id must be kebab-case: {paper_id}")
+    matches = sorted(PAPERS.glob(f"*/{paper_id}/{METADATA_FILE}"))
+    if len(matches) != 1:
+        raise ValueError(f"paper id must resolve exactly once: {paper_id}")
+    metadata_path = matches[0]
+    metadata_text = metadata_path.read_text(encoding="utf-8")
+    metadata = load_yaml_text(metadata_text, str(metadata_path))
+    if metadata.get("reading_status") != "draft":
+        raise ValueError("review receipt requires reading_status=draft")
+    paper_dir = metadata_path.parent
+    source = paper_dir / SOURCE_FILE
+    translation = paper_dir / TRANSLATION_FILE
+    policy_path = ROOT / "docs/translation-policy.md"
+    if not source.is_file() or not translation.is_file():
+        raise ValueError("review receipt requires source.pdf and translation.md")
+    if not policy_path.is_file():
+        raise ValueError("review receipt requires docs/translation-policy.md")
+    return {
+        "metadata_path": metadata_path,
+        "metadata_text": metadata_text,
+        "source_sha256": sha256_file(source),
+        "translation_sha256": sha256_file(translation),
+        "assets_manifest_sha256": assets_manifest_sha256(paper_dir, ROOT),
+        "translation_policy_sha256": sha256_file(policy_path),
+        "review_metadata_sha256": review_metadata_sha256(metadata),
+        "review_gate_manifest_sha256": review_gate_manifest_sha256(ROOT),
+        "git_head": current_git_head(ROOT),
+    }
+
+
+def _build_review_receipt_from_snapshot(
+    paper_id: str,
+    review_action: str,
+    translator: str,
+    reviewer: str,
+    review_base_sha: str,
+    checks: list[str],
+    findings: list[str],
+    waiver_records: dict[str, dict[str, Any]],
+    snapshot: dict[str, Any],
+) -> dict[str, Any]:
+    receipt: dict[str, Any] = {
+        "schema_version": REVIEW_RECEIPT_SCHEMA_VERSION,
+        "paper_id": paper_id,
+        "source_sha256": snapshot["source_sha256"],
+        "translation_sha256": snapshot["translation_sha256"],
+        "assets_manifest_sha256": snapshot["assets_manifest_sha256"],
+        "translation_policy_sha256": snapshot["translation_policy_sha256"],
+        "review_metadata_sha256": snapshot["review_metadata_sha256"],
+        "review_gate_manifest_sha256": snapshot["review_gate_manifest_sha256"],
+        "review_action": review_action,
+        "translator": translator,
+        "reviewer": reviewer,
+        "identity_assurance": REVIEW_IDENTITY_ASSURANCE,
+        "review_base_sha": review_base_sha,
+        "checks": sorted(checks),
+        "findings": sorted(findings),
+        "waivers": waiver_records,
+    }
+    receipt["fingerprint"] = review_receipt_fingerprint(receipt)
+    return validate_review_receipt(receipt, f"review receipt for {paper_id}")
+
+
+def _validate_review_checklist(checks: list[str]) -> None:
+    if not isinstance(checks, list) or any(
+        not isinstance(check, str) for check in checks
+    ):
+        raise ValueError("review receipt checks must be a list of strings")
+    if set(checks) == REQUIRED_REVIEW_CHECKS and len(checks) == len(set(checks)):
+        return
+    missing = sorted(REQUIRED_REVIEW_CHECKS - set(checks))
+    unexpected = sorted(set(checks) - REQUIRED_REVIEW_CHECKS)
+    details: list[str] = []
+    if missing:
+        details.append("missing: " + ", ".join(missing))
+    if unexpected:
+        details.append("unexpected: " + ", ".join(unexpected))
+    raise ValueError(
+        "review receipt requires every checklist item exactly once"
+        + (f" ({'; '.join(details)})" if details else "")
+    )
+
+
+def _parse_waiver_approvals(waivers: list[str]) -> dict[str, str]:
+    approved: dict[str, str] = {}
+    for raw_waiver in waivers:
+        if not isinstance(raw_waiver, str):
+            raise ValueError("acceptance waiver approvals must be strings")
+        category, separator, fingerprint = raw_waiver.strip().partition("=")
+        if not separator or category not in ACCEPTANCE_WAIVERS:
+            raise ValueError(
+                "acceptance waivers must use category=<reviewed-fingerprint> for: "
+                + ", ".join(sorted(ACCEPTANCE_WAIVERS))
+            )
+        if not SHA256_RE.fullmatch(fingerprint):
+            raise ValueError(
+                f"acceptance waiver fingerprint for {category} must be lowercase SHA-256"
+            )
+        if category in approved:
+            raise ValueError(f"duplicate acceptance waiver approval: {category}")
+        approved[category] = fingerprint
+    return approved
+
+
+def _assert_waiver_approvals_match(
+    approved: dict[str, str],
+    waiver_records: dict[str, dict[str, Any]],
+) -> None:
+    observed = {
+        category: record["fingerprint"]
+        for category, record in waiver_records.items()
+    }
+    if observed == approved:
+        return
+    missing = observed.keys() - approved.keys()
+    unused = approved.keys() - observed.keys()
+    changed = {
+        category
+        for category in observed.keys() & approved.keys()
+        if observed[category] != approved[category]
+    }
+    details: list[str] = []
+    if missing:
+        details.append(
+            "unapproved waiver candidates: "
+            + ", ".join(
+                f"{category}={observed[category]}" for category in sorted(missing)
+            )
+        )
+    if unused:
+        details.append(
+            "requested waivers have no current candidates: "
+            + ", ".join(sorted(unused))
+        )
+    details.extend(
+        "approved waiver fingerprint changed: "
+        f"{category}:{approved[category]}:{observed[category]}"
+        for category in sorted(changed)
+    )
+    raise ValueError("; ".join(details))
+
+
+def build_review_receipt(
+    paper_id: str,
+    review_action: str,
+    translator: str,
+    reviewer: str,
+    review_base_sha: str,
+    checks: list[str],
+    findings: list[str],
+    waiver_records: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Build a content-bound reviewer attestation without mutating the repository."""
+
+    _validate_review_checklist(checks)
+    validate_review_base_commit(ROOT, review_base_sha)
+    snapshot = _capture_review_snapshot(paper_id)
+    return _build_review_receipt_from_snapshot(
+        paper_id,
+        review_action,
+        translator,
+        reviewer,
+        review_base_sha,
+        checks,
+        findings,
+        waiver_records or {},
+        snapshot,
+    )
+
+
+def emit_review_receipt(
+    paper_id: str,
+    review_action: str,
+    translator: str,
+    reviewer: str,
+    review_base_sha: str,
+    checks: list[str],
+    findings: list[str],
+    no_findings: bool,
+    waivers: list[str],
+) -> int:
+    """Run the scoped deep gate and emit a pure-YAML content-bound receipt."""
+
+    if bool(findings) == no_findings:
+        print(
+            "ERROR: use one or more --finding values, or explicitly use --no-findings",
+            file=sys.stderr,
+        )
+        return 1
+    try:
+        approved_waivers = _parse_waiver_approvals(waivers)
+        before_snapshot = _capture_review_snapshot(paper_id)
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    environment = os.environ.copy()
+    for internal_key in VALIDATION_INTERNAL_ENV_KEYS:
+        environment.pop(internal_key, None)
+    environment["PYTHON"] = sys.executable
+    environment["DEEP_VALIDATION"] = "1"
+    with tempfile.TemporaryDirectory(
+        prefix="db-papers-review-receipt-evidence-"
+    ) as temporary:
+        evidence_file = Path(temporary) / "observed.tsv"
+        evidence_file.write_text("", encoding="utf-8")
+        completed = subprocess.run(
+            [
+                "bash",
+                "scripts/validate_translations.sh",
+                "--paper-id",
+                paper_id,
+                "--acceptance-discovery",
+                "--acceptance-evidence-file",
+                os.fspath(evidence_file),
+                "--acceptance-paper-id",
+                paper_id,
+            ],
+            cwd=ROOT,
+            env=environment,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        waiver_records: dict[str, dict[str, Any]] = {}
+        evidence_error: OSError | ValueError | None = None
+        if completed.returncode == 0:
+            try:
+                waiver_records = build_waiver_records(
+                    read_observed_tsv(evidence_file)
+                )
+                _assert_waiver_approvals_match(
+                    approved_waivers, waiver_records
+                )
+            except (OSError, ValueError) as exc:
+                evidence_error = exc
+    if completed.returncode != 0:
+        details = "\n".join(
+            part.strip()
+            for part in (completed.stdout, completed.stderr)
+            if part.strip()
+        )
+        print("ERROR: paper-check failed before review receipt", file=sys.stderr)
+        if details:
+            print(details, file=sys.stderr)
+        return 1
+    if evidence_error is not None:
+        print(
+            f"ERROR: review waiver evidence failed: {evidence_error}",
+            file=sys.stderr,
+        )
+        return 1
+    try:
+        after_snapshot = _capture_review_snapshot(paper_id)
+        if after_snapshot != before_snapshot:
+            raise ValueError(
+                "review snapshot changed while paper-check was running; "
+                "repeat the review receipt step on stable inputs"
+            )
+        _validate_review_checklist(checks)
+        validate_review_base_commit(ROOT, review_base_sha)
+        receipt = _build_review_receipt_from_snapshot(
+            paper_id,
+            review_action,
+            translator,
+            reviewer,
+            review_base_sha,
+            checks,
+            findings,
+            waiver_records,
+            after_snapshot,
+        )
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    print(dump_yaml(receipt), end="")
+    return 0
+
+
 def acceptance_preflight(
     paper_id: str, approved_waivers: dict[str, str]
 ) -> tuple[bool, str, dict[str, dict[str, Any]]]:
@@ -877,19 +1555,11 @@ def acceptance_preflight(
     translation = matches[0]
     output: list[str] = []
     base_env = os.environ.copy()
-    for internal_key in (
-        "ACCEPTANCE_DISCOVERY",
-        "ACCEPTANCE_EVIDENCE_FILE",
-        "ACCEPTANCE_PAPER_ID",
-        "ACCEPTANCE_RECORDED_WAIVERS",
-        "ACCEPTANCE_TARGET_STATUS",
-    ):
+    for internal_key in VALIDATION_INTERNAL_ENV_KEYS:
         base_env.pop(internal_key, None)
     base_env.update(
         {
-            "PAPER_ID": paper_id,
             "PYTHON": sys.executable,
-            "SKIP_METADATA_VALIDATION": "1",
             "DEEP_VALIDATION": "1",
         }
     )
@@ -918,6 +1588,8 @@ def acceptance_preflight(
         discovery_command = [
             "bash",
             "scripts/validate_translations.sh",
+            "--paper-id",
+            paper_id,
             "--acceptance-discovery",
             "--acceptance-evidence-file",
             os.fspath(discovery_file),
@@ -970,6 +1642,8 @@ def acceptance_preflight(
         translated_command = [
             "bash",
             "scripts/validate_translations.sh",
+            "--paper-id",
+            paper_id,
             "--acceptance-evidence-file",
             os.fspath(translated_file),
             "--acceptance-paper-id",
@@ -1001,9 +1675,7 @@ def acceptance_preflight(
             output.extend(f"ERROR: waiver evidence {item}" for item in mismatches)
             return False, "\n".join(output), waiver_records
 
-        mathjax_module = os.environ.get(
-            "MATHJAX_MODULE", os.fspath(ROOT / "node_modules/mathjax")
-        )
+        mathjax_module = os.fspath(ROOT / "node_modules/mathjax")
         mathjax_command = [
             sys.executable,
             "scripts/verify_math_rendering.py",
@@ -1037,6 +1709,11 @@ def _assert_acceptance_snapshot(
     translation: Path,
     translation_sha256: str,
     assets_sha256: str,
+    policy_path: Path,
+    policy_sha256: str,
+    review_gate_sha256: str,
+    receipt_path: Path,
+    expected_receipt: str,
     expected_head_sha: str,
 ) -> None:
     if current_git_head(ROOT) != expected_head_sha:
@@ -1051,6 +1728,12 @@ def _assert_acceptance_snapshot(
         raise ValueError("translation.md changed during acceptance")
     if assets_manifest_sha256(metadata_path.parent, ROOT) != assets_sha256:
         raise ValueError("assets changed during acceptance")
+    if sha256_file(policy_path) != policy_sha256:
+        raise ValueError("translation policy changed during acceptance")
+    if review_gate_manifest_sha256(ROOT) != review_gate_sha256:
+        raise ValueError("review gate changed during acceptance")
+    if receipt_path.read_text(encoding="utf-8") != expected_receipt:
+        raise ValueError("review receipt changed during acceptance")
 
 
 def _rollback_attempted_writes(
@@ -1073,11 +1756,14 @@ def _rollback_attempted_writes(
 
 def _accept_record_locked(
     paper_id: str,
-    review_action: str,
-    waivers: list[str],
-    reviewer: str,
-    review_base_sha: str,
+    review_receipt_path: Path,
 ) -> int:
+    journal_path = _acceptance_journal_path(ROOT)
+    if _acceptance_transaction_markers(ROOT):
+        raise ValueError(
+            "an unfinished acceptance transaction already exists; "
+            "run recover-acceptance first"
+        )
     paths = configured_paths(ROOT)
     ledger_path = paths["acceptance_ledger"]
     matches = sorted(PAPERS.glob(f"*/{paper_id}/{paths['metadata'].name}"))
@@ -1097,46 +1783,51 @@ def _accept_record_locked(
         )
     source = metadata_path.parent / paths["source"].name
     translation = metadata_path.parent / paths["translation"].name
+    policy_path = ROOT / "docs/translation-policy.md"
     if not source.is_file() or not translation.is_file():
         raise ValueError("acceptance requires source.pdf and translation.md")
-    if review_action not in RUNTIME_REVIEW_ACTIONS:
-        raise ValueError(
-            "runtime review action must be one of: "
-            + ", ".join(sorted(RUNTIME_REVIEW_ACTIONS))
-        )
-    approved_waivers: dict[str, str] = {}
-    for raw_waiver in waivers:
-        if not isinstance(raw_waiver, str):
-            raise ValueError("acceptance waiver approvals must be strings")
-        category, separator, fingerprint = raw_waiver.strip().partition("=")
-        if not separator or category not in ACCEPTANCE_WAIVERS:
-            raise ValueError(
-                "acceptance waivers must use category=<reviewed-fingerprint> for: "
-                + ", ".join(sorted(ACCEPTANCE_WAIVERS))
-            )
-        if not SHA256_RE.fullmatch(fingerprint):
-            raise ValueError(
-                f"acceptance waiver fingerprint for {category} must be lowercase SHA-256"
-            )
-        if category in approved_waivers:
-            raise ValueError(f"duplicate acceptance waiver approval: {category}")
-        approved_waivers[category] = fingerprint
-    if not isinstance(reviewer, str) or not reviewer.strip() or reviewer != reviewer.strip():
-        raise ValueError("reviewer must be a non-empty trimmed string")
-    if reviewer in MIGRATION_REVIEWERS:
-        raise ValueError("migration reviewer markers cannot be used by runtime acceptance")
-    if not isinstance(review_base_sha, str) or not GIT_SHA_RE.fullmatch(review_base_sha):
-        raise ValueError("review_base_sha must be a 40-character lowercase Git SHA")
-    validate_review_base_commit(ROOT, review_base_sha)
+    original_receipt = review_receipt_path.read_text(encoding="utf-8")
+    receipt = validate_review_receipt(
+        load_yaml_text(original_receipt, str(review_receipt_path)),
+        str(review_receipt_path),
+    )
+    if receipt["paper_id"] != paper_id:
+        raise ValueError("review receipt paper_id does not match --id")
+    validate_review_base_commit(ROOT, receipt["review_base_sha"])
+    approved_waivers = {
+        category: record["fingerprint"]
+        for category, record in receipt["waivers"].items()
+    }
     expected_head_sha = current_git_head(ROOT)
 
     source_hash = sha256_file(source)
     translation_hash = sha256_file(translation)
     assets_hash = assets_manifest_sha256(metadata_path.parent, ROOT)
+    policy_hash = sha256_file(policy_path)
+    current_receipt_values = {
+        "source_sha256": source_hash,
+        "translation_sha256": translation_hash,
+        "assets_manifest_sha256": assets_hash,
+        "translation_policy_sha256": policy_hash,
+        "review_metadata_sha256": review_metadata_sha256(
+            data,
+            receipt["schema_version"],
+        ),
+        "review_gate_manifest_sha256": review_gate_manifest_sha256(ROOT),
+    }
+    for key, current_value in current_receipt_values.items():
+        if receipt[key] != current_value:
+            raise ValueError(
+                f"review receipt {key} does not match the current review snapshot"
+            )
 
     accepted, details, waiver_records = acceptance_preflight(paper_id, approved_waivers)
     if not accepted:
         raise ValueError(f"acceptance preflight failed\n{details}".rstrip())
+    if waiver_records != receipt["waivers"]:
+        raise ValueError(
+            "review receipt waiver evidence does not match the current validator output"
+        )
 
     _assert_acceptance_snapshot(
         ledger_path=ledger_path,
@@ -1148,25 +1839,62 @@ def _accept_record_locked(
         translation=translation,
         translation_sha256=translation_hash,
         assets_sha256=assets_hash,
+        policy_path=policy_path,
+        policy_sha256=policy_hash,
+        review_gate_sha256=receipt["review_gate_manifest_sha256"],
+        receipt_path=review_receipt_path,
+        expected_receipt=original_receipt,
         expected_head_sha=expected_head_sha,
     )
+
+    previous_entry = ledger["entries"].get(paper_id)
+    if previous_entry is not None and "review_receipt" not in previous_entry:
+        retired = ledger["retired_legacy_entry_fingerprints"]
+        if paper_id in retired:
+            raise ValueError(
+                "receiptless legacy entry is already marked as retired"
+            )
+        retired[paper_id] = acceptance_entry_fingerprint(previous_entry)
 
     ledger["entries"][paper_id] = {
         "source_sha256": source_hash,
         "translation_sha256": translation_hash,
         "assets_manifest_sha256": assets_hash,
-        "review_action": review_action,
-        "reviewer": reviewer,
-        "review_base_sha": review_base_sha,
+        "review_action": receipt["review_action"],
+        "reviewer": receipt["reviewer"],
+        "review_base_sha": receipt["review_base_sha"],
+        "review_receipt": receipt,
     }
     if waiver_records:
         ledger["entries"][paper_id]["waivers"] = waiver_records
     data["reading_status"] = "translated"
     accepted_ledger = dump_yaml(ledger)
     accepted_metadata = dump_yaml(data)
+    journal = _build_acceptance_journal(
+        paper_id=paper_id,
+        ledger_path=ledger_path,
+        original_ledger=original_ledger,
+        accepted_ledger=accepted_ledger,
+        metadata_path=metadata_path,
+        original_metadata=original_metadata,
+        accepted_metadata=accepted_metadata,
+        source=source,
+        source_sha256=source_hash,
+        translation=translation,
+        translation_sha256=translation_hash,
+        assets_manifest_sha256_value=assets_hash,
+        policy_path=policy_path,
+        policy_sha256=policy_hash,
+        review_gate_sha256=receipt["review_gate_manifest_sha256"],
+        git_head=expected_head_sha,
+    )
+    expected_journal_text = dump_yaml(journal)
     attempted: list[tuple[Path, str, str]] = []
+    journal_written = False
 
     try:
+        journal_path = _write_acceptance_journal(journal)
+        journal_written = True
         attempted.append((ledger_path, original_ledger, accepted_ledger))
         atomic_write_text(ledger_path, accepted_ledger)
         _assert_acceptance_snapshot(
@@ -1179,6 +1907,11 @@ def _accept_record_locked(
             translation=translation,
             translation_sha256=translation_hash,
             assets_sha256=assets_hash,
+            policy_path=policy_path,
+            policy_sha256=policy_hash,
+            review_gate_sha256=receipt["review_gate_manifest_sha256"],
+            receipt_path=review_receipt_path,
+            expected_receipt=original_receipt,
             expected_head_sha=expected_head_sha,
         )
         attempted.append((metadata_path, original_metadata, accepted_metadata))
@@ -1193,18 +1926,90 @@ def _accept_record_locked(
             translation=translation,
             translation_sha256=translation_hash,
             assets_sha256=assets_hash,
+            policy_path=policy_path,
+            policy_sha256=policy_hash,
+            review_gate_sha256=receipt["review_gate_manifest_sha256"],
+            receipt_path=review_receipt_path,
+            expected_receipt=original_receipt,
             expected_head_sha=expected_head_sha,
         )
         recorded = load_acceptance_ledger(ledger_path)["entries"].get(paper_id)
         if recorded != ledger["entries"][paper_id]:
             raise ValueError("acceptance ledger failed post-write verification")
+        _assert_acceptance_snapshot(
+            ledger_path=ledger_path,
+            expected_ledger=accepted_ledger,
+            metadata_path=metadata_path,
+            expected_metadata=accepted_metadata,
+            source=source,
+            source_sha256=source_hash,
+            translation=translation,
+            translation_sha256=translation_hash,
+            assets_sha256=assets_hash,
+            policy_path=policy_path,
+            policy_sha256=policy_hash,
+            review_gate_sha256=receipt["review_gate_manifest_sha256"],
+            receipt_path=review_receipt_path,
+            expected_receipt=original_receipt,
+            expected_head_sha=expected_head_sha,
+        )
+        if journal_path.read_text(encoding="utf-8") != expected_journal_text:
+            raise ValueError("acceptance transaction journal changed concurrently")
     except BaseException:
         rollback_errors = _rollback_attempted_writes(attempted)
         if rollback_errors:
             print("ERROR: rollback failed: " + "; ".join(rollback_errors), file=sys.stderr)
         elif attempted:
             print("Acceptance changes were rolled back.", file=sys.stderr)
+        if journal_written and not rollback_errors:
+            try:
+                if journal_path.read_text(encoding="utf-8") != expected_journal_text:
+                    raise OSError(
+                        "journal changed concurrently; refusing to remove it"
+                    )
+                _remove_acceptance_journal(
+                    journal_path,
+                    expected_journal_text,
+                )
+            except OSError as cleanup_error:
+                markers = _acceptance_transaction_markers(ROOT)
+                recovery = (
+                    "; recovery marker retained at "
+                    + ", ".join(
+                        path.relative_to(ROOT).as_posix() for path in markers
+                    )
+                    + "; run recover-acceptance --mode rollback"
+                    if markers
+                    else "; no recovery marker remains, so do not run recovery"
+                )
+                print(
+                    "ERROR: rollback completed but transaction cleanup failed"
+                    f"{recovery}: {cleanup_error}",
+                    file=sys.stderr,
+                )
         raise
+
+    try:
+        _remove_acceptance_journal(journal_path, expected_journal_text)
+    except OSError as exc:
+        markers = _acceptance_transaction_markers(ROOT)
+        if markers:
+            rendered_markers = ", ".join(
+                path.relative_to(ROOT).as_posix() for path in markers
+            )
+            recovery = (
+                f"recovery marker retained at {rendered_markers}; run "
+                "recover-acceptance --mode commit"
+            )
+        else:
+            recovery = (
+                "no recovery marker remains; the authoritative files are in "
+                "the accepted state, so do not run recovery"
+            )
+        raise ValueError(
+            "acceptance files were written, but transaction cleanup failed; "
+            f"{recovery}: {exc}"
+        ) from exc
 
     print(f"Accepted {paper_id}; hashes recorded in {ledger_path.relative_to(ROOT)}.")
     return 0
@@ -1212,18 +2017,203 @@ def _accept_record_locked(
 
 def accept_record(
     paper_id: str,
-    review_action: str,
-    waivers: list[str],
-    reviewer: str,
-    review_base_sha: str,
+    review_receipt_path: Path,
 ) -> int:
     try:
         with sigterm_as_exception(), acceptance_lock(ROOT):
-            return _accept_record_locked(
-                paper_id, review_action, waivers, reviewer, review_base_sha
-            )
+            return _accept_record_locked(paper_id, review_receipt_path)
     except (AcceptanceInterrupted, KeyboardInterrupt, OSError, ValueError) as exc:
         details = str(exc).strip() or f"acceptance interrupted by {type(exc).__name__}"
+        print(f"ERROR: {details}", file=sys.stderr)
+        return 1
+
+
+def _assert_recovery_file_states(
+    files: dict[str, dict[str, str]],
+    expected: dict[str, str],
+) -> None:
+    """Refuse to continue after either authoritative file changes."""
+
+    for relative_path in files:
+        current = (ROOT / relative_path).read_text(encoding="utf-8")
+        if current != expected[relative_path]:
+            raise ValueError(
+                f"{relative_path} changed while acceptance recovery was running; "
+                "refusing to overwrite"
+            )
+
+
+def _assert_recovery_context(context: dict[str, str]) -> None:
+    """Recheck every content-bound input before recovery can be committed."""
+
+    context_checks = {
+        "git HEAD": (
+            current_git_head(ROOT),
+            context["git_head"],
+        ),
+        "source.pdf": (
+            sha256_file(ROOT / context["source_path"]),
+            context["source_sha256"],
+        ),
+        "translation.md": (
+            sha256_file(ROOT / context["translation_path"]),
+            context["translation_sha256"],
+        ),
+        "assets": (
+            assets_manifest_sha256(
+                (ROOT / context["translation_path"]).parent,
+                ROOT,
+            ),
+            context["assets_manifest_sha256"],
+        ),
+        "translation policy": (
+            sha256_file(ROOT / context["translation_policy_path"]),
+            context["translation_policy_sha256"],
+        ),
+        "review gate": (
+            review_gate_manifest_sha256(ROOT),
+            context["review_gate_manifest_sha256"],
+        ),
+    }
+    mismatched = [
+        label
+        for label, (current, expected) in context_checks.items()
+        if current != expected
+    ]
+    if mismatched:
+        raise ValueError(
+            "acceptance inputs changed after the interrupted transaction: "
+            + ", ".join(mismatched)
+            + "; use mode=rollback"
+        )
+
+
+def _recover_acceptance_locked(mode: str) -> int:
+    journal_path = _unfinished_acceptance_marker(ROOT)
+    if journal_path is None:
+        raise ValueError("no unfinished acceptance transaction exists")
+    if not journal_path.is_file():
+        raise ValueError(
+            f"acceptance transaction marker is not a file: {journal_path}"
+        )
+    journal_text = journal_path.read_text(encoding="utf-8")
+    journal = _validate_acceptance_journal(
+        load_yaml_text(journal_text, str(journal_path)),
+        root=ROOT,
+        label=str(journal_path),
+    )
+    target_state = "accepted" if mode == "commit" else "original"
+    files = journal["files"]
+    context = journal["context"]
+    current_contents: dict[str, str] = {}
+    for relative_path, record in files.items():
+        path = ROOT / relative_path
+        current = path.read_text(encoding="utf-8")
+        if current not in {record["original"], record["accepted"]}:
+            raise ValueError(
+                f"{relative_path} changed outside the unfinished transaction; "
+                "refusing recovery"
+            )
+        current_contents[relative_path] = current
+
+    if mode == "commit":
+        _assert_recovery_context(context)
+        ledger_relative = "config/acceptance.yaml"
+        accepted_ledger = validate_acceptance_ledger(
+            load_yaml_text(
+                files[ledger_relative]["accepted"],
+                f"{journal_path}: accepted ledger",
+            ),
+            f"{journal_path}: accepted ledger",
+        )
+        accepted_entry = accepted_ledger["entries"].get(journal["paper_id"])
+        if not accepted_entry or "review_receipt" not in accepted_entry:
+            raise ValueError(
+                "transaction target lacks a content-bound acceptance entry"
+            )
+        receipt = accepted_entry["review_receipt"]
+        bound_values = {
+            "source_sha256": context["source_sha256"],
+            "translation_sha256": context["translation_sha256"],
+            "assets_manifest_sha256": context["assets_manifest_sha256"],
+            "translation_policy_sha256": context[
+                "translation_policy_sha256"
+            ],
+            "review_gate_manifest_sha256": context[
+                "review_gate_manifest_sha256"
+            ],
+        }
+        for key, expected in bound_values.items():
+            value = receipt.get(key, accepted_entry.get(key))
+            if value != expected:
+                raise ValueError(
+                    f"transaction target {key} does not match its context"
+                )
+
+    ordered_paths = list(files)
+    if mode == "rollback":
+        ordered_paths.reverse()
+    for relative_path in ordered_paths:
+        _assert_recovery_file_states(files, current_contents)
+        target = files[relative_path][target_state]
+        if current_contents[relative_path] != target:
+            atomic_write_text(ROOT / relative_path, target)
+            current_contents[relative_path] = target
+
+    expected_target_contents = {
+        relative_path: record[target_state]
+        for relative_path, record in files.items()
+    }
+    _assert_recovery_file_states(files, expected_target_contents)
+    if mode == "commit":
+        _assert_recovery_context(context)
+        metadata_relative = next(
+            relative_path
+            for relative_path in files
+            if relative_path != "config/acceptance.yaml"
+        )
+        metadata = load_yaml_text(
+            files[metadata_relative]["accepted"],
+            f"{journal_path}: accepted metadata",
+        )
+        if metadata.get("reading_status") != "translated":
+            raise ValueError(
+                "transaction target metadata is not reading_status=translated"
+            )
+        accepted_entry = load_acceptance_ledger(
+            ROOT / "config/acceptance.yaml"
+        )["entries"].get(journal["paper_id"])
+        if not accepted_entry:
+            raise ValueError("recovered acceptance entry failed validation")
+        if (
+            accepted_entry["review_receipt"]["review_metadata_sha256"]
+            != review_metadata_sha256(
+                metadata,
+                accepted_entry["review_receipt"]["schema_version"],
+            )
+        ):
+            raise ValueError(
+                "transaction target metadata does not match its review receipt"
+            )
+    _assert_recovery_file_states(files, expected_target_contents)
+    if mode == "commit":
+        _assert_recovery_context(context)
+    if journal_path.read_text(encoding="utf-8") != journal_text:
+        raise ValueError("acceptance transaction journal changed during recovery")
+    _remove_acceptance_journal(journal_path, journal_text)
+    print(
+        f"Recovered acceptance transaction for {journal['paper_id']} "
+        f"using mode={mode}."
+    )
+    return 0
+
+
+def recover_acceptance(mode: str) -> int:
+    try:
+        with sigterm_as_exception(), acceptance_lock(ROOT):
+            return _recover_acceptance_locked(mode)
+    except (AcceptanceInterrupted, KeyboardInterrupt, OSError, ValueError) as exc:
+        details = str(exc).strip() or f"recovery interrupted by {type(exc).__name__}"
         print(f"ERROR: {details}", file=sys.stderr)
         return 1
 
@@ -1234,6 +2224,10 @@ def main() -> int:
     validate_parser = subparsers.add_parser("validate", help="validate minimal paper metadata")
     validate_parser.add_argument("--paper-id", help="validate only one paper record")
     subparsers.add_parser("status", help="print tab-separated rows for deep validation")
+    queue_parser = subparsers.add_parser(
+        "review-queue", help="print the deterministic risk-first deep-review queue"
+    )
+    queue_parser.add_argument("--limit", type=int)
     config_parser = subparsers.add_parser("config", help="print a validated project config value")
     config_parser.add_argument("--key", required=True)
     config_parser.add_argument("--paper-id")
@@ -1262,25 +2256,71 @@ def main() -> int:
         help="registered topic; repeat as needed",
     )
     new_parser.add_argument("--url", required=True, help="authoritative source URL")
-    accept_parser = subparsers.add_parser("accept", help="record hashes after manual review and set translated")
-    accept_parser.add_argument("--id", required=True, dest="paper_id")
-    accept_parser.add_argument(
+    receipt_parser = subparsers.add_parser(
+        "review-receipt",
+        help="run the scoped deep gate and emit a content-bound review receipt",
+    )
+    receipt_parser.add_argument("--id", required=True, dest="paper_id")
+    receipt_parser.add_argument(
         "--review-action", required=True, choices=sorted(RUNTIME_REVIEW_ACTIONS)
     )
-    accept_parser.add_argument(
-        "--reviewer", required=True, help="reviewer identity recorded in acceptance evidence"
+    receipt_parser.add_argument(
+        "--translator",
+        required=True,
+        help="stable namespace:value identity of the translator or repairer",
     )
-    accept_parser.add_argument(
+    receipt_parser.add_argument(
+        "--reviewer",
+        required=True,
+        help="stable namespace:value identity of the independent PDF reviewer",
+    )
+    receipt_parser.add_argument(
         "--review-base-sha",
         required=True,
         help="40-character fixed baseline commit against which the review was performed",
     )
-    accept_parser.add_argument(
+    receipt_parser.add_argument(
+        "--check",
+        action="append",
+        default=[],
+        choices=sorted(REQUIRED_REVIEW_CHECKS),
+        help="attest one required review dimension; every dimension is required exactly once",
+    )
+    finding_group = receipt_parser.add_mutually_exclusive_group(required=True)
+    finding_group.add_argument(
+        "--finding",
+        action="append",
+        default=[],
+        help="record one repaired or verified finding; repeat as needed",
+    )
+    finding_group.add_argument(
+        "--no-findings",
+        action="store_true",
+        help="explicitly attest that the deep review found no defects",
+    )
+    receipt_parser.add_argument(
         "--waiver",
         action="append",
         default=[],
         metavar="CATEGORY=FINGERPRINT",
-        help="approve one exact reviewed candidate-group fingerprint",
+        help="attest one exact reviewed paper-check candidate-group fingerprint",
+    )
+    accept_parser = subparsers.add_parser("accept", help="record hashes after manual review and set translated")
+    accept_parser.add_argument("--id", required=True, dest="paper_id")
+    accept_parser.add_argument(
+        "--review-receipt",
+        required=True,
+        type=Path,
+        help="YAML receipt emitted by the independent reviewer",
+    )
+    recover_parser = subparsers.add_parser(
+        "recover-acceptance",
+        help="finish or roll back an interrupted two-file acceptance transaction",
+    )
+    recover_parser.add_argument(
+        "--mode",
+        required=True,
+        choices=("commit", "rollback"),
     )
     args = parser.parse_args()
 
@@ -1288,6 +2328,10 @@ def main() -> int:
         return validate(args.paper_id)
     if args.command == "status":
         return status_rows()
+    if args.command == "review-queue":
+        if args.limit is not None and args.limit < 1:
+            parser.error("--limit must be positive")
+        return review_queue(args.limit)
     if args.command == "config":
         return config_value(args.key, args.paper_id)
     if args.command == "validation-manifest":
@@ -1299,14 +2343,22 @@ def main() -> int:
         )
     if args.command == "catalog":
         return catalog(args.check)
-    if args.command == "accept":
-        return accept_record(
+    if args.command == "review-receipt":
+        return emit_review_receipt(
             args.paper_id,
             args.review_action,
-            args.waiver,
+            args.translator,
             args.reviewer,
             args.review_base_sha,
+            args.check,
+            args.finding,
+            args.no_findings,
+            args.waiver,
         )
+    if args.command == "accept":
+        return accept_record(args.paper_id, args.review_receipt)
+    if args.command == "recover-acceptance":
+        return recover_acceptance(args.mode)
     return new_record(args.id, args.title, args.area, args.topics, args.url)
 
 
