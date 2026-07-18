@@ -287,7 +287,7 @@ CXi = {min(xi), max(xi), total_rows(xi), total_nulls(xi), ...}
 问题可形式化为寻找 $F(\mathit{CX} _ {1},\mathit{CX} _ {2},\ldots,\mathit{CX} _ {n})$，使得：
 
 $$
-F(CX_1, ..., CX_n) \Rightarrow \neg \exists x_1, ..., x_n(P(x_1, ..., x_n)) \tag{1}
+F(CX_1, ..., CX_n) \Rightarrow \neg \exists x_1, ..., x_n(P(x_1, ..., x_n)) \qquad \text{(1)}
 $$
 
 当可证伪表达式 $F$ 是 tight 时，关系更强；没有假阴性意味着：
@@ -305,7 +305,7 @@ $$
 结合第一个公式，得到 tight 可证伪表达式的定义：
 
 $$
-F(CX_1, ..., CX_n) \Leftrightarrow \neg \exists x_1, ..., x_n(P(x_1, ..., x_n)) \tag{2}
+F(CX_1, ..., CX_n) \Leftrightarrow \neg \exists x_1, ..., x_n(P(x_1, ..., x_n)) \qquad \text{(2)}
 $$
 
 直观上，这个问题与布尔可满足性问题 SAT[^5] 有关，尽管变量域和函数都超出了布尔范围。由于 SAT 是 NP 完全问题，构建可证伪表达式的问题也是 NP 完全。本文算法只在有限情形下实用，但它针对真实代表性工作负载中 WHERE 子句使用的条件进行了调优。算法以一组递归应用的规则给出。

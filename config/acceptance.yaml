@@ -3310,25 +3310,25 @@ entries:
       fingerprint: 88d8aa5aded17e51fd2435c6c095ccf5483849f8bbb09cba8e2774ad74d97450
   big-metadata-when-metadata-is-big-data:
     source_sha256: 35bda2cd483f7fc6c64b1d6eaa8509ad30eb009e62f1396660b0288aa437285f
-    translation_sha256: 3332fa0c63536a3803f88f4f3ab7cb274ca085219b2f8245d498e654a04c821f
+    translation_sha256: 976c34f37b12660f7ce57893ec2d6617436bec99b53daa3a193f2d2f7cb2f759
     assets_manifest_sha256: fb887f93ca3d15a137a7c802c040f0b740442fda57284194dd8bb6366c01b761
     review_action: repair-review
-    reviewer: codex:wave1-math-audit
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex:deepdb-full-repair
+    review_base_sha: c5b23fc1d640a09149330dfd074b5fe4d1724ec3
     review_receipt:
       schema_version: 1
       paper_id: big-metadata-when-metadata-is-big-data
       source_sha256: 35bda2cd483f7fc6c64b1d6eaa8509ad30eb009e62f1396660b0288aa437285f
-      translation_sha256: 3332fa0c63536a3803f88f4f3ab7cb274ca085219b2f8245d498e654a04c821f
+      translation_sha256: 976c34f37b12660f7ce57893ec2d6617436bec99b53daa3a193f2d2f7cb2f759
       assets_manifest_sha256: fb887f93ca3d15a137a7c802c040f0b740442fda57284194dd8bb6366c01b761
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
       review_metadata_sha256: d0cfb795e9dda5dfc3febc772d2d88e5f19179fed0948f4215c1924af1a0d6dc
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: 6f6c46864b60db1a3572b77d6fde47d666a13ab00f87ce17ea6b63642b255729
       review_action: repair-review
-      translator: codex:wave1-gate-verify
-      reviewer: codex:wave1-math-audit
+      translator: codex:root
+      reviewer: codex:deepdb-full-repair
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: c5b23fc1d640a09149330dfd074b5fe4d1724ec3
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -3342,9 +3342,13 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - 独立审阅者逐页核对 source.pdf：8 张图、6 张表、全部 falsifiable-expression 推导、SQL、实验设置与数值、结论和参考文献准确完整；单篇深度门禁与数学渲染均无告警。
+        - 'source.pdf p.6 / translation.md §5.3: independently verified equations (1) and (2) preserve every variable, subscript,
+          quantifier, relation and equation number; only \tag{1,2} changed to \qquad \text{(1,2)}. Locked MathJax reproduced
+          the old mtable/mlabeledtr label structure and confirmed the replacement has no label-table structure; GitHub and
+          MathJax audits passed 99/99. Git diff confirmed no other translation change, so prior content-bound checks remain
+          unaffected.'
       waivers: {}
-      fingerprint: 0520f7448e27fcd8fb615e428bfd531a0fc7f122c46dd23d5fab4d7b7ceec56d
+      fingerprint: fa913f59706eb981139a1272ffff210095d2d010a7082a1d2af897aa9ee5202b
   bringing-cloud-native-storage-to-sap-iq:
     source_sha256: 9a7d7fe80f3f4000e6dc9bf1afc5cfc485a42616b3a76d092b941a12c25407c3
     translation_sha256: ca2f8fc5250214c6b62e489df1f609fcacb4c3aa8625fa6e11745658b4390389
