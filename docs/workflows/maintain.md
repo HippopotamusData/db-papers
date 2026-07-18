@@ -49,3 +49,5 @@ make diff-check
 `make check` 内含锁定版本 MathJax 的本地 TeX 结构门禁。accept 对当前译文额外执行 GitHub 节点审计后才允许写入；未运行 accept 的其他变更译文仍须按 `docs/portable-math-maintainers.md` 执行限定文件范围的审计。公式校验器或全局公式策略变更执行全库 `make math-audit-github`，并在推送后的真实 GitHub 文件页检查最终显示。外部审计依赖已登录的 `gh` 和网络，因此不纳入无网络的 `make check`，由 CI 对变更译文重复执行；VS Code/KaTeX 仅为可选诊断，不能驱动有损公式改写。审计结果必须在完成报告中明确列出。
 
 校验器、依赖或流程实现变化时，`make deep-check` 可以扫描整个仓库以识别实际受影响论文，但该只读检查不等于全库复审授权。无确定性历史影响时保留既有验收；存在确定性影响时按 paper ID 做范围修复与复审；只有用户明确要求时才把影响范围扩展为全库逐篇内容复审。
+
+CI 的 `archive-check` 保持同一个必需检查名，但按差异选择最小安全范围：普通文档、目录和配置快照变更运行 `make check`；论文的 `paper.yaml`、`source.pdf`、`translation.md` 或 `assets/` 变化再对现存的受影响 paper ID 逐篇运行 `make paper-check`；只有深度校验器、依赖锁、`config/policy.yaml`、全局翻译策略、CI 范围选择逻辑发生变化，无法取得可信比较基线，或维护者手动触发时才运行全库 `make deep-check`。不得把 `config/acceptance.yaml` 的正常单篇验收更新或测试文件变化升级为全库扫描。

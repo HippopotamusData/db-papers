@@ -3,6 +3,7 @@ name: check
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -30,8 +31,72 @@ jobs:
         run: npm ci
       - name: Check maintainer environment
         run: make doctor
+
+      - name: Determine changed paths
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          changed_paths="$RUNNER_TEMP/changed-paths.txt"
+          : > "$changed_paths"
+          force_deep=false
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            force_deep=true
+          elif [ "$EVENT_NAME" = "pull_request" ]; then
+            git diff --name-only "origin/$BASE_REF...HEAD" > "$changed_paths"
+          elif [ -n "$BEFORE_SHA" ] &&
+               [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] &&
+               git cat-file -e "$BEFORE_SHA^{commit}"; then
+            git diff --name-only "$BEFORE_SHA..$CURRENT_SHA" > "$changed_paths"
+          elif git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            git diff --name-only "HEAD^..HEAD" > "$changed_paths"
+          else
+            force_deep=true
+          fi
+
+          cat "$changed_paths"
+          echo "force_deep=$force_deep" >> "$GITHUB_OUTPUT"
+
+      - name: Select validation scope
+        id: scope
+        env:
+          FORCE_DEEP: ${{ steps.changes.outputs.force_deep }}
+        run: |
+          args=()
+          if [ "$FORCE_DEEP" = "true" ]; then
+            args+=(--force-deep)
+          fi
+          python scripts/ci_validation_scope.py "${args[@]}" \
+            < "$RUNNER_TEMP/changed-paths.txt" >> "$GITHUB_OUTPUT"
+
+      - name: Run fast archive gate
+        if: steps.scope.outputs.deep_check != 'true'
+        run: make check
+
+      - name: Run scoped paper gates
+        if: steps.scope.outputs.deep_check != 'true' && steps.scope.outputs.paper_ids != ''
+        env:
+          PAPER_IDS: ${{ steps.scope.outputs.paper_ids }}
+        run: |
+          while IFS= read -r paper_id; do
+            [ -n "$paper_id" ] || continue
+            paper_dir=$(find papers -mindepth 2 -maxdepth 2 -type d \
+              -name "$paper_id" -print -quit)
+            if [ -z "$paper_dir" ]; then
+              echo "Skipping removed paper: $paper_id"
+              continue
+            fi
+            make paper-check PAPER_ID="$paper_id"
+          done <<< "$PAPER_IDS"
+
       - name: Run full archive gate
+        if: steps.scope.outputs.deep_check == 'true'
         run: make deep-check
+
       - name: Check whitespace
         env:
           EVENT_NAME: ${{ github.event_name }}
