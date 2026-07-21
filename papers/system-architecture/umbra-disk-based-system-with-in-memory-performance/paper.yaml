@@ -1,0 +1,18 @@
+title: 'Umbra: A Disk-Based System with In-Memory Performance'
+authors:
+  - Thomas Neumann
+  - Michael Freitag
+year: 2020
+source_url: https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf
+topics:
+  - database-system-design
+  - query-execution
+  - storage-engine
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4

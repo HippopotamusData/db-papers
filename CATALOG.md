@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：134
-- 已验收译文：128
+- 论文记录：135
+- 已验收译文：129
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -17,7 +17,7 @@
 | --- | ---: |
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 4 |
-| 系统架构 (`system-architecture`) | 23 |
+| 系统架构 (`system-architecture`) | 24 |
 | 查询处理 (`query-processing`) | 48 |
 | 存储 (`storage`) | 18 |
 | 事务与并发控制 (`transactions`) | 7 |
@@ -46,7 +46,7 @@
 | [Merge Path - A Visually Intuitive Approach to Parallel Merging](papers/implementation-foundations/merge-path-visually-intuitive-parallel-merging/translation.md) | 排序与归并 | 2014 | 4.0 | translated | [原文](https://arxiv.org/abs/1406.2628) |
 | [Pattern-defeating Quicksort](papers/implementation-foundations/pattern-defeating-quicksort/translation.md) | 排序与归并 | 2021 | 4.0 | translated | [原文](https://arxiv.org/abs/2106.05123) |
 
-### 系统架构 (`system-architecture`，23 篇)
+### 系统架构 (`system-architecture`，24 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
@@ -72,6 +72,7 @@
 | [The Design of POSTGRES](papers/system-architecture/design-of-postgres/translation.md) | 数据库系统设计 | 1985 | 5.0 | translated | [原文](https://www2.eecs.berkeley.edu/Pubs/TechRpts/1985/602.html) |
 | [The Snowflake Elastic Data Warehouse](papers/system-architecture/the-snowflake-elastic-data-warehouse/translation.md) | 数据库系统设计 | 2016 | 5.0 | translated | [原文](https://doi.org/10.1145/2882903.2903741) |
 | [The Vertica Analytic Database: C-Store 7 Years Later](papers/system-architecture/the-vertica-analytic-database-c-store-7-years-later/translation.md) | 数据库系统设计 | 2012 | 4.0 | translated | [原文](https://vldb.org/pvldb/vol5/p1790_andrewlamb_vldb2012.pdf) |
+| [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](https://dl.acm.org/doi/pdf/10.1145/3406011) |
 
 ### 查询处理 (`query-processing`，48 篇)
@@ -228,5 +229,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 134 | 0 |
-| 发表年份 | 134 | 0 |
+| 作者 | 135 | 0 |
+| 发表年份 | 135 | 0 |
