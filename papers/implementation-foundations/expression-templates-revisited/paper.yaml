@@ -7,7 +7,7 @@ authors:
 year: 2011
 source_url: https://arxiv.org/pdf/1104.1729.pdf
 topics:
-  - query-execution
+  - program-compilation-and-optimization
 reading_status: translated
 rating:
   score: 3.5

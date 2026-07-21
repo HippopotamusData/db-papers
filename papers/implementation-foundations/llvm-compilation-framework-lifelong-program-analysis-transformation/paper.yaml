@@ -5,7 +5,7 @@ authors:
 year: 2003
 source_url: https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf
 topics:
-  - query-compilation
+  - program-compilation-and-optimization
 reading_status: translated
 rating:
   score: 4.5

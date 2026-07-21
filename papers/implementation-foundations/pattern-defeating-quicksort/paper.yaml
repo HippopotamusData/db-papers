@@ -4,7 +4,7 @@ authors:
 year: 2021
 source_url: https://arxiv.org/abs/2106.05123
 topics:
-  - query-execution
+  - sorting-and-merging
 reading_status: translated
 rating:
   score: 4.0

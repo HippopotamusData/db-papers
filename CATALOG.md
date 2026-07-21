@@ -16,8 +16,9 @@
 | 一级领域 | 数量 |
 | --- | ---: |
 | 基础与综述 (`foundations`) | 2 |
+| 算法与实现基础 (`implementation-foundations`) | 4 |
 | 系统架构 (`system-architecture`) | 23 |
-| 查询处理 (`query-processing`) | 52 |
+| 查询处理 (`query-processing`) | 48 |
 | 存储 (`storage`) | 18 |
 | 事务与并发控制 (`transactions`) | 7 |
 | 分布式数据库 (`distributed-databases`) | 6 |
@@ -35,6 +36,15 @@
 | --- | --- | ---: | ---: | --- | --- |
 | [A Relational Model of Data for Large Shared Data Banks](papers/foundations/a-relational-model-of-data-for-large-shared-data-banks/translation.md) | 数据库总览、关系模型 | 1970 | 5.0 | translated | [原文](https://research.ibm.com/publications/a-relational-model-of-data-for-large-shared-data-banks) |
 | [Architecture of a Database System](papers/foundations/architecture-of-a-database-system/source.pdf) | 数据库总览 | 2007 | 4.0 | skipped | [原文](https://dsf.berkeley.edu/papers/fntdb07-architecture.pdf) |
+
+### 算法与实现基础 (`implementation-foundations`，4 篇)
+
+| 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
+| --- | --- | ---: | ---: | --- | --- |
+| [Expression Templates Revisited: A Performance Analysis of the Current ET Methodology](papers/implementation-foundations/expression-templates-revisited/translation.md) | 程序编译与优化 | 2011 | 3.5 | translated | [原文](https://arxiv.org/pdf/1104.1729.pdf) |
+| [LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation](papers/implementation-foundations/llvm-compilation-framework-lifelong-program-analysis-transformation/translation.md) | 程序编译与优化 | 2003 | 4.5 | translated | [原文](https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf) |
+| [Merge Path - A Visually Intuitive Approach to Parallel Merging](papers/implementation-foundations/merge-path-visually-intuitive-parallel-merging/translation.md) | 排序与归并 | 2014 | 4.0 | translated | [原文](https://arxiv.org/abs/1406.2628) |
+| [Pattern-defeating Quicksort](papers/implementation-foundations/pattern-defeating-quicksort/translation.md) | 排序与归并 | 2021 | 4.0 | translated | [原文](https://arxiv.org/abs/2106.05123) |
 
 ### 系统架构 (`system-architecture`，23 篇)
 
@@ -64,7 +74,7 @@
 | [The Vertica Analytic Database: C-Store 7 Years Later](papers/system-architecture/the-vertica-analytic-database-c-store-7-years-later/translation.md) | 数据库系统设计 | 2012 | 4.0 | translated | [原文](https://vldb.org/pvldb/vol5/p1790_andrewlamb_vldb2012.pdf) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](https://dl.acm.org/doi/pdf/10.1145/3406011) |
 
-### 查询处理 (`query-processing`，52 篇)
+### 查询处理 (`query-processing`，48 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
@@ -83,16 +93,13 @@
 | [Efficiently Compiling Efficient Query Plans for Modern Hardware](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/translation.md) | 查询编译 | 2011 | 4.5 | translated | [原文](https://www.vldb.org/pvldb/vol4/p539-neumann.pdf) |
 | [Everything You Always Wanted to Know About Compiled and Vectorized Queries But Were Afraid to Ask](papers/query-processing/compiled-and-vectorized-queries-afraid-to-ask/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](https://www.vldb.org/pvldb/vol11/p2209-kersten.pdf) |
 | [Exploiting Upper and Lower Bounds in Top-Down Query Optimization](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/translation.md) | 查询优化 | 2001 | 3.0 | translated | [原文](https://doi.org/10.1109/IDEAS.2001.938068) |
-| [Expression Templates Revisited: A Performance Analysis of the Current ET Methodology](papers/query-processing/expression-templates-revisited/translation.md) | 查询执行 | 2011 | 3.5 | translated | [原文](https://arxiv.org/pdf/1104.1729.pdf) |
 | [Generating code for holistic query evaluation](papers/query-processing/generating-code-holistic-query-evaluation/translation.md) | 查询编译 | 2010 | 3.5 | translated | [原文](https://doi.org/10.1109/ICDE.2010.5447892) |
 | [How Good Are Query Optimizers, Really?](papers/query-processing/how-good-are-query-optimizers-really/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](http://www.vldb.org/pvldb/vol9/p204-leis.pdf) |
 | [Impala: A Modern, Open-Source SQL Engine for Hadoop](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/translation.md) | 查询执行 | 2015 | 4.0 | translated | [原文](http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf) |
 | [Improving Unnesting of Complex Queries](papers/query-processing/improving-unnesting-of-complex-queries/translation.md) | 查询优化 | 2025 | 3.5 | translated | [原文](https://portal.fis.tum.de/en/publications/improving-unnesting-of-complex-queries/) |
 | [Interleaved Multi-Vectorizing](papers/query-processing/interleaved-multi-vectorizing/translation.md) | 向量化执行 | 2019 | 3.0 | translated | [原文](http://www.vldb.org/pvldb/vol13/p226-fang.pdf) |
 | [Learned Cardinalities: Estimating Correlated Joins with Deep Learning](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/translation.md) | 查询优化、基数估计、AI 优化数据库 | 2019 | 4.0 | translated | [原文](https://vldb.org/cidrdb/2019/learned-cardinalities-estimating-correlated-joins-with-deep-learning.html) |
-| [LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation](papers/query-processing/llvm-compilation-framework-lifelong-program-analysis-transformation/translation.md) | 查询编译 | 2003 | 4.5 | translated | [原文](https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf) |
 | [Low-Latency Compilation of SQL Queries to Machine Code](papers/query-processing/low-latency-compilation-sql-queries-machine-code/translation.md) | 查询编译 | 2021 | 2.5 | translated | [原文](https://vldb.org/pvldb/vol14/p2691-funke.pdf) |
-| [Merge Path - A Visually Intuitive Approach to Parallel Merging](papers/query-processing/merge-path-visually-intuitive-parallel-merging/translation.md) | 查询执行 | 2014 | 4.0 | translated | [原文](https://arxiv.org/abs/1406.2628) |
 | [MonetDB/X100: Hyper-Pipelining Query Execution](papers/query-processing/monetdb-x100-hyper-pipelining-query-execution/translation.md) | 向量化执行 | 2005 | 5.0 | translated | [原文](https://www.cidrdb.org/cidr2005/papers/P19.pdf) |
 | [Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age](papers/query-processing/morsel-driven-parallelism/translation.md) | 查询执行 | 2014 | 4.5 | translated | [原文](https://doi.org/10.1145/2588555.2610507) |
 | [Neo: A Learned Query Optimizer](papers/query-processing/neo-a-learned-query-optimizer/translation.md) | 查询优化、AI 优化数据库 | 2019 | 4.0 | translated | [原文](https://www.vldb.org/pvldb/vol12/p1705-marcus.pdf) |
@@ -101,7 +108,6 @@
 | [Optimizing Queries over Partitioned Tables in MPP Systems](papers/query-processing/optimizing-queries-partitioned-tables-mpp/translation.md) | 查询优化 | 2014 | 3.5 | translated | [原文](https://d1fto35gcfffzn.cloudfront.net/big-data/white-paper/OptimizingQueriesOverPartitionedTablesInMPPSystems.pdf) |
 | [Optimizing Queries Using Materialized Views: A Practical, Scalable Solution](papers/query-processing/optimizing-queries-using-materialized-views/translation.md) | 查询优化 | 2001 | 4.0 | translated | [原文](https://doi.org/10.1145/375663.375706) |
 | [Orca: A Modular Query Optimizer Architecture for Big Data](papers/query-processing/orca-modular-query-optimizer-architecture-big-data/translation.md) | 查询优化 | 2014 | 4.5 | translated | [原文](https://doi.org/10.1145/2588555.2595637) |
-| [Pattern-defeating Quicksort](papers/query-processing/pattern-defeating-quicksort/translation.md) | 查询执行 | 2021 | 4.0 | translated | [原文](https://arxiv.org/abs/2106.05123) |
 | [Permutable Compiled Queries: Dynamically Adapting Compiled Queries without Recompiling](papers/query-processing/permutable-compiled-queries-dynamically-adapting-without-recompiling/translation.md) | 查询编译 | 2021 | 3.0 | translated | [原文](https://db.cs.cmu.edu/papers/2020/p101-menon.pdf) |
 | [Photon: A Fast Query Engine for Lakehouse Systems](papers/query-processing/photon-fast-query-engine-lakehouse-systems/translation.md) | 云原生、查询执行、向量化执行、湖仓一体 | 2022 | 4.0 | translated | [原文](https://doi.org/10.1145/3514221.3526054) |
 | [Presto: SQL on Everything](papers/query-processing/presto-sql-on-everything/translation.md) | 查询执行、数据联邦 | 2019 | 4.5 | translated | [原文](https://trino.io/Presto_SQL_on_Everything.pdf) |

@@ -6,6 +6,9 @@ areas:
   foundations:
     label_zh: 基础与综述
     description: 数据库领域基础知识、总览和跨领域综述。
+  implementation-foundations:
+    label_zh: 算法与实现基础
+    description: 数据库实现可复用的通用算法、编译器、HPC 与底层性能技术；主要贡献不以数据库问题本身为对象。
   system-architecture:
     label_zh: 系统架构
     description: 完整数据库系统、云数据库、系统组件协同与工程架构。
@@ -48,6 +51,12 @@ topics:
   cloud-native:
     label_zh: 云原生
     description: 面向云环境的弹性、解耦、无服务器化或托管系统设计。
+  sorting-and-merging:
+    label_zh: 排序与归并
+    description: 通用排序、选择、分区、归并算法及其并行化或缓存优化。
+  program-compilation-and-optimization:
+    label_zh: 程序编译与优化
+    description: 面向通用程序的编译框架、中间表示、元编程和程序级性能优化。
   query-optimization:
     label_zh: 查询优化
     description: 选择、搜索或改写查询计划及其代价与规则体系。
