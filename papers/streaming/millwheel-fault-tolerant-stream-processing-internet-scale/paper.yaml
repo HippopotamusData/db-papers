@@ -1,0 +1,24 @@
+title: 'MillWheel: Fault-Tolerant Stream Processing at Internet Scale'
+authors:
+  - Tyler Akidau
+  - Alex Balikov
+  - Kaya Bekiroğlu
+  - Slava Chernyak
+  - Josh Haberman
+  - Reuven Lax
+  - Sam McVeety
+  - Daniel Mills
+  - Paul Nordstrom
+  - Sam Whittle
+year: 2013
+source_url: https://doi.org/10.14778/2536222.2536229
+topics:
+  - stream-processing
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5

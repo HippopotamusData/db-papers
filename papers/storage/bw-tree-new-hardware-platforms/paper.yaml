@@ -1,0 +1,18 @@
+title: 'The Bw-Tree: A B-tree for New Hardware Platforms'
+authors:
+  - Justin J. Levandoski
+  - David B. Lomet
+  - Sudipta Sengupta
+year: 2013
+source_url: https://www.microsoft.com/en-us/research/publication/the-bw-tree-a-b-tree-for-new-hardware/
+topics:
+  - storage-engine
+  - indexing
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

@@ -1,0 +1,27 @@
+title: 'Amazon Aurora: Design Considerations for High Throughput Cloud-Native Relational Databases'
+authors:
+  - Alexandre Verbitski
+  - Anurag Gupta
+  - Debanjan Saha
+  - Murali Brahmadesam
+  - Kamal Gupta
+  - Raman Mittal
+  - Sailesh Krishnamurthy
+  - Sandor Maurice
+  - Tengiz Kharatishvili
+  - Xiaofeng Bao
+year: 2017
+source_url: https://www.amazon.science/publications/amazon-aurora-design-considerations-for-high-throughput-cloud-native-relational-databases
+topics:
+  - database-system-design
+  - cloud-native
+  - distributed-storage
+  - transaction-processing
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 4
+  reader_payoff: 5

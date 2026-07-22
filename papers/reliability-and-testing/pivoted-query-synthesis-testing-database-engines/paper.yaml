@@ -1,0 +1,16 @@
+title: Testing Database Engines via Pivoted Query Synthesis
+authors:
+  - Manuel Rigger
+  - Zhendong Su
+year: 2020
+source_url: https://www.usenix.org/conference/osdi20/presentation/rigger
+topics:
+  - database-testing
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 4
+  reader_payoff: 4

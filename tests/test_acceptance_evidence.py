@@ -32,6 +32,17 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             "translation-side payload candidate"
         )
 
+    @staticmethod
+    def f1_numeric_recovery_candidate() -> str:
+        mappings = ", ".join(
+            f"{index}->{index}" for index in range(1, 25) if index != 16
+        )
+        return (
+            "RISK: source numeric references 1-24 were recovered by complete "
+            "ordered two-column bibliography-content evidence; parsed markers: "
+            f"{mappings}"
+        )
+
     def test_candidate_change_changes_fingerprint_and_fails_comparison(self) -> None:
         recorded = build_waiver_records(
             {"resources": [self.resource_candidate(1)]}
@@ -236,6 +247,249 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             ],
         )
 
+    def test_author_key_content_mappings_are_v2_item_bound_and_stable(self) -> None:
+        first = (
+            "RISK: source author-key reference identifiers were normalized by "
+            "unique bibliography-content OCR evidence: "
+            "br0w85->brow85, sel179->seli79"
+        )
+        reordered = (
+            "RISK: source author-key reference identifiers were normalized by "
+            "unique bibliography-content OCR evidence: "
+            "sel179->seli79, br0w85->brow85"
+        )
+
+        first_record = build_waiver_records(
+            {"resources": [first]},
+            evidence_versions={"resources": 2},
+        )
+        reordered_record = build_waiver_records(
+            {"resources": [reordered]},
+            evidence_versions={"resources": 2},
+        )
+        current_record = build_waiver_records({"resources": [first]})
+
+        self.assertEqual(first_record["resources"]["evidence_version"], 2)
+        self.assertEqual(
+            first_record["resources"]["findings"],
+            [
+                "source-reference-ocr-normalization:br0w85:brow85",
+                "source-reference-ocr-normalization:sel179:seli79",
+            ],
+        )
+        self.assertEqual(
+            first_record["resources"]["fingerprint"],
+            reordered_record["resources"]["fingerprint"],
+        )
+        self.assertEqual(
+            decode_waiver_records(encode_waiver_records(first_record)),
+            first_record,
+        )
+        self.assertEqual(current_record["resources"]["evidence_version"], 3)
+        self.assertEqual(
+            current_record["resources"]["findings"],
+            first_record["resources"]["findings"],
+        )
+
+    def test_author_key_content_mapping_is_unknown_to_frozen_v1(self) -> None:
+        candidate = (
+            "RISK: source author-key reference identifiers were normalized by "
+            "unique bibliography-content OCR evidence: br0w85->brow85"
+        )
+        with self.assertRaisesRegex(
+            ValueError, "unknown resources waiver candidate"
+        ):
+            build_waiver_records(
+                {"resources": [candidate]},
+                evidence_versions={"resources": 1},
+            )
+
+    def test_author_key_content_mapping_rejects_non_bijective_candidates(self) -> None:
+        prefix = (
+            "RISK: source author-key reference identifiers were normalized by "
+            "unique bibliography-content OCR evidence: "
+        )
+        for mappings in (
+            "bad85->good85, bad85->other85",
+            "bad85->good85, other85->good85",
+            "same85->same85",
+        ):
+            with self.subTest(mappings=mappings), self.assertRaisesRegex(
+                ValueError, "unknown resources waiver candidate"
+            ):
+                build_waiver_records(
+                    {"resources": [prefix + mappings]},
+                    evidence_versions={"resources": 2},
+                )
+
+    def test_author_key_mapping_is_globally_bijective_across_diagnostics(self) -> None:
+        prefix = (
+            "RISK: source author-key reference identifiers were normalized by "
+            "unique bibliography-content OCR evidence: "
+        )
+        candidate_sets = (
+            [prefix + "bad85->good85", prefix + "bad85->other85"],
+            [prefix + "bad85->good85", prefix + "other85->good85"],
+        )
+        for candidates in candidate_sets:
+            with self.subTest(candidates=candidates), self.assertRaisesRegex(
+                ValueError, "global one-to-one mapping"
+            ):
+                build_waiver_records(
+                    {"resources": candidates},
+                    evidence_versions={"resources": 2},
+                )
+
+    def test_numeric_bibliography_recovery_is_v3_item_bound_and_stable(
+        self,
+    ) -> None:
+        first = (
+            "RISK: source numeric references 1-10 were recovered by complete "
+            "ordered two-column bibliography-content evidence; parsed markers: "
+            "l->1, 2->2, lo->10"
+        )
+        reordered = (
+            "RISK: source numeric references 1-10 were recovered by complete "
+            "ordered two-column bibliography-content evidence; parsed markers: "
+            "lo->10, 2->2, l->1"
+        )
+
+        first_record = build_waiver_records({"resources": [first]})
+        reordered_record = build_waiver_records({"resources": [reordered]})
+
+        self.assertEqual(first_record["resources"]["evidence_version"], 3)
+        self.assertEqual(
+            first_record["resources"]["findings"],
+            sorted(
+                [
+                    *(
+                        f"source-reference-content-recovery:{index}"
+                        for index in range(1, 11)
+                    ),
+                    "source-reference-marker-content-mapping:l:1",
+                    "source-reference-marker-content-mapping:2:2",
+                    "source-reference-marker-content-mapping:lo:10",
+                ]
+            ),
+        )
+        self.assertEqual(
+            first_record["resources"]["fingerprint"],
+            reordered_record["resources"]["fingerprint"],
+        )
+        with self.assertRaisesRegex(
+            ValueError, "unknown resources waiver candidate"
+        ):
+            build_waiver_records(
+                {"resources": [first]},
+                evidence_versions={"resources": 2},
+            )
+
+    def test_f1_split_reference_recovery_is_bound_to_all_24_entries(self) -> None:
+        record = build_waiver_records(
+            {"resources": [self.f1_numeric_recovery_candidate()]}
+        )["resources"]
+
+        self.assertEqual(record["evidence_version"], 3)
+        self.assertEqual(
+            record["fingerprint"],
+            "8cd5f1d10f915e3515282a9a7076ca7105d4940b57e3e6eacb7998d4753222f8",
+        )
+        self.assertEqual(len(record["findings"]), 47)
+        self.assertIn("source-reference-content-recovery:16", record["findings"])
+        self.assertIn(
+            "source-reference-marker-content-mapping:15:15", record["findings"]
+        )
+        self.assertNotIn(
+            "source-reference-marker-content-mapping:16:16", record["findings"]
+        )
+        self.assertIn(
+            "source-reference-marker-content-mapping:17:17", record["findings"]
+        )
+
+    def test_numeric_bibliography_recovery_v3_rejects_weak_or_conflicting_claims(
+        self,
+    ) -> None:
+        prefix = (
+            "RISK: source numeric references 1-10 were recovered by complete "
+            "ordered two-column bibliography-content evidence; parsed markers: "
+        )
+        invalid = (
+            prefix + "l->1, 2->3, lo->10",
+            prefix + "l->1, i->1, lo->10",
+            prefix + "l->1, l->2, lo->10",
+            prefix + "l->1, lo->10",
+            prefix + "x->10, 2->2, l->1",
+            prefix + "l->2, 3->3, lo->10",
+            prefix + "O->9, 2->2, l->1",
+            prefix.replace("1-10", "1-9") + "l->1, 2->2, is->9",
+        )
+        for candidate in invalid:
+            with self.subTest(candidate=candidate), self.assertRaisesRegex(
+                ValueError, "unknown resources waiver candidate"
+            ):
+                build_waiver_records({"resources": [candidate]})
+
+    def test_numeric_bibliography_recovery_v3_accepts_real_scan_aliases(
+        self,
+    ) -> None:
+        candidate = (
+            "RISK: source numeric references 1-15 were recovered by complete "
+            "ordered two-column bibliography-content evidence; parsed markers: "
+            "l->1, lo->10, is->15"
+        )
+
+        record = build_waiver_records({"resources": [candidate]})["resources"]
+
+        self.assertIn(
+            "source-reference-marker-content-mapping:l:1",
+            record["findings"],
+        )
+        self.assertIn(
+            "source-reference-marker-content-mapping:lo:10",
+            record["findings"],
+        )
+        self.assertIn(
+            "source-reference-marker-content-mapping:is:15",
+            record["findings"],
+        )
+
+    def test_frozen_v1_and_v2_fingerprints_do_not_follow_default_version(
+        self,
+    ) -> None:
+        candidate = self.resource_candidate(1)
+        expected = {
+            1: "2ecf32a9ed88aec8cedf6b05e3c2c8e853484cf1cdb89200dffef1395d3e98ea",
+            2: "8de0fe7af03400709132f595d15c9c6c123cb06154c140f10c8237d294479791",
+        }
+        for version, fingerprint in expected.items():
+            with self.subTest(version=version):
+                record = build_waiver_records(
+                    {"resources": [candidate]},
+                    evidence_versions={"resources": version},
+                )["resources"]
+                self.assertEqual(record["fingerprint"], fingerprint)
+
+    def test_v1_numeric_ocr_mappings_do_not_use_author_key_bijection(self) -> None:
+        candidates = [
+            "RISK: source reference identifier i was normalized to 1 as a "
+            "contiguous numeric-series OCR candidate",
+            "RISK: source reference identifiers were normalized by ordered "
+            "contiguous OCR evidence: i->2",
+        ]
+
+        record = build_waiver_records(
+            {"resources": candidates},
+            evidence_versions={"resources": 1},
+        )
+
+        self.assertEqual(
+            record["resources"]["findings"],
+            [
+                "source-reference-ocr-normalization:i:1",
+                "source-reference-ocr-normalization:i:2",
+            ],
+        )
+
     def test_duplicate_semantic_finding_and_unknown_rule_are_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "duplicate waiver finding"):
             build_waiver_records(
@@ -256,19 +510,72 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             "moderate mechanical abridgement risk: CJK/source-word ratio=50/100 "
             "(<0.75; extractor=pypdf-6.14.2; metric=v1)"
         )
+        high = (
+            "high mechanical abridgement risk: CJK/source-word ratio=49/100 "
+            "(<0.50; extractor=pypdf-6.14.2; metric=v1)"
+        )
         record = build_waiver_records({"abridgement": [valid]})
         self.assertEqual(record["abridgement"]["findings"], ["abridgement:moderate"])
+        self.assertEqual(
+            build_waiver_records({"abridgement": [high]})["abridgement"][
+                "findings"
+            ],
+            ["abridgement:high"],
+        )
         for invalid in (
             valid.replace("pypdf-6.14.2", "pypdf-6.14.1"),
             valid.replace("metric=v1", "metric=v2"),
             valid.replace("moderate", "high"),
             valid.replace("<0.75", "<0.50"),
+            valid.replace("50/100", "75/100"),
             "moderate mechanical abridgement risk: arbitrary future metric",
         ):
             with self.subTest(invalid=invalid), self.assertRaisesRegex(
                 ValueError, "unknown abridgement waiver candidate"
             ):
                 build_waiver_records({"abridgement": [invalid]})
+
+    def test_versioned_abridgement_parsers_ignore_live_metric_drift(self) -> None:
+        candidate = (
+            "moderate mechanical abridgement risk: CJK/source-word ratio=50/100 "
+            "(<0.75; extractor=pypdf-6.14.2; metric=v1)"
+        )
+        records_by_version = {
+            version: build_waiver_records(
+                {"abridgement": [candidate]},
+                evidence_versions={"abridgement": version},
+            )
+            for version in (1, 2, 3)
+        }
+
+        with (
+            patch.object(
+                acceptance_evidence,
+                "PYPDF_VERSION",
+                "99.0.0",
+                create=True,
+            ),
+            patch.object(
+                acceptance_evidence,
+                "PDF_METRICS_VERSION",
+                99,
+                create=True,
+            ),
+            patch.object(
+                acceptance_evidence,
+                "abridgement_candidate_from_counts",
+                return_value=None,
+                create=True,
+            ),
+        ):
+            for version, records in records_by_version.items():
+                with self.subTest(version=version):
+                    encoded = encode_waiver_records(records)
+                    self.assertEqual(validate_waiver_records(records), records)
+                    self.assertEqual(decode_waiver_records(encoded), records)
+                    reviewed, mismatches = compare_waiver_records(records, records)
+                    self.assertEqual(mismatches, [])
+                    self.assertEqual(len(reviewed), 1)
 
     def test_evidence_version_change_is_rejected(self) -> None:
         records = build_waiver_records({"resources": [self.resource_candidate(1)]})
@@ -277,9 +584,83 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             validate_waiver_records(records)
 
     def test_v1_evidence_uses_its_frozen_parser(self) -> None:
-        records = build_waiver_records({"resources": [self.resource_candidate(1)]})
-        with patch.object(acceptance_evidence, "WAIVER_EVIDENCE_VERSION", 2):
+        records = build_waiver_records(
+            {"resources": [self.resource_candidate(1)]},
+            evidence_versions={"resources": 1},
+        )
+        with patch.object(acceptance_evidence, "WAIVER_EVIDENCE_VERSION", 99):
             self.assertEqual(validate_waiver_records(records), records)
+
+    def test_compare_cli_replays_recorded_v1_parser(self) -> None:
+        candidate = self.resource_candidate(1)
+        records = build_waiver_records(
+            {"resources": [candidate]},
+            evidence_versions={"resources": 1},
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "observed.tsv"
+            path.write_text(f"resources\t{candidate}\n", encoding="utf-8")
+            stdout = io.StringIO()
+            with patch.object(
+                sys,
+                "argv",
+                [
+                    "acceptance_evidence.py",
+                    "compare",
+                    "--recorded",
+                    encode_waiver_records(records),
+                    "--observed",
+                    str(path),
+                ],
+            ), contextlib.redirect_stdout(stdout):
+                self.assertEqual(main(), 0)
+        self.assertTrue(stdout.getvalue().startswith("reviewed:resources:"))
+
+    def test_compare_cli_reports_current_v3_recovery_as_changed_from_f1_v1(
+        self,
+    ) -> None:
+        old_candidates = [
+            "RISK: reference entry-count candidate differs (23/24)",
+            "RISK: translation has unmatched reference identifiers: 16",
+        ]
+        records = build_waiver_records(
+            {"resources": old_candidates},
+            evidence_versions={"resources": 1},
+        )
+        old_fingerprint = (
+            "ca23b69d2401f2d36ffc874119618e07fb2874fb2a0366789c23f693bb69b7e2"
+        )
+        new_fingerprint = (
+            "8cd5f1d10f915e3515282a9a7076ca7105d4940b57e3e6eacb7998d4753222f8"
+        )
+        self.assertEqual(records["resources"]["fingerprint"], old_fingerprint)
+
+        candidate = self.f1_numeric_recovery_candidate()
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "observed.tsv"
+            path.write_text(f"resources\t{candidate}\n", encoding="utf-8")
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with patch.object(
+                sys,
+                "argv",
+                [
+                    "acceptance_evidence.py",
+                    "compare",
+                    "--recorded",
+                    encode_waiver_records(records),
+                    "--observed",
+                    str(path),
+                ],
+            ), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                self.assertEqual(main(), 1)
+
+        self.assertEqual(stderr.getvalue(), "")
+        self.assertEqual(
+            stdout.getvalue().strip(),
+            f"changed:resources:{old_fingerprint}:{new_fingerprint}:{candidate}",
+        )
+        self.assertNotIn("unknown resources waiver candidate", stdout.getvalue())
 
     def test_reviewed_category_is_separate_from_changed_category(self) -> None:
         recorded = build_waiver_records(

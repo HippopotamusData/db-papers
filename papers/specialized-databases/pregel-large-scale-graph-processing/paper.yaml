@@ -1,0 +1,21 @@
+title: 'Pregel: A System for Large-Scale Graph Processing'
+authors:
+  - Grzegorz Malewicz
+  - Matthew H. Austern
+  - Aart J. C. Bik
+  - James C. Dehnert
+  - Ilan Horn
+  - Naty Leiser
+  - Grzegorz Czajkowski
+year: 2010
+source_url: https://research.google/pubs/pregel-a-system-for-large-scale-graph-processing/
+topics:
+  - database-system-design
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

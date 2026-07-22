@@ -1,0 +1,15 @@
+title: Volcano—An Extensible and Parallel Query Evaluation System
+authors:
+  - Goetz Graefe
+year: 1994
+source_url: https://doi.org/10.1109/69.273032
+topics:
+  - query-execution
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

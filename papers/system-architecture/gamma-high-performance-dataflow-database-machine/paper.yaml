@@ -1,0 +1,21 @@
+title: GAMMA - A High Performance Dataflow Database Machine
+authors:
+  - David J. DeWitt
+  - Robert H. Gerber
+  - Goetz Graefe
+  - Michael L. Heytens
+  - Krishna B. Kumar
+  - M. Muralikrishna
+year: 1986
+source_url: https://www.vldb.org/conf/1986/P228.PDF
+topics:
+  - database-system-design
+  - query-execution
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

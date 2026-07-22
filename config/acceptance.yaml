@@ -6883,3 +6883,1116 @@ entries:
           boundaries'
       waivers: {}
       fingerprint: 4d6c28070ff02167fb82a35f0674d02737130e962bc1642b673fc4f53bdbf51d
+  amazon-aurora-cloud-native-relational-database:
+    source_sha256: ec3688a76e96c94bbac956980adc2291654d9f9d81e6f10597a1a45844c8f761
+    translation_sha256: 4ab8f92b1ce7bb698130b7612bd189186fdc81497044cbfd360cc8322fbbe520
+    assets_manifest_sha256: b72132d654c83c46873681c7ff3632494e90987b01fdc40453d251931f06d27b
+    review_action: full-translation-review
+    reviewer: codex-agent:aurora-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: amazon-aurora-cloud-native-relational-database
+      source_sha256: ec3688a76e96c94bbac956980adc2291654d9f9d81e6f10597a1a45844c8f761
+      translation_sha256: 4ab8f92b1ce7bb698130b7612bd189186fdc81497044cbfd360cc8322fbbe520
+      assets_manifest_sha256: b72132d654c83c46873681c7ff3632494e90987b01fdc40453d251931f06d27b
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: 9ae62bc7294ffbe48e939d8858ceb9f598229635e0812915d7b4b911553c40f8
+      review_gate_manifest_sha256: 6ff4dae9f7b24d8c8f1722c7b4b41e8d940ec3765f5c8c17d99de4bc2c9f21ba
+      review_action: full-translation-review
+      translator: codex-agent:classic-candidates
+      reviewer: codex-agent:aurora-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - 作者性叙述：源文有效项 150（we=101、our=38、us=11；排除 I/O、i.e. 与 us-east/us-west 等非作者项），逐项 150/150 通过；摘要、第 1 节路线图、第 2 节导言、第 3 节导言与
+          3.2、第 4 节导言与 4.1、第 6 节导言、第 7.4 节及致谢中的中文同主语或所有关系合并均保持“我们”责任归属，未改成本文、系统或团队。
+        - 参考文献：双栏源文的 [1]-[42] 全部逐条核对，作者、题名、出处、卷期页码和 URL 断词恢复正确；正文引用锚点均随相应论断保留。
+        - 图表与视觉：12 幅图和 5 张表全部与正文引用、编号、数值和结论一致；逐图检查裁剪边界、轴、刻度、图例、标签和箭头均完整可读，每个资源仅出现一次且未带相邻正文或重复图注。
+        - 数字与单位：全部显式数字、单位、比较方向、故障边界及限定词逐项通过，包括 3 AZ/6 副本/4-of-6 写 Quorum/3-of-6 读 Quorum、10 GB/10 秒/10 Gbps、LSN 示例、5 张表及全部性能和客户数据。
+        - 源文内部不一致忠实保留：6.1.1 正文 MySQL 5.7 的 20,000 reads/sec 与 125,000 writes/sec 未按图 6/7 静默互换；6.2.2 正文 95th percentile (P99)
+          与图 9/10 的 P50/P95 标注均按源文保留。
+        - 源文清单：物理页 1-12；题名、10 位作者、Amazon Web Services、关键词和出版信息完整；正文第 1-9 节、致谢及参考文献均逐项回填；源文无附录、编号算法、Listing 或编号公式，纯版权样板按策略省略。
+        - 独立终审后的单篇深门禁通过：0 warning、0 reviewed-risk category group；无需 waiver。
+        - 章节与技术内容：Quorum 不等式、VCL/VDL/CPL/SCL/LAL/MTR 机制、写入/提交/读取/副本/恢复路径、控制平面及相关工作均逐段对照通过。
+      waivers: {}
+      fingerprint: 7d92a4802b0b5ee09df5c2cd489a87fa7a4ab4d3441f8085552418e0c6163282
+  raft-understandable-consensus-algorithm:
+    source_sha256: e6345fcba31cbc747ab41755aa62654859c4403dbb687da0021079f78181a7b5
+    translation_sha256: 9f885789fd354d4f91037dfc1e430b09bb72a392848cd501ce15484d7cf69104
+    assets_manifest_sha256: bbf8d33bba10d99b531b2a4a7dfdded0cd94baed21905ffa82ee08374263837c
+    review_action: repair-review
+    reviewer: codex-agent:raft-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: raft-understandable-consensus-algorithm
+      source_sha256: e6345fcba31cbc747ab41755aa62654859c4403dbb687da0021079f78181a7b5
+      translation_sha256: 9f885789fd354d4f91037dfc1e430b09bb72a392848cd501ce15484d7cf69104
+      assets_manifest_sha256: bbf8d33bba10d99b531b2a4a7dfdded0cd94baed21905ffa82ee08374263837c
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: 7279b9be4cd21ef6f5fe2614c10cb3ea1fd683ab1562482bbc777f88bb72a51d
+      review_gate_manifest_sha256: 6ff4dae9f7b24d8c8f1722c7b4b41e8d940ec3765f5c8c17d99de4bc2c9f21ba
+      review_action: repair-review
+      translator: codex-agent:corpus-gap
+      reviewer: codex-agent:raft-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - 'algorithm-and-safety: checked every Figure 2 persistent/volatile field, AppendEntries and RequestVote argument/result,
+          receiver rule, all-server/follower/candidate/leader rule, term and index comparison direction, majority condition,
+          current-term commitment restriction, Figure 3 properties, and Leader Completeness contradiction steps 1-9 against
+          the PDF'
+        - 'authorial-voice: after restoring PDF line-break artifacts and excluding i.e., matchIndex[i], and us-ing false positives,
+          source has 80 valid I/we/my/our/us items (we=64, our=14, us=2); all 80 passed semantic and relationship review;
+          eight Chinese shared-subject or contextual-possessive mappings were checked explicitly: primary goal, decided/could
+          design, used/divided, second approach, assume/prove, our materials, our test script, and developed/shown'
+        - 'conclusions-and-limitations: retained the explicit Section 7 space-limit omission and [29] pointer, timing affects
+          availability but not safety, conservative old-term commitment rule, user-study prior-experience and self-report
+          bias, unmechanized proof invariants and type-safety caveat, future-work limits, conclusion, and complete acknowledgments'
+        - 'figures-and-table: all 14 assets are one-to-one, sharp, correctly placed, and semantically matched; Figure 13 retains
+          the number-of-participants axis, 0/5/10/15/20 ticks, implement/explain labels, five-category legend, and full boundary;
+          Table 1 retains all three rows and values; asset bytes and manifest are unchanged from the full visual review'
+        - 'formulas-and-inline-code: checked the timing inequality, N commit predicate, T/U proof variables, leader subscripts,
+          Cold/Cold,new/Cnew transitions, alpha limits, comparison directions, and all formula references; inline code is
+          limited to genuine Raft fields, arrays, RPC literals, and source identifiers, with mathematical variables and relations
+          retained as math'
+        - 'front-matter: canonical order places the standard translator note immediately after H1, followed by separate author
+          and institution paragraphs without Markdown hard-break spaces; title, Diego Ongaro and John Ousterhout, Stanford
+          University, source URL, USENIX ATC 14 venue, June 19-20 2014 Philadelphia date/location, ISBN 978-1-931971-10-2,
+          and USENIX open-access sponsorship match the rendered cover'
+        - 'numbers-and-limits: checked every explicit number, unit, comparison, fault boundary, and qualifier, including five
+          servers tolerating two failures, 150-300 ms randomized timeouts, broadcastTime much less than electionTimeout much
+          less than MTBF, 0.5-20 ms and 10-500 ms ranges, 43/33/15 participants, 14 percent, 4.9/25.7/20.8/2.5/12.5/6.3 scores,
+          2000 lines, 25 implementations, 400 lines, 3500 words, 100/1000 trials, 5/50/287/513/35/152 ms, and 4 versus 10
+          message types'
+        - 'references: manually compared all entries [1]-[35] and every body anchor; the extractor-only candidates are unmatched
+          [20], [21], [29], source count 32 versus translation count 35, and low source-token overlap for [6]; rendered pages
+          318-319 and translation confirm all four items and all 35 entries are complete, so the exact resources waiver is
+          evidence-backed'
+        - 'snapshot-verification: reviewed current translation SHA-256 9f885789fd354d4f91037dfc1e430b09bb72a392848cd501ce15484d7cf69104,
+          unchanged source and asset manifest, retained rating, and draft repair state; all prior content-review conclusions
+          remain applicable and no substantive defect is present'
+        - 'source-inventory: independently reviewed all 16 PDF pages including the USENIX cover; abstract; Sections 1-11;
+          subsections 5.1-5.6 and 8.1-8.3; Figures 1-14; Table 1; Figure 2 algorithm state, RPC fields, and server rules;
+          safety proof steps 1-9; conclusion; acknowledgments; and references [1]-[35]; source has no footnotes, appendix,
+          numbered code listing, or received/revised record'
+        - 'visual-layout: prior rendered source pages 1-3 and 5-16 and all 14 assets remain byte-identical; they cover the
+          cover, double-column flow, Figure 2 full-page algorithm, figure/table-dense pages, conclusion/acknowledgments, and
+          citation-dense final pages; current two-paragraph header layout was inspected and all reading-width assets preserve
+          labels, axes, ticks, legends, subfigure markers, arrows, and boundaries'
+        - 'whitespace-layout: current translation has no trailing whitespace; author and institution render as two distinct,
+          readable paragraphs; canonical header structure, paragraph boundaries, publication information order, and following
+          abstract transition are intact'
+        - 'whitespace-repair-proof: adding exactly two trailing spaces back to the current author line and removing exactly
+          the new blank line between author and institution reproduces prior reviewed translation SHA-256 ce4eb1048011065bcfce654eb729955b703231714d1e456ebbad6c3ff9f47703;
+          therefore the repair only replaces the hard-break author/institution pair with two ordinary readable paragraphs
+          and leaves all other translation bytes unchanged'
+      waivers:
+        resources:
+          evidence_version: 1
+          fingerprint: d367a4dc923ce61cf854b221cc9a67b24dc50097471ed42677832047ac584ef0
+          findings:
+            - low-token-overlap-reference:6
+            - reference-entry-count-differs
+            - unmatched-translation-reference:20
+            - unmatched-translation-reference:21
+            - unmatched-translation-reference:29
+          candidates:
+            - 'RISK: reference entry-count candidate differs (32/35)'
+            - 'RISK: translation has unmatched reference identifiers: 20, 21, 29'
+            - 'RISK: translation reference has low source-token overlap for: 6'
+      fingerprint: a32572204e080cf0d52fe5b124211c80c9a5bab59b617501be47c4a4a24b82c6
+    waivers:
+      resources:
+        evidence_version: 1
+        fingerprint: d367a4dc923ce61cf854b221cc9a67b24dc50097471ed42677832047ac584ef0
+        findings:
+          - low-token-overlap-reference:6
+          - reference-entry-count-differs
+          - unmatched-translation-reference:20
+          - unmatched-translation-reference:21
+          - unmatched-translation-reference:29
+        candidates:
+          - 'RISK: reference entry-count candidate differs (32/35)'
+          - 'RISK: translation has unmatched reference identifiers: 20, 21, 29'
+          - 'RISK: translation reference has low source-token overlap for: 6'
+  pivoted-query-synthesis-testing-database-engines:
+    source_sha256: c9fb56b3d545c929c129802fd0e7e0070a31f7d908e0ba5371693d133601b8be
+    translation_sha256: 55e9865bcc449978c40d531138e23e68854c0f1072d28b4beb735c5fe44d5e5a
+    assets_manifest_sha256: 9e5f7c722bb28250422908445551268cb0ff0ed474ad0127b84546f60be5577b
+    review_action: full-translation-review
+    reviewer: codex-agent:pqs-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: pivoted-query-synthesis-testing-database-engines
+      source_sha256: c9fb56b3d545c929c129802fd0e7e0070a31f7d908e0ba5371693d133601b8be
+      translation_sha256: 55e9865bcc449978c40d531138e23e68854c0f1072d28b4beb735c5fe44d5e5a
+      assets_manifest_sha256: 9e5f7c722bb28250422908445551268cb0ff0ed474ad0127b84546f60be5577b
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: ac499f0fc779dc2ef9befeb2e84449bed6db593dc60daa7e80b8789fdaa41700
+      review_gate_manifest_sha256: 6ff4dae9f7b24d8c8f1722c7b4b41e8d940ec3765f5c8c17d99de4bc2c9f21ba
+      review_action: full-translation-review
+      translator: codex-agent:frontier-candidates
+      reviewer: codex-agent:pqs-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - Algorithms 1-3 were compared line by line with the rendered PDF and preserve control flow, cases, return values,
+          operators, and captions. Algorithm 1 source case-ellipsis/do-ellipsis schematic is represented by the single ellipsis
+          branch marker ...：, with no concrete operation omitted. All 12 numbered SQL listings were manually checked against
+          their rendered source; statements, identifiers, literals, ordering, comments, actual/expected result sets, and error
+          strings agree, and Listing 12 retains the 43-letter a run.
+        - All explicit numbers, units, ranges, percentages, versions, dates, counts, and comparison directions were checked.
+          Tables 1-4 reproduce their values and headings; Table 2 correctly places Intended and Duplicate under Closed. The
+          source typesetting 5,0000 is preserved with a transparent source-note, and the 10-30 rows, 1000000 cardinality,
+          96/121/78 counts, 52.7/82.4 percentages, coverage values, and 1.7/7.2 million quantities agree with the PDF.
+        - 'Author voice inventory used pdftotext -layout plus rendered-page inspection: 278 regex candidates minus ten i.e.
+          tokens and one third-party Cockroach Labs quotation yields 267 valid authorial I/we/my/our/us items; all 267 passed
+          semantic and referent review. Chinese same-subject sharing was accepted only where one explicit 我们 governed coordinated
+          author actions or an immediately linked 我们的/自己 relation; every source item remained separately counted, and no author
+          action was assigned to 本文, 系统, 方法, or 团队.'
+        - Both displayed formulas preserve the source symbols, indices, products, and values. Every inline code node was classified
+          as a filename, identifier, SQL token/expression, or literal datum rather than mathematical prose. Independent locked
+          MathJax and GitHub Markdown rendering audits each verified all four expressions after the final paper-check.
+        - 'Both formal figures were matched to rendered source pages and inspected at full resolution: Figure 1 contains all
+          seven steps, arrows, dotted-result paths, labels, values, and continuation branches; Figure 2 contains all three
+          DBMS panels, statement labels, axes/ticks, fills, and the four-entry legend. Four Markdown tables preserve all cells,
+          spans via explanatory note, units, and conclusions; each formal resource has one complete representation with no
+          clipping or duplicate asset.'
+        - Final canonical-header comparison passed exactly against paper.yaml. Independent final paper-check passed on translation
+          SHA256 55e9865bcc449978c40d531138e23e68854c0f1072d28b4beb735c5fe44d5e5a; its only candidate category was listings
+          with 23 diagnostics and fingerprint 92c354c9ad4ea5542bdddfe3d1e4ea8f67c183261433dcc84933f90519d1d3fe, matching the
+          manually reviewed set exactly.
+        - 'Front matter and structure verified from the 17-page PDF: canonical title and H1, Manuel Rigger and Zhendong Su,
+          ETH Zurich affiliation, OSDI 20 venue and dates, pages 667-682, ISBN, source URL, Available/Functional/Reproduced
+          badges, open-access sponsor note, abstract, eight numbered sections with all subsections, acknowledgements, and
+          references are present.'
+        - 'Listing dispositions: 1 partial-index actual/expected rows pass; 2 INTERSECT containment query pass; 3 COLLATE/WITHOUT
+          ROWID pass; 4 skip-scan DISTINCT pass; 5 LIKE optimization pass; 6 MEMORY engine and unsigned cast pass; 7 null-safe
+          comparison/value-range case pass; 8 double negation pass; 9 PostgreSQL inheritance pass; 10 SQLite double-quote
+          index pass; 11 malformed database image pass; 12 unexpected-null index case pass. The conservative extractor generated
+          23 listing-risk diagnostics only because source column text was over-captured; no abridgement was accepted.'
+        - 'Reviewed byte snapshot: source SHA256 c9fb56b3d545c929c129802fd0e7e0070a31f7d908e0ba5371693d133601b8be; translation
+          SHA256 55e9865bcc449978c40d531138e23e68854c0f1072d28b4beb735c5fe44d5e5a; fixed review base bac13c8f1c61f0dc7e093c502438bbe9a8d543a6.'
+        - Technical claims and directionality were checked section by section against the PDF, including the containment oracle
+          construction, TRUE/FALSE/NULL rectification, join behavior, error-oracle boundary, DBMS-specific scope, evaluation
+          methodology, bug classifications, NoREC/TLP comparison, deployment discussion, limitations, and future-work claims;
+          no inversion, unsupported claim, or material omission remains.
+        - 'The -layout recount recovered three authorial items hidden by -raw word gluing: PDF p.669 ofourapproach maps to
+          translation line 111 我们方法; PDF p.674 bugsthatwefound maps to line 280 我们所发现; PDF p.677 Wherewedeemed maps to line
+          487 当我们认为. All three were visually confirmed and pass; conclusion line 533 separately retains both 我们的方法 and 我们只实现了.'
+        - 'The conclusion and limitations preserve the stated scope: PQS partially validates results and cannot generally
+          verify insertion/deletion, cardinality, ordering, concurrency, transactions, access control, duplicate rows, several
+          aggregate/window/join cases, ambiguous queries, or unsupported user functions; the non-containment and scaling directions
+          remain qualified as future work.'
+        - There are no paper footnotes, appendices, received/revised records, or omitted end-matter items. Acknowledgements
+          preserve all named people and author relations. All 53 references are present in order and were checked across PDF
+          line breaks for authors, titles, venues, years, page ranges, and URLs; body citation anchors remain attached to
+          the corresponding claims.
+        - Visual-layout review covered all 17 rendered PDF pages, especially two-column boundaries and pages containing algorithms,
+          four tables, two figures, Listings 1-12, acknowledgements, and multi-page references. Markdown heading hierarchy,
+          15 balanced fence pairs, 21 table rows, image links, captions, and asset boundaries are complete; no HTML comments,
+          placeholders, empty tables, QA residue, or whole-page screenshots remain.
+      waivers:
+        listings:
+          evidence_version: 1
+          fingerprint: 92c354c9ad4ea5542bdddfe3d1e4ea8f67c183261433dcc84933f90519d1d3fe
+          findings:
+            - listing:10:short-relative-to-source
+            - listing:10:weak-distinctive-identifier-overlap
+            - listing:11:short-relative-to-source
+            - listing:11:weak-distinctive-identifier-overlap
+            - listing:12:short-relative-to-source
+            - listing:12:weak-distinctive-identifier-overlap
+            - listing:1:short-relative-to-source
+            - listing:1:weak-distinctive-identifier-overlap
+            - listing:2:short-relative-to-source
+            - listing:2:weak-distinctive-identifier-overlap
+            - listing:3:short-relative-to-source
+            - listing:4:short-relative-to-source
+            - listing:4:weak-distinctive-identifier-overlap
+            - listing:5:short-relative-to-source
+            - listing:5:weak-distinctive-identifier-overlap
+            - listing:6:short-relative-to-source
+            - listing:6:weak-distinctive-identifier-overlap
+            - listing:7:short-relative-to-source
+            - listing:7:weak-distinctive-identifier-overlap
+            - listing:8:short-relative-to-source
+            - listing:8:weak-distinctive-identifier-overlap
+            - listing:9:short-relative-to-source
+            - listing:9:weak-distinctive-identifier-overlap
+          candidates:
+            - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.07)'
+            - 'RISK: Listing 1 fenced payload is short relative to source code candidate (147/948)'
+            - 'RISK: Listing 10 fenced payload has weak distinctive-identifier overlap with source candidate (0.11)'
+            - 'RISK: Listing 10 fenced payload is short relative to source code candidate (164/1332)'
+            - 'RISK: Listing 11 fenced payload has weak distinctive-identifier overlap with source candidate (0.16)'
+            - 'RISK: Listing 11 fenced payload is short relative to source code candidate (211/1683)'
+            - 'RISK: Listing 12 fenced payload has weak distinctive-identifier overlap with source candidate (0.15)'
+            - 'RISK: Listing 12 fenced payload is short relative to source code candidate (247/1431)'
+            - 'RISK: Listing 2 fenced payload has weak distinctive-identifier overlap with source candidate (0.02)'
+            - 'RISK: Listing 2 fenced payload is short relative to source code candidate (90/1801)'
+            - 'RISK: Listing 3 fenced payload is short relative to source code candidate (181/805)'
+            - 'RISK: Listing 4 fenced payload has weak distinctive-identifier overlap with source candidate (0.11)'
+            - 'RISK: Listing 4 fenced payload is short relative to source code candidate (321/1546)'
+            - 'RISK: Listing 5 fenced payload has weak distinctive-identifier overlap with source candidate (0.23)'
+            - 'RISK: Listing 5 fenced payload is short relative to source code candidate (124/805)'
+            - 'RISK: Listing 6 fenced payload has weak distinctive-identifier overlap with source candidate (0.11)'
+            - 'RISK: Listing 6 fenced payload is short relative to source code candidate (195/1273)'
+            - 'RISK: Listing 7 fenced payload has weak distinctive-identifier overlap with source candidate (0.07)'
+            - 'RISK: Listing 7 fenced payload is short relative to source code candidate (122/1473)'
+            - 'RISK: Listing 8 fenced payload has weak distinctive-identifier overlap with source candidate (0.04)'
+            - 'RISK: Listing 8 fenced payload is short relative to source code candidate (107/1683)'
+            - 'RISK: Listing 9 fenced payload has weak distinctive-identifier overlap with source candidate (0.08)'
+            - 'RISK: Listing 9 fenced payload is short relative to source code candidate (194/1510)'
+      fingerprint: 6d7f857dff0bb9841ada94bcc19b317aaec6babbc6041e70056e1efe793d1838
+    waivers:
+      listings:
+        evidence_version: 1
+        fingerprint: 92c354c9ad4ea5542bdddfe3d1e4ea8f67c183261433dcc84933f90519d1d3fe
+        findings:
+          - listing:10:short-relative-to-source
+          - listing:10:weak-distinctive-identifier-overlap
+          - listing:11:short-relative-to-source
+          - listing:11:weak-distinctive-identifier-overlap
+          - listing:12:short-relative-to-source
+          - listing:12:weak-distinctive-identifier-overlap
+          - listing:1:short-relative-to-source
+          - listing:1:weak-distinctive-identifier-overlap
+          - listing:2:short-relative-to-source
+          - listing:2:weak-distinctive-identifier-overlap
+          - listing:3:short-relative-to-source
+          - listing:4:short-relative-to-source
+          - listing:4:weak-distinctive-identifier-overlap
+          - listing:5:short-relative-to-source
+          - listing:5:weak-distinctive-identifier-overlap
+          - listing:6:short-relative-to-source
+          - listing:6:weak-distinctive-identifier-overlap
+          - listing:7:short-relative-to-source
+          - listing:7:weak-distinctive-identifier-overlap
+          - listing:8:short-relative-to-source
+          - listing:8:weak-distinctive-identifier-overlap
+          - listing:9:short-relative-to-source
+          - listing:9:weak-distinctive-identifier-overlap
+        candidates:
+          - 'RISK: Listing 1 fenced payload has weak distinctive-identifier overlap with source candidate (0.07)'
+          - 'RISK: Listing 1 fenced payload is short relative to source code candidate (147/948)'
+          - 'RISK: Listing 10 fenced payload has weak distinctive-identifier overlap with source candidate (0.11)'
+          - 'RISK: Listing 10 fenced payload is short relative to source code candidate (164/1332)'
+          - 'RISK: Listing 11 fenced payload has weak distinctive-identifier overlap with source candidate (0.16)'
+          - 'RISK: Listing 11 fenced payload is short relative to source code candidate (211/1683)'
+          - 'RISK: Listing 12 fenced payload has weak distinctive-identifier overlap with source candidate (0.15)'
+          - 'RISK: Listing 12 fenced payload is short relative to source code candidate (247/1431)'
+          - 'RISK: Listing 2 fenced payload has weak distinctive-identifier overlap with source candidate (0.02)'
+          - 'RISK: Listing 2 fenced payload is short relative to source code candidate (90/1801)'
+          - 'RISK: Listing 3 fenced payload is short relative to source code candidate (181/805)'
+          - 'RISK: Listing 4 fenced payload has weak distinctive-identifier overlap with source candidate (0.11)'
+          - 'RISK: Listing 4 fenced payload is short relative to source code candidate (321/1546)'
+          - 'RISK: Listing 5 fenced payload has weak distinctive-identifier overlap with source candidate (0.23)'
+          - 'RISK: Listing 5 fenced payload is short relative to source code candidate (124/805)'
+          - 'RISK: Listing 6 fenced payload has weak distinctive-identifier overlap with source candidate (0.11)'
+          - 'RISK: Listing 6 fenced payload is short relative to source code candidate (195/1273)'
+          - 'RISK: Listing 7 fenced payload has weak distinctive-identifier overlap with source candidate (0.07)'
+          - 'RISK: Listing 7 fenced payload is short relative to source code candidate (122/1473)'
+          - 'RISK: Listing 8 fenced payload has weak distinctive-identifier overlap with source candidate (0.04)'
+          - 'RISK: Listing 8 fenced payload is short relative to source code candidate (107/1683)'
+          - 'RISK: Listing 9 fenced payload has weak distinctive-identifier overlap with source candidate (0.08)'
+          - 'RISK: Listing 9 fenced payload is short relative to source code candidate (194/1510)'
+  serializable-isolation-for-snapshot-databases:
+    source_sha256: 48601fda0570cf6b83f6d2346e5e0c7831bce0c19102be158239ad4aac3ff650
+    translation_sha256: 6fe92f00dde9ab3c535305ac7a6defa7b970fa67d6e7c5d4451b5f781eb6649e
+    assets_manifest_sha256: bd04c82349b42d3e8a0fe2b5b235681d256ef36252b90d54282d18e7ecc43bdd
+    review_action: full-translation-review
+    reviewer: codex-agent:ssi-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: serializable-isolation-for-snapshot-databases
+      source_sha256: 48601fda0570cf6b83f6d2346e5e0c7831bce0c19102be158239ad4aac3ff650
+      translation_sha256: 6fe92f00dde9ab3c535305ac7a6defa7b970fa67d6e7c5d4451b5f781eb6649e
+      assets_manifest_sha256: bd04c82349b42d3e8a0fe2b5b235681d256ef36252b90d54282d18e7ecc43bdd
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: 1b3a456daa4576aedabcf18998b53bbaa71716701c6a9c9a1357ff209519c094
+      review_gate_manifest_sha256: 6ff4dae9f7b24d8c8f1722c7b4b41e8d940ec3765f5c8c17d99de4bc2c9f21ba
+      review_action: full-translation-review
+      translator: codex-agent:corpus-gap
+      reviewer: codex-agent:ssi-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - All explicit histories, formulas, identifiers, version numbers, code-line totals and percentages, transaction-table
+          values, hardware/software specifications, MPL thresholds, timing and throughput comparisons, confidence interval
+          qualifier, data-size multipliers, and overhead ranges were checked against the PDF.
+        - Authorial voice audit passed 97/97 effective source items after excluding four I/O tokens and the References section.
+          Thirteen repeated source occurrences are carried by shared Chinese subjects across nine coordinated groups (prototype/evaluation,
+          four-part roadmap, terminology pair, two section-3 mechanism groups, see/set/check, four-part simplification statement,
+          proof completion, and db_perf simulation/comparison); narrator and ownership remain explicit. Two authorial passives
+          or implicit using constructions are additionally rendered with explicit 我们 and are not counted as source items.
+        - Figure 1 and Figures 5-8 code, the three-transaction test history, the unnumbered table, formulas, conclusions and
+          limitations, repeatability statement, and all 21 structured references were checked in full; no abridgement, resource,
+          or listing waiver is required.
+        - 'Source inventory reconciled: 10 physical pages (printed 729-738), complete front matter and author footnote, sections
+          1-7 plus section 8 References, 13 numbered figures (Figures 1 and 5-8 transcribed; Figures 2-4 and 9-13 represented
+          by 8 assets), one unnumbered transaction-status table, repeatability URL, no acknowledgments or appendix, and references
+          [1]-[21].'
+        - 'Technical review passed: the dangerous-structure theorem and concurrency predicates, unconstrained commit order,
+          TN->T0->T1 edge directions, inConflict/outConflict directions, SIREAD/WRITE detection cases, victim rules, retention
+          boundary, pseudocode conditions, and correctness argument all match the PDF.'
+        - 'Visual review passed for all 10 rendered source pages and all 8 assets: crop boundaries retain complete nodes,
+          arrows, subfigure labels, axes, ticks, legends, error bars, and plot labels at readable resolution without adjacent
+          prose or the overall source figure caption.'
+      waivers: {}
+      fingerprint: 0b174553900ec9d9cd4acc96372d8f92d8f4d6db592012bf86d51ca3c84f9250
+  f1-distributed-sql-database-scales:
+    source_sha256: ae150e1f952d39fbe712c6a910c2aa8ab34647e5287eff54f50d62d1688658e3
+    translation_sha256: d78238d3f20138f9a242d8f33a2f957be4a29254e4083fbe1369a783e62a2261
+    assets_manifest_sha256: 4f52c63736b87aa196ad4630993111465e76a5c42c1e8c521d60307b5789586d
+    review_action: full-translation-review
+    reviewer: codex-agent:f1-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: f1-distributed-sql-database-scales
+      source_sha256: ae150e1f952d39fbe712c6a910c2aa8ab34647e5287eff54f50d62d1688658e3
+      translation_sha256: d78238d3f20138f9a242d8f33a2f957be4a29254e4083fbe1369a783e62a2261
+      assets_manifest_sha256: 4f52c63736b87aa196ad4630993111465e76a5c42c1e8c521d60307b5789586d
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: fb2f6ab4d860850d6e0500e0808c5fe5c4ab460c17c3b2d076e74a7a4583ad6e
+      review_gate_manifest_sha256: 375cb93738e459da5e684d66618a0990a53594cf8399dbe20d524617034adbb0
+      review_action: full-translation-review
+      translator: codex-agent:classic-candidates
+      reviewer: codex-agent:f1-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - All explicit quantities, units, comparison directions, transaction and failure boundaries, deployment assumptions,
+          SQL text, inline mathematical identifiers, limitations, conclusions, citation anchors, and Figures 1-3 remain unchanged
+          and retain the prior full-review disposition.
+        - Authorial-voice inventory remains 80 valid contexts and 97 effective tokens (we=61, our=30, us=6), excluding nine
+          index-variable I tokens, three i.e. tokens, and four country or code US tokens; all 97 relationships and the shared-subject
+          merges at translation lines 51, 78, and 239 remain correct.
+        - Canonical header check passed with zero drift, GitHub math audit verified 26 expressions, and the scoped deep paper
+          check emitted exactly the reviewed resources-v3 diagnostic and fingerprint.
+        - 'Evidence-v3 migration recheck confirmed the accepted content snapshot is unchanged: source SHA ae150e1f952d39fbe712c6a910c2aa8ab34647e5287eff54f50d62d1688658e3,
+          translation SHA d78238d3f20138f9a242d8f33a2f957be4a29254e4083fbe1369a783e62a2261, and the three previously reviewed
+          figure assets retain their reviewed hashes.'
+        - 'Resources evidence v3 was checked item by item: all 24 source bibliography entries have complete ordered two-column
+          content recovery and 23 visible marker-to-content mappings cover 1-15 and 17-24. Reference 16 is present and complete
+          on PDF page 12 but its marker-content parse is interrupted by the physical https: line break, so source-reference-content-recovery:16
+          is accepted and no source-reference-marker-content-mapping:16:16 is claimed.'
+        - 'Source inventory remains matched: 12 PDF pages; title, 14 authors, two affiliations, VLDB 2013 publication material,
+          abstract, one footnote, 14 numbered main sections, 15 numbered subsections, two-step schema-change algorithm, three
+          figures, no formal tables, no numbered algorithms, seven SQL or structured-code groups, conclusion, acknowledgements,
+          and references [1]-[24].'
+      waivers:
+        resources:
+          evidence_version: 3
+          fingerprint: 8cd5f1d10f915e3515282a9a7076ca7105d4940b57e3e6eacb7998d4753222f8
+          findings:
+            - source-reference-content-recovery:1
+            - source-reference-content-recovery:10
+            - source-reference-content-recovery:11
+            - source-reference-content-recovery:12
+            - source-reference-content-recovery:13
+            - source-reference-content-recovery:14
+            - source-reference-content-recovery:15
+            - source-reference-content-recovery:16
+            - source-reference-content-recovery:17
+            - source-reference-content-recovery:18
+            - source-reference-content-recovery:19
+            - source-reference-content-recovery:2
+            - source-reference-content-recovery:20
+            - source-reference-content-recovery:21
+            - source-reference-content-recovery:22
+            - source-reference-content-recovery:23
+            - source-reference-content-recovery:24
+            - source-reference-content-recovery:3
+            - source-reference-content-recovery:4
+            - source-reference-content-recovery:5
+            - source-reference-content-recovery:6
+            - source-reference-content-recovery:7
+            - source-reference-content-recovery:8
+            - source-reference-content-recovery:9
+            - source-reference-marker-content-mapping:10:10
+            - source-reference-marker-content-mapping:11:11
+            - source-reference-marker-content-mapping:12:12
+            - source-reference-marker-content-mapping:13:13
+            - source-reference-marker-content-mapping:14:14
+            - source-reference-marker-content-mapping:15:15
+            - source-reference-marker-content-mapping:17:17
+            - source-reference-marker-content-mapping:18:18
+            - source-reference-marker-content-mapping:19:19
+            - source-reference-marker-content-mapping:1:1
+            - source-reference-marker-content-mapping:20:20
+            - source-reference-marker-content-mapping:21:21
+            - source-reference-marker-content-mapping:22:22
+            - source-reference-marker-content-mapping:23:23
+            - source-reference-marker-content-mapping:24:24
+            - source-reference-marker-content-mapping:2:2
+            - source-reference-marker-content-mapping:3:3
+            - source-reference-marker-content-mapping:4:4
+            - source-reference-marker-content-mapping:5:5
+            - source-reference-marker-content-mapping:6:6
+            - source-reference-marker-content-mapping:7:7
+            - source-reference-marker-content-mapping:8:8
+            - source-reference-marker-content-mapping:9:9
+          candidates:
+            - 'RISK: source numeric references 1-24 were recovered by complete ordered two-column bibliography-content evidence;
+              parsed markers: 1->1, 2->2, 3->3, 4->4, 5->5, 6->6, 7->7, 8->8, 9->9, 10->10, 11->11, 12->12, 13->13, 14->14,
+              15->15, 17->17, 18->18, 19->19, 20->20, 21->21, 22->22, 23->23, 24->24'
+      fingerprint: cd62175b9d6a9641bfb1c2d77c4ff511e8c9a7e03b099ef81bb2c537af5cd1fd
+    waivers:
+      resources:
+        evidence_version: 3
+        fingerprint: 8cd5f1d10f915e3515282a9a7076ca7105d4940b57e3e6eacb7998d4753222f8
+        findings:
+          - source-reference-content-recovery:1
+          - source-reference-content-recovery:10
+          - source-reference-content-recovery:11
+          - source-reference-content-recovery:12
+          - source-reference-content-recovery:13
+          - source-reference-content-recovery:14
+          - source-reference-content-recovery:15
+          - source-reference-content-recovery:16
+          - source-reference-content-recovery:17
+          - source-reference-content-recovery:18
+          - source-reference-content-recovery:19
+          - source-reference-content-recovery:2
+          - source-reference-content-recovery:20
+          - source-reference-content-recovery:21
+          - source-reference-content-recovery:22
+          - source-reference-content-recovery:23
+          - source-reference-content-recovery:24
+          - source-reference-content-recovery:3
+          - source-reference-content-recovery:4
+          - source-reference-content-recovery:5
+          - source-reference-content-recovery:6
+          - source-reference-content-recovery:7
+          - source-reference-content-recovery:8
+          - source-reference-content-recovery:9
+          - source-reference-marker-content-mapping:10:10
+          - source-reference-marker-content-mapping:11:11
+          - source-reference-marker-content-mapping:12:12
+          - source-reference-marker-content-mapping:13:13
+          - source-reference-marker-content-mapping:14:14
+          - source-reference-marker-content-mapping:15:15
+          - source-reference-marker-content-mapping:17:17
+          - source-reference-marker-content-mapping:18:18
+          - source-reference-marker-content-mapping:19:19
+          - source-reference-marker-content-mapping:1:1
+          - source-reference-marker-content-mapping:20:20
+          - source-reference-marker-content-mapping:21:21
+          - source-reference-marker-content-mapping:22:22
+          - source-reference-marker-content-mapping:23:23
+          - source-reference-marker-content-mapping:24:24
+          - source-reference-marker-content-mapping:2:2
+          - source-reference-marker-content-mapping:3:3
+          - source-reference-marker-content-mapping:4:4
+          - source-reference-marker-content-mapping:5:5
+          - source-reference-marker-content-mapping:6:6
+          - source-reference-marker-content-mapping:7:7
+          - source-reference-marker-content-mapping:8:8
+          - source-reference-marker-content-mapping:9:9
+        candidates:
+          - 'RISK: source numeric references 1-24 were recovered by complete ordered two-column bibliography-content evidence;
+            parsed markers: 1->1, 2->2, 3->3, 4->4, 5->5, 6->6, 7->7, 8->8, 9->9, 10->10, 11->11, 12->12, 13->13, 14->14,
+            15->15, 17->17, 18->18, 19->19, 20->20, 21->21, 22->22, 23->23, 24->24'
+  millwheel-fault-tolerant-stream-processing-internet-scale:
+    source_sha256: 2131f6f8b7ec5ede35559ab1a68e8d3697c1a27edf1d381efd0f49b778da9159
+    translation_sha256: 254220de80b4876bd9652bbb028f05dc862f6c630dd4a285964ea1604e9104a7
+    assets_manifest_sha256: ee027220a9d3c437acb7b90cb7dc3a4828d6f89c00068b1a9b80be29cd8d2604
+    review_action: full-translation-review
+    reviewer: codex-agent:millwheel-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: millwheel-fault-tolerant-stream-processing-internet-scale
+      source_sha256: 2131f6f8b7ec5ede35559ab1a68e8d3697c1a27edf1d381efd0f49b778da9159
+      translation_sha256: 254220de80b4876bd9652bbb028f05dc862f6c630dd4a285964ea1604e9104a7
+      assets_manifest_sha256: ee027220a9d3c437acb7b90cb7dc3a4828d6f89c00068b1a9b80be29cd8d2604
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: 8c07754009cf6ef09378cace42e183555b410271209df18451830aa3a8ef243a
+      review_gate_manifest_sha256: 6ff4dae9f7b24d8c8f1722c7b4b41e8d940ec3765f5c8c17d99de4bc2c9f21ba
+      review_action: full-translation-review
+      translator: codex-agent:classic-candidates
+      reviewer: codex-agent:millwheel-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - 'All 16 figures checked: 12 precisely cropped image assets retain readable labels, axes, ticks, legends, arrows,
+          and boundaries; Figures 3, 7, 9, and 10 are complete code transcriptions checked token by token.'
+        - 'Authorial narration rebuilt independently from pypdf extraction: 111 raw candidates; excluded one line-broken us-ing
+          false positive and one i.e. false positive; 109 effective items equal 105 prose items plus 4 code-comment items.
+          All 109 preserve explicit first-person attribution and possession in Chinese; no shared-subject merges.'
+        - 'Core semantics and all explicit quantities checked: low watermarks and pending work, event time and window boundaries,
+          persistent state, timers, at-least-once and exactly-once delivery, strong and weak productions, checkpointing, deduplication,
+          zombie writes, evaluation units, and negative tradeoffs; repaired lines 154, 160, 245, and 286 agree with the PDF.'
+        - 'Front matter checked: ten authors, Google affiliation, grouped email addresses, copying restriction, VLDB 2013
+          conference invitation, PVLDB volume and issue, copyright identifier, and price.'
+        - References 1-34 and their body citation anchors checked against the rendered PDF, including wrapped names, page
+          ranges, URLs, and source-visible irregularities.
+        - 'Source inventory checked independently: 12 pages; abstract; Sections 1-10 and all subsections; Figures 1-16; one
+          low-watermark formula; acknowledgements; 34 references; no tables, standalone algorithms, or footnotes.'
+      waivers: {}
+      fingerprint: 502120ec0fae56caf36f7729226f401f2b1cac441fd46ff042ea7a9f671700be
+  pregel-large-scale-graph-processing:
+    source_sha256: fecb9886958d217ef5130026014aa7a58050415dead62572e0aab7940a779f0e
+    translation_sha256: 9f1bf85e419ab6d42788e07b4e91e501f11ea798f1a0bb0fbc081d13f676d57c
+    assets_manifest_sha256: 11a1fa8fafab6d75af0e77fb33128f8fa4c59c29d481124ed502b99113e9f49b
+    review_action: full-translation-review
+    reviewer: codex-agent:pregel-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: pregel-large-scale-graph-processing
+      source_sha256: fecb9886958d217ef5130026014aa7a58050415dead62572e0aab7940a779f0e
+      translation_sha256: 9f1bf85e419ab6d42788e07b4e91e501f11ea798f1a0bb0fbc081d13f676d57c
+      assets_manifest_sha256: 11a1fa8fafab6d75af0e77fb33128f8fa4c59c29d481124ed502b99113e9f49b
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: aa3cd0af6bf06bcbbeafdc141a54c8c930e3ab8175bbdb54f98ca450688db6e6
+      review_gate_manifest_sha256: 6ff4dae9f7b24d8c8f1722c7b4b41e8d940ec3765f5c8c17d99de4bc2c9f21ba
+      review_action: full-translation-review
+      translator: codex-agent:corpus-gap
+      reviewer: codex-agent:pregel-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - resources候选已人工处置：双栏PDF印刷页144的右栏是参考文献[6]续文及[7]–[22]，视觉顺序位于左栏“10. REFERENCES”标题及[1]–[6]之后；布局抽取将[7]–[22]提前，造成37/47与未匹配[7]–[16]的保守候选；译文[1]–[47]逐条完整。
+        - 作者性清单通过：原始I/we/my/our/us扫描命中50项，其中I/O为1项非作者性伪命中；49项有效第一人称均逐项在译文保留为“我们/我们的”，49/49通过，无中文共用主语合并。
+        - 图与代码通过：5个精裁assets逐一核对边界、箭头、节点/阴影、坐标轴、全部刻度与图例关系；图3–6的4段C++代码去除空白后与PDF转写逐字节一致；2个编号公式的变量、上下标、分组和参数值一致。
+        - 源文清单轮通过：11页（印刷页135–145）；首页作者/机构/邮箱、分类、一般术语、关键词、出版许可与会议信息，正文1–10节及3.1–5.4子节，脚注1，图1–9，图3–6的4段C++代码，编号公式(1)–(2)，致谢与参考文献[1]–[47]均逐项定位。
+        - 逐项对照轮通过：BSP/以顶点为中心的超步与消息保证、combiner/aggregator、拓扑变更冲突顺序、master/worker/partition、检查点与受限恢复，以及PageRank、SSSP、二分图匹配、半聚类算法、全部实验数字/单位/比较方向与结论限制均与PDF一致。
+      waivers:
+        resources:
+          evidence_version: 1
+          fingerprint: dd9d869ae645d1bdcd802a5aaa64c7c68624ded6951bb6ae8ea6ceb910482b80
+          findings:
+            - reference-entry-count-differs
+            - unmatched-translation-reference:10
+            - unmatched-translation-reference:11
+            - unmatched-translation-reference:12
+            - unmatched-translation-reference:13
+            - unmatched-translation-reference:14
+            - unmatched-translation-reference:15
+            - unmatched-translation-reference:16
+            - unmatched-translation-reference:7
+            - unmatched-translation-reference:8
+            - unmatched-translation-reference:9
+          candidates:
+            - 'RISK: reference entry-count candidate differs (37/47)'
+            - 'RISK: translation has unmatched reference identifiers: 10, 11, 12, 13, 14, 15, 16, 7, 8, 9'
+      fingerprint: 942cb87dcb0aa02394ba5fb60feb35542b6b08bcada951d4857a795801ed7033
+    waivers:
+      resources:
+        evidence_version: 1
+        fingerprint: dd9d869ae645d1bdcd802a5aaa64c7c68624ded6951bb6ae8ea6ceb910482b80
+        findings:
+          - reference-entry-count-differs
+          - unmatched-translation-reference:10
+          - unmatched-translation-reference:11
+          - unmatched-translation-reference:12
+          - unmatched-translation-reference:13
+          - unmatched-translation-reference:14
+          - unmatched-translation-reference:15
+          - unmatched-translation-reference:16
+          - unmatched-translation-reference:7
+          - unmatched-translation-reference:8
+          - unmatched-translation-reference:9
+        candidates:
+          - 'RISK: reference entry-count candidate differs (37/47)'
+          - 'RISK: translation has unmatched reference identifiers: 10, 11, 12, 13, 14, 15, 16, 7, 8, 9'
+  bw-tree-new-hardware-platforms:
+    source_sha256: 6dbaa6c9871d4ead79b017143ead94767b49dcdd93e93fdc86382b2bf993af88
+    translation_sha256: 8382ba8e910a2b512e24d85b11ee5eaa20ed7a341abb02626d4c7549152e4874
+    assets_manifest_sha256: 4472abc4d9baaef1b80a204620a1517e54b23935e612f3a5d81241263584cdb0
+    review_action: full-translation-review
+    reviewer: codex-agent:bw-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: bw-tree-new-hardware-platforms
+      source_sha256: 6dbaa6c9871d4ead79b017143ead94767b49dcdd93e93fdc86382b2bf993af88
+      translation_sha256: 8382ba8e910a2b512e24d85b11ee5eaa20ed7a341abb02626d4c7549152e4874
+      assets_manifest_sha256: 4472abc4d9baaef1b80a204620a1517e54b23935e612f3a5d81241263584cdb0
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: 1ffcbba84a8f3f26717af607cac528c5db00afbf14eff8fbe77c17989d4c3cf2
+      review_gate_manifest_sha256: 6ff4dae9f7b24d8c8f1722c7b4b41e8d940ec3765f5c8c17d99de4bc2c9f21ba
+      review_action: full-translation-review
+      translator: codex-agent:frontier-candidates
+      reviewer: codex-agent:bw-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - All experimental setup values, workloads, rates, units, table cells, speedups, comparison directions, cache statistics,
+          and negative qualifications were checked against the PDF; Figures 1-7 and their seven assets preserve all subpanels,
+          arrows, labels, axes, ticks, legends, and crop boundaries; Tables I-II and footnotes 1-5 are complete.
+        - All returned authorial defects were repaired by the translator and rechecked on the final byte snapshot, including
+          Our focus, the passive Page state changes sentence, our latch-free approach, and our LSS.
+        - 'Authorial inventory independently rebuilt from PDF layout: 183 valid we, 78 our, and 9 valid us after excluding
+          the single en-us URL false positive, for 270 effective instances; 270/270 passed semantic and relationship review
+          through 246 explicit 我们/我们的 forms, 4 author-bound 自己/自己的 forms, and 20 individually checked Chinese shared-subject
+          or shared-ownership merges; no added author agency remains.'
+        - References 1-24 and all in-text citation anchors were checked against the PDF, including restored line-break hyphenation,
+          page ranges, and URLs; canonical header and final single-paper deep validation passed with zero warnings and no
+          waiver.
+        - 'Source inventory verified against all 12 physical pages: front matter with three authors, Microsoft Research affiliation
+          and three emails; Sections I-VIII with every subsection; Figures 1-7; Tables I-II; footnotes 1-5; References 1-24;
+          no algorithms, listings, acknowledgments, appendix, or numbered equations.'
+        - Technical review passed for mapping-table indirection, delta chains and consolidation, CAS installation, split/merge
+          SMOs and helping, epoch reclamation, non-atomic range scans, LSS incremental flushing, WAL/LSN/ESL/RSSP constraints,
+          and all stated limitations and future-work boundaries.
+      waivers: {}
+      fingerprint: 502a5477a22a8b82c4e0fa73294e67bb618519c31db23e4aff591c81ea52909d
+  gamma-high-performance-dataflow-database-machine:
+    source_sha256: fdf37642b4e753b0f8a0f136b66ca165719383dff862c6d0e812923c1f612ae2
+    translation_sha256: 5dc813db7436c2b5c276803713abbb42aa41d4df8d13d19031ba35884358a83f
+    assets_manifest_sha256: 854d6fbfd7d757faf747ddb87b1bf61b2e5692aa38027c2cffb2affd9e07e861
+    review_action: full-translation-review
+    reviewer: codex-agent:gamma-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: gamma-high-performance-dataflow-database-machine
+      source_sha256: fdf37642b4e753b0f8a0f136b66ca165719383dff862c6d0e812923c1f612ae2
+      translation_sha256: 5dc813db7436c2b5c276803713abbb42aa41d4df8d13d19031ba35884358a83f
+      assets_manifest_sha256: 854d6fbfd7d757faf747ddb87b1bf61b2e5692aa38027c2cffb2affd9e07e861
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: 7431ecc9160f7a23c51d3b18fe22c9568795088c0012e7fc21642b7789d14a37
+      review_gate_manifest_sha256: 4b7c0081faf56dca0d84b1546038263018ee1613b3bfe34b92ff67caed6b5c3a
+      review_action: full-translation-review
+      translator: codex-agent:classic-candidates
+      reviewer: codex-agent:gamma-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - All 42 bibliography entries and body author-key citations were checked visually; OCR mappings browss->brow85, ghrd83->gard83,
+          idewi84bj->dewi84b, ifish->fish84, ikaku85j->kaku85, iston->ston79, sel179->seli79, and tanebl->tane81 are unique
+          and correct; iston is the MUFFIN entry and does not map to ston76.
+        - Authorial narration inventory is 45 effective I/we/my/our/us items; all 45 preserve first-person ownership in Chinese,
+          with no shared-subject merges.
+        - 'Figures 1-10 were checked visually: nine cropped assets preserve labels, arrows, legends, axes, ticks, and boundaries;
+          Figure 7 and the other three unnumbered tables are fully transcribed.'
+        - Remaining unmatched-reference, 22/42 entry-count, and short-entry candidates (baru84, blas79, kaku85, wagn73) were
+          individually closed against printed pages 236-237 and reflect conservative two-column OCR/layout extraction rather
+          than omitted content.
+        - 'Source inventory verified: 10 scanned pages, printed 228-237; front matter, Abstract, Sections 1-6 with all subsections,
+          acknowledgements, four footnotes, query code, and 42 author-key references are present.'
+        - Technical claims, all explicit numbers and units, comparison directions, hash-join overflow behavior, selection
+          and join experiments, and the negative network-congestion result were checked against 300-dpi page renders and independent
+          OCR.
+      waivers:
+        resources:
+          evidence_version: 2
+          fingerprint: 656b20c06a21d26ed163f07292fe173b342ec9cb8b04368651d53c209df84785
+          findings:
+            - reference-entry-count-differs
+            - short-translation-reference:baru84
+            - short-translation-reference:blas79
+            - short-translation-reference:kaku85
+            - short-translation-reference:wagn73
+            - source-reference-ocr-normalization:browss:brow85
+            - source-reference-ocr-normalization:ghrd83:gard83
+            - source-reference-ocr-normalization:idewi84bj:dewi84b
+            - source-reference-ocr-normalization:ifish:fish84
+            - source-reference-ocr-normalization:ikaku85j:kaku85
+            - source-reference-ocr-normalization:iston:ston79
+            - source-reference-ocr-normalization:sel179:seli79
+            - source-reference-ocr-normalization:tanebl:tane81
+            - unmatched-translation-reference:bitt83
+            - unmatched-translation-reference:bora83
+            - unmatched-translation-reference:brat84
+            - unmatched-translation-reference:chou85
+            - unmatched-translation-reference:dewi79
+            - unmatched-translation-reference:dewi85
+            - unmatched-translation-reference:ensc85
+            - unmatched-translation-reference:hell81
+            - unmatched-translation-reference:idm85
+            - unmatched-translation-reference:jark84
+            - unmatched-translation-reference:kim85
+            - unmatched-translation-reference:kits83a
+            - unmatched-translation-reference:kits83b
+            - unmatched-translation-reference:leil78
+            - unmatched-translation-reference:livn85
+            - unmatched-translation-reference:ries78
+            - unmatched-translation-reference:sale84
+            - unmatched-translation-reference:ston76
+            - unmatched-translation-reference:ubel85
+            - unmatched-translation-reference:wats81
+          candidates:
+            - 'RISK: reference entry-count candidate differs (22/42)'
+            - 'RISK: source author-key reference identifiers were normalized by unique bibliography-content OCR evidence:
+              browss->brow85, ghrd83->gard83, idewi84bj->dewi84b, ifish->fish84, ikaku85j->kaku85, iston->ston79, sel179->seli79,
+              tanebl->tane81'
+            - 'RISK: translation has unmatched reference identifiers: bitt83, bora83, brat84, chou85, dewi79, dewi85, ensc85,
+              hell81, idm85, jark84, kim85, kits83a, kits83b, leil78, livn85, ries78, sale84, ston76, ubel85, wats81'
+            - 'RISK: translation reference content is suspiciously short for: baru84, blas79, kaku85, wagn73'
+      fingerprint: 6988318897d3c0d2693bccb6817248c74940052646ff285958be4a12f4c0cf91
+    waivers:
+      resources:
+        evidence_version: 2
+        fingerprint: 656b20c06a21d26ed163f07292fe173b342ec9cb8b04368651d53c209df84785
+        findings:
+          - reference-entry-count-differs
+          - short-translation-reference:baru84
+          - short-translation-reference:blas79
+          - short-translation-reference:kaku85
+          - short-translation-reference:wagn73
+          - source-reference-ocr-normalization:browss:brow85
+          - source-reference-ocr-normalization:ghrd83:gard83
+          - source-reference-ocr-normalization:idewi84bj:dewi84b
+          - source-reference-ocr-normalization:ifish:fish84
+          - source-reference-ocr-normalization:ikaku85j:kaku85
+          - source-reference-ocr-normalization:iston:ston79
+          - source-reference-ocr-normalization:sel179:seli79
+          - source-reference-ocr-normalization:tanebl:tane81
+          - unmatched-translation-reference:bitt83
+          - unmatched-translation-reference:bora83
+          - unmatched-translation-reference:brat84
+          - unmatched-translation-reference:chou85
+          - unmatched-translation-reference:dewi79
+          - unmatched-translation-reference:dewi85
+          - unmatched-translation-reference:ensc85
+          - unmatched-translation-reference:hell81
+          - unmatched-translation-reference:idm85
+          - unmatched-translation-reference:jark84
+          - unmatched-translation-reference:kim85
+          - unmatched-translation-reference:kits83a
+          - unmatched-translation-reference:kits83b
+          - unmatched-translation-reference:leil78
+          - unmatched-translation-reference:livn85
+          - unmatched-translation-reference:ries78
+          - unmatched-translation-reference:sale84
+          - unmatched-translation-reference:ston76
+          - unmatched-translation-reference:ubel85
+          - unmatched-translation-reference:wats81
+        candidates:
+          - 'RISK: reference entry-count candidate differs (22/42)'
+          - 'RISK: source author-key reference identifiers were normalized by unique bibliography-content OCR evidence: browss->brow85,
+            ghrd83->gard83, idewi84bj->dewi84b, ifish->fish84, ikaku85j->kaku85, iston->ston79, sel179->seli79, tanebl->tane81'
+          - 'RISK: translation has unmatched reference identifiers: bitt83, bora83, brat84, chou85, dewi79, dewi85, ensc85,
+            hell81, idm85, jark84, kim85, kits83a, kits83b, leil78, livn85, ries78, sale84, ston76, ubel85, wats81'
+          - 'RISK: translation reference content is suspiciously short for: baru84, blas79, kaku85, wagn73'
+  random-sampling-with-a-reservoir:
+    source_sha256: dba2241b478a46b49ec90cd95f85a8bc3cdf2c12b8c6de03134b99a754a5803b
+    translation_sha256: 8cde61359f65cd15dbaf57ad324b9dc65ecba4f43c57f2c3f007fcadc341ba47
+    assets_manifest_sha256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+    review_action: repair-review
+    reviewer: codex-agent:vitter-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: random-sampling-with-a-reservoir
+      source_sha256: dba2241b478a46b49ec90cd95f85a8bc3cdf2c12b8c6de03134b99a754a5803b
+      translation_sha256: 8cde61359f65cd15dbaf57ad324b9dc65ecba4f43c57f2c3f007fcadc341ba47
+      assets_manifest_sha256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: 079fc2bd96cb85749910b68153a8b9d7a22b0c868104a5b0af129fdbbf6c2216
+      review_gate_manifest_sha256: 375cb93738e459da5e684d66618a0990a53594cf8399dbe20d524617034adbb0
+      review_action: repair-review
+      translator: codex-agent:corpus-gap
+      reviewer: codex-agent:vitter-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - 'authorial narration retained: 140 effective source relationships (I=0, we=119, my=0, our=6, us=15), 140/140 individually
+          matched; Chinese shared-subject merges=0'
+        - 'final whitespace gate: tracked, staged, and untracked diff whitespace validation passed with no remaining findings'
+        - 'formula repair review: line 360 is the first line of Eq. 5.4, G(x)=Prob{X<=x}; physical page 9 / journal page 45
+          was visually rechecked and the removed line-end space has no visible, mathematical, or semantic effect'
+        - 'inventory retained from independent full review: source physical pages 21/21; title matter, sections 1-10, conclusion,
+          algorithms R/X/Y/Z, all formal results, Tables I-II, references 1-11, and end matter matched'
+        - 'math rendering: all 531 expressions passed the scoped GitHub Markdown node audit with exact payload preservation
+          after the whitespace repair'
+        - 'repair scope: translation line 360 lost exactly one trailing ASCII space; in-memory reinsertion reproduces the
+          fully reviewed prior SHA-256 30d8a0e7117307d08ce57742da2585f5fcd44e7597570692bf7b800fed513252 from current SHA-256
+          8cde61359f65cd15dbaf57ad324b9dc65ecba4f43c57f2c3f007fcadc341ba47, with byte length 52002 versus 52001 and no other
+          byte difference'
+        - 'resources retained: source contains no figures, no acknowledgment section, and no formal image assets to preserve'
+      waivers: {}
+      fingerprint: 009bcae83167bea5ff1c94f4b74518cca83c193b2b6a8c92e94b94c4cd62028a
+  volcano-extensible-parallel-query-evaluation-system:
+    source_sha256: 46dd869fc795434f7f85e329faa3d3dc9b6736d088d090b3a0d33e86e89cc180
+    translation_sha256: dbd39a74cce65c1771d4136bbe770d70ead4686c3f439d7ed12c9d1f30ff3d62
+    assets_manifest_sha256: e61eb931e001f9263edfab8bebbb5bc9107736a37f32a7182cb7445abe4acbad
+    review_action: full-translation-review
+    reviewer: codex-agent:volcano-reviewer
+    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    review_receipt:
+      schema_version: 1
+      paper_id: volcano-extensible-parallel-query-evaluation-system
+      source_sha256: 46dd869fc795434f7f85e329faa3d3dc9b6736d088d090b3a0d33e86e89cc180
+      translation_sha256: dbd39a74cce65c1771d4136bbe770d70ead4686c3f439d7ed12c9d1f30ff3d62
+      assets_manifest_sha256: e61eb931e001f9263edfab8bebbb5bc9107736a37f32a7182cb7445abe4acbad
+      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      review_metadata_sha256: 55367fe2fd8816b15486a7005ad67bd49f3d4481d8398196702dba3b07efab83
+      review_gate_manifest_sha256: e05c47d188591afd3e93222c21e2ef1685d20fe650d9755594dcc12bc769729a
+      review_action: full-translation-review
+      translator: codex-agent:frontier-candidates
+      reviewer: codex-agent:volcano-reviewer
+      identity_assurance: self-attested
+      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - 'Authorial narration verified: 53 effective source items, 53 passed; Chinese shared-subject merges preserve attribution
+          for We/our pairs.'
+        - Figures 1-7 and all eight cropped assets visually reviewed at 300 dpi; labels, boundaries, captions, and cross-references
+          passed.
+        - 'Reference 30 verified at 600 dpi: source visibly ends Mar. 199. and the translation preserves it without conjectural
+          completion.'
+        - 'Resources evidence v3 verified: complete references 1-35 recovered; parsed marker mappings l->1, 2->2, lo->10,
+          12->12, 13->13, 14->14, is->15, 25->25, 26->26, 28->28, 30->30, 31->31, 33->33, 34->34, and 35->35 match source
+          bibliography content; all 50 item-bound findings reviewed.'
+        - 'Source inventory verified: 16 pages; Sections I-VII; 2 footnotes; Figures 1-7; no formal source tables, formulas,
+          algorithms, or listings; acknowledgments; references 1-35; author biography and portrait.'
+      waivers:
+        resources:
+          evidence_version: 3
+          fingerprint: 8a544d41e63d0beb5cd3f8f88e785a7a3aa6856eb7fe2ca18422b62227abe107
+          findings:
+            - source-reference-content-recovery:1
+            - source-reference-content-recovery:10
+            - source-reference-content-recovery:11
+            - source-reference-content-recovery:12
+            - source-reference-content-recovery:13
+            - source-reference-content-recovery:14
+            - source-reference-content-recovery:15
+            - source-reference-content-recovery:16
+            - source-reference-content-recovery:17
+            - source-reference-content-recovery:18
+            - source-reference-content-recovery:19
+            - source-reference-content-recovery:2
+            - source-reference-content-recovery:20
+            - source-reference-content-recovery:21
+            - source-reference-content-recovery:22
+            - source-reference-content-recovery:23
+            - source-reference-content-recovery:24
+            - source-reference-content-recovery:25
+            - source-reference-content-recovery:26
+            - source-reference-content-recovery:27
+            - source-reference-content-recovery:28
+            - source-reference-content-recovery:29
+            - source-reference-content-recovery:3
+            - source-reference-content-recovery:30
+            - source-reference-content-recovery:31
+            - source-reference-content-recovery:32
+            - source-reference-content-recovery:33
+            - source-reference-content-recovery:34
+            - source-reference-content-recovery:35
+            - source-reference-content-recovery:4
+            - source-reference-content-recovery:5
+            - source-reference-content-recovery:6
+            - source-reference-content-recovery:7
+            - source-reference-content-recovery:8
+            - source-reference-content-recovery:9
+            - source-reference-marker-content-mapping:12:12
+            - source-reference-marker-content-mapping:13:13
+            - source-reference-marker-content-mapping:14:14
+            - source-reference-marker-content-mapping:25:25
+            - source-reference-marker-content-mapping:26:26
+            - source-reference-marker-content-mapping:28:28
+            - source-reference-marker-content-mapping:2:2
+            - source-reference-marker-content-mapping:30:30
+            - source-reference-marker-content-mapping:31:31
+            - source-reference-marker-content-mapping:33:33
+            - source-reference-marker-content-mapping:34:34
+            - source-reference-marker-content-mapping:35:35
+            - source-reference-marker-content-mapping:is:15
+            - source-reference-marker-content-mapping:l:1
+            - source-reference-marker-content-mapping:lo:10
+          candidates:
+            - 'RISK: source numeric references 1-35 were recovered by complete ordered two-column bibliography-content evidence;
+              parsed markers: l->1, 2->2, lo->10, 12->12, 13->13, 14->14, is->15, 25->25, 26->26, 28->28, 30->30, 31->31,
+              33->33, 34->34, 35->35'
+      fingerprint: 22521de00124f673a8266ea78572ff097e2d56ff2cd6b2208e01d308f336b5cc
+    waivers:
+      resources:
+        evidence_version: 3
+        fingerprint: 8a544d41e63d0beb5cd3f8f88e785a7a3aa6856eb7fe2ca18422b62227abe107
+        findings:
+          - source-reference-content-recovery:1
+          - source-reference-content-recovery:10
+          - source-reference-content-recovery:11
+          - source-reference-content-recovery:12
+          - source-reference-content-recovery:13
+          - source-reference-content-recovery:14
+          - source-reference-content-recovery:15
+          - source-reference-content-recovery:16
+          - source-reference-content-recovery:17
+          - source-reference-content-recovery:18
+          - source-reference-content-recovery:19
+          - source-reference-content-recovery:2
+          - source-reference-content-recovery:20
+          - source-reference-content-recovery:21
+          - source-reference-content-recovery:22
+          - source-reference-content-recovery:23
+          - source-reference-content-recovery:24
+          - source-reference-content-recovery:25
+          - source-reference-content-recovery:26
+          - source-reference-content-recovery:27
+          - source-reference-content-recovery:28
+          - source-reference-content-recovery:29
+          - source-reference-content-recovery:3
+          - source-reference-content-recovery:30
+          - source-reference-content-recovery:31
+          - source-reference-content-recovery:32
+          - source-reference-content-recovery:33
+          - source-reference-content-recovery:34
+          - source-reference-content-recovery:35
+          - source-reference-content-recovery:4
+          - source-reference-content-recovery:5
+          - source-reference-content-recovery:6
+          - source-reference-content-recovery:7
+          - source-reference-content-recovery:8
+          - source-reference-content-recovery:9
+          - source-reference-marker-content-mapping:12:12
+          - source-reference-marker-content-mapping:13:13
+          - source-reference-marker-content-mapping:14:14
+          - source-reference-marker-content-mapping:25:25
+          - source-reference-marker-content-mapping:26:26
+          - source-reference-marker-content-mapping:28:28
+          - source-reference-marker-content-mapping:2:2
+          - source-reference-marker-content-mapping:30:30
+          - source-reference-marker-content-mapping:31:31
+          - source-reference-marker-content-mapping:33:33
+          - source-reference-marker-content-mapping:34:34
+          - source-reference-marker-content-mapping:35:35
+          - source-reference-marker-content-mapping:is:15
+          - source-reference-marker-content-mapping:l:1
+          - source-reference-marker-content-mapping:lo:10
+        candidates:
+          - 'RISK: source numeric references 1-35 were recovered by complete ordered two-column bibliography-content evidence;
+            parsed markers: l->1, 2->2, lo->10, 12->12, 13->13, 14->14, is->15, 25->25, 26->26, 28->28, 30->30, 31->31, 33->33,
+            34->34, 35->35'

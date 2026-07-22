@@ -14,15 +14,10 @@ from pathlib import Path
 from typing import Any, Iterable
 from urllib.parse import quote
 
-from pdf_metrics import (
-    PDF_METRICS_VERSION,
-    PYPDF_VERSION,
-    abridgement_candidate_from_counts,
-)
-
-
 WAIVER_CATEGORIES = frozenset({"abridgement", "listings", "resources"})
-WAIVER_EVIDENCE_VERSION = 1
+WAIVER_EVIDENCE_VERSION = 3
+WAIVER_EVIDENCE_V1_PYPDF_VERSION = "6.14.2"
+WAIVER_EVIDENCE_V1_PDF_METRICS_VERSION = 1
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 FINDING_RE = re.compile(r"^[a-z0-9][a-z0-9._:/%+-]*$")
 
@@ -55,6 +50,28 @@ def _subjects(value: str) -> list[str]:
     return subjects
 
 
+def _abridgement_candidate_v1(
+    translated_cjk: int,
+    source_words: int,
+) -> str | None:
+    """Reproduce the frozen evidence-v1 integer threshold semantics."""
+
+    if translated_cjk * 100 < source_words * 50:
+        severity = "high"
+        threshold = "0.50"
+    elif translated_cjk * 100 < source_words * 75:
+        severity = "moderate"
+        threshold = "0.75"
+    else:
+        return None
+    return (
+        f"{severity} mechanical abridgement risk: "
+        f"CJK/source-word ratio={translated_cjk}/{source_words} "
+        f"(<{threshold}; extractor=pypdf-{WAIVER_EVIDENCE_V1_PYPDF_VERSION}; "
+        f"metric=v{WAIVER_EVIDENCE_V1_PDF_METRICS_VERSION})"
+    )
+
+
 def _candidate_findings_v1(category: str, candidate: str) -> list[str]:
     """Return stable rule-and-subject identities for one raw diagnostic.
 
@@ -70,15 +87,15 @@ def _candidate_findings_v1(category: str, candidate: str) -> list[str]:
             r"(high|moderate) mechanical abridgement risk: "
             r"CJK/source-word ratio=(\d+)/([1-9]\d*) "
             r"\(<(0\.50|0\.75); extractor=pypdf-"
-            + re.escape(PYPDF_VERSION)
+            + re.escape(WAIVER_EVIDENCE_V1_PYPDF_VERSION)
             + r"; metric=v"
-            + str(PDF_METRICS_VERSION)
+            + str(WAIVER_EVIDENCE_V1_PDF_METRICS_VERSION)
             + r"\)",
             candidate,
         )
         if match:
             severity, translated_cjk, source_words, threshold = match.groups()
-            expected = abridgement_candidate_from_counts(
+            expected = _abridgement_candidate_v1(
                 int(translated_cjk), int(source_words)
             )
             if expected == candidate and threshold == (
@@ -264,8 +281,165 @@ def _candidate_findings_v1(category: str, candidate: str) -> list[str]:
     raise ValueError(f"unknown resources waiver candidate: {candidate}")
 
 
+def _author_key_ocr_mappings_v2(
+    category: str,
+    candidate: str,
+) -> list[tuple[str, str]] | None:
+    if category != "resources" or not candidate.startswith("RISK: "):
+        return None
+    diagnostic = candidate.removeprefix("RISK: ")
+    match = re.fullmatch(
+        r"source author-key reference identifiers were normalized by unique "
+        r"bibliography-content OCR evidence: (.+)",
+        diagnostic,
+    )
+    if match is None:
+        return None
+
+    mappings: list[tuple[str, str]] = []
+    source_identifiers: set[str] = set()
+    normalized_identifiers: set[str] = set()
+    for mapping in match.group(1).split(", "):
+        mapping_match = re.fullmatch(
+            r"([A-Za-z][A-Za-z0-9+_.:-]{0,63})->"
+            r"([A-Za-z][A-Za-z0-9+_.:-]{0,63})",
+            mapping,
+        )
+        if mapping_match is None:
+            raise ValueError(f"unknown resources waiver candidate: {candidate}")
+        source_identifier, normalized_identifier = mapping_match.groups()
+        source_identity = source_identifier.casefold()
+        normalized_identity = normalized_identifier.casefold()
+        if (
+            source_identity == normalized_identity
+            or source_identity in source_identifiers
+            or normalized_identity in normalized_identifiers
+        ):
+            raise ValueError(f"unknown resources waiver candidate: {candidate}")
+        source_identifiers.add(source_identity)
+        normalized_identifiers.add(normalized_identity)
+        mappings.append((source_identifier, normalized_identifier))
+    return mappings
+
+
+def _candidate_findings_v2(category: str, candidate: str) -> list[str]:
+    """Extend frozen v1 evidence with author-key OCR content matching."""
+
+    mappings = _author_key_ocr_mappings_v2(category, candidate)
+    if mappings is not None:
+        return [
+            "source-reference-ocr-normalization:"
+            f"{_subject(source_identifier)}:{_subject(normalized_identifier)}"
+            for source_identifier, normalized_identifier in mappings
+        ]
+
+    return _candidate_findings_v1(category, candidate)
+
+
+def _numeric_reference_ocr_candidates_v3(identifier: str) -> set[int]:
+    """Reproduce the frozen evidence-v3 short-marker OCR semantics."""
+
+    if identifier.isdigit() and len(identifier) <= 2:
+        return {int(identifier)}
+    compact = identifier.casefold().strip("[]()<>").replace(".", "")
+    if not compact or len(compact) > 5:
+        return set()
+    variants = {compact}
+    removable_leading = frozenset({"r", "p", "v", "m", "w", "i", "l", "1"})
+    removable_trailing = frozenset({"i", "l", "1"})
+    if compact[0] in removable_leading:
+        variants.add(compact[1:])
+    if compact[-1] in removable_trailing:
+        variants.add(compact[:-1])
+    if (
+        len(compact) >= 2
+        and compact[0] in removable_leading
+        and compact[-1] in removable_trailing
+    ):
+        variants.add(compact[1:-1])
+
+    translation = str.maketrans({"i": "1", "l": "1", "o": "0", "s": "5"})
+    candidates: set[int] = set()
+    for variant in variants:
+        normalized = variant.translate(translation)
+        if normalized.isdigit() and int(normalized) > 0:
+            candidates.add(int(normalized))
+    return candidates
+
+
+def _numeric_reference_recovery_v3(
+    category: str,
+    candidate: str,
+) -> tuple[int, list[tuple[str, str]]] | None:
+    if category != "resources" or not candidate.startswith("RISK: "):
+        return None
+    diagnostic = candidate.removeprefix("RISK: ")
+    match = re.fullmatch(
+        r"source numeric references 1-([1-9]\d*) were recovered by complete "
+        r"ordered two-column bibliography-content evidence; parsed markers: "
+        r"(.+)",
+        diagnostic,
+    )
+    if match is None:
+        return None
+
+    entry_count = int(match.group(1))
+    if entry_count < 10:
+        raise ValueError(f"unknown resources waiver candidate: {candidate}")
+    mappings: list[tuple[str, str]] = []
+    source_identifiers: set[str] = set()
+    target_identifiers: set[str] = set()
+    for mapping in match.group(2).split(", "):
+        mapping_match = re.fullmatch(
+            r"([\[\]()<>A-Za-z0-9.]{1,5})->([1-9]\d*)",
+            mapping,
+        )
+        if mapping_match is None:
+            raise ValueError(f"unknown resources waiver candidate: {candidate}")
+        source_identifier, target_identifier = mapping_match.groups()
+        source_identity = source_identifier.casefold()
+        target_number = int(target_identifier)
+        if (
+            source_identity in source_identifiers
+            or target_identifier in target_identifiers
+            or target_number > entry_count
+            or target_number not in _numeric_reference_ocr_candidates_v3(
+                source_identifier
+            )
+        ):
+            raise ValueError(f"unknown resources waiver candidate: {candidate}")
+        source_identifiers.add(source_identity)
+        target_identifiers.add(target_identifier)
+        mappings.append((source_identifier, target_identifier))
+    if len(mappings) < 3:
+        raise ValueError(f"unknown resources waiver candidate: {candidate}")
+    return entry_count, mappings
+
+
+def _candidate_findings_v3(category: str, candidate: str) -> list[str]:
+    """Extend frozen v2 evidence with complete numeric content recovery."""
+
+    recovery = _numeric_reference_recovery_v3(category, candidate)
+    if recovery is not None:
+        entry_count, mappings = recovery
+        findings = [
+            f"source-reference-content-recovery:{index}"
+            for index in range(1, entry_count + 1)
+        ]
+        findings.extend(
+            "source-reference-marker-content-mapping:"
+            f"{_subject(source_identifier)}:{target_identifier}"
+            for source_identifier, target_identifier in mappings
+        )
+        return findings
+
+    return _candidate_findings_v2(category, candidate)
+
+
 WAIVER_FINDING_PARSERS = {
     1: _candidate_findings_v1,
+    2: _candidate_findings_v2,
+    3: _candidate_findings_v3,
 }
 
 
@@ -290,7 +464,32 @@ def findings_for_candidates(
     evidence_version: int = WAIVER_EVIDENCE_VERSION,
 ) -> list[str]:
     findings: dict[str, str] = {}
+    author_key_targets: dict[str, str] = {}
+    author_key_sources: dict[str, str] = {}
     for candidate in normalize_candidates(candidates):
+        author_key_mappings = (
+            _author_key_ocr_mappings_v2(category, candidate)
+            if evidence_version in {2, 3}
+            else None
+        )
+        for source_identifier, normalized_identifier in author_key_mappings or []:
+            source_identity = source_identifier.casefold()
+            normalized_identity = normalized_identifier.casefold()
+            previous_target = author_key_targets.get(source_identity)
+            previous_source = author_key_sources.get(normalized_identity)
+            if (
+                previous_target is not None
+                and previous_target != normalized_identity
+            ) or (
+                previous_source is not None
+                and previous_source != source_identity
+            ):
+                raise ValueError(
+                    "author-key OCR waiver candidates must form one global "
+                    "one-to-one mapping"
+                )
+            author_key_targets[source_identity] = normalized_identity
+            author_key_sources[normalized_identity] = source_identity
         for finding in candidate_findings(
             category,
             candidate,
@@ -336,25 +535,40 @@ def waiver_fingerprint(
     return hashlib.sha256(payload).hexdigest()
 
 
-def build_waiver_records(observed: dict[str, Iterable[str]]) -> dict[str, dict[str, Any]]:
+def build_waiver_records(
+    observed: dict[str, Iterable[str]],
+    *,
+    evidence_versions: dict[str, int] | None = None,
+) -> dict[str, dict[str, Any]]:
     records: dict[str, dict[str, Any]] = {}
+    evidence_versions = evidence_versions or {}
     for category in sorted(observed):
         if category not in WAIVER_CATEGORIES:
             raise ValueError(f"unknown waiver category: {category}")
         candidates = normalize_candidates(observed[category])
         if not candidates:
             continue
+        evidence_version = evidence_versions.get(
+            category, WAIVER_EVIDENCE_VERSION
+        )
+        if (
+            type(evidence_version) is not int
+            or evidence_version not in WAIVER_FINDING_PARSERS
+        ):
+            raise ValueError(
+                f"unsupported waiver evidence_version: {evidence_version!r}"
+            )
         records[category] = {
-            "evidence_version": WAIVER_EVIDENCE_VERSION,
+            "evidence_version": evidence_version,
             "fingerprint": waiver_fingerprint(
                 category,
                 candidates,
-                evidence_version=WAIVER_EVIDENCE_VERSION,
+                evidence_version=evidence_version,
             ),
             "findings": findings_for_candidates(
                 category,
                 candidates,
-                evidence_version=WAIVER_EVIDENCE_VERSION,
+                evidence_version=evidence_version,
             ),
             "candidates": candidates,
         }
@@ -497,6 +711,48 @@ def decode_waiver_records(encoded: str) -> dict[str, Any]:
     return validate_waiver_records(value, "recorded waiver evidence")
 
 
+def build_observed_waiver_records_for_compare(
+    recorded: dict[str, dict[str, Any]],
+    observed: dict[str, Iterable[str]],
+) -> dict[str, dict[str, Any]]:
+    """Build current observations without silently widening old waivers.
+
+    Existing diagnostics are first replayed with the evidence parser recorded
+    by the acceptance receipt.  If, and only if, that parser does not recognize
+    a current diagnostic, retry the whole category with the current parser so
+    comparison reports an explicit evidence-version/fingerprint change.  Other
+    failures remain hard validation errors.
+    """
+
+    recorded = validate_waiver_records(recorded, "recorded waivers")
+    records: dict[str, dict[str, Any]] = {}
+    for category in sorted(observed):
+        candidates = normalize_candidates(observed[category])
+        if not candidates:
+            continue
+        recorded_version = recorded.get(category, {}).get(
+            "evidence_version", WAIVER_EVIDENCE_VERSION
+        )
+        try:
+            category_record = build_waiver_records(
+                {category: candidates},
+                evidence_versions={category: recorded_version},
+            )
+        except ValueError as exc:
+            unknown_prefix = f"unknown {category} waiver candidate: "
+            if (
+                recorded_version == WAIVER_EVIDENCE_VERSION
+                or not str(exc).startswith(unknown_prefix)
+            ):
+                raise
+            category_record = build_waiver_records(
+                {category: candidates},
+                evidence_versions={category: WAIVER_EVIDENCE_VERSION},
+            )
+        records.update(category_record)
+    return records
+
+
 def compare_waiver_records(
     recorded: dict[str, dict[str, Any]], observed: dict[str, dict[str, Any]]
 ) -> tuple[list[str], list[str]]:
@@ -546,7 +802,10 @@ def main() -> int:
     if args.command == "compare":
         try:
             recorded = decode_waiver_records(args.recorded)
-            observed = build_waiver_records(read_observed_tsv(args.observed))
+            observed = build_observed_waiver_records_for_compare(
+                recorded,
+                read_observed_tsv(args.observed),
+            )
             reviewed, mismatches = compare_waiver_records(recorded, observed)
         except (OSError, ValueError) as exc:
             print(f"ERROR: {exc}", file=sys.stderr)

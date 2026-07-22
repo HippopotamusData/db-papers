@@ -1,0 +1,15 @@
+title: Random Sampling with a Reservoir
+authors:
+  - Jeffrey Scott Vitter
+year: 1985
+source_url: https://doi.org/10.1145/3147.3165
+topics:
+  - stream-processing
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

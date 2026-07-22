@@ -258,6 +258,22 @@ MIN_USEFUL_IMAGE_AREA = 256
 MIN_USEFUL_VISIBLE_PIXELS = 64
 MIN_USEFUL_PIXEL_RATIO_PER_MILLE = 1
 REFERENCE_AUTHOR_KEY_STOPWORDS = frozenset({"AND", "FOR", "THE", "WITH"})
+AUTHOR_KEY_OCR_LEADING_TOKEN_LIMIT = 6
+AUTHOR_KEY_OCR_CONTEXT_TOKEN_LIMIT = 16
+AUTHOR_KEY_OCR_MIN_LEADING_MATCHES = 3
+AUTHOR_KEY_OCR_MIN_CONTEXT_MATCHES = 4
+AUTHOR_KEY_OCR_MIN_LEADING_MARGIN = 1
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ENTRIES = 10
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_COLUMN_GAP = 16
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MAX_COLUMN_SPREAD = 8
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_RIGHT_MARKERS = 3
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_LEFT_MARKERS = 2
+NUMERIC_BIBLIOGRAPHY_RECOVERY_BLANK_RUN = 3
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MAX_TOKEN_WINDOW = 40
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ORDERED_TOKENS = 4
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_RARE_TOKENS = 2
+NUMERIC_BIBLIOGRAPHY_RECOVERY_RARE_DOCUMENT_FREQUENCY = 4
+NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ANCHOR_LENGTH = 4
 
 
 def _minimum_useful_pixels(area: int) -> int:
@@ -1490,6 +1506,527 @@ def _reference_tokens(text: str) -> set[str]:
     }
 
 
+def _reference_token_sequence(text: str) -> list[str]:
+    tokens: list[str] = []
+    for raw_token in REFERENCE_TOKEN_RE.findall(text):
+        token = raw_token.casefold().strip(".,:;/")
+        if (
+            token in REFERENCE_TOKEN_STOPWORDS
+            or re.search(r"[a-z]", token, re.IGNORECASE) is None
+        ):
+            continue
+        tokens.append(token)
+    return tokens
+
+
+def _complete_numeric_translation_entries(
+    translation_section: str,
+) -> list[tuple[str, str]] | None:
+    """Return a clean, complete ``1..N`` translation bibliography.
+
+    Recovery may use translation bibliography content only as review-candidate
+    discovery evidence.  Keep that evidence bounded to the bibliography itself
+    so a following author biography or footnote cannot manufacture matches.
+    """
+
+    post_reference = TRANSLATION_POST_REFERENCE_CONTENT_RE.search(
+        translation_section
+    )
+    clean_section = (
+        translation_section[: post_reference.start()]
+        if post_reference is not None
+        else translation_section
+    )
+    entries = _reference_entries(clean_section)
+    if len(entries) < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ENTRIES:
+        return None
+    expected = [str(index) for index in range(1, len(entries) + 1)]
+    if [identifier for identifier, _body in entries] != expected:
+        return None
+    if any(not body.strip() for _identifier, body in entries):
+        return None
+    return entries
+
+
+def _two_column_bibliography_tokens(
+    source_text: str,
+    source_heading: re.Match[str],
+) -> list[str] | None:
+    """Reconstruct one same-page two-column bibliography in reading order.
+
+    ``pdftotext -layout`` emits rows, not columns.  Infer the right column only
+    from two tight clusters of parsed marker-body starts separated by a large
+    layout gap.  The left column begins below the selected heading; the right
+    column ends at a real blank run after its last marker.  Any weak geometry
+    leaves the ordinary reference errors untouched.
+    """
+
+    page_start = source_text.rfind("\f", 0, source_heading.start("heading")) + 1
+    page_end = source_text.find("\f", source_heading.end("heading"))
+    if page_end < 0:
+        page_end = len(source_text)
+    page = source_text[page_start:page_end]
+    heading_offset = source_heading.start("heading") - page_start
+    if heading_offset < 0 or heading_offset > len(page):
+        return None
+    heading_line = page[:heading_offset].count("\n")
+    lines = page.split("\n")
+
+    marker_starts: list[tuple[int, int]] = []
+    for line_index, line in enumerate(lines):
+        for _start, body_start, delimited, _decimal in _reference_line_starts(
+            line
+        ):
+            if delimited is not None:
+                marker_starts.append((body_start, line_index))
+    if len(marker_starts) < (
+        NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_LEFT_MARKERS
+        + NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_RIGHT_MARKERS
+    ):
+        return None
+
+    positions = sorted(body_start for body_start, _line in marker_starts)
+    gaps = [
+        (positions[index + 1] - positions[index], index)
+        for index in range(len(positions) - 1)
+    ]
+    largest_gap, split_index = max(gaps, default=(0, -1))
+    if largest_gap < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_COLUMN_GAP:
+        return None
+    left_positions = positions[: split_index + 1]
+    right_positions = positions[split_index + 1 :]
+    if (
+        len(right_positions) < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_RIGHT_MARKERS
+        or max(right_positions) - min(right_positions)
+        > NUMERIC_BIBLIOGRAPHY_RECOVERY_MAX_COLUMN_SPREAD
+    ):
+        return None
+
+    right_boundary = right_positions[len(right_positions) // 2]
+    left_marker_rows = {
+        line_index
+        for body_start, line_index in marker_starts
+        if body_start in left_positions and line_index > heading_line
+    }
+    if len(left_marker_rows) < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_LEFT_MARKERS:
+        return None
+    right_marker_rows = [
+        line_index
+        for body_start, line_index in marker_starts
+        if abs(body_start - right_boundary)
+        <= NUMERIC_BIBLIOGRAPHY_RECOVERY_MAX_COLUMN_SPREAD
+    ]
+    if len(right_marker_rows) < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_RIGHT_MARKERS:
+        return None
+
+    last_right_marker_row = max(right_marker_rows)
+    right_stop: int | None = None
+    blank_run = NUMERIC_BIBLIOGRAPHY_RECOVERY_BLANK_RUN
+    for line_index in range(
+        last_right_marker_row + 1,
+        len(lines) - blank_run + 1,
+    ):
+        if all(
+            not lines[candidate][right_boundary:].strip()
+            for candidate in range(line_index, line_index + blank_run)
+        ):
+            right_stop = line_index
+            break
+    if right_stop is None:
+        return None
+
+    left_column = "\n".join(
+        line[:right_boundary] for line in lines[heading_line + 1 :]
+    )
+    right_column = "\n".join(
+        line[right_boundary:] for line in lines[:right_stop]
+    )
+    ordered_text = _reference_structure_text(
+        left_column + "\n" + right_column
+    )
+    tokens = _reference_token_sequence(ordered_text)
+    return tokens or None
+
+
+@dataclass(frozen=True)
+class _NumericReferenceMatch:
+    positions: tuple[int, ...]
+    ordered_token_count: int
+    rare_token_count: int
+
+    @property
+    def start(self) -> int:
+        return self.positions[0]
+
+    @property
+    def end(self) -> int:
+        return self.positions[-1]
+
+    @property
+    def score(self) -> tuple[int, int, int]:
+        return (
+            self.ordered_token_count,
+            self.rare_token_count,
+            -(self.end - self.start + 1),
+        )
+
+
+def _ordered_distinct_reference_matches(
+    translation_tokens: list[str],
+    source_tokens: list[str],
+    *,
+    source_offset: int = 0,
+) -> list[tuple[str, int]]:
+    """Return distinct matched tokens and their strictly increasing indices."""
+
+    distinct_translation_tokens = list(dict.fromkeys(translation_tokens))
+    matches: list[tuple[str, int]] = []
+    source_cursor = 0
+    for token in distinct_translation_tokens:
+        try:
+            source_index = source_tokens.index(token, source_cursor)
+        except ValueError:
+            continue
+        matches.append((token, source_offset + source_index))
+        source_cursor = source_index + 1
+    return matches
+
+
+def _numeric_recovery_match_chain(
+    source_tokens: list[str],
+    translation_entries: list[tuple[str, str]],
+) -> list[_NumericReferenceMatch] | None:
+    """Bind every item to a globally non-overlapping ordered proof chain."""
+
+    translation_tokens = {
+        identifier: _reference_token_sequence(
+            _reference_structure_text(body)
+        )
+        for identifier, body in translation_entries
+    }
+    translation_document_frequency = Counter(
+        token
+        for tokens in translation_tokens.values()
+        for token in set(tokens)
+    )
+    source_counts = Counter(source_tokens)
+    source_positions: dict[str, int] = {
+        token: index
+        for index, token in enumerate(source_tokens)
+        if source_counts[token] == 1
+    }
+
+    candidate_layers: list[list[_NumericReferenceMatch]] = []
+    previous_anchor_end = -1
+    for identifier, _body in translation_entries:
+        tokens = translation_tokens[identifier]
+        token_set = set(tokens)
+        anchors = {
+            token
+            for token in token_set
+            if (
+                len(token) >= NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ANCHOR_LENGTH
+                and translation_document_frequency[token] == 1
+                and token in source_positions
+            )
+        }
+        if not anchors:
+            return None
+        anchor_positions = sorted(source_positions[token] for token in anchors)
+        anchor_start = anchor_positions[0]
+        anchor_end = anchor_positions[-1]
+        if (
+            anchor_start <= previous_anchor_end
+            or anchor_end - anchor_start + 1
+            > NUMERIC_BIBLIOGRAPHY_RECOVERY_MAX_TOKEN_WINDOW
+        ):
+            return None
+
+        rare_tokens = {
+            token
+            for token in token_set
+            if (
+                len(token) >= NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ANCHOR_LENGTH
+                and translation_document_frequency[token]
+                <= NUMERIC_BIBLIOGRAPHY_RECOVERY_RARE_DOCUMENT_FREQUENCY
+            )
+        }
+        candidates_by_positions: dict[
+            tuple[int, ...], _NumericReferenceMatch
+        ] = {}
+        earliest_start = max(
+            0,
+            anchor_end - NUMERIC_BIBLIOGRAPHY_RECOVERY_MAX_TOKEN_WINDOW + 1,
+        )
+        for window_start in range(earliest_start, anchor_start + 1):
+            window_end = min(
+                len(source_tokens),
+                window_start + NUMERIC_BIBLIOGRAPHY_RECOVERY_MAX_TOKEN_WINDOW,
+            )
+            if anchor_end >= window_end:
+                continue
+            matches = _ordered_distinct_reference_matches(
+                tokens,
+                source_tokens[window_start:window_end],
+                source_offset=window_start,
+            )
+            for match_start in range(len(matches)):
+                proof_tokens: set[str] = set()
+                for match_end in range(match_start, len(matches)):
+                    token, _position = matches[match_end]
+                    proof_tokens.add(token)
+                    if (
+                        len(proof_tokens)
+                        < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ORDERED_TOKENS
+                        or len(proof_tokens & rare_tokens)
+                        < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_RARE_TOKENS
+                        or not anchors <= proof_tokens
+                    ):
+                        continue
+                    matched_positions = tuple(
+                        position
+                        for _token, position in matches[
+                            match_start : match_end + 1
+                        ]
+                    )
+                    if any(
+                        left >= right
+                        for left, right in zip(
+                            matched_positions,
+                            matched_positions[1:],
+                        )
+                    ):
+                        continue
+                    candidate = _NumericReferenceMatch(
+                        positions=matched_positions,
+                        ordered_token_count=len(proof_tokens),
+                        rare_token_count=len(proof_tokens & rare_tokens),
+                    )
+                    candidates_by_positions[matched_positions] = candidate
+        if not candidates_by_positions:
+            return None
+        candidate_layers.append(
+            sorted(
+                candidates_by_positions.values(),
+                key=lambda candidate: (
+                    candidate.start,
+                    candidate.end,
+                    candidate.positions,
+                ),
+            )
+        )
+        previous_anchor_end = anchor_end
+
+    # Dynamic programming is required here: the locally highest-scoring proof
+    # can overlap the next entry even when a lower-scoring local proof permits
+    # a complete chain.  Compatibility is therefore part of selection, not a
+    # post-hoc check of the already-chosen windows.
+    states: list[
+        tuple[tuple[int, int, int], tuple[_NumericReferenceMatch, ...]]
+    ] = [
+        (candidate.score, (candidate,))
+        for candidate in candidate_layers[0]
+    ]
+    for candidates in candidate_layers[1:]:
+        next_states: list[
+            tuple[tuple[int, int, int], tuple[_NumericReferenceMatch, ...]]
+        ] = []
+        for candidate in candidates:
+            compatible = [
+                (score, chain)
+                for score, chain in states
+                if candidate.start > chain[-1].end
+            ]
+            if not compatible:
+                continue
+            previous_score, previous_chain = max(
+                compatible,
+                key=lambda state: (
+                    state[0],
+                    tuple(
+                        (-match.start, -match.end, match.positions)
+                        for match in state[1]
+                    ),
+                ),
+            )
+            next_states.append(
+                (
+                    tuple(
+                        left + right
+                        for left, right in zip(
+                            previous_score,
+                            candidate.score,
+                            strict=True,
+                        )
+                    ),
+                    previous_chain + (candidate,),
+                )
+            )
+        if not next_states:
+            return None
+        states = next_states
+
+    _score, selected_chain = max(
+        states,
+        key=lambda state: (
+            state[0],
+            tuple(
+                (-match.start, -match.end, match.positions)
+                for match in state[1]
+            ),
+        ),
+    )
+    if any(
+        current.start <= previous.end
+        for previous, current in zip(
+            selected_chain,
+            selected_chain[1:],
+        )
+    ):
+        return None
+    return list(selected_chain)
+
+
+def _parsed_numeric_reference_mappings(
+    parsed_source_entries: list[tuple[str, str]],
+    translation_entries: list[tuple[str, str]],
+) -> list[tuple[str, str]] | None:
+    """Cross-check every surviving source marker against entry content."""
+
+    source_counts = Counter(
+        identifier for identifier, _body in parsed_source_entries
+    )
+    if (
+        len(parsed_source_entries)
+        < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_RIGHT_MARKERS
+        or any(count != 1 for count in source_counts.values())
+    ):
+        return None
+    translation_tokens = {
+        identifier: set(
+            _reference_token_sequence(_reference_structure_text(body))[
+                :AUTHOR_KEY_OCR_CONTEXT_TOKEN_LIMIT
+            ]
+        )
+        for identifier, body in translation_entries
+    }
+    mappings: list[tuple[str, str]] = []
+    mapped_targets: set[str] = set()
+    for source_identifier, source_body in parsed_source_entries:
+        source_tokens = _reference_token_sequence(
+            _reference_structure_text(source_body)
+        )
+        leading_tokens = set(
+            source_tokens[:AUTHOR_KEY_OCR_LEADING_TOKEN_LIMIT]
+        )
+        context_tokens = set(
+            source_tokens[:AUTHOR_KEY_OCR_CONTEXT_TOKEN_LIMIT]
+        )
+        scores = sorted(
+            [
+                (
+                    len(leading_tokens & target_tokens),
+                    len(context_tokens & target_tokens),
+                    target_identifier,
+                )
+                for target_identifier, target_tokens in translation_tokens.items()
+            ],
+            reverse=True,
+        )
+        best_leading, best_context, target_identifier = scores[0]
+        second_leading = scores[1][0] if len(scores) > 1 else 0
+        if (
+            best_leading < AUTHOR_KEY_OCR_MIN_LEADING_MATCHES
+            or best_context < AUTHOR_KEY_OCR_MIN_CONTEXT_MATCHES
+            or best_leading - second_leading
+            < AUTHOR_KEY_OCR_MIN_LEADING_MARGIN
+            or target_identifier in mapped_targets
+            or int(target_identifier)
+            not in _numeric_reference_ocr_candidates(source_identifier)
+        ):
+            return None
+        mappings.append((source_identifier, target_identifier))
+        mapped_targets.add(target_identifier)
+    return sorted(mappings, key=lambda mapping: int(mapping[1]))
+
+
+def _recover_complete_numeric_bibliography(
+    source_text: str,
+    source_heading: re.Match[str],
+    parsed_source_entries: list[tuple[str, str]],
+    translation_entries: list[tuple[str, str]],
+) -> tuple[list[tuple[str, str]], list[str], dict[str, str]] | None:
+    """Recover all numeric items, or recover none, from independent evidence."""
+
+    entry_count = len(translation_entries)
+    if entry_count < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ENTRIES:
+        return None
+    expected_identifiers = {str(index) for index in range(1, entry_count + 1)}
+    if (
+        len(parsed_source_entries) == entry_count
+        and {identifier for identifier, _body in parsed_source_entries}
+        == expected_identifiers
+    ):
+        return None
+
+    source_tokens = _two_column_bibliography_tokens(
+        source_text,
+        source_heading,
+    )
+    if source_tokens is None:
+        return None
+    match_chain = _numeric_recovery_match_chain(
+        source_tokens,
+        translation_entries,
+    )
+    if match_chain is None:
+        return None
+    marker_mappings = _parsed_numeric_reference_mappings(
+        parsed_source_entries,
+        translation_entries,
+    )
+    if marker_mappings is None:
+        return None
+
+    match_centers = [
+        (match.start + match.end) // 2
+        for match in match_chain
+    ]
+    boundaries = [0]
+    boundaries.extend(
+        (left_center + right_center) // 2 + 1
+        for left_center, right_center in zip(
+            match_centers,
+            match_centers[1:],
+        )
+    )
+    boundaries.append(len(source_tokens))
+    recovered_entries = [
+        (
+            str(index),
+            " ".join(source_tokens[boundaries[index - 1] : boundaries[index]]),
+        )
+        for index in range(1, entry_count + 1)
+    ]
+    if any(not body for _identifier, body in recovered_entries):
+        return None
+
+    mapping_text = ", ".join(
+        f"{source_identifier}->{target_identifier}"
+        for source_identifier, target_identifier in marker_mappings
+    )
+    risk = (
+        f"source numeric references 1-{entry_count} were recovered by complete "
+        "ordered two-column bibliography-content evidence; parsed markers: "
+        + mapping_text
+    )
+    return (
+        recovered_entries,
+        [risk],
+        dict(marker_mappings),
+    )
+
+
 def _numeric_reference_ocr_candidates(identifier: str) -> set[int]:
     """Return numeric readings for one short, visibly damaged entry marker."""
 
@@ -1737,6 +2274,141 @@ def _normalize_source_reference_ocr(
     ]
 
 
+def _source_author_key_ocr_normalization(
+    source_entries: list[tuple[str, str]],
+    translation_entries: list[tuple[str, str]],
+) -> tuple[list[tuple[str, str]], list[str], dict[str, str]]:
+    """Normalize author-key OCR only with unique leading-content evidence.
+
+    Layout extraction can interleave both bibliography columns in one parsed
+    body.  The beginning of that body still belongs to the entry whose marker
+    was parsed, so leading tokens carry more authority than later tokens.  The
+    mapping is deliberately all-or-nothing: weak evidence, a tied best match,
+    duplicate identifiers, or any target collision leaves every source entry
+    unchanged so the ordinary missing-reference gate remains deterministic.
+    """
+
+    source_counts = Counter(identifier for identifier, _body in source_entries)
+    translation_counts = Counter(
+        identifier for identifier, _body in translation_entries
+    )
+    if any(count != 1 for count in source_counts.values()) or any(
+        count != 1 for count in translation_counts.values()
+    ):
+        return source_entries, [], {}
+
+    source_identifiers = set(source_counts)
+    translation_identifiers = set(translation_counts)
+    unmatched_source_candidates = [
+        (identifier, body)
+        for identifier, body in source_entries
+        if identifier not in translation_identifiers
+        and not identifier.isdigit()
+        and re.search(r"[a-z]", identifier, re.IGNORECASE)
+    ]
+    if not unmatched_source_candidates:
+        return source_entries, [], {}
+    if any(
+        re.fullmatch(
+            r"[a-z][a-z0-9+_.:-]{0,63}",
+            identifier,
+            re.IGNORECASE,
+        )
+        is None
+        for identifier, _body in unmatched_source_candidates
+    ):
+        return source_entries, [], {}
+    source_candidates = unmatched_source_candidates
+
+    unmatched_translation_candidates = [
+        (identifier, body)
+        for identifier, body in translation_entries
+        if identifier not in source_identifiers
+        and not identifier.isdigit()
+        and re.search(r"[a-z]", identifier, re.IGNORECASE)
+    ]
+    if not unmatched_translation_candidates or any(
+        re.fullmatch(
+            r"[a-z][a-z0-9+_.:-]{0,63}",
+            identifier,
+            re.IGNORECASE,
+        )
+        is None
+        for identifier, _body in unmatched_translation_candidates
+    ):
+        return source_entries, [], {}
+    translation_candidates = unmatched_translation_candidates
+
+    mappings: dict[str, str] = {}
+    for source_identifier, source_body in source_candidates:
+        source_tokens = _reference_token_sequence(source_body)
+        leading_tokens = set(
+            source_tokens[:AUTHOR_KEY_OCR_LEADING_TOKEN_LIMIT]
+        )
+        context_tokens = set(
+            source_tokens[:AUTHOR_KEY_OCR_CONTEXT_TOKEN_LIMIT]
+        )
+        scores: list[tuple[int, int, str]] = []
+        for translation_identifier, translation_body in translation_candidates:
+            translation_tokens = set(
+                _reference_token_sequence(translation_body)[
+                    :AUTHOR_KEY_OCR_CONTEXT_TOKEN_LIMIT
+                ]
+            )
+            scores.append(
+                (
+                    len(leading_tokens & translation_tokens),
+                    len(context_tokens & translation_tokens),
+                    translation_identifier,
+                )
+            )
+        scores.sort(reverse=True)
+        best_leading, best_context, best_identifier = scores[0]
+        second_leading = scores[1][0] if len(scores) > 1 else 0
+        if (
+            best_leading < AUTHOR_KEY_OCR_MIN_LEADING_MATCHES
+            or best_context < AUTHOR_KEY_OCR_MIN_CONTEXT_MATCHES
+            or best_leading - second_leading
+            < AUTHOR_KEY_OCR_MIN_LEADING_MARGIN
+        ):
+            return source_entries, [], {}
+        mappings[source_identifier] = best_identifier
+
+    if len(set(mappings.values())) != len(mappings):
+        return source_entries, [], {}
+
+    normalized = [
+        (mappings.get(identifier, identifier), body)
+        for identifier, body in source_entries
+    ]
+    if len({identifier for identifier, _body in normalized}) != len(normalized):
+        return source_entries, [], {}
+
+    mapping_text = ", ".join(
+        f"{source_identifier}->{mappings[source_identifier]}"
+        for source_identifier in sorted(mappings)
+    )
+    return (
+        normalized,
+        [
+            "source author-key reference identifiers were normalized by unique "
+            f"bibliography-content OCR evidence: {mapping_text}"
+        ],
+        mappings,
+    )
+
+
+def _normalize_source_author_key_ocr(
+    source_entries: list[tuple[str, str]],
+    translation_entries: list[tuple[str, str]],
+) -> tuple[list[tuple[str, str]], list[str]]:
+    normalized, risks, _mappings = _source_author_key_ocr_normalization(
+        source_entries,
+        translation_entries,
+    )
+    return normalized, risks
+
+
 def _citation_identifiers(
     text: str,
     reference_ids: set[str],
@@ -1843,19 +2515,49 @@ def _inline_citation_findings(
     if source_heading is None or translation_heading is None:
         return []
 
-    source_entries = _reference_entries(source_section)
+    parsed_source_entries = _reference_entries(source_section)
+    source_entries = parsed_source_entries
     source_entries, _ocr_risks = _normalize_source_reference_ocr(source_entries)
+    translation_section = translation_text[translation_heading.end() :]
+    translation_entries = _reference_entries(translation_section)
+    source_entries, _author_key_ocr_risks, author_key_mappings = (
+        _source_author_key_ocr_normalization(
+            source_entries,
+            translation_entries,
+        )
+    )
+    numeric_mappings: dict[str, str] = {}
+    complete_translation_entries = _complete_numeric_translation_entries(
+        translation_section
+    )
+    if complete_translation_entries is not None:
+        numeric_recovery = _recover_complete_numeric_bibliography(
+            source_text,
+            source_heading,
+            parsed_source_entries,
+            complete_translation_entries,
+        )
+        if numeric_recovery is not None:
+            source_entries, _numeric_recovery_risks, numeric_mappings = (
+                numeric_recovery
+            )
     source_reference_ids = {
         identifier for identifier, _body in source_entries
     }
     if not source_reference_ids:
         return []
 
-    source_citations = _citation_identifiers(
-        source_body,
-        source_reference_ids,
-        include_source_angle_ocr=True,
-    )
+    citation_mappings = author_key_mappings | numeric_mappings
+    source_citations = {
+        citation_mappings.get(identifier, identifier)
+        for identifier in _citation_identifiers(
+            source_body,
+            source_reference_ids
+            | set(author_key_mappings)
+            | set(numeric_mappings),
+            include_source_angle_ocr=True,
+        )
+    }
     translation_citations = _citation_identifiers(
         _translation_citation_body(translation_text, translation_heading),
         source_reference_ids,
@@ -1947,10 +2649,34 @@ def _reference_findings(
         errors.append("source has a References section but translation has no reference heading")
         translation_section = ""
 
-    source_entries = source_entry_parser(source_section)
+    parsed_source_entries = source_entry_parser(source_section)
+    source_entries = parsed_source_entries
     source_entries, source_ocr_risks = _normalize_source_reference_ocr(source_entries)
     risks.extend(source_ocr_risks)
     translation_entries = translation_entry_parser(translation_section)
+    if broaden_source_heading:
+        source_entries, source_author_key_ocr_risks = (
+            _normalize_source_author_key_ocr(
+                source_entries,
+                translation_entries,
+            )
+        )
+        risks.extend(source_author_key_ocr_risks)
+        complete_translation_entries = _complete_numeric_translation_entries(
+            translation_section
+        )
+        if complete_translation_entries is not None:
+            numeric_recovery = _recover_complete_numeric_bibliography(
+                source_text,
+                source_heading,
+                parsed_source_entries,
+                complete_translation_entries,
+            )
+            if numeric_recovery is not None:
+                source_entries, numeric_recovery_risks, _numeric_mappings = (
+                    numeric_recovery
+                )
+                risks.extend(numeric_recovery_risks)
     source_counts = Counter(identifier for identifier, _text in source_entries)
     translation_counts = Counter(identifier for identifier, _text in translation_entries)
 

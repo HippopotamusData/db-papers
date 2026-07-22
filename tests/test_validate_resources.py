@@ -28,6 +28,148 @@ def save_nonuniform_image(path: Path, size: tuple[int, int] = (32, 16)) -> None:
 
 
 class ResourceValidationTests(unittest.TestCase):
+    @staticmethod
+    def complete_numeric_two_column_fixture(
+        *,
+        source_overrides: dict[int, str] | None = None,
+        translation_overrides: dict[int, str] | None = None,
+        include_translation_citations: bool = True,
+    ) -> tuple[str, str]:
+        source_overrides = source_overrides or {}
+        translation_overrides = translation_overrides or {}
+
+        def body(index: int) -> str:
+            tag = chr(ord("a") + index - 1)
+            return (
+                f"Surname{tag}, A. Anchorword{tag} Distinctive{tag} "
+                f"Databaseengine{tag} Querymethod{tag}. Journal, 20{index:02d}."
+            )
+
+        source_bodies = {
+            index: source_overrides.get(index, body(index))
+            for index in range(1, 16)
+        }
+        translation_bodies = {
+            index: translation_overrides.get(index, body(index))
+            for index in range(1, 16)
+        }
+        left_markers = {
+            1: "[l] ",
+            2: "[2] ",
+            4: "[4] ",
+            6: "[6] ",
+            8: "[8] ",
+        }
+        right_markers = {
+            9: "[9] ",
+            10: "[lo] ",
+            12: "[12] ",
+            14: "[14] ",
+            15: "[is] ",
+        }
+        left_prefixes = [
+            "Prior work [l], [lo], and [is] matters.",
+            "Article text.",
+            "More article text.",
+            "Evaluation text.",
+            "Implementation text.",
+            "Discussion text.",
+            "Acknowledgments.",
+        ]
+        lines = [
+            f"{left:<72}{right_markers.get(index, '')}{source_bodies[index]}"
+            for left, index in zip(left_prefixes, range(9, 16), strict=True)
+        ]
+        lines.extend(f"{'Article tail.':<72}" for _index in range(3))
+        lines.append("                              REFERENCES")
+        lines.extend(
+            left_markers.get(index, "") + source_bodies[index]
+            for index in range(1, 9)
+        )
+        source = "\n".join(lines) + "\n"
+
+        body_citations = (
+            "已有工作 [1]、[10] 和 [15]。"
+            if include_translation_citations
+            else "这里遗漏了原文的引用。"
+        )
+        translation = (
+            "## 正文\n"
+            + body_citations
+            + "\n## 参考文献\n"
+            + "\n".join(
+                f"- [{index}] {translation_bodies[index]}"
+                for index in range(1, 16)
+            )
+            + "\n## 作者简介\n后续内容不能作为书目匹配证据。\n"
+        )
+        return source, translation
+
+    @staticmethod
+    def overlapping_numeric_proof_fixture() -> tuple[str, str]:
+        marked_identifiers = {1, 2, 6, 8, 10}
+
+        def tag(index: int) -> str:
+            return chr(ord("a") + index - 1)
+
+        def marked_body(index: int) -> str:
+            parts = []
+            if index == 1:
+                parts.append("sharedbefore")
+            parts.append(
+                f"Author{tag(index)}, A. Markedalpha{tag(index)} "
+                f"Markedbeta{tag(index)} Markedgamma{tag(index)}. "
+                f"Journal, 20{index:02d}."
+            )
+            if index == 10:
+                parts.append("sharedafter")
+            return " ".join(parts)
+
+        def local_body(index: int) -> str:
+            return f"Uniqueleft{tag(index)} Uniqueright{tag(index)}"
+
+        source_bodies = {
+            index: (
+                marked_body(index)
+                if index in marked_identifiers
+                else local_body(index)
+            )
+            for index in range(1, 11)
+        }
+        translation_bodies = {
+            index: (
+                marked_body(index)
+                if index in marked_identifiers
+                else (
+                    f"sharedbefore {local_body(index)} sharedafter"
+                )
+            )
+            for index in range(1, 11)
+        }
+        right_markers = {6: "[6] ", 8: "[8] ", 10: "[lo] "}
+        lines = [
+            f"{'Article text.':<72}"
+            f"{right_markers.get(index, ' ' * 5)}{source_bodies[index]}"
+            for index in range(6, 11)
+        ]
+        lines.extend(f"{'Article tail.':<72}" for _index in range(3))
+        lines.append("                              REFERENCES")
+        left_markers = {1: "[l] ", 2: "[2] "}
+        lines.extend(
+            left_markers.get(index, "") + source_bodies[index]
+            for index in range(1, 6)
+        )
+        source = "\n".join(lines) + "\n"
+        translation = (
+            "## 正文\n这里没有引用。\n## 参考文献\n"
+            + "\n".join(
+                f"- [{index}] {translation_bodies[index]}"
+                for index in range(1, 11)
+            )
+            + "\n## 作者简介\n后续内容。\n"
+        )
+        return source, translation
+
     def test_duplicate_and_orphan_assets_are_reported(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             paper = Path(temporary)
@@ -888,6 +1030,40 @@ class ResourceValidationTests(unittest.TestCase):
             ],
         )
 
+    def test_unproven_raw_numeric_ocr_alias_is_not_a_missing_inline_citation(
+        self,
+    ) -> None:
+        source = (
+            "INTRODUCTION\nPrior work [I] is relevant.\n"
+            "REFERENCES\n"
+            "[i] A. Author, “First database paper,” Journal, 2020.\n"
+            "[2] B. Author, “Second database paper,” Journal, 2021.\n"
+            "[3] C. Author, “Third database paper,” Journal, 2022.\n"
+        )
+        translation = (
+            "## 引言\n已有工作 [1] 与此相关。\n"
+            "## 参考文献\n\n"
+            "- [1] A. Author, “First database paper,” Journal, 2020.\n"
+            "- [2] B. Author, “Second database paper,” Journal, 2021.\n"
+            "- [3] C. Author, “Third database paper,” Journal, 2022.\n"
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertEqual(errors, [])
+        self.assertEqual(
+            risks,
+            [
+                "source reference identifier i was normalized to 1 as a "
+                "contiguous numeric-series OCR candidate"
+            ],
+        )
+
     def test_clean_long_numeric_reference_series_needs_no_ocr_waiver(self) -> None:
         entries = [
             (str(index), f"Author, A. Database paper {index}. Journal.")
@@ -913,6 +1089,482 @@ class ResourceValidationTests(unittest.TestCase):
         errors, risks = source_coverage_findings(source, translation, True)
         self.assertIn("missing numbered references: i", errors)
         self.assertFalse(any("normalized" in issue for issue in risks))
+
+    def test_unique_author_key_content_match_is_review_evidence(self) -> None:
+        source_entries = [
+            (
+                "br0w85",
+                "Browne Dale Leung Jenevein. A Parallel Multi-Stage I/O "
+                "Architecture with Self-Managing Disk Cache.",
+            ),
+            (
+                "sel179",
+                "Selinger et al. Access Path Selection in a Relational "
+                "Database Management System.",
+            ),
+        ]
+        translation_entries = [
+            (
+                "brow85",
+                "Browne Dale Leung Jenevein. A Parallel Multi-Stage I/O "
+                "Architecture with Self-Managing Disk Cache.",
+            ),
+            (
+                "seli79",
+                "Selinger et al. Access Path Selection in a Relational "
+                "Database Management System.",
+            ),
+        ]
+
+        normalized, risks = (
+            validate_resources._normalize_source_author_key_ocr(
+                source_entries,
+                translation_entries,
+            )
+        )
+
+        self.assertEqual(
+            [identifier for identifier, _body in normalized],
+            ["brow85", "seli79"],
+        )
+        self.assertEqual(
+            risks,
+            [
+                "source author-key reference identifiers were normalized by "
+                "unique bibliography-content OCR evidence: "
+                "br0w85->brow85, sel179->seli79"
+            ],
+        )
+
+    def test_review_gate_turns_author_key_ocr_into_item_level_risk(self) -> None:
+        source = (
+            "REFERENCES\n"
+            "[BR0W85] Browne, J. C., Dale, A. G., Leung, C., and Jenevein, R. "
+            "A Parallel Multi-Stage "
+            "I/O Architecture with Self-Managing Disk Cache.\n"
+            "[GOOD81] Goodman, J. R. Multiprocessor Database Algorithms.\n"
+        )
+        translation = (
+            "## 参考文献\n"
+            "- [BROW85] Browne, J. C., Dale, A. G., Leung, C., and Jenevein, R. "
+            "A Parallel Multi-Stage "
+            "I/O Architecture with Self-Managing Disk Cache.\n"
+            "- [GOOD81] Goodman, J. R. Multiprocessor Database Algorithms.\n"
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertEqual(errors, [])
+        self.assertIn(
+            "source author-key reference identifiers were normalized by unique "
+            "bibliography-content OCR evidence: br0w85->brow85",
+            risks,
+        )
+
+    def test_ambiguous_author_key_content_match_fails_closed(self) -> None:
+        source_entries = [
+            (
+                "smlt20",
+                "Smith Jones Lee. Shared Database Design and Query Processing.",
+            )
+        ]
+        translation_entries = [
+            (
+                "smit20",
+                "Smith Jones Lee. Shared Database Design and Storage Systems.",
+            ),
+            (
+                "smit21",
+                "Smith Jones Lee. Shared Database Design and Query Engines.",
+            ),
+        ]
+
+        normalized, risks = (
+            validate_resources._normalize_source_author_key_ocr(
+                source_entries,
+                translation_entries,
+            )
+        )
+
+        self.assertEqual(normalized, source_entries)
+        self.assertEqual(risks, [])
+
+    def test_ambiguous_author_key_keeps_missing_reference_error(self) -> None:
+        source = (
+            "REFERENCES\n"
+            "[SMLT20] Smith, A., Jones, B., and Lee, C. Shared Database "
+            "Design and Query Processing.\n"
+            "[GOOD81] Goodman, J. R. Multiprocessor Database Algorithms.\n"
+        )
+        translation = (
+            "## 参考文献\n"
+            "- [SMIT20] Smith, A., Jones, B., and Lee, C. Shared Database "
+            "Design and Storage Systems.\n"
+            "- [SMIT21] Smith, A., Jones, B., and Lee, C. Shared Database "
+            "Design and Query Engines.\n"
+            "- [GOOD81] Goodman, J. R. Multiprocessor Database Algorithms.\n"
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertIn("missing numbered references: smlt20", errors)
+        self.assertFalse(
+            any("bibliography-content OCR evidence" in issue for issue in risks)
+        )
+
+    def test_matching_ignores_shared_year_and_numeric_tokens(self) -> None:
+        source = (
+            "REFERENCES\n"
+            "[SMLT20] Smith, A. 2020 123 456. Alpha Database Replication.\n"
+            "[GOOD81] Goodman, J. R. Multiprocessor Database Algorithms.\n"
+        )
+        translation = (
+            "## 参考文献\n"
+            "- [SMIT20] Smith, A. 2020 123 456. Unrelated Query Optimizer.\n"
+            "- [GOOD81] Goodman, J. R. Multiprocessor Database Algorithms.\n"
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertIn("missing numbered references: smlt20", errors)
+        self.assertFalse(
+            any("bibliography-content OCR evidence" in issue for issue in risks)
+        )
+
+    def test_low_evidence_author_key_content_match_fails_closed(self) -> None:
+        source_entries = [
+            ("br0w85", "Unreadable scan fragments without useful title evidence.")
+        ]
+        translation_entries = [
+            (
+                "brow85",
+                "Browne Dale Leung Jenevein. Parallel Database Architecture.",
+            )
+        ]
+
+        normalized, risks = (
+            validate_resources._normalize_source_author_key_ocr(
+                source_entries,
+                translation_entries,
+            )
+        )
+
+        self.assertEqual(normalized, source_entries)
+        self.assertEqual(risks, [])
+
+    def test_author_key_target_collision_fails_closed(self) -> None:
+        source_entries = [
+            ("smlt20", "Smith Jones Lee. Shared Database Design paper one."),
+            ("smlt2o", "Smith Jones Lee. Shared Database Design paper two."),
+        ]
+        translation_entries = [
+            ("smit20", "Smith Jones Lee. Shared Database Design paper."),
+            ("other20", "Unrelated Author. A Different Storage Engine paper."),
+        ]
+
+        normalized, risks = (
+            validate_resources._normalize_source_author_key_ocr(
+                source_entries,
+                translation_entries,
+            )
+        )
+
+        self.assertEqual(normalized, source_entries)
+        self.assertEqual(risks, [])
+
+    def test_numeric_reference_does_not_use_author_key_content_matching(self) -> None:
+        source_entries = [
+            ("7", "Smith Jones Lee. Shared Database Design and Query Processing.")
+        ]
+        translation_entries = [
+            (
+                "smit20",
+                "Smith Jones Lee. Shared Database Design and Query Processing.",
+            )
+        ]
+
+        normalized, risks = (
+            validate_resources._normalize_source_author_key_ocr(
+                source_entries,
+                translation_entries,
+            )
+        )
+
+        self.assertEqual(normalized, source_entries)
+        self.assertEqual(risks, [])
+
+    def test_complete_numeric_bibliography_is_recovered_from_two_columns(
+        self,
+    ) -> None:
+        source, translation = self.complete_numeric_two_column_fixture()
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertEqual(errors, [])
+        self.assertIn(
+            "source numeric references 1-15 were recovered by complete ordered "
+            "two-column bibliography-content evidence; parsed markers: "
+            "l->1, 2->2, 4->4, 6->6, 8->8, 9->9, lo->10, 12->12, "
+            "14->14, is->15",
+            risks,
+        )
+        self.assertFalse(
+            any(
+                phrase in risk
+                for risk in risks
+                for phrase in (
+                    "entry-count candidate differs",
+                    "unmatched reference identifiers",
+                    "body citation identifiers",
+                )
+            )
+        )
+
+    def test_numeric_match_chain_rejects_reused_cross_item_positions(
+        self,
+    ) -> None:
+        source_tokens = ["sharedbefore"]
+        source_tokens.extend(
+            token
+            for index in range(1, 11)
+            for token in (f"uniqueleft{index}", f"uniqueright{index}")
+        )
+        source_tokens.append("sharedafter")
+        translation_entries = [
+            (
+                str(index),
+                f"sharedbefore uniqueleft{index} uniqueright{index} "
+                "sharedafter",
+            )
+            for index in range(1, 11)
+        ]
+
+        self.assertIsNone(
+            validate_resources._numeric_recovery_match_chain(
+                source_tokens,
+                translation_entries,
+            )
+        )
+
+    def test_numeric_match_chain_selects_non_overlapping_proofs_globally(
+        self,
+    ) -> None:
+        source_tokens = [
+            "firsta",
+            "firstb",
+            "firstc",
+            "firstd",
+            "seconda",
+            "secondb",
+            "secondc",
+            "secondd",
+        ]
+        translation_entries = [
+            ("1", "firsta firstb firstc firstd seconda"),
+            ("2", "seconda secondb secondc secondd"),
+        ]
+
+        chain = validate_resources._numeric_recovery_match_chain(
+            source_tokens,
+            translation_entries,
+        )
+
+        self.assertIsNotNone(chain)
+        assert chain is not None
+        self.assertEqual(len(chain), 2)
+        self.assertLess(chain[0].end, chain[1].start)
+        for match in chain:
+            self.assertTrue(
+                all(
+                    left < right
+                    for left, right in zip(
+                        match.positions,
+                        match.positions[1:],
+                    )
+                )
+            )
+
+    def test_numeric_recovery_rejects_cross_item_evidence_end_to_end(
+        self,
+    ) -> None:
+        source, translation = self.overlapping_numeric_proof_fixture()
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertIn("missing numbered references: l, lo", errors)
+        self.assertFalse(
+            any("numeric references 1-10 were recovered" in risk for risk in risks)
+        )
+
+    def test_numeric_bibliography_recovery_rejects_scattered_local_tokens(
+        self,
+    ) -> None:
+        scattered = (
+            "Surnamee, A. "
+            + " ".join(f"Filler{index}" for index in range(45))
+            + " Anchorworde Distinctivee Databaseenginee Querymethode. "
+            "Journal, 2005."
+        )
+        source, translation = self.complete_numeric_two_column_fixture(
+            source_overrides={5: scattered}
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertIn("missing numbered references: is, l, lo", errors)
+        self.assertFalse(
+            any("numeric references 1-15 were recovered" in risk for risk in risks)
+        )
+
+    def test_numeric_bibliography_recovery_rejects_ambiguous_duplicate_content(
+        self,
+    ) -> None:
+        repeated_body = (
+            "Surnamef, A. Anchorwordf Distinctivef Databaseenginef "
+            "Querymethodf. Journal, 2006."
+        )
+        source, translation = self.complete_numeric_two_column_fixture(
+            source_overrides={7: repeated_body}
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertIn("missing numbered references: is, l, lo", errors)
+        self.assertFalse(
+            any("numeric references 1-15 were recovered" in risk for risk in risks)
+        )
+
+    def test_numeric_bibliography_recovery_rejects_incomplete_source_evidence(
+        self,
+    ) -> None:
+        source, translation = self.complete_numeric_two_column_fixture(
+            source_overrides={7: "Unreadable scan fragment."}
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertIn("missing numbered references: is, l, lo", errors)
+        self.assertFalse(
+            any("numeric references 1-15 were recovered" in risk for risk in risks)
+        )
+
+    def test_numeric_bibliography_recovery_rejects_forged_translation_content(
+        self,
+    ) -> None:
+        source, translation = self.complete_numeric_two_column_fixture(
+            translation_overrides={
+                7: (
+                    "Fabricated, F. Unrelatedalpha Unrelatedbeta "
+                    "Unrelatedgamma Unrelateddelta."
+                )
+            }
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertIn("missing numbered references: is, l, lo", errors)
+        self.assertFalse(
+            any("numeric references 1-15 were recovered" in risk for risk in risks)
+        )
+
+    def test_recovered_numeric_aliases_remain_inline_citation_evidence(
+        self,
+    ) -> None:
+        source, translation = self.complete_numeric_two_column_fixture(
+            include_translation_citations=False
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertEqual(errors, [])
+        self.assertIn(
+            "source body citation identifiers have no translation-side candidate: "
+            "1, 10, 15",
+            risks,
+        )
+
+    def test_complete_numeric_source_does_not_enter_content_recovery_path(
+        self,
+    ) -> None:
+        source, translation = self.complete_numeric_two_column_fixture()
+        source_heading, _section, _body = (
+            validate_resources._review_source_reference_parts(source)
+        )
+        translation_heading = validate_resources.select_reference_heading(
+            translation,
+            validate_resources.TRANSLATION_REFERENCE_HEADING_RE,
+            require_single_evidence=False,
+        )
+        assert source_heading is not None
+        assert translation_heading is not None
+        translation_entries = (
+            validate_resources._complete_numeric_translation_entries(
+                translation[translation_heading.end() :]
+            )
+        )
+        assert translation_entries is not None
+        complete_source_entries = [
+            (identifier, body) for identifier, body in translation_entries
+        ]
+
+        self.assertIsNone(
+            validate_resources._recover_complete_numeric_bibliography(
+                source,
+                source_heading,
+                complete_source_entries,
+                translation_entries,
+            )
+        )
 
     def test_alphanumeric_and_decimal_references_are_matched(self) -> None:
         source = (
@@ -1075,6 +1727,36 @@ class ResourceValidationTests(unittest.TestCase):
         )
         self.assertIn(
             "source body citation identifiers have no translation-side candidate: 2",
+            risks,
+        )
+
+    def test_author_key_ocr_body_citation_maps_before_inline_comparison(self) -> None:
+        source = (
+            "INTRODUCTION\nPrior work [BR0W85] is relevant.\n"
+            "REFERENCES\n"
+            "[BR0W85] Browne, J. C., Dale, A. G., Leung, C., and Jenevein, R. "
+            "A Parallel Multi-Stage I/O Architecture with Self-Managing Disk Cache.\n"
+            "[GOOD81] Goodman, J. R. Multiprocessor Database Algorithms.\n"
+        )
+        translation = (
+            "## 引言\n这里遗漏了原文引用。\n"
+            "## 参考文献\n"
+            "- [BROW85] Browne, J. C., Dale, A. G., Leung, C., and Jenevein, R. "
+            "A Parallel Multi-Stage I/O Architecture with Self-Managing Disk Cache.\n"
+            "- [GOOD81] Goodman, J. R. Multiprocessor Database Algorithms.\n"
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+
+        self.assertEqual(errors, [])
+        self.assertIn(
+            "source body citation identifiers have no translation-side candidate: "
+            "brow85",
             risks,
         )
 

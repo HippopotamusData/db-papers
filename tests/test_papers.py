@@ -613,6 +613,10 @@ class PapersTests(unittest.TestCase):
         receipt = yaml.safe_load(stdout.getvalue())
         self.assertEqual(receipt["waivers"], waiver_records)
         self.assertEqual(
+            receipt["waivers"]["resources"]["evidence_version"],
+            3,
+        )
+        self.assertEqual(
             receipt["identity_assurance"],
             papers.REVIEW_IDENTITY_ASSURANCE,
         )
