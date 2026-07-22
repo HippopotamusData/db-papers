@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：146
-- 已验收译文：140
+- 论文记录：150
+- 已验收译文：144
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -16,9 +16,9 @@
 | 一级领域 | 数量 |
 | --- | ---: |
 | 基础与综述 (`foundations`) | 2 |
-| 算法与实现基础 (`implementation-foundations`) | 5 |
+| 算法与实现基础 (`implementation-foundations`) | 6 |
 | 系统架构 (`system-architecture`) | 26 |
-| 查询处理 (`query-processing`) | 49 |
+| 查询处理 (`query-processing`) | 52 |
 | 存储 (`storage`) | 19 |
 | 事务与并发控制 (`transactions`) | 8 |
 | 分布式数据库 (`distributed-databases`) | 8 |
@@ -37,10 +37,11 @@
 | [A Relational Model of Data for Large Shared Data Banks](papers/foundations/a-relational-model-of-data-for-large-shared-data-banks/translation.md) | 数据库总览、关系模型 | 1970 | 5.0 | translated | [原文](https://research.ibm.com/publications/a-relational-model-of-data-for-large-shared-data-banks) |
 | [Architecture of a Database System](papers/foundations/architecture-of-a-database-system/source.pdf) | 数据库总览 | 2007 | 4.0 | skipped | [原文](https://dsf.berkeley.edu/papers/fntdb07-architecture.pdf) |
 
-### 算法与实现基础 (`implementation-foundations`，5 篇)
+### 算法与实现基础 (`implementation-foundations`，6 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
+| [Data Prefetch Mechanisms](papers/implementation-foundations/data-prefetch-mechanisms/translation.md) | 程序编译与优化 | 2000 | 3.5 | translated | [原文](https://doi.org/10.1145/358923.358939) |
 | [Expression Templates Revisited: A Performance Analysis of the Current ET Methodology](papers/implementation-foundations/expression-templates-revisited/translation.md) | 程序编译与优化 | 2011 | 3.5 | translated | [原文](https://arxiv.org/pdf/1104.1729.pdf) |
 | [LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation](papers/implementation-foundations/llvm-compilation-framework-lifelong-program-analysis-transformation/translation.md) | 程序编译与优化 | 2003 | 4.5 | translated | [原文](https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf) |
 | [Merge Path - A Visually Intuitive Approach to Parallel Merging](papers/implementation-foundations/merge-path-visually-intuitive-parallel-merging/translation.md) | 排序与归并 | 2014 | 4.0 | translated | [原文](https://arxiv.org/abs/1406.2628) |
@@ -78,13 +79,14 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](https://dl.acm.org/doi/pdf/10.1145/3406011) |
 
-### 查询处理 (`query-processing`，49 篇)
+### 查询处理 (`query-processing`，52 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
 | [Access Path Selection in a Relational Database Management System](papers/query-processing/access-path-selection-relational-database-management-system/translation.md) | 查询优化 | 1979 | 5.0 | translated | [原文](https://research.ibm.com/publications/access-path-selection-in-a-relational-database-management-system) |
 | [Adaptive Execution of Compiled Queries](papers/query-processing/adaptive-execution-compiled-queries/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](https://db.in.tum.de/~leis/papers/adaptiveexecution.pdf) |
 | [Adaptive Optimization of Very Large Join Queries](papers/query-processing/adaptive-optimization-very-large-join-queries/translation.md) | 查询优化 | 2018 | 3.5 | translated | [原文](https://db.in.tum.de/~radke/papers/hugejoins.pdf) |
+| [Advanced Join Strategies for Large-Scale Distributed Computation](papers/query-processing/advanced-join-strategies-large-scale-distributed-computation/translation.md) | 查询执行 | 2014 | 3.5 | translated | [原文](https://www.vldb.org/pvldb/vol7/p1484-bruno.pdf) |
 | [An Overview of Query Optimization in Relational Systems](papers/query-processing/overview-query-optimization-relational-systems/translation.md) | 查询优化 | 1998 | 4.0 | translated | [原文](https://www.microsoft.com/en-us/research/publication/an-overview-of-query-optimization-in-relational-systems-paper/) |
 | [Apache Calcite: A Foundational Framework for Optimized Query Processing Over Heterogeneous Data Sources](papers/query-processing/apache-calcite-a-foundational-framework-for-optimized-query-processing-over-heterogeneous-data-sources/translation.md) | 查询优化、数据联邦 | 2018 | 5.0 | translated | [原文](https://arxiv.org/pdf/1802.10233.pdf) |
 | [Are We Ready For Learned Cardinality Estimation?](papers/query-processing/are-we-ready-for-learned-cardinality-estimation/translation.md) | 基数估计、AI 优化数据库 | 2021 | 3.5 | translated | [原文](https://doi.org/10.14778/3461535.3461552) |
@@ -98,8 +100,10 @@
 | [Everything You Always Wanted to Know About Compiled and Vectorized Queries But Were Afraid to Ask](papers/query-processing/compiled-and-vectorized-queries-afraid-to-ask/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](https://www.vldb.org/pvldb/vol11/p2209-kersten.pdf) |
 | [Exploiting Upper and Lower Bounds in Top-Down Query Optimization](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/translation.md) | 查询优化 | 2001 | 3.0 | translated | [原文](https://doi.org/10.1109/IDEAS.2001.938068) |
 | [Generating code for holistic query evaluation](papers/query-processing/generating-code-holistic-query-evaluation/translation.md) | 查询编译 | 2010 | 3.5 | translated | [原文](https://doi.org/10.1109/ICDE.2010.5447892) |
+| [Handling Data Skew in Parallel Joins in Shared-Nothing Systems](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/translation.md) | 查询执行 | 2008 | 4.0 | translated | [原文](https://doi.org/10.1145/1376616.1376720) |
 | [How Good Are Query Optimizers, Really?](papers/query-processing/how-good-are-query-optimizers-really/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](http://www.vldb.org/pvldb/vol9/p204-leis.pdf) |
 | [Impala: A Modern, Open-Source SQL Engine for Hadoop](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/translation.md) | 查询执行 | 2015 | 4.0 | translated | [原文](http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf) |
+| [Improving Hash Join Performance through Prefetching](papers/query-processing/improving-hash-join-performance-prefetching/translation.md) | 查询执行 | 2007 | 4.0 | translated | [原文](https://www.shimin-chen.com/papers/hashjoin_tods_preliminary.pdf) |
 | [Improving Unnesting of Complex Queries](papers/query-processing/improving-unnesting-of-complex-queries/translation.md) | 查询优化 | 2025 | 3.5 | translated | [原文](https://portal.fis.tum.de/en/publications/improving-unnesting-of-complex-queries/) |
 | [Interleaved Multi-Vectorizing](papers/query-processing/interleaved-multi-vectorizing/translation.md) | 向量化执行 | 2019 | 3.0 | translated | [原文](http://www.vldb.org/pvldb/vol13/p226-fang.pdf) |
 | [Learned Cardinalities: Estimating Correlated Joins with Deep Learning](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/translation.md) | 查询优化、基数估计、AI 优化数据库 | 2019 | 4.0 | translated | [原文](https://vldb.org/cidrdb/2019/learned-cardinalities-estimating-correlated-joins-with-deep-learning.html) |
@@ -240,5 +244,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 146 | 0 |
-| 发表年份 | 146 | 0 |
+| 作者 | 150 | 0 |
+| 发表年份 | 150 | 0 |

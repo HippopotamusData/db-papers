@@ -1,0 +1,18 @@
+title: Handling Data Skew in Parallel Joins in Shared-Nothing Systems
+authors:
+  - Yu Xu
+  - Pekka Kostamaa
+  - Xin Zhou
+  - Liang Chen
+year: 2008
+source_url: https://doi.org/10.1145/1376616.1376720
+topics:
+  - query-execution
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

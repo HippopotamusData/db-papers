@@ -1,0 +1,18 @@
+title: Improving Hash Join Performance through Prefetching
+authors:
+  - Shimin Chen
+  - Anastassia Ailamaki
+  - Phillip B. Gibbons
+  - Todd C. Mowry
+year: 2007
+source_url: https://www.shimin-chen.com/papers/hashjoin_tods_preliminary.pdf
+topics:
+  - query-execution
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 4
