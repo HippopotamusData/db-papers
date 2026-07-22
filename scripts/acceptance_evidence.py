@@ -15,7 +15,7 @@ from typing import Any, Iterable
 from urllib.parse import quote
 
 WAIVER_CATEGORIES = frozenset({"abridgement", "listings", "resources"})
-WAIVER_EVIDENCE_VERSION = 3
+WAIVER_EVIDENCE_VERSION = 4
 WAIVER_EVIDENCE_V1_PYPDF_VERSION = "6.14.2"
 WAIVER_EVIDENCE_V1_PDF_METRICS_VERSION = 1
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -436,10 +436,27 @@ def _candidate_findings_v3(category: str, candidate: str) -> list[str]:
     return _candidate_findings_v2(category, candidate)
 
 
+def _candidate_findings_v4(category: str, candidate: str) -> list[str]:
+    """Extend frozen v3 evidence with hierarchical equation numbers."""
+
+    if category == "resources" and candidate.startswith("RISK: "):
+        diagnostic = candidate.removeprefix("RISK: ")
+        match = re.fullmatch(
+            r"source equation \(([1-9]\d*(?:\.\d+)*)\) has no "
+            r"translation-side display/formula candidate",
+            diagnostic,
+        )
+        if match:
+            return [f"missing-display-equation:{match.group(1)}"]
+
+    return _candidate_findings_v3(category, candidate)
+
+
 WAIVER_FINDING_PARSERS = {
     1: _candidate_findings_v1,
     2: _candidate_findings_v2,
     3: _candidate_findings_v3,
+    4: _candidate_findings_v4,
 }
 
 
@@ -469,7 +486,7 @@ def findings_for_candidates(
     for candidate in normalize_candidates(candidates):
         author_key_mappings = (
             _author_key_ocr_mappings_v2(category, candidate)
-            if evidence_version in {2, 3}
+            if evidence_version in {2, 3, 4}
             else None
         )
         for source_identifier, normalized_identifier in author_key_mappings or []:

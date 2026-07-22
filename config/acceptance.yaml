@@ -190,25 +190,25 @@ entries:
           - 'RISK: translation has unmatched reference identifiers: 11, 15'
   speculative-distributed-csv-data-parsing-big-data-analytics:
     source_sha256: 5a0f37d3b54c439029c411bc61183dfdada62191095d94fa355d5434188fc5ef
-    translation_sha256: 9bf6ed6882e0046429f9aa93c22de101e9412f39fdf8175832f9347933ce4ae3
+    translation_sha256: 46d8f376aaa6be167680b036a61dcb1b1c26acee883a821c7a25d516178bea24
     assets_manifest_sha256: b09ca8b6e76b8ed0f32787a3134b5db94e56737878f88fbd220546d60254cc7e
     review_action: repair-review
-    reviewer: codex:wave1-gate-verify
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-a
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: speculative-distributed-csv-data-parsing-big-data-analytics
       source_sha256: 5a0f37d3b54c439029c411bc61183dfdada62191095d94fa355d5434188fc5ef
-      translation_sha256: 9bf6ed6882e0046429f9aa93c22de101e9412f39fdf8175832f9347933ce4ae3
+      translation_sha256: 46d8f376aaa6be167680b036a61dcb1b1c26acee883a821c7a25d516178bea24
       assets_manifest_sha256: b09ca8b6e76b8ed0f32787a3134b5db94e56737878f88fbd220546d60254cc7e
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: bec0518c8798bed659852d9b8b0de9ae82cdcc92b670f04b1b8f7d82dbfc66e3
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-math-audit
-      reviewer: codex:wave1-gate-verify
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-a
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -222,22 +222,25 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Restored source author, affiliation, contact, SIGMOD publication and internship metadata, section structure, portable
-          probability notation, and complete reference details; independently verified the full 17-page translation, Algorithm
-          1, formulas, experiments, appendix, 16 figures, and 27 references.
+        - 'Authorial inventory: source.pdf has 153 valid contextual rows and 186 we-our-us tokens; 153 of 153 context relations
+          pass in the final bytes, and every same-subject Chinese merge was checked individually.'
+        - 'Formula migration: all 47 fixed-base math expressions preserve display kind, order, and exact TeX under only the
+          tag-to-text-number projection; rendered source page 7 and formulas 1 through 5 were checked for layout.'
+        - 'Resources waiver reviewed against source.pdf: Algorithm 1 is present as a complete formal fenced pseudocode payload
+          with title, input, and all ten numbered lines; the detector candidate is conservative rather than a missing algorithm.'
       waivers:
         resources:
-          evidence_version: 1
-          fingerprint: 468577f65ccff88583b0e1881a01ac0c6840088f7b7d2605d106426e30cc8744
+          evidence_version: 4
+          fingerprint: 97651c2c8ac589987a0392b529a7567d06521e60deb4cf9614ad71c2ac46bb1c
           findings:
             - missing-formal-payload:algorithm:1
           candidates:
             - 'RISK: source Algorithm 1 has no formal translation-side payload candidate'
-      fingerprint: 398e16b6e09a5589e42d5cb0b653478800a55d9acf5b63aec885b18db668885b
+      fingerprint: 71f3babd1b0d1be274d8c2d876c14b7a4df935d7f8dd676d7d705a10ce2d5811
     waivers:
       resources:
-        evidence_version: 1
-        fingerprint: 468577f65ccff88583b0e1881a01ac0c6840088f7b7d2605d106426e30cc8744
+        evidence_version: 4
+        fingerprint: 97651c2c8ac589987a0392b529a7567d06521e60deb4cf9614ad71c2ac46bb1c
         findings:
           - missing-formal-payload:algorithm:1
         candidates:
@@ -2028,25 +2031,25 @@ entries:
           - 'RISK: source equation (1) has no translation-side display/formula candidate'
   saha-string-adaptive-hash-table-analytical-databases:
     source_sha256: fb8a9a55e90f268d3bf37d7a84dc7b2fd6b82d8570d343364470a32583692389
-    translation_sha256: 4c566508cf64464d114f06760baa2cacad3010453465120dee63347d08a7ce6c
+    translation_sha256: 4c3abab3b19a76fc3d35270e4f83c60f56b09f0b3a84c03b4941e8b87fce5c9d
     assets_manifest_sha256: de45935f4d532f8bc28ca7b6a5206cabb7f41db9d5e49be8759f80bca8a8644e
     review_action: repair-review
-    reviewer: codex:wave1-math-audit
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-b
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: saha-string-adaptive-hash-table-analytical-databases
       source_sha256: fb8a9a55e90f268d3bf37d7a84dc7b2fd6b82d8570d343364470a32583692389
-      translation_sha256: 4c566508cf64464d114f06760baa2cacad3010453465120dee63347d08a7ce6c
+      translation_sha256: 4c3abab3b19a76fc3d35270e4f83c60f56b09f0b3a84c03b4941e8b87fce5c9d
       assets_manifest_sha256: de45935f4d532f8bc28ca7b6a5206cabb7f41db9d5e49be8759f80bca8a8644e
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 5292e43d860617612d4f708c13cc275dd432149a62bf578f326c1784f0182498
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-gate-verify
-      reviewer: codex:wave1-math-audit
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-b
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -2060,11 +2063,15 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Independently reverified all source pages, fifteen figure assets, both core formulas, hash-table adaptation semantics,
-          the correct at-most-forty-percent total-query-runtime conclusion, all experiments, end matter and twenty-eight references
-          after repair.
+        - 'authorial-narration: 104 valid source I/we/my/our/us relations inventoried after dehyphenation and exclusion of
+          references, code, and third-party quotation; 104 passed; intra-paragraph and contribution-list same-subject merges
+          were accepted only where explicit 我们/我们的 preserves responsibility'
+        - 'formula-layout: Equations 1-2 on source page 10 and every changed rendered translation formula page were visually
+          checked; equation numbering, order, TeX payload, and references are preserved'
+        - 'full-source-review: all 18 source pages, front matter, sections, 15 figures, Tables 1-3, equations, the pseudocode
+          listing, end matter, conclusion, and 28 references were inventoried and mapped to the current translation'
       waivers: {}
-      fingerprint: 4485a9208e230f5a5f9462be7c1fb1d4503efcc53d5c7f972182ad4ac1661d73
+      fingerprint: 545b4ed7a736eb8b3269e152837a4436882616f2204439632338e72fe8acbc8a
   spark-sql-relational-data-processing-in-spark:
     source_sha256: f4307d15e3290bc4e2ac32a223741795f0a22c8f23c5b5ab20dca4784c5713d2
     translation_sha256: 5adc6dc7a9f1fcc2ae85056c110a5157895c3361a9c197e6bcbac758de005f1d
@@ -3268,25 +3275,25 @@ entries:
       fingerprint: 0edde6135fe67286e730577acaf18773803aed9d5b538cd3d369c69c87c99e06
   analyticdb-real-time-olap-database-system-at-alibaba-cloud:
     source_sha256: ae093def9e959d52907f22a3bae659d7e82fc87d1ba227bcf830bed93a0fce12
-    translation_sha256: 3e745d3088fa04d7bf75a1edc0f72d9293a6dfe3106ec5892d76bf854fc5f601
+    translation_sha256: 1d5a48dae196e6961a00a7e0434a32902187f939400172b4493216acea54160c
     assets_manifest_sha256: ffc16d0e9d3ca160bf7386d2118bac976329c0c02881df9d0811ed223cd9cc66
     review_action: repair-review
-    reviewer: codex:flink-full-repair
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-b
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: analyticdb-real-time-olap-database-system-at-alibaba-cloud
       source_sha256: ae093def9e959d52907f22a3bae659d7e82fc87d1ba227bcf830bed93a0fce12
-      translation_sha256: 3e745d3088fa04d7bf75a1edc0f72d9293a6dfe3106ec5892d76bf854fc5f601
+      translation_sha256: 1d5a48dae196e6961a00a7e0434a32902187f939400172b4493216acea54160c
       assets_manifest_sha256: ffc16d0e9d3ca160bf7386d2118bac976329c0c02881df9d0811ed223cd9cc66
-      translation_policy_sha256: 8cae5b8742d03c21683eced41cd427cf49d3ec96e25b164bd78068f7c74f2888
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: c07c2dc0ae455112467084ceae7cc7a7a96c322a3c43eddc0416791292d2e481
-      review_gate_manifest_sha256: 1828fe0a3d46b15a9040f25b6041e4229b586ca7bf21b962af56edefc23724a2
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:ubiquitous-btree-independent
-      reviewer: codex:flink-full-repair
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-b
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -3300,14 +3307,14 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - 'figure-11: recropped the complete sorted-index diagram with row IDs, mappings, and Build Index label'
-        - 'figure-9: recropped the complete baseline/incremental merge diagram with labels, arrows, and boundaries'
-        - 'sec.1-7: restored all source we/our/us to first-person Chinese; full 86-token mapping verified'
-        - 'sec.3.2: restored the optional qualifier for user-specified secondary partitions'
-        - 'sec.3.4.2: restored the conclusion that version verification ensures real-time-query data visibility'
-        - 'sec.4.2.3: corrected approximate 50 percent to the source exact 50 percent index-size reduction'
+        - 'authorial-narration: 86 valid source I/we/my/our/us relations inventoried; 86 passed; same-subject Chinese merges
+          retained only where an explicit 我们/我们的 subject still makes responsibility unambiguous'
+        - 'formula-layout: Equation 1 source page 7 and its changed rendered translation page were visually checked; numbering,
+          order, payload, and references are preserved'
+        - 'full-source-review: all 12 source pages, front matter, sections, figures, tables, Algorithms 1-3, Equation 1, conclusion,
+          end matter, and 39 references were inventoried and mapped to the current translation'
       waivers: {}
-      fingerprint: 88d8aa5aded17e51fd2435c6c095ccf5483849f8bbb09cba8e2774ad74d97450
+      fingerprint: b263f4d28339294a4f32c3beb42cc276a0cb6e8f84c1dc91e7c5f99b822b0d94
   big-metadata-when-metadata-is-big-data:
     source_sha256: 35bda2cd483f7fc6c64b1d6eaa8509ad30eb009e62f1396660b0288aa437285f
     translation_sha256: 976c34f37b12660f7ce57893ec2d6617436bec99b53daa3a193f2d2f7cb2f759
@@ -4391,25 +4398,25 @@ entries:
           - 'RISK: source Table 2 has no formal translation-side payload candidate'
   bird-can-llm-already-serve-as-a-database-interface:
     source_sha256: d0cc68992e8c5b7354c906f901638680170a5ebf40376c52e9aa3069c99fc9eb
-    translation_sha256: 6bbdeceec824b305259e894eb3356dcecc6e3bcee02eb778c7445b78088c67f8
+    translation_sha256: 62fdbc14a859b9bfb3d01e2f5e7b95b9a6579f3bce362a5605a6f60317723ca9
     assets_manifest_sha256: 02022e0a1e1f0de292687320cbbcfcfe75a5501ba3c61fc9045080062d5dd61f
     review_action: repair-review
-    reviewer: codex:wave1-gate-verify
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-a
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: bird-can-llm-already-serve-as-a-database-interface
       source_sha256: d0cc68992e8c5b7354c906f901638680170a5ebf40376c52e9aa3069c99fc9eb
-      translation_sha256: 6bbdeceec824b305259e894eb3356dcecc6e3bcee02eb778c7445b78088c67f8
+      translation_sha256: 62fdbc14a859b9bfb3d01e2f5e7b95b9a6579f3bce362a5605a6f60317723ca9
       assets_manifest_sha256: 02022e0a1e1f0de292687320cbbcfcfe75a5501ba3c61fc9045080062d5dd61f
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: b2eab7ac6d93ce6e7d73670b017324d982cf7639396ba0b2e9739718f5150adc
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:root
-      reviewer: codex:wave1-gate-verify
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-a
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -4423,39 +4430,13 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Independently rechecked all 28 pages, 12 assets, formulas, tables, SQL examples, appendices, first-person narration,
-          and references 1-62.
-        - Manually verified that the apparent duplicate reference 44 is an appendix citation and that references 44 and 62
-          are complete in the source and translation.
-        - Restored exact author-affiliation markers, all source contact emails, Jinyang Li internship-footnote binding, and
-          the NeurIPS 2023 Datasets and Benchmarks Track footer.
-      waivers:
-        resources:
-          evidence_version: 1
-          fingerprint: ce863a1293b95cdd1f00b8f4912fc15062ee76cff9dad67bd2f0dbd7c1e7883d
-          findings:
-            - duplicate-source-reference:44
-            - reference-entry-count-differs
-            - short-translation-reference:44
-            - short-translation-reference:62
-          candidates:
-            - 'RISK: reference entry-count candidate differs (63/62)'
-            - 'RISK: source has duplicate reference identifier candidates: 44'
-            - 'RISK: translation reference content is suspiciously short for: 44, 62'
-      fingerprint: 29bdd6b1b412ebe9dd70a64ec8ed6befdacb12c4c147e894beed12d7469a0e2d
-    waivers:
-      resources:
-        evidence_version: 1
-        fingerprint: ce863a1293b95cdd1f00b8f4912fc15062ee76cff9dad67bd2f0dbd7c1e7883d
-        findings:
-          - duplicate-source-reference:44
-          - reference-entry-count-differs
-          - short-translation-reference:44
-          - short-translation-reference:62
-        candidates:
-          - 'RISK: reference entry-count candidate differs (63/62)'
-          - 'RISK: source has duplicate reference identifier candidates: 44'
-          - 'RISK: translation reference content is suspiciously short for: 44, 62'
+        - 'Authorial inventory: source.pdf has 146 valid we-our-us relation instances after excluding references, figure and
+          code examples, and third-party material; 146 of 146 pass in the final bytes, and every same-subject Chinese merge
+          was checked individually.'
+        - 'Formula migration: all 35 fixed-base math expressions preserve display kind, order, and exact TeX under only the
+          tag-to-text-number projection; rendered source pages 3 and 6 and formulas 1 through 4 were checked for layout.'
+      waivers: {}
+      fingerprint: b09c20024bfede8ea2867e400f1980c5ae5398456b23902120934eb48aa0d5ff
   dynamo-amazon-highly-available-key-value-store:
     source_sha256: 5cacd624cd7bfd37e3d22e04d8c2e347a49579d2927dbb06f40a89c0bcd40bd4
     translation_sha256: 96207b9112f548b79fbc16011d8e59a0d09129cfa43a27938e0b6fde9cf7f238
@@ -4901,25 +4882,25 @@ entries:
           - 'RISK: translation reference content is suspiciously short for: 7'
   bao-making-learned-query-optimization-practical:
     source_sha256: 7ffe17799d73e5c637254b24ee4b824bd813e92e2b75ab48697e168662bc7721
-    translation_sha256: 64ced292fd302447c9daed7b1cbd46afee71067cddca6a3a6b6a28d042da8836
+    translation_sha256: 51e2e7638d02c07ad6e1ff646427486bcc6b29fd72a998cb5777a3143eb0dfeb
     assets_manifest_sha256: 169251ca1b22179d26457f1e1399aacda3d4fd4be9e7496f5b87ed786e2dbd7c
     review_action: repair-review
-    reviewer: codex:wave1-gate-verify
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-a
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: bao-making-learned-query-optimization-practical
       source_sha256: 7ffe17799d73e5c637254b24ee4b824bd813e92e2b75ab48697e168662bc7721
-      translation_sha256: 64ced292fd302447c9daed7b1cbd46afee71067cddca6a3a6b6a28d042da8836
+      translation_sha256: 51e2e7638d02c07ad6e1ff646427486bcc6b29fd72a998cb5777a3143eb0dfeb
       assets_manifest_sha256: 169251ca1b22179d26457f1e1399aacda3d4fd4be9e7496f5b87ed786e2dbd7c
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: e69717f43af7553556a2abde4502d1ef50fd2fb479295300aab68389fa8dc207
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-math-audit
-      reviewer: codex:wave1-gate-verify
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-a
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -4933,11 +4914,12 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Restored source contact metadata, corrected the Figure 16 whisker description, and explicitly preserved the source's
-          conflation of posterior expectation and mode; independently verified all 14 pages, CMAB formulation, training loop,
-          experiments, 71 math expressions, 15 figures, and 83 references.
+        - 'Authorial inventory: source.pdf has 102 valid contextual rows and 126 we-our-us tokens; 102 of 102 context relations
+          pass in the final bytes, and every same-subject Chinese merge was checked individually.'
+        - 'Formula migration: all 71 fixed-base math expressions preserve display kind, order, and exact TeX under only the
+          tag-to-text-number projection; rendered source page 4 and formula 1 were checked for layout.'
       waivers: {}
-      fingerprint: f0c8c35577b7835e865bb8273745e03cd52f03987889507cdcac4606f99b54ef
+      fingerprint: 03851492021e851b57de81f887b3d0cc97cd1c780af9342168eb1d5cfa171f85
   deepdb-learn-from-data-not-from-queries:
     source_sha256: e2e854b786eeaf55b33dd79bf6918fa4a4dba695f6c250cd3644b52967c57fb5
     translation_sha256: ba7ad5d0fe84a15ff08dd9baafd1f7ecf3c5a816ff52f9f81f3b7dc1bd661299
@@ -5026,61 +5008,25 @@ entries:
       fingerprint: fda2c83166d9f15d49e26ea70cec2c66e5027dc8af20bc42d63b6fa05a51ceaa
   neo-a-learned-query-optimizer:
     source_sha256: 6cd5c1843cf2ea8d5673d332fe263d1e29188390659dbaedcfe2035f3d2b6542
-    translation_sha256: 9be9a67e0ce24f731c252dfbdfc93ac293c72dae7c0dba36e466176abeb860c9
+    translation_sha256: 04f91c051415905f1c10e30c8c06cc5c8fbfec4c932f376bdb47066878003d68
     assets_manifest_sha256: 726fa930e5d6f4da42b3d4a6fdca250ab41aea3b6a52bffa7e34d41399db70d8
-    review_action: full-translation-review
-    reviewer: codex:wave1-gate-verify
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    review_action: repair-review
+    reviewer: codex-agent:tag-migration-reviewer-c
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: neo-a-learned-query-optimizer
       source_sha256: 6cd5c1843cf2ea8d5673d332fe263d1e29188390659dbaedcfe2035f3d2b6542
-      translation_sha256: 9be9a67e0ce24f731c252dfbdfc93ac293c72dae7c0dba36e466176abeb860c9
+      translation_sha256: 04f91c051415905f1c10e30c8c06cc5c8fbfec4c932f376bdb47066878003d68
       assets_manifest_sha256: 726fa930e5d6f4da42b3d4a6fdca250ab41aea3b6a52bffa7e34d41399db70d8
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 67ced7fa4d3202c8b616ab24fa10e0a0ecc1aadebe468956b999f3072b73cada
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
-      review_action: full-translation-review
-      translator: codex:wave1-math-audit
-      reviewer: codex:wave1-gate-verify
-      identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
-      checks:
-        - algorithms-and-listings
-        - conclusions-and-limitations
-        - figures-and-tables
-        - footnotes-and-end-matter
-        - formulas
-        - front-matter
-        - numbers-and-units
-        - references
-        - section-structure
-        - technical-claims
-        - visual-layout
-      findings: []
-      waivers: {}
-      fingerprint: 06f0a7a3f2839c3a01fc19f3f38cdc11e23a8cb759dd0c9769204099c9e827b5
-  neurocard-one-cardinality-estimator-for-all-tables:
-    source_sha256: 0789d8dce73de3212412dc3f46dd2087652cbcc44dfad79ad30b0f2c73a6f98c
-    translation_sha256: 3e2aaa06376d5fcf237fc6585bc78fa470f9959b0cd4173d2f66ca0f5dcb9585
-    assets_manifest_sha256: e5619c5e54a75fc334d977cc46630231e4ca052c55464c4a94433b4204200d33
-    review_action: repair-review
-    reviewer: codex:wave1-math-audit
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
-    review_receipt:
-      schema_version: 1
-      paper_id: neurocard-one-cardinality-estimator-for-all-tables
-      source_sha256: 0789d8dce73de3212412dc3f46dd2087652cbcc44dfad79ad30b0f2c73a6f98c
-      translation_sha256: 3e2aaa06376d5fcf237fc6585bc78fa470f9959b0cd4173d2f66ca0f5dcb9585
-      assets_manifest_sha256: e5619c5e54a75fc334d977cc46630231e4ca052c55464c4a94433b4204200d33
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
-      review_metadata_sha256: a8cf27110b1a6be7ba780dbc800e0efd7b54d8d085f75c04d6a5558773c3ca8f
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-gate-verify
-      reviewer: codex:wave1-math-audit
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-c
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -5094,10 +5040,60 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Independently reverified all source pages, eight figure assets, cardinality formulas and algorithms, source Table
-          2 inconsistency and reference 49 anomaly notes, all experimental values and fifty references after repair.
+        - 'Authorial inventory: 130 valid source relations; 130/130 passed after repair. The final Chinese text has 122 explicit
+          authorial markers; the eight-relation difference is fully accounted for by reviewed same-subject coordination, including
+          the 2-to-1 roadmap group and the 3-to-1 convergence/reporting group.'
+        - 'Formula integrity: all 109 TeX expressions retain their pre-repair order and payload. Source physical page 3, printed
+          page 1707, Equation (1) was checked symbol by symbol and its translated label renders horizontally.'
+        - 'Technical and visual review: all 12 source pages and the complete translated reading path were checked, including
+          value-network definitions, row-vector encoding, training protocol, experimental claims, figures, tables, footnotes,
+          conclusions, limitations, and references.'
       waivers: {}
-      fingerprint: f6a6298d3f32cbb477430fd5ecbe8b4feb9bd393559a9928323cd7bcd63cba36
+      fingerprint: 5d4ea747b8ac875eb8cfeaa5b9cefb4a27b46030794baacb32aacba98dfe7cac
+  neurocard-one-cardinality-estimator-for-all-tables:
+    source_sha256: 0789d8dce73de3212412dc3f46dd2087652cbcc44dfad79ad30b0f2c73a6f98c
+    translation_sha256: 5e3b61c2d3c639450904b54f5a24640336fcec46bce9f5066fc35f27b5b5006a
+    assets_manifest_sha256: e5619c5e54a75fc334d977cc46630231e4ca052c55464c4a94433b4204200d33
+    review_action: repair-review
+    reviewer: codex-agent:tag-migration-reviewer-b
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
+    review_receipt:
+      schema_version: 1
+      paper_id: neurocard-one-cardinality-estimator-for-all-tables
+      source_sha256: 0789d8dce73de3212412dc3f46dd2087652cbcc44dfad79ad30b0f2c73a6f98c
+      translation_sha256: 5e3b61c2d3c639450904b54f5a24640336fcec46bce9f5066fc35f27b5b5006a
+      assets_manifest_sha256: e5619c5e54a75fc334d977cc46630231e4ca052c55464c4a94433b4204200d33
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
+      review_metadata_sha256: a8cf27110b1a6be7ba780dbc800e0efd7b54d8d085f75c04d6a5558773c3ca8f
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
+      review_action: repair-review
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-b
+      identity_assurance: self-attested
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
+      checks:
+        - algorithms-and-listings
+        - conclusions-and-limitations
+        - figures-and-tables
+        - footnotes-and-end-matter
+        - formulas
+        - front-matter
+        - numbers-and-units
+        - references
+        - section-structure
+        - technical-claims
+        - visual-layout
+      findings:
+        - 'authorial-narration: 144 valid source I/we/my/our/us relations inventoried after dehyphenation and exclusion of
+          references, code, and third-party quotation; 144 passed; intra-paragraph and contribution/evaluation-list same-subject
+          merges were accepted only where explicit 我们/我们的 preserves responsibility'
+        - 'formula-layout: Equations 1-9 on source pages 4, 5, and 7 and every changed rendered translation formula page were
+          visually checked; equation numbering, order, TeX payload, and references are preserved'
+        - 'full-source-review: all 13 source pages, front matter, sections, 8 figures, Tables 1-5, equations, algorithms and
+          sampling procedures, footnotes, conclusion, acknowledgements, and 50 references were inventoried and mapped to the
+          current translation'
+      waivers: {}
+      fingerprint: 18e7a4bb1750ce30c2e9fbbbe0ad6fef88a722d6cb6f8e7d40db7d43819ad808
   photon-fast-query-engine-lakehouse-systems:
     source_sha256: 0d1c5a77986ede93eee5cfbac03bff0ef5984e4b28ad77988cae4595ffff8468
     translation_sha256: 177a6b1a20b8767791c076a4807ccd1458027bd4e6f926ddced73e6c0600f2c1
@@ -5222,25 +5218,25 @@ entries:
       fingerprint: a2a16474913b673015624a8f8f41ab31b3f6902f45d322f39ad49f6bf35a4408
   analyticdb-v-hybrid-analytical-engine-query-fusion:
     source_sha256: dda12150823c2ffc83eaa4b218f638df3ec1ac5f45fae5bfe740cbd6cced9686
-    translation_sha256: 4b2fdaad0841f3d5f760207b8a716a0b4850266d544a648e569b00bf37ada155
+    translation_sha256: 2b6fbe275f8944401ff6a50ead877d0dcc4c15b82216fe94c38a0222c2ef12ec
     assets_manifest_sha256: 0bb14ec2b7250af1ffd4c200d57ac79677425fa58bb8f59bc7c7d2a4f6b31b54
     review_action: repair-review
-    reviewer: codex:wave1-gate-verify
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-b2
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: analyticdb-v-hybrid-analytical-engine-query-fusion
       source_sha256: dda12150823c2ffc83eaa4b218f638df3ec1ac5f45fae5bfe740cbd6cced9686
-      translation_sha256: 4b2fdaad0841f3d5f760207b8a716a0b4850266d544a648e569b00bf37ada155
+      translation_sha256: 2b6fbe275f8944401ff6a50ead877d0dcc4c15b82216fe94c38a0222c2ef12ec
       assets_manifest_sha256: 0bb14ec2b7250af1ffd4c200d57ac79677425fa58bb8f59bc7c7d2a4f6b31b54
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 8d9b3a8d20d48d1582fcd613ed771e479b919b34f3777fcb24660597b7dc4de9
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-math-audit
-      reviewer: codex:wave1-gate-verify
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-b2
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -5254,11 +5250,15 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Restored the source contact metadata and independently verified the complete 14-page translation, VGPQ algorithm,
-          four physical-plan classes, formulas, experiments, 16 figures, and 57 references, including explicit preservation
-          of the source's 4096/64 versus 32-subcell and VGPG/VGPQ inconsistencies.
+        - 'authorial-narration: 122 valid source I/we/my/our/us relations inventoried after dehyphenation and exclusion of
+          one third-party quotation and two I/O tokens; 122 passed; same-subject Chinese merges were accepted only where explicit
+          我们/我们的 preserves every authorial relation'
+        - 'formula-layout: Equations 1-5 on source PDF pages 8 and 9 and all five changed rendered translation formulas were
+          visually checked; equation numbering, order, TeX payload, and references are preserved'
+        - 'full-source-review: all 14 source pages, front matter, Sections 1-9, 16 figures, Tables 1-3, Algorithm 1, equations,
+          two footnotes, conclusion, and 57 references were inventoried and mapped to the current translation'
       waivers: {}
-      fingerprint: a06b9e245004e921fa9c9e30caf7fc16fcdbeea25f226b06fcf336a0d3ceb2da
+      fingerprint: 802a76387a7baf6f6b982ccecddca7e73442c1faaf2502fb79a02e1f3640ab04
   diskann-fast-accurate-billion-point-nearest-neighbor-search:
     source_sha256: 15ee6136e41eb70d05692ca5f5af18b47fc63754c3a5004de686d8b1be2c6d2c
     translation_sha256: d4798ffbfc0a30e51bb12c1e925483f646138a636d5ee9e916e925bd0d67309a
@@ -5317,25 +5317,25 @@ entries:
           - 'RISK: source Algorithm 2 has no formal translation-side payload candidate'
   hnsw-efficient-and-robust-approximate-nearest-neighbor-search:
     source_sha256: f78da128a3ea9ac08d37cfe6c4b641f371f88adb677d6d2bf637d90bad8d414a
-    translation_sha256: 8ad29eb48452989c4924f2ce081f73cb0d40fc19fa17879feff44e74b53757b5
+    translation_sha256: 885cf4c529a3b766c7101f11b190508c18588cc8dffadc47bf4d9b6218802f4a
     assets_manifest_sha256: 486430b91a8a737ee04fde56b4eeaa97efdc2b8a173d6c1a56701a8658d3f09d
     review_action: repair-review
-    reviewer: codex:wave1-gate-verify
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-c
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: hnsw-efficient-and-robust-approximate-nearest-neighbor-search
       source_sha256: f78da128a3ea9ac08d37cfe6c4b641f371f88adb677d6d2bf637d90bad8d414a
-      translation_sha256: 8ad29eb48452989c4924f2ce081f73cb0d40fc19fa17879feff44e74b53757b5
+      translation_sha256: 885cf4c529a3b766c7101f11b190508c18588cc8dffadc47bf4d9b6218802f4a
       assets_manifest_sha256: 486430b91a8a737ee04fde56b4eeaa97efdc2b8a173d6c1a56701a8658d3f09d
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 6a6a37c478306e0e5c8a36a9f64059d1825175218a6a988eebac5f29a03e86f6
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-resource-audit
-      reviewer: codex:wave1-gate-verify
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-c
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -5349,23 +5349,28 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - 论文 source、translation、assets 与旧内容绑定收据的哈希完全一致；原独立审阅者在当前 review-gate manifest 下重跑 scoped deep gate，并确认 11 项内容检查及既有人工结论仍绑定当前字节。
-        - 重新核对公式、概率、复杂度、内存表达式、Algorithms 1–5、Figures 1–15、Tables 1–3 和 references 1–59；Algorithm 1/3 payload 提示仍为已核实的形式匹配假阳性。
+        - 'Authorial inventory: 34 valid source relations; 34/34 passed after repair. Two same-subject Chinese coordination
+          groups were checked explicitly: physical page 3 set/get and physical page 8 limit/use.'
+        - 'Formula and visual review: source physical page 7 Equation (1) was checked symbol by symbol and its translated
+          label renders horizontally; all 11 source pages and the complete translated reading path were visually reviewed.'
+        - 'Resource waiver disposition: source Algorithms 1 and 3 are fully preserved as named translation sections with complete
+          text-code payloads; the two validator findings are conservative formal-payload pairing misses, not missing algorithms.
+          Algorithms 2, 4, and 5, figures, footnotes, and references were also checked.'
       waivers:
         resources:
-          evidence_version: 1
-          fingerprint: 2a15a0bbd80d29d7e6a24755a0ce457010f479c1fdb7f31773fa03616ed4fa21
+          evidence_version: 4
+          fingerprint: ec6f6299a74ad7fb1508bc35254fdbb58aa2abf139cff1393b28a67e70032ba7
           findings:
             - missing-formal-payload:algorithm:1
             - missing-formal-payload:algorithm:3
           candidates:
             - 'RISK: source Algorithm 1 has no formal translation-side payload candidate'
             - 'RISK: source Algorithm 3 has no formal translation-side payload candidate'
-      fingerprint: 72bff5ad8349fc5c508aa571a21da16ff2ed0860cdae73e8e4ffc4ce82600730
+      fingerprint: 1c1dce896bc04245692461a293460e02972dd974b03d97eec6a8abeefba41404
     waivers:
       resources:
-        evidence_version: 1
-        fingerprint: 2a15a0bbd80d29d7e6a24755a0ce457010f479c1fdb7f31773fa03616ed4fa21
+        evidence_version: 4
+        fingerprint: ec6f6299a74ad7fb1508bc35254fdbb58aa2abf139cff1393b28a67e70032ba7
         findings:
           - missing-formal-payload:algorithm:1
           - missing-formal-payload:algorithm:3
@@ -5374,25 +5379,25 @@ entries:
           - 'RISK: source Algorithm 3 has no formal translation-side payload candidate'
   milvus-purpose-built-vector-data-management-system:
     source_sha256: af3412c70d512105c5e5521b715ef6173b003b5aa88c89a5d888efc07e2e6027
-    translation_sha256: 15d15bc34639eb89b27c4f835f8bcf3c5affcfe2893c5fd553370942e05c966c
+    translation_sha256: 56981a69641e2962c1528290ef33d48676b6cd4606bdaf00763adcd6e5c0834d
     assets_manifest_sha256: 6bc48ce5b349cc5fc3bda36af7f3a06e87f65cb7c642ac67ee6a22938e96112d
     review_action: repair-review
-    reviewer: codex:wave1-math-audit
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-c
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: milvus-purpose-built-vector-data-management-system
       source_sha256: af3412c70d512105c5e5521b715ef6173b003b5aa88c89a5d888efc07e2e6027
-      translation_sha256: 15d15bc34639eb89b27c4f835f8bcf3c5affcfe2893c5fd553370942e05c966c
+      translation_sha256: 56981a69641e2962c1528290ef33d48676b6cd4606bdaf00763adcd6e5c0834d
       assets_manifest_sha256: 6bc48ce5b349cc5fc3bda36af7f3a06e87f65cb7c642ac67ee6a22938e96112d
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 36278bbf8547812c5407e1ee7c78c9c0f37ca2c6c778968d4d3feaf3abed9217
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-gate-verify
-      reviewer: codex:wave1-math-audit
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-c
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -5406,31 +5411,38 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Independently reverified all source pages, sixteen figure assets, cache and SQ8H algorithms, multi-vector formulas,
-          all reported magnitude directions, end matter and seventy-three references after repair.
+        - 'Authorial inventory: 119 valid source relations (109 we, 10 our); 119/119 passed after repair. Eleven explicitly
+          reviewed shared-subject groups account for twelve fewer Chinese subject markers: abstract roadmap; GPU contribution;
+          SIMD refactor; vector-fusion explanation; competitor comparison; metric setup; scalability setup; dataset/scenario
+          setup; three-action Recipe1M setup; conclusion we/our; acknowledgements.'
+        - 'Formula and visual review: source physical page 5 Equation (1) and every surrounding symbol were checked against
+          the translated display and rendered horizontally; all 12 source pages and the complete translation reading path,
+          figures, table, algorithm, footnotes, conclusions, and references were reviewed.'
+        - 'Repair disposition: missing authorial agency was restored without changing technical claims or TeX payloads; footnote
+          variables n, t, and k remain semantically exact in repository-compliant prose form.'
       waivers: {}
-      fingerprint: 90a84ea76d7d4ee8eddb90b91cd84ee535417db7c1eb7cbf2465d4cb639ee292
+      fingerprint: 99591fb9c0f3ce471f4991ca450564b9c011faad3f36c94dc11ccef7dbba715c
   spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search:
     source_sha256: 3d68b9ed723ad5c03ba9c9e55ef81a14795f68db66c3c5085cd86f63c6b689a0
-    translation_sha256: 448ac58226bc637b35fa066907b03cf7631d8fa42e81ca6b7397683e9c7d9eda
+    translation_sha256: 3c056bde5029cf2dbc8143f80cae406ef2ac8a3df072b046ff1af8b3c7a104ab
     assets_manifest_sha256: afc2d3958ce27cbdf800ae324e6b3b20d57b837e97724544841c35b25712e286
     review_action: repair-review
-    reviewer: codex:ingres-independent-review
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-c
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search
       source_sha256: 3d68b9ed723ad5c03ba9c9e55ef81a14795f68db66c3c5085cd86f63c6b689a0
-      translation_sha256: 448ac58226bc637b35fa066907b03cf7631d8fa42e81ca6b7397683e9c7d9eda
+      translation_sha256: 3c056bde5029cf2dbc8143f80cae406ef2ac8a3df072b046ff1af8b3c7a104ab
       assets_manifest_sha256: afc2d3958ce27cbdf800ae324e6b3b20d57b837e97724544841c35b25712e286
-      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 2384738ceeaa3e05a9df2c564afa223f1c72e56627c8e5f0651e519d1f7f3080
-      review_gate_manifest_sha256: 377603967cb1b3acac388b01db67f43be1c703b3cbbc4ca08c43f9ccf2e1b704
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:root
-      reviewer: codex:ingres-independent-review
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-c
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -5444,41 +5456,35 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - All 14 source pages and all 14 extracted figure assets were visually inspected; cropping, axes, ticks, legends,
-          subfigure labels, and cross-references passed.
-        - All explicit numbers, units, datasets, hardware resources, hyperparameters, comparison directions, performance claims,
-          qualifications, and distributed-search results were checked against the PDF and passed.
-        - 'Authorial voice inventory independently rebuilt: 116 valid source items (we=108, our=5, us=3), all 116 semantically
-          mapped; six shared-subject groups reduce seven explicit markers, with two faithful Chinese explicitizations, reconciling
-          target count 111. Distributed-scalability paragraph preserves all five source authorial relations explicitly.'
-        - Scoped paper-check, 54-expression MathJax and GitHub portable-math audits, portable-math check, and git diff whitespace
-          check passed with zero warnings or reviewed-risk groups at translation sha256 448ac58226bc637b35fa066907b03cf7631d8fa42e81ca6b7397683e9c7d9eda.
-        - 'Source inventory independently verified: 14 pages, complete front matter and NeurIPS 2021 venue, sections 1-6,
-          14 figures, 3 numbered formulas plus unnumbered RNG relation, 51 references, 2 footnotes, acknowledgement, and all
-          18 NeurIPS checklist answers; no source tables, formal algorithms, or listings.'
+        - 'Authorial inventory: 116 valid source relations (108 we, 5 our, 3 us); 116/116 passed. Six explicitly reviewed
+          same-subject Chinese coordination groups account for seven fewer markers, while two faithful Chinese subject explicitizations
+          preserve otherwise implicit agency; the reviewed target count is 111.'
+        - 'Formula and visual review: source physical page 4 Equation (1) and physical page 5 Equations (2) and (3) were checked
+          symbol by symbol and all labels render horizontally. The complete source and translated reading path, algorithms,
+          figures, tables, footnotes, conclusions, and references were reviewed.'
       waivers: {}
-      fingerprint: d779b3c7145217165e772898122803f8da61bb4d9f6fed897e9717a723a9258a
+      fingerprint: cca27f45bde4959119951961a02bc1a0d5e35ddfe2584af6161d6195a1b08998
   vbase-unifying-vector-search-relational-queries:
     source_sha256: 5a762e51b689b31abe3da8c5288c6791b2a77f8a8e2243ad4a84776b6698e089
-    translation_sha256: 367ce4fa0393b84a4d79bc1500edbd886aa1b8a7f23888f59d6ac26ebd7bb94f
+    translation_sha256: 3060993b53626d8448c070065475ca078e2789cc8e7578fa3f8962afc2f17091
     assets_manifest_sha256: ce232403e6e45b523590431aaf838e6b8e614db47379da1c984adb747c451af0
     review_action: repair-review
-    reviewer: codex:data-blocks-independent
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-b
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: vbase-unifying-vector-search-relational-queries
       source_sha256: 5a762e51b689b31abe3da8c5288c6791b2a77f8a8e2243ad4a84776b6698e089
-      translation_sha256: 367ce4fa0393b84a4d79bc1500edbd886aa1b8a7f23888f59d6ac26ebd7bb94f
+      translation_sha256: 3060993b53626d8448c070065475ca078e2789cc8e7578fa3f8962afc2f17091
       assets_manifest_sha256: ce232403e6e45b523590431aaf838e6b8e614db47379da1c984adb747c451af0
-      translation_policy_sha256: 8cae5b8742d03c21683eced41cd427cf49d3ec96e25b164bd78068f7c74f2888
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 74db1a232a7d816c1c2928747f3fbf7f3f9174f90aa47051247e491848089f04
-      review_gate_manifest_sha256: 1828fe0a3d46b15a9040f25b6041e4229b586ca7bf21b962af56edefc23724a2
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:root
-      reviewer: codex:data-blocks-independent
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-b
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -5492,27 +5498,31 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Independent full-paper review verified equations 1-11, all eight figures, Tables 2-8, Q1-Q8 SQL, numerical claims,
-          and 90 source references
-        - Removed unsupported explanatory additions and restored source-faithful authorial voice throughout the design, implementation,
-          and evaluation sections
-        - Restored the complete Q8 average/median/99th schema and source footnote markers in Tables 4 and 8, with explicit
-          fidelity notes for the source inconsistency
+        - 'authorial-narration: 104 valid source I/we/my/our/us relations inventoried after dehyphenation and exclusion of
+          references, code, and third-party quotation; 104 passed; intra-paragraph same-subject merges were accepted only
+          where explicit 我们/我们的 preserves responsibility'
+        - 'formula-layout: Equations 1-11 on source pages 5, 7, and 8 and every changed rendered translation formula page
+          were visually checked; equation numbering, order, TeX payload, and references are preserved'
+        - 'full-source-review: all 20 source pages, front matter, sections, 8 figures, Tables 1-8, Q1-Q8 SQL, equations, footnotes,
+          conclusion, acknowledgements, and 90 references were inventoried and mapped to the current translation'
+        - 'resources-waiver: source and translation both contain a complete reference 61 and 90 numbered entries; the 89/90
+          count and unmatched-61 diagnostics arise from two-column extraction and parser boundary behavior, not a missing
+          citation or reference'
       waivers:
         resources:
-          evidence_version: 1
-          fingerprint: f517462be6b225f00b25f6ec4967886c2ec204a8d9050f84136ec90e14628f5d
+          evidence_version: 4
+          fingerprint: 4ab1cb6a6948fd87e5cfeef9dfa50c90c8998f013358e678dc8f96dbb4d28fbf
           findings:
             - reference-entry-count-differs
             - unmatched-translation-reference:61
           candidates:
             - 'RISK: reference entry-count candidate differs (89/90)'
             - 'RISK: translation has unmatched reference identifiers: 61'
-      fingerprint: a993debebea56cb0ead0d2e7422403d6a9e92aa682008f4ffa8e71116ffbea4e
+      fingerprint: d7b368164651a3ea6b4917d037986cfa6830cba5025ebcd6bab732c8727583c8
     waivers:
       resources:
-        evidence_version: 1
-        fingerprint: f517462be6b225f00b25f6ec4967886c2ec204a8d9050f84136ec90e14628f5d
+        evidence_version: 4
+        fingerprint: 4ab1cb6a6948fd87e5cfeef9dfa50c90c8998f013358e678dc8f96dbb4d28fbf
         findings:
           - reference-entry-count-differs
           - unmatched-translation-reference:61
@@ -5521,25 +5531,25 @@ entries:
           - 'RISK: translation has unmatched reference identifiers: 61'
   case-for-learned-index-structures:
     source_sha256: 392f604ddcdf26dc4905fc7649dc6e68aa843d50cddcc4fcb5f1b0eed23679a0
-    translation_sha256: 83cd7e8676f8c031f4dd384801554bdec17b1a61fce749ba8523ae2c420690d2
+    translation_sha256: 6523df7336a87feecc5f40e527a92cd4a6aa60e77e8bb21797ba39e7e92ef5f6
     assets_manifest_sha256: fb0944d0b2f36deed76844100ad315e5fdca38bd981a73803fa2e0c1e2771d5e
     review_action: repair-review
-    reviewer: codex:root
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-b
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: case-for-learned-index-structures
       source_sha256: 392f604ddcdf26dc4905fc7649dc6e68aa843d50cddcc4fcb5f1b0eed23679a0
-      translation_sha256: 83cd7e8676f8c031f4dd384801554bdec17b1a61fce749ba8523ae2c420690d2
+      translation_sha256: 6523df7336a87feecc5f40e527a92cd4a6aa60e77e8bb21797ba39e7e92ef5f6
       assets_manifest_sha256: fb0944d0b2f36deed76844100ad315e5fdca38bd981a73803fa2e0c1e2771d5e
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 2cf683cdd109401928bbf39eede7047dd24660783da7c0fd639438a69d1e0a68
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-resource-audit
-      reviewer: codex:root
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-b
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -5553,11 +5563,15 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - 独立核对 11 项视觉资源，坐标轴、图例、子图标签和正文引用完整。
-        - 独立逐页复核 source.pdf 30/30 页与完整译文，首页、正文、全部显式数字、公式、表格、算法、脚注、结论及参考文献对应完整。
-        - 算法 1 保留源文代码，并以无歧义的 index 下标公式说明源文第 9 行与第 3.2 节模型选择公式的内部不一致；可移植数学与 MathJax 门禁通过。
+        - 'authorial-narration: 330 valid source I/we/my/our/us relations inventoried after dehyphenation and exclusion of
+          references, code, and third-party quotation; 330 passed; intra-paragraph and list same-subject merges were accepted
+          only where explicit 我们/我们的 still governs every authorial action and possession'
+        - 'formula-layout: Equations 1-3 on source pages 5 and 26 and every changed rendered translation formula page were
+          visually checked; equation numbering, order, TeX payload, and references are preserved'
+        - 'full-source-review: all 30 source pages, front matter, sections, 11 visual resources, Algorithm 1, equations, footnotes,
+          acknowledgements, appendices A-E, conclusion, and 75 references were inventoried and mapped to the current translation'
       waivers: {}
-      fingerprint: 435bb892d122680c7abc8ad6aae3936a7522508065515a0c5ea0f3aa997401eb
+      fingerprint: b113cf2547e5180354ff1d746c5d080c22987ea7230822cba40d3fc410dc7001
   delta-lake-high-performance-acid-table-storage-cloud-object-stores:
     source_sha256: b0fa92e38efb80f6c10f94a0fa31ccc42d0d75c345d5f94d08a7dc18632e9437
     translation_sha256: 5d5b404c5b3efabd25b33e07c9d064bc96eb5bf00a63e61c36ed27df8288e69c
@@ -5661,25 +5675,25 @@ entries:
           - 'RISK: translation has unmatched reference identifiers: 17, 18, 19, 20'
   log-structured-merge-tree:
     source_sha256: 2fba8f74a15cee6b7965daa8e11d39f9a77d03b36e9dd4814120e771be81a173
-    translation_sha256: d0bd5c6f2cc9f75894590ff9f99864ccc283e01f3fdb88f4038564a72ed2f5eb
+    translation_sha256: 6be173b900a23d0c6da8d080a51cf18a9035a914608368ad2d308da6ac7ce083
     assets_manifest_sha256: 6e6fd3ca6adaf15e816909b6bd2c2863fe43fcce0fb77fd8153649efedfa8423
     review_action: repair-review
-    reviewer: codex:wave1-gate-verify
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-a
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: log-structured-merge-tree
       source_sha256: 2fba8f74a15cee6b7965daa8e11d39f9a77d03b36e9dd4814120e771be81a173
-      translation_sha256: d0bd5c6f2cc9f75894590ff9f99864ccc283e01f3fdb88f4038564a72ed2f5eb
+      translation_sha256: 6be173b900a23d0c6da8d080a51cf18a9035a914608368ad2d308da6ac7ce083
       assets_manifest_sha256: 6e6fd3ca6adaf15e816909b6bd2c2863fe43fcce0fb77fd8153649efedfa8423
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 868a901d7c8c78e7dfc00b5f3a88af50f76b020bd2f8b6a5aec548e73ec32268
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-math-audit
-      reviewer: codex:wave1-gate-verify
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-a
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -5693,24 +5707,29 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - 论文 source、translation、assets 与旧内容绑定收据的哈希完全一致；独立于原修复者的 reviewer 在当前 review-gate manifest 下重跑 scoped deep gate，并确认旧
-          11 项逐项证据继续绑定当前字节。
-        - 重新核对数学代码与图题、组件大小公式和 Theorem 3.1 完整导数推导/变量范围/解；Figure 2/3 多候选提示仍为已核实的资源匹配假阳性。
+        - 'Authorial inventory: source.pdf has 206 valid contexts and 247 we-our-us tokens; 206 of 206 context relations pass
+          in the final bytes, including the physical-page-16 Theorem 3.2 setup; every same-subject Chinese merge was checked
+          individually.'
+        - 'Formula migration: all 114 fixed-base math expressions preserve display kind, order, and exact TeX under only the
+          tag-to-text-number projection; rendered source pages 13, 14, 17, and 19 and formulas 3.1 through 3.8, including
+          the repeated 3.8 label, were checked for layout.'
+        - 'Resources waiver reviewed against source.pdf: Figures 2 and 3 each intentionally use two distinct image crops for
+          their two source subfigures; these are not duplicate representations.'
       waivers:
         resources:
-          evidence_version: 1
-          fingerprint: 9851829106cc9edc35bd726f32b3e8c05ac79ccda32cbb19f6481ebeee11e8c0
+          evidence_version: 4
+          fingerprint: 98853b5399cb1068c9d402917d16320d914c751e549afe6dc611f7d1d31bd1b2
           findings:
             - multiple-image-candidates:figure:2
             - multiple-image-candidates:figure:3
           candidates:
             - 'RISK: Figure 2 has 2 image candidates; verify subfigures versus duplicate representations'
             - 'RISK: Figure 3 has 2 image candidates; verify subfigures versus duplicate representations'
-      fingerprint: 38eca9ac15bad1fd88d86827d3871ebd31cc21958db7086df436c299b04ffaa4
+      fingerprint: 6d88e55ab3667934908a81019b8fa9b930cccfa84f43640a3c3094ba37ded2e3
     waivers:
       resources:
-        evidence_version: 1
-        fingerprint: 9851829106cc9edc35bd726f32b3e8c05ac79ccda32cbb19f6481ebeee11e8c0
+        evidence_version: 4
+        fingerprint: 98853b5399cb1068c9d402917d16320d914c751e549afe6dc611f7d1d31bd1b2
         findings:
           - multiple-image-candidates:figure:2
           - multiple-image-candidates:figure:3
@@ -6059,25 +6078,25 @@ entries:
       fingerprint: 9e9cfa0e0ea0c54cec89d056874637b73cda2ade6da93ee95eea7dfcc92adcd2
   critique-ansi-sql-isolation-levels:
     source_sha256: a0411993252be7e6905c3f89e7118c22f2cc45c22d311b15e34b6216b7897ca9
-    translation_sha256: 46f97c183d7c02a00a631e1be247c08878f1322a6c2bc76aae14b4a7165c241f
+    translation_sha256: 0fd6419623ea3d5e3d3548b601f79df50551175323f233b50899b4e4ab8dbfeb
     assets_manifest_sha256: b3e4a77cd918bb5266bdc8046e03163bc84ca73fa5767cb145e3121220b43dfb
     review_action: repair-review
-    reviewer: codex:impala-independent-review
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-a
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: critique-ansi-sql-isolation-levels
       source_sha256: a0411993252be7e6905c3f89e7118c22f2cc45c22d311b15e34b6216b7897ca9
-      translation_sha256: 46f97c183d7c02a00a631e1be247c08878f1322a6c2bc76aae14b4a7165c241f
+      translation_sha256: 0fd6419623ea3d5e3d3548b601f79df50551175323f233b50899b4e4ab8dbfeb
       assets_manifest_sha256: b3e4a77cd918bb5266bdc8046e03163bc84ca73fa5767cb145e3121220b43dfb
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: a8153d54139e71a94cf2cfb7f5db3cb24ebc7ec254ad296fa06a88152db55517
-      review_gate_manifest_sha256: 54619aa0696a0cf408025d874a1c6d56a947425a46e1bf4bb42d64b101f8b545
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:root
-      reviewer: codex:impala-independent-review
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-a
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -6091,15 +6110,17 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Independently re-reviewed all 10 source pages after repair; verified complete front matter, systematic first-person
-          narration, all repeated and unique formulas including the four isolation-order relations, H1-H5, P0-P4C, A1-A3 and
-          A5A-A5B, Tables 1-4, complete Figure 2, transparent treatment of source-internal contradictions, acknowledgments,
-          and all 18 references. The resources candidates are solely two-column PDF extraction artifacts; [ABJ], [ILL], [THA],
-          and all 18 entries are visibly present. All 11 controlled checks pass.
+        - 'Authorial inventory: source.pdf has 29 valid we-our-us relation instances after excluding notation and references;
+          29 of 29 pass in the final bytes, including the A5A history introduction, and every same-subject Chinese merge was
+          checked individually.'
+        - 'Formula migration: all 172 fixed-base math expressions preserve display kind, order, and exact TeX under only the
+          tag-to-text-number projection; rendered source page 2 and formulas 2.1 and 2.2 were checked for layout.'
+        - 'Resources waiver reviewed against source.pdf: all 18 source reference entries are present in translation; ABJ,
+          ILL, and THA are case-normalization candidates, and the reported 15-versus-18 count is not an omission.'
       waivers:
         resources:
-          evidence_version: 1
-          fingerprint: 7cbd1a780caf6f2a74bc392109f5eca68eb48b6043f1e54b733b46aefd77d824
+          evidence_version: 4
+          fingerprint: e0ec95b122ff5ddc4d3a3bad4afacc1813301ca6459528910312138066ccb57e
           findings:
             - reference-entry-count-differs
             - unmatched-translation-reference:abj
@@ -6108,11 +6129,11 @@ entries:
           candidates:
             - 'RISK: reference entry-count candidate differs (15/18)'
             - 'RISK: translation has unmatched reference identifiers: abj, ill, tha'
-      fingerprint: 5e21ef05a9648e3ba0e81036e748b1616f754e33a39a4a30158529709f70f975
+      fingerprint: 909f09279cb274317d49c3ded1a85db96c71ddb83947b63cdfba00a168a6ed2b
     waivers:
       resources:
-        evidence_version: 1
-        fingerprint: 7cbd1a780caf6f2a74bc392109f5eca68eb48b6043f1e54b733b46aefd77d824
+        evidence_version: 4
+        fingerprint: e0ec95b122ff5ddc4d3a3bad4afacc1813301ca6459528910312138066ccb57e
         findings:
           - reference-entry-count-differs
           - unmatched-translation-reference:abj
@@ -6218,25 +6239,25 @@ entries:
       fingerprint: da083fa483e67a955c5e337a0123eb8e997792071d245000fea34bab77039a5b
   optimistic-methods-concurrency-control:
     source_sha256: 5bd2f2e7b2356de972e7e6bd19ebc229568dd7968bc01acc3583038003ce364e
-    translation_sha256: 1cfd0bb003e316d7cbea3c20fc56c68a56264175effb8e1554e8fd8585d0ac4f
+    translation_sha256: eb991ac42792ea45fc7eb0973b93237846582e35284c46b095d668e8751c4a45
     assets_manifest_sha256: ae8686badb126e052d1af014682cbf559be5144a03ab74395cf4433592d6ad7c
     review_action: repair-review
-    reviewer: codex:root
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-c
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: optimistic-methods-concurrency-control
       source_sha256: 5bd2f2e7b2356de972e7e6bd19ebc229568dd7968bc01acc3583038003ce364e
-      translation_sha256: 1cfd0bb003e316d7cbea3c20fc56c68a56264175effb8e1554e8fd8585d0ac4f
+      translation_sha256: eb991ac42792ea45fc7eb0973b93237846582e35284c46b095d668e8751c4a45
       assets_manifest_sha256: ae8686badb126e052d1af014682cbf559be5144a03ab74395cf4433592d6ad7c
-      translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: 7c5620d2f9f66087d07f1bfc092a516dd89a4ef2696c5e2752f16de101812aed
-      review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:wave1-gate-verify
-      reviewer: codex:root
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-c
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -6250,12 +6271,17 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - Independent 14-page source-to-translation review confirmed the repaired 1981 ACM notice, complete introduction and
-          locking limitations, all three concurrency-control algorithms, serial-equivalence conditions, B-tree probability
-          derivation, 3 uncropped figures, 15 references, and received/revised/accepted history; paper-check completed with
-          zero warnings and zero reviewed-risk groups.
+        - 'Authorial inventory: 62 valid source relations; 62/62 passed after repair. Coordinated clauses and Chinese shared
+          subjects were checked relation by relation rather than accepted by raw marker-count equality; no agency relation
+          is lost.'
+        - 'Formula and visual review: all eight display blocks were checked; source physical page 6, printed page 218, contains
+          the sole numbered Equation (1), whose translated label renders horizontally. All 13 source pages and the complete
+          translated reading path were visually reviewed, including figures, pseudocode, end matter, and references.'
+        - 'Repair disposition: the introduction''s two lock-free method families and promised starvation handling, the B-tree
+          lowest-layer leaf-page definition, and the conclusion''s authorship claims were restored and rechecked against the
+          PDF.'
       waivers: {}
-      fingerprint: 69670910c52293824da9fee605e4d0da34636b6c84623fdeb74de7f03b11784b
+      fingerprint: bdbd506d8438164ab8e953140ae73ebc69c92eae0b0074307717ae99fb8e755f
   speedy-transactions-multicore-in-memory-databases:
     source_sha256: 49e82cd1ff4d9a12111f3381e64bdb1089926f9be0b61e551659b5a58e1341f7
     translation_sha256: 666d66ee7230fd90b66211bbf9873728d1260cd8196d07dd51dc61564a07ea4a
@@ -6388,25 +6414,25 @@ entries:
       fingerprint: 1ef49ddddb0cf88d0870b00fdfb8cfe32d7bcf29c7a21e7b9c1b29657069ad90
   dbtoaster-higher-order-delta-processing:
     source_sha256: c4c41637dd80ecdd7df2ab44dc5249a16089bba220063ca5d7cbae14727fc649
-    translation_sha256: ab53db2f6899d708f5b13d92da07ff74d881b6d295d603035fa54febb75a34f4
+    translation_sha256: b0bc68a0ecd41624555783f7d85ae4cd8875c937328d41f77017600d3c206f39
     assets_manifest_sha256: 5f5909dbdf7097b6808cb0e721df334f064ef994a3f51fb7b9d79bb4da77c4cc
     review_action: repair-review
-    reviewer: codex:data-blocks-independent
-    review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+    reviewer: codex-agent:tag-migration-reviewer-b2
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: dbtoaster-higher-order-delta-processing
       source_sha256: c4c41637dd80ecdd7df2ab44dc5249a16089bba220063ca5d7cbae14727fc649
-      translation_sha256: ab53db2f6899d708f5b13d92da07ff74d881b6d295d603035fa54febb75a34f4
+      translation_sha256: b0bc68a0ecd41624555783f7d85ae4cd8875c937328d41f77017600d3c206f39
       assets_manifest_sha256: 5f5909dbdf7097b6808cb0e721df334f064ef994a3f51fb7b9d79bb4da77c4cc
-      translation_policy_sha256: 8cae5b8742d03c21683eced41cd427cf49d3ec96e25b164bd78068f7c74f2888
+      translation_policy_sha256: 23eda25cf52be43c64f2bab21f6d2c49462b232c1a17dca7755d3146be7e0ccb
       review_metadata_sha256: c28dd2820b502c34937419025e9def20951bc248327ebe00b0a66556d6f261aa
-      review_gate_manifest_sha256: 1828fe0a3d46b15a9040f25b6041e4229b586ca7bf21b962af56edefc23724a2
+      review_gate_manifest_sha256: ee409e0330a69055b49cdb4e8570b3a3ebfe9b57890e9fb2dba50306ed910d46
       review_action: repair-review
-      translator: codex:root
-      reviewer: codex:data-blocks-independent
+      translator: codex-agent:tag-migration-root
+      reviewer: codex-agent:tag-migration-reviewer-b2
       identity_assurance: self-attested
-      review_base_sha: 1ff53ad242294435f01edada0a0454d67175a956
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -6420,12 +6446,16 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - 'assets/figure-6-workload-features.png - repaired crop verified: 981x554 image has 24px safety margins on all four
-          sides with all labels and values intact'
-        - 'translation.md:653-659 - repaired figure order verified: Figure 5 now follows Figure 4 and precedes Section 6 and
-          Figure 6'
+        - 'authorial-narration: 139 valid source I/we/my/our/us relations inventoried after dehyphenation and exclusion of
+          six (I)ncremental abbreviations in Figure 3; 139 passed; same-subject Chinese merges were accepted only where explicit
+          我们/我们的 preserves every authorial relation'
+        - 'formula-layout: Rewrite equations 1-4 on source PDF page 6 and all four changed rendered translation formulas were
+          visually checked; equation numbering, order, TeX payload, and references are preserved'
+        - 'full-source-review: all 12 source pages, front matter and notices, Sections 1-8, Appendix A, Figures 1-11, Examples
+          1-9, Theorem 1, Definition 1, equations, three footnotes, 12 appendix SQL queries, conclusion, and 36 references
+          were inventoried and mapped to the current translation'
       waivers: {}
-      fingerprint: 4fd9e4f15280e969d61eb6b28e3e799af30a0bedc8e564c2d8700766cf87dcf5
+      fingerprint: fc997af1b8fbd29c891b489fa8acfa1afd799c3639d0d675d34bee709d31cc2e
   merge-path-visually-intuitive-parallel-merging:
     source_sha256: c2d2c0301c47cab5c47e63117f61b412bafa3166b0cfbab47e768f1f1c491dc7
     translation_sha256: 5338263e4dc42b4eb9e094f772cfc7c9ab010f35579223ee06a22b652ee533b7
@@ -7784,25 +7814,25 @@ entries:
           - 'RISK: translation reference content is suspiciously short for: baru84, blas79, kaku85, wagn73'
   random-sampling-with-a-reservoir:
     source_sha256: dba2241b478a46b49ec90cd95f85a8bc3cdf2c12b8c6de03134b99a754a5803b
-    translation_sha256: 8cde61359f65cd15dbaf57ad324b9dc65ecba4f43c57f2c3f007fcadc341ba47
+    translation_sha256: c1a8ca80712da43213ccf29f6634dd4ead3cc5e65b7689428450d18011123076
     assets_manifest_sha256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
     review_action: repair-review
-    reviewer: codex-agent:vitter-reviewer
-    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+    reviewer: codex-agent:vitter-math-pdf-reviewer
+    review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
     review_receipt:
       schema_version: 1
       paper_id: random-sampling-with-a-reservoir
       source_sha256: dba2241b478a46b49ec90cd95f85a8bc3cdf2c12b8c6de03134b99a754a5803b
-      translation_sha256: 8cde61359f65cd15dbaf57ad324b9dc65ecba4f43c57f2c3f007fcadc341ba47
+      translation_sha256: c1a8ca80712da43213ccf29f6634dd4ead3cc5e65b7689428450d18011123076
       assets_manifest_sha256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
-      translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
+      translation_policy_sha256: 1bba5ada2e12115736be9c4b61ae4b393d9988c450598ea3bfeff44715841cd0
       review_metadata_sha256: 079fc2bd96cb85749910b68153a8b9d7a22b0c868104a5b0af129fdbbf6c2216
       review_gate_manifest_sha256: 375cb93738e459da5e684d66618a0990a53594cf8399dbe20d524617034adbb0
       review_action: repair-review
-      translator: codex-agent:corpus-gap
-      reviewer: codex-agent:vitter-reviewer
+      translator: codex-agent:vitter-math-repairer
+      reviewer: codex-agent:vitter-math-pdf-reviewer
       identity_assurance: self-attested
-      review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
+      review_base_sha: 1500f722ccc5fee421736cf909f7bc8b5715e014
       checks:
         - algorithms-and-listings
         - conclusions-and-limitations
@@ -7816,22 +7846,13 @@ entries:
         - technical-claims
         - visual-layout
       findings:
-        - 'authorial narration retained: 140 effective source relationships (I=0, we=119, my=0, our=6, us=15), 140/140 individually
-          matched; Chinese shared-subject merges=0'
-        - 'final whitespace gate: tracked, staged, and untracked diff whitespace validation passed with no remaining findings'
-        - 'formula repair review: line 360 is the first line of Eq. 5.4, G(x)=Prob{X<=x}; physical page 9 / journal page 45
-          was visually rechecked and the removed line-end space has no visible, mathematical, or semantic effect'
-        - 'inventory retained from independent full review: source physical pages 21/21; title matter, sections 1-10, conclusion,
-          algorithms R/X/Y/Z, all formal results, Tables I-II, references 1-11, and end matter matched'
-        - 'math rendering: all 531 expressions passed the scoped GitHub Markdown node audit with exact payload preservation
-          after the whitespace repair'
-        - 'repair scope: translation line 360 lost exactly one trailing ASCII space; in-memory reinsertion reproduces the
-          fully reviewed prior SHA-256 30d8a0e7117307d08ce57742da2585f5fcd44e7597570692bf7b800fed513252 from current SHA-256
-          8cde61359f65cd15dbaf57ad324b9dc65ecba4f43c57f2c3f007fcadc341ba47, with byte length 52002 versus 52001 and no other
-          byte difference'
-        - 'resources retained: source contains no figures, no acknowledgment section, and no formal image assets to preserve'
+        - 'PDF physical pages 4-16 (journal pages 40-52): visual review confirms 21 single-line displays, the three-line aligned
+          formula (5.3), and the cases structures (6.1), (7.3), and (7.5) match source.pdf; all 531 expressions passed locked
+          MathJax and GitHub node audits, and GitHub Markdown output contains no mlabeledtr or mtable'
+        - 'repair scope: 25 numbered display formulas (2.1)-(7.7) changed only from \\tag{...} to \\qquad \\text{(...)}; normalized
+          byte comparison confirms every formula body, equation number, and prose reference is unchanged'
       waivers: {}
-      fingerprint: 009bcae83167bea5ff1c94f4b74518cca83c193b2b6a8c92e94b94c4cd62028a
+      fingerprint: 061c4190a09ebea2890e6f9a370c708ca7c37895c0085d4d81625611d1db66b3
   volcano-extensible-parallel-query-evaluation-system:
     source_sha256: 46dd869fc795434f7f85e329faa3d3dc9b6736d088d090b3a0d33e86e89cc180
     translation_sha256: dbd39a74cce65c1771d4136bbe770d70ead4686c3f439d7ed12c9d1f30ff3d62

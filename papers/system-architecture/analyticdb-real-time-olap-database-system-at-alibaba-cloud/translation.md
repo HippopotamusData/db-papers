@@ -259,7 +259,7 @@ return minus(row_ids, delete_bitset_snap);
 
 $$
 NN(q) = \arg\min _ {y \in Y} d(q, y)
-\tag{1}
+\qquad \text{(1)}
 $$
 
 AnalyticDB 支持欧氏距离、余弦距离等相似度度量，并可在 SQL 中指定。最直接的 NNS 方法会线性扫描数据库中的所有向量，逐个计算与查询向量的距离，最后返回 top-k 结果。为避免穷举搜索，我们实现并结合了 Product Quantization（PQ）[26] 和 Proximity Graph（k-NNG）[22]。实验已经证明，这两种近似 NNS 方法 [4] 能以高概率取得 NN（或 k-NN）。PQ 通过分解向量空间获得较小索引，k-NNG 则借助高效、连通良好的图索引取得更好的搜索性能和准确度。AnalyticDB 会根据内存资源以及用户对准确度和效率的要求，自适应选择更合适的方法。

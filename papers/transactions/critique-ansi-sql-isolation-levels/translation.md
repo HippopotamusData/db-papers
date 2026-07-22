@@ -71,13 +71,13 @@ ANSI SQL 以英文描述了下列三种现象：
 ANSI 对 P1 的文字可以有两种解释。严格解释要求实际发生一次脏读异常：
 
 $$
-w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}(a_1\text{ 与 }c_2\text{ 以任一顺序出现}) \tag{2.1}
+w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}(a_1\text{ 与 }c_2\text{ 以任一顺序出现}) \qquad \text{(2.1)}
 $$
 
 较宽松的解释则禁止一旦发生脏读就继续形成的所有历史，不论两个事务最终提交还是中止：
 
 $$
-w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}) \tag{2.2}
+w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}) \qquad \text{(2.2)}
 $$
 
 式 (2.2) 禁止四种提交-中止组合，而式 (2.1) 只禁止其中两种。宽松定义指出一种可能导致异常的交错，严格定义则要求异常实际发生。为避免混淆，我们把宽松形式继续记作 P1，把严格异常记作 A1：
@@ -353,7 +353,7 @@ $$
 
 **A5：数据项约束违反（Data Item Constraint Violation）。** 两个事务各自读取一组相关数据，并据此更新其中互不冲突的部分；它们单独执行时都保持 $C(DB)$，并发提交后的合并结果却违反 $C(DB)$。A5 有两个有用的具体形式。
 
-**A5A：读偏斜（Read Skew）。** $T_1$ 读 $x$； $T_2$ 更新相互关联的 $x$ 和 $y$ 并提交；随后 $T_1$ 读 $y$，于是看到一新一旧的两个值：
+**A5A：读偏斜（Read Skew）。** $T_1$ 读 $x$； $T_2$ 更新相互关联的 $x$ 和 $y$ 并提交；随后 $T_1$ 读 $y$，于是看到一新一旧的两个值。用历史表示，我们得到如下异常：
 
 $$
 A5A:\quad r_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}w_2[y]\thickspace{}\ldots\thickspace{}c_2\thickspace{}\ldots\thickspace{}r_1[y]\thickspace{}\ldots\thickspace{}(c_1\text{ 或 }a_1).

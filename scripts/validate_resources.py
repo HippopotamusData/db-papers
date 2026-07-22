@@ -207,7 +207,10 @@ DISPLAY_MATH_PATTERNS = (
         re.DOTALL,
     ),
 )
-EQUATION_NUMBER_RE = re.compile(r"(?:\\tag\{([1-9]\d*)\}|\(([1-9]\d*)\))")
+EQUATION_NUMBER_PATTERN = r"[1-9]\d*(?:\.\d+)*"
+EQUATION_NUMBER_RE = re.compile(
+    rf"(?:\\tag\{{({EQUATION_NUMBER_PATTERN})\}}|\(({EQUATION_NUMBER_PATTERN})\))"
+)
 MATH_SIGNAL_RE = re.compile(
     r"(?:=|≤|≥|∑|∏|\\(?:sum|prod|frac|sqrt|min|max|log)\b|[+*/^_])",
     re.IGNORECASE,
@@ -2774,12 +2777,12 @@ def _reference_findings(
     return errors, risks
 
 
-def _equation_numbers_in_formulae(translation_text: str) -> set[int]:
-    numbers: set[int] = set()
+def _equation_numbers_in_formulae(translation_text: str) -> set[str]:
+    numbers: set[str] = set()
     for pattern in DISPLAY_MATH_PATTERNS:
         for block in pattern.findall(translation_text):
             for tagged, parenthesized in EQUATION_NUMBER_RE.findall(block):
-                numbers.add(int(tagged or parenthesized))
+                numbers.add(tagged or parenthesized)
 
     for line in translation_text.splitlines():
         matches = list(EQUATION_NUMBER_RE.finditer(line))
@@ -2791,7 +2794,7 @@ def _equation_numbers_in_formulae(translation_text: str) -> set[int]:
         )
         if MATH_SIGNAL_RE.search(formula_body) or has_math_delimiters:
             for match in matches:
-                numbers.add(int(match.group(1) or match.group(2)))
+                numbers.add(match.group(1) or match.group(2))
     return numbers
 
 
@@ -2908,17 +2911,17 @@ def source_coverage_findings(
         if require_inline_citations:
             risks.extend(_inline_citation_findings(source_text, translation_text))
 
-    source_equations: set[int] = set()
+    source_equations: set[str] = set()
     source_lines = source_text.splitlines()
     for index, line in enumerate(source_lines):
-        matches = re.findall(r"\(([1-9]\d*)\)\s*$", line)
+        matches = re.findall(rf"\(({EQUATION_NUMBER_PATTERN})\)\s*$", line)
         if not matches:
             continue
         previous = source_lines[index - 1] if index else ""
         if MATH_SIGNAL_RE.search(line) or (
             line.strip().startswith("(") and MATH_SIGNAL_RE.search(previous)
         ):
-            source_equations.update(int(value) for value in matches)
+            source_equations.update(matches)
     translation_equations = _equation_numbers_in_formulae(translation_text)
     for number in sorted(source_equations):
         if number not in translation_equations:

@@ -53,7 +53,7 @@ PORTABLE_COMMANDS = frozenset(
     mid min models mu ne neg negthinspace neq nexists not notin odot phi pi pm
     pmod prod propto qquad quad rVert rangle rbrace rceil rfloor rho right
     rightarrow rtimes rvert setminus sigma sim simeq sqrt subset subseteq sum
-    tag tau text texttt therefore theta thickspace thinspace tilde times to
+    tau text texttt therefore theta thickspace thinspace tilde times to
     triangleq underbrace varnothing vdots vec vee wedge widehat widetilde
     xrightarrow
     """.split()
@@ -1357,6 +1357,14 @@ def _tex_issues(
                         r"\verb is limited to the GitHub-verified complete forms \verb0_0, \verb0%0, and \verb0#0",
                     )
                 )
+            elif command == "tag":
+                issues.append(
+                    MathIssue(
+                        fragment.offset + cursor,
+                        "GHM020",
+                        r"\tag can render as a vertical label table on GitHub; preserve the exact number as ordinary TeX text, for example \qquad \text{(2.1)}",
+                    )
+                )
             elif command not in PORTABLE_COMMANDS:
                 issues.append(
                     MathIssue(
@@ -1391,14 +1399,6 @@ def _tex_issues(
                             f"environment is outside the GitHub-verified profile: {environment.group(1)}",
                         )
                     )
-            elif command == "tag" and not fragment.display:
-                issues.append(
-                    MathIssue(
-                        fragment.offset + cursor,
-                        "GHM020",
-                        r"\tag is only allowed in display math",
-                    )
-                )
             cursor = command_end
             continue
         if next_char not in " \t":

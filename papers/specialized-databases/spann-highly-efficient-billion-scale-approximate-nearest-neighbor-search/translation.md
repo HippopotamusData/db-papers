@@ -85,7 +85,7 @@ $$
 \lambda\sum _ {i=1}^{N}\left(\sum _ {l=1}^{|X|}h _ {li}-\frac{|X|}{N}\right)^2,
 \quad
 \text{s.t. }\sum _ {i=1}^{N}h _ {li}=1.
-\tag{1}
+\qquad \text{(1)}
 $$
 
 其中， $C\in\mathbb{R}^{N\times m}$ 表示质心， $H\in\lbrace{}0,1\rbrace^{|X|\times N}$ 表示聚类分配， $\sum _ {l=1}^{|X|}h _ {li}$ 是分配给第 $i$ 个簇的向量数，即 $|X_i|$； $\lambda$ 是聚类约束与平衡约束之间的权衡超参数。
@@ -115,7 +115,7 @@ x\in X _ {ij}
 \le \cdots
 \le \mathrm{Dist}(x,c _ {iK}).
 \end{aligned}
-\tag{2}
+\qquad \text{(2)}
 $$
 
 ![图 4：闭包聚类分配](assets/figure-4.png)
@@ -145,7 +145,7 @@ q\xrightarrow{\mathrm{search}}X _ {ij}
 \le \cdots
 \le \mathrm{Dist}(q,c _ {iK}).
 \end{aligned}
-\tag{3}
+\qquad \text{(3)}
 $$
 
 通过进一步减少最近 $K$ 个倒排列表中不必要的列表访问，我们能够显著降低查询延迟，同时更合理、有效地使用资源，从而维持高召回率。

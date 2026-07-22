@@ -155,9 +155,29 @@ y &= 2
         text = r"正文 $\begin{aligned}x&=1\end{aligned}$。"
         self.assertEqual(self.codes(text), ["GHM020", "GHM020"])
 
-    def test_rejects_contextually_invalid_tag_and_char(self) -> None:
-        text = r'正文 $x\tag{1}$、 $\char{nonsense}$ 与 $\char"10FFFF{}$。'
-        self.assertEqual(self.codes(text), ["GHM020", "GHM020", "GHM020"])
+    def test_rejects_tag_in_inline_and_display_math(self) -> None:
+        text = "正文 $x\\tag{1}$。\n\n$$\ny=1\\tag{2.1}\n$$\n"
+        issues = validate_text(text)
+        self.assertEqual([issue.code for issue in issues], ["GHM020", "GHM020"])
+        self.assertTrue(all(r"\qquad \text{(2.1)}" in issue.message for issue in issues))
+
+    def test_accepts_portable_text_equation_numbers(self) -> None:
+        text = r"""$$
+x=1 \qquad \text{(1)}
+$$
+
+$$
+\begin{aligned}
+x &= 1 \\
+y &= 2
+\end{aligned}\qquad \text{(2.1)}
+$$
+"""
+        self.assertEqual(self.codes(text), [])
+
+    def test_rejects_contextually_invalid_char(self) -> None:
+        text = r'正文 $\char{nonsense}$ 与 $\char"10FFFF{}$。'
+        self.assertEqual(self.codes(text), ["GHM020", "GHM020"])
 
     def test_rejects_char_even_for_previously_allowed_literal_codes(self) -> None:
         text = r'正文 $\char"005F{}$、 $\char"0025{}$ 与 $\char"0023{}$。'

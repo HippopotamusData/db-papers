@@ -285,7 +285,7 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             decode_waiver_records(encode_waiver_records(first_record)),
             first_record,
         )
-        self.assertEqual(current_record["resources"]["evidence_version"], 3)
+        self.assertEqual(current_record["resources"]["evidence_version"], 4)
         self.assertEqual(
             current_record["resources"]["findings"],
             first_record["resources"]["findings"],
@@ -354,8 +354,12 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             "lo->10, 2->2, l->1"
         )
 
-        first_record = build_waiver_records({"resources": [first]})
-        reordered_record = build_waiver_records({"resources": [reordered]})
+        first_record = build_waiver_records(
+            {"resources": [first]}, evidence_versions={"resources": 3}
+        )
+        reordered_record = build_waiver_records(
+            {"resources": [reordered]}, evidence_versions={"resources": 3}
+        )
 
         self.assertEqual(first_record["resources"]["evidence_version"], 3)
         self.assertEqual(
@@ -386,7 +390,8 @@ class AcceptanceEvidenceTests(unittest.TestCase):
 
     def test_f1_split_reference_recovery_is_bound_to_all_24_entries(self) -> None:
         record = build_waiver_records(
-            {"resources": [self.f1_numeric_recovery_candidate()]}
+            {"resources": [self.f1_numeric_recovery_candidate()]},
+            evidence_versions={"resources": 3},
         )["resources"]
 
         self.assertEqual(record["evidence_version"], 3)
@@ -427,7 +432,10 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             with self.subTest(candidate=candidate), self.assertRaisesRegex(
                 ValueError, "unknown resources waiver candidate"
             ):
-                build_waiver_records({"resources": [candidate]})
+                build_waiver_records(
+                    {"resources": [candidate]},
+                    evidence_versions={"resources": 3},
+                )
 
     def test_numeric_bibliography_recovery_v3_accepts_real_scan_aliases(
         self,
@@ -438,7 +446,10 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             "l->1, lo->10, is->15"
         )
 
-        record = build_waiver_records({"resources": [candidate]})["resources"]
+        record = build_waiver_records(
+            {"resources": [candidate]},
+            evidence_versions={"resources": 3},
+        )["resources"]
 
         self.assertIn(
             "source-reference-marker-content-mapping:l:1",
@@ -468,6 +479,70 @@ class AcceptanceEvidenceTests(unittest.TestCase):
                     evidence_versions={"resources": version},
                 )["resources"]
                 self.assertEqual(record["fingerprint"], fingerprint)
+
+    def test_hierarchical_equation_number_is_v4_item_bound(self) -> None:
+        candidate = (
+            "RISK: source equation (2.1) has no translation-side "
+            "display/formula candidate"
+        )
+
+        record = build_waiver_records({"resources": [candidate]})["resources"]
+
+        self.assertEqual(record["evidence_version"], 4)
+        self.assertEqual(record["findings"], ["missing-display-equation:2.1"])
+        self.assertEqual(
+            record["fingerprint"],
+            "6adc5ecbb158df420ee50a85c01268c232f2b86466fb145244f23c5a51b2a6c9",
+        )
+
+    def test_frozen_v3_integer_equation_record_remains_valid(self) -> None:
+        candidate = (
+            "RISK: source equation (2) has no translation-side "
+            "display/formula candidate"
+        )
+        record = build_waiver_records(
+            {"resources": [candidate]},
+            evidence_versions={"resources": 3},
+        )
+
+        self.assertEqual(record["resources"]["evidence_version"], 3)
+        self.assertEqual(validate_waiver_records(record), record)
+        self.assertEqual(
+            record["resources"]["findings"], ["missing-display-equation:2"]
+        )
+
+    def test_dotted_equation_is_unknown_to_v3_and_compare_upgrades_to_v4(
+        self,
+    ) -> None:
+        integer_candidate = (
+            "RISK: source equation (2) has no translation-side "
+            "display/formula candidate"
+        )
+        dotted_candidate = (
+            "RISK: source equation (2.1) has no translation-side "
+            "display/formula candidate"
+        )
+        recorded = build_waiver_records(
+            {"resources": [integer_candidate]},
+            evidence_versions={"resources": 3},
+        )
+
+        with self.assertRaisesRegex(
+            ValueError, "unknown resources waiver candidate"
+        ):
+            build_waiver_records(
+                {"resources": [dotted_candidate]},
+                evidence_versions={"resources": 3},
+            )
+
+        observed = acceptance_evidence.build_observed_waiver_records_for_compare(
+            recorded,
+            {"resources": [dotted_candidate]},
+        )
+        self.assertEqual(observed["resources"]["evidence_version"], 4)
+        _reviewed, mismatches = compare_waiver_records(recorded, observed)
+        self.assertEqual(len(mismatches), 1)
+        self.assertTrue(mismatches[0].startswith("changed:resources:"))
 
     def test_v1_numeric_ocr_mappings_do_not_use_author_key_bijection(self) -> None:
         candidates = [
@@ -545,7 +620,7 @@ class AcceptanceEvidenceTests(unittest.TestCase):
                 {"abridgement": [candidate]},
                 evidence_versions={"abridgement": version},
             )
-            for version in (1, 2, 3)
+            for version in (1, 2, 3, 4)
         }
 
         with (
@@ -616,7 +691,7 @@ class AcceptanceEvidenceTests(unittest.TestCase):
                 self.assertEqual(main(), 0)
         self.assertTrue(stdout.getvalue().startswith("reviewed:resources:"))
 
-    def test_compare_cli_reports_current_v3_recovery_as_changed_from_f1_v1(
+    def test_compare_cli_reports_current_v4_recovery_as_changed_from_f1_v1(
         self,
     ) -> None:
         old_candidates = [
@@ -631,7 +706,7 @@ class AcceptanceEvidenceTests(unittest.TestCase):
             "ca23b69d2401f2d36ffc874119618e07fb2874fb2a0366789c23f693bb69b7e2"
         )
         new_fingerprint = (
-            "8cd5f1d10f915e3515282a9a7076ca7105d4940b57e3e6eacb7998d4753222f8"
+            "4de007761dd4e125d3b3d10554f602eb0962c01465478b2edcd6bc5f9b8cb84f"
         )
         self.assertEqual(records["resources"]["fingerprint"], old_fingerprint)
 

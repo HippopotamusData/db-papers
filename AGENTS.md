@@ -33,7 +33,7 @@ Before acting, read only the document or documents listed for the task:
 | Classify or enrich reading metadata | `docs/workflows/metadata.md` |
 | Score a paper's reading value | `docs/workflows/rating.md` |
 | Create or repair a translation | `docs/workflows/translate.md`, `docs/translation-policy.md` |
-| Coordinate a Codex translation batch with direct subagents | `docs/workflows/batch-translate.md`, `docs/translation-policy.md` |
+| Coordinate a Codex translation or authorized historical-repair batch with direct subagents | `docs/workflows/batch-translate.md`, `docs/workflows/review.md`, `docs/translation-policy.md` |
 | Audit/review a translation (read-only by default) | `docs/workflows/review.md`, `docs/translation-policy.md` |
 | Review-and-repair or accept a translation (explicit write authorization) | `docs/workflows/review.md`, `docs/translation-policy.md` |
 | Change required metadata fields | `docs/workflows/maintain.md`, `docs/workflows/metadata.md` |

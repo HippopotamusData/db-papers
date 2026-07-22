@@ -614,7 +614,7 @@ class PapersTests(unittest.TestCase):
         self.assertEqual(receipt["waivers"], waiver_records)
         self.assertEqual(
             receipt["waivers"]["resources"]["evidence_version"],
-            3,
+            4,
         )
         self.assertEqual(
             receipt["identity_assurance"],

@@ -1638,11 +1638,28 @@ class ResourceValidationTests(unittest.TestCase):
         self.assertFalse(errors)
         self.assertTrue(any("non-numbered bibliography" in issue for issue in risks))
 
-    def test_latex_tag_is_an_equation_number_candidate(self) -> None:
+    def test_portable_text_number_is_an_equation_number_candidate(self) -> None:
         source = "score = left + right                                      (5)\n"
-        translation = "$$\nscore = left + right \\tag{5}\n$$\n"
+        translation = "$$\nscore = left + right \\qquad \\text{(5)}\n$$\n"
         _errors, risks = source_coverage_findings(source, translation, False)
         self.assertFalse(any("equation (5)" in issue for issue in risks))
+
+    def test_dotted_portable_text_number_is_an_equation_number_candidate(self) -> None:
+        source = "score = left + right                                    (2.1)\n"
+        translation = "$$\nscore = left + right \\qquad \\text{(2.1)}\n$$\n"
+        _errors, risks = source_coverage_findings(source, translation, False)
+        self.assertFalse(any("equation (2.1)" in issue for issue in risks))
+
+    def test_missing_dotted_equation_is_a_resource_candidate(self) -> None:
+        source = "score = left + right                                    (2.1)\n"
+        _errors, risks = source_coverage_findings(source, "没有对应公式。\n", False)
+        self.assertTrue(any("equation (2.1)" in issue for issue in risks))
+
+    def test_dotted_equation_cross_reference_is_not_a_formula_candidate(self) -> None:
+        source = "score = left + right                                    (2.1)\n"
+        translation = "计算过程见公式 (2.1)。\n"
+        _errors, risks = source_coverage_findings(source, translation, False)
+        self.assertTrue(any("equation (2.1)" in issue for issue in risks))
 
     def test_equation_cross_reference_is_not_a_formula_candidate(self) -> None:
         source = "score = left + right                                      (5)\n"
