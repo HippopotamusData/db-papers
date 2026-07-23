@@ -26,7 +26,7 @@
 | `reading_status` | `source.pdf` | `translation.md` | 进入条件 |
 | --- | --- | --- | --- |
 | `unavailable` | 无 | 无 | 当前没有可读原文 |
-| `source_only` | 有 | 无 | 已验证原文，尚无译文 |
+| `source_only` | 有 | 无 | 已通过 ingest 的原文身份与可读性闭环，尚无译文 |
 | `draft` | 有 | 有 | 译文尚未逐节验收 |
 | `translated` | 有 | 有 | 验收快照与当前文件匹配；新的或重新验收的条目还必须有独立 review receipt，且受审 title/authors/year/source_url 未漂移 |
 | `skipped` | 有 | 无 | 项目策略已有对应 reason code |
@@ -39,7 +39,7 @@
 
 不要添加 venue、DOI/arXiv 独立字段、文档类型、PDF 页数、摘要、版权、下载记录、审校说明、评分证据或自由备注。确有跨论文的新需求时转入 `docs/workflows/maintain.md`，不要只为一篇论文增加字段。
 
-状态迁移由对应工作流拥有：ingest 负责 `unavailable -> source_only`，translate 负责 `source_only -> draft`，review/accept 负责 `draft -> translated`；源文或译文实质变化及复审失败时先 `translated -> draft`。页数或范围策略变化时，由 maintain 同步 `source_only <-> skipped` 与项目级 reason code。
+状态迁移由对应工作流拥有：ingest 在 `source-check` 与人工来源身份核对都通过后负责 `unavailable -> source_only`，translate 负责 `source_only -> draft`，review/accept 负责 `draft -> translated`；源文或译文实质变化及复审失败时先 `translated -> draft`。translate 只检测页数超限并停止；页数或范围策略变化时，由 maintain 在同一变更中同步 `source_only <-> skipped` 与项目级 reason code，单篇译者不得单独修改共享策略。
 
 ## 验证
 

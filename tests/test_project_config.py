@@ -15,10 +15,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from acceptance_evidence import build_waiver_records  # noqa: E402
 import project_config  # noqa: E402
 from project_config import (  # noqa: E402
-    HISTORICAL_V2_ENTRY_FINGERPRINTS,
-    LEGACY_RECEIPTLESS_ENTRY_FINGERPRINTS,
     REVIEW_GATE_STATIC_PATHS,
     REVIEW_IDENTITY_ASSURANCE,
+    REVIEW_RECEIPT_SCHEMA_VERSION,
     REQUIRED_REVIEW_CHECKS,
     assets_manifest_sha256,
     configured_paths,
@@ -31,12 +30,48 @@ from project_config import (  # noqa: E402
     review_receipt_fingerprint,
     skip_reason,
     validate_review_receipt,
-    validate_repository_legacy_freeze,
 )
 
 
+def review_receipt_v2(**updates: object) -> dict[str, object]:
+    receipt: dict[str, object] = {
+        "schema_version": 2,
+        "paper_id": "sample",
+        "source_sha256": "0" * 64,
+        "translation_sha256": "1" * 64,
+        "assets_manifest_sha256": "2" * 64,
+        "review_metadata_sha256": "4" * 64,
+        "review_action": "repair-review",
+        "translator": "codex:/root/translator",
+        "reviewer": "codex:/root/reviewer",
+        "review_base_sha": "6" * 40,
+        "review_head_sha": "7" * 40,
+        "findings": ["All review dimensions passed against source.pdf."],
+        "authorial_voice": {
+            "source_valid_items": 2,
+            "verified_items": 2,
+            "shared_subject_merges": 1,
+        },
+        "waivers": {},
+    }
+    receipt.update(updates)
+    receipt["fingerprint"] = review_receipt_fingerprint(receipt)
+    return receipt
+
+
 class ProjectConfigTests(unittest.TestCase):
+    def test_yaml_loader_rejects_symlinks(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / "outside.yaml"
+            target.write_text("value: outside\n", encoding="utf-8")
+            linked = root / "paper.yaml"
+            linked.symlink_to(target)
+            with self.assertRaisesRegex(ValueError, "non-symlink"):
+                project_config.load_yaml(linked)
+
     def test_review_gate_manifest_binds_active_review_procedure(self) -> None:
+        self.assertIn("AGENTS.md", REVIEW_GATE_STATIC_PATHS)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             for relative in REVIEW_GATE_STATIC_PATHS:
@@ -46,14 +81,23 @@ class ProjectConfigTests(unittest.TestCase):
             scripts = root / "scripts"
             scripts.mkdir(exist_ok=True)
             (scripts / "validator.py").write_text("RULE = 1\n", encoding="utf-8")
+            nested = scripts / "helpers/rule.py"
+            nested.parent.mkdir()
+            nested.write_text("RULE = 2\n", encoding="utf-8")
 
             initial = review_gate_manifest_sha256(root)
+            nested.write_text("RULE = 3\n", encoding="utf-8")
+            nested_changed = review_gate_manifest_sha256(root)
+            self.assertNotEqual(initial, nested_changed)
             review_workflow = root / "docs/workflows/review.md"
             review_workflow.write_text(
                 review_workflow.read_text(encoding="utf-8") + "changed\n",
                 encoding="utf-8",
             )
-            self.assertNotEqual(initial, review_gate_manifest_sha256(root))
+            self.assertNotEqual(
+                nested_changed,
+                review_gate_manifest_sha256(root),
+            )
 
     def test_repository_policy_and_taxonomy_match_their_schemas(self) -> None:
         paths = configured_paths(ROOT)
@@ -61,33 +105,48 @@ class ProjectConfigTests(unittest.TestCase):
         self.assertEqual(policy["default_max_source_pages"], 60)
         load_taxonomy(ROOT / "config/taxonomy.yaml")
         acceptance = load_acceptance_ledger(paths["acceptance_ledger"])
-        retired_ids = set(
-            acceptance["retired_legacy_entry_fingerprints"]
-        )
-        historical_ids = {
-            paper_id
-            for paper_id, entry in acceptance["entries"].items()
-            if entry["reviewer"] == "historical-v2-reviewer-unrecorded"
-        }
-        self.assertEqual(
-            historical_ids,
-            set(HISTORICAL_V2_ENTRY_FINGERPRINTS) - retired_ids,
-        )
-        receiptless_ids = {
-            paper_id
-            for paper_id, entry in acceptance["entries"].items()
-            if "review_receipt" not in entry
-        }
-        self.assertEqual(
-            receiptless_ids,
-            set(LEGACY_RECEIPTLESS_ENTRY_FINGERPRINTS) - retired_ids,
-        )
+        self.assertEqual(acceptance["schema_version"], 5)
+        self.assertEqual(len(acceptance["entries"]), 144)
         self.assertTrue(
             all(
-                "review_receipt" in acceptance["entries"][paper_id]
-                for paper_id in retired_ids
+                receipt["paper_id"] == paper_id
+                for paper_id, receipt in acceptance["entries"].items()
             )
         )
+        legacy_empty_findings = {
+            paper_id
+            for paper_id, receipt in acceptance["entries"].items()
+            if receipt["schema_version"] == 1 and not receipt["findings"]
+        }
+        self.assertEqual(
+            legacy_empty_findings,
+            {
+                "detecting-optimization-bugs-non-optimizing-reference-engine",
+                "dynamo-amazon-highly-available-key-value-store",
+                "efficiently-compiling-efficient-query-plans-modern-hardware",
+                "llvm-compilation-framework-lifelong-program-analysis-transformation",
+                "low-latency-compilation-sql-queries-machine-code",
+                "runtime-code-generation-cloudera-impala",
+            },
+        )
+
+    def test_taxonomy_reader_text_must_be_trimmed_single_line(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "taxonomy.yaml"
+            path.write_text(
+                "schema_version: 1\n"
+                "areas:\n"
+                "  query-processing:\n"
+                "    label_zh: ' 查询处理'\n"
+                "    description: description\n"
+                "topics:\n"
+                "  query-execution:\n"
+                "    label_zh: 查询执行\n"
+                "    description: description\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "trimmed"):
+                load_taxonomy(path)
 
     def test_page_exception_requires_authorization_and_higher_limit(self) -> None:
         invalid_records = (
@@ -137,11 +196,11 @@ class ProjectConfigTests(unittest.TestCase):
             acceptance = root / "acceptance.yaml"
             acceptance.write_text(
                 "schema_version: true\n"
-                "retired_legacy_entry_fingerprints: {}\n"
+                "review_snapshots: {}\n"
                 "entries: {}\n",
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(ValueError, "must be integer 4"):
+            with self.assertRaisesRegex(ValueError, "must be integer 5"):
                 load_acceptance_ledger(acceptance)
 
             taxonomy = root / "taxonomy.yaml"
@@ -152,27 +211,26 @@ class ProjectConfigTests(unittest.TestCase):
                 load_taxonomy(taxonomy)
 
     def test_acceptance_rejects_unknown_action_and_waiver(self) -> None:
-        base = (
-            "schema_version: 4\n"
-            "retired_legacy_entry_fingerprints: {}\n"
-            "entries:\n  sample:\n"
-            "    source_sha256: '" + "0" * 64 + "'\n"
-            "    translation_sha256: '" + "1" * 64 + "'\n"
-            "    assets_manifest_sha256: '" + "2" * 64 + "'\n"
-            "    reviewer: reviewer@example.com\n"
-            "    review_base_sha: '" + "3" * 40 + "'\n"
+        invalid_updates = (
+            {"review_action": "anything-goes"},
+            {"review_action": "legacy-migration"},
+            {"waivers": {"arbitrary-typo-code": {}}},
         )
-        invalid_entries = (
-            "    review_action: anything-goes\n",
-            "    review_action: legacy-migration\n",
-            "    review_action: section-review\n    waivers:\n      arbitrary-typo-code:\n        fingerprint: '"
-            + "4" * 64
-            + "'\n        candidates: [candidate]\n",
-        )
-        for entry in invalid_entries:
-            with self.subTest(entry=entry), tempfile.TemporaryDirectory() as temporary:
+        for updates in invalid_updates:
+            with self.subTest(updates=updates), tempfile.TemporaryDirectory() as temporary:
                 path = Path(temporary) / "acceptance.yaml"
-                path.write_text(base + entry, encoding="utf-8")
+                receipt = review_receipt_v2(**updates)
+                path.write_text(
+                    yaml.safe_dump(
+                        {
+                            "schema_version": 5,
+                            "review_snapshots": {},
+                            "entries": {"sample": receipt},
+                        },
+                        sort_keys=False,
+                    ),
+                    encoding="utf-8",
+                )
                 with self.assertRaises(ValueError):
                     load_acceptance_ledger(path)
 
@@ -183,43 +241,33 @@ class ProjectConfigTests(unittest.TestCase):
         ):
             with self.subTest(reviewer=reviewer), tempfile.TemporaryDirectory() as temporary:
                 path = Path(temporary) / "acceptance.yaml"
+                receipt = review_receipt_v2(reviewer=reviewer)
                 path.write_text(
-                    "schema_version: 4\n"
-                    "retired_legacy_entry_fingerprints: {}\n"
-                    "entries:\n  sample:\n"
-                    f"    source_sha256: '{'0' * 64}'\n"
-                    f"    translation_sha256: '{'1' * 64}'\n"
-                    f"    assets_manifest_sha256: '{'2' * 64}'\n"
-                    "    review_action: repair-review\n"
-                    f"    reviewer: {reviewer}\n"
-                    f"    review_base_sha: '{'3' * 40}'\n",
+                    yaml.safe_dump(
+                        {
+                            "schema_version": 5,
+                            "review_snapshots": {},
+                            "entries": {"sample": receipt},
+                        },
+                        sort_keys=False,
+                    ),
                     encoding="utf-8",
                 )
                 with self.assertRaises(ValueError):
                     load_acceptance_ledger(path)
 
-    def test_acceptance_v4_rejects_unfrozen_receiptless_entry(self) -> None:
+    def test_acceptance_v5_rejects_receiptless_entry(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "acceptance.yaml"
-            candidate = (
-                "RISK: source Figure 1 has no formal translation-side payload candidate"
-            )
             path.write_text(
                 yaml.safe_dump(
                     {
-                        "schema_version": 4,
-                        "retired_legacy_entry_fingerprints": {},
+                        "schema_version": 5,
+                        "review_snapshots": {},
                         "entries": {
                             "sample": {
+                                "schema_version": 2,
                                 "source_sha256": "0" * 64,
-                                "translation_sha256": "1" * 64,
-                                "assets_manifest_sha256": "2" * 64,
-                                "review_action": "repair-review",
-                                "reviewer": "reviewer@example.com",
-                                "review_base_sha": "3" * 40,
-                                "waivers": build_waiver_records(
-                                    {"resources": [candidate]}
-                                ),
                             }
                         },
                     },
@@ -227,83 +275,37 @@ class ProjectConfigTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(ValueError, "receiptless legacy evidence"):
+            with self.assertRaisesRegex(ValueError, "missing keys"):
                 load_acceptance_ledger(path)
 
-    def test_repository_legacy_retirement_requires_exact_fingerprint_and_receipt(
-        self,
-    ) -> None:
-        frozen = "a" * 64
-        data = {
-            "retired_legacy_entry_fingerprints": {"sample": frozen},
-            "entries": {
-                "sample": {
-                    "reviewer": "human:reviewer@example.com",
-                    "review_receipt": {},
-                }
-            },
-        }
-        with patch(
-            "project_config.LEGACY_RECEIPTLESS_ENTRY_FINGERPRINTS",
-            {"sample": frozen},
-        ), patch(
-            "project_config.HISTORICAL_V2_ENTRY_FINGERPRINTS",
-            {},
-        ):
-            validate_repository_legacy_freeze(data, "ledger")
-
-            data["retired_legacy_entry_fingerprints"]["sample"] = "b" * 64
-            with self.assertRaisesRegex(
-                ValueError,
-                "changed retired legacy fingerprints",
-            ):
-                validate_repository_legacy_freeze(data, "ledger")
-
-            data["retired_legacy_entry_fingerprints"]["sample"] = frozen
-            data["entries"]["sample"].pop("review_receipt")
-            with self.assertRaisesRegex(
-                ValueError,
-                "retired legacy entries without review receipts",
-            ):
-                validate_repository_legacy_freeze(data, "ledger")
-
-    def test_content_bound_review_receipt_requires_independent_complete_review(self) -> None:
-        receipt = {
-            "schema_version": 1,
-            "paper_id": "sample",
-            "source_sha256": "0" * 64,
-            "translation_sha256": "1" * 64,
-            "assets_manifest_sha256": "2" * 64,
-            "translation_policy_sha256": "3" * 64,
-            "review_metadata_sha256": "4" * 64,
-            "review_gate_manifest_sha256": "5" * 64,
-            "review_action": "repair-review",
-            "translator": "codex:/root/translator",
-            "reviewer": "codex:/root/reviewer",
-            "identity_assurance": REVIEW_IDENTITY_ASSURANCE,
-            "review_base_sha": "6" * 40,
-            "checks": sorted(REQUIRED_REVIEW_CHECKS),
-            "findings": ["translation.md:10 repaired a source-backed omission"],
-            "waivers": {},
-        }
-        receipt["fingerprint"] = review_receipt_fingerprint(receipt)
-        entry = {
-            "source_sha256": receipt["source_sha256"],
-            "translation_sha256": receipt["translation_sha256"],
-            "assets_manifest_sha256": receipt["assets_manifest_sha256"],
-            "review_action": receipt["review_action"],
-            "reviewer": receipt["reviewer"],
-            "review_base_sha": receipt["review_base_sha"],
-            "review_receipt": receipt,
-        }
+    def test_acceptance_v5_rejects_legacy_retirement_top_level(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "acceptance.yaml"
             path.write_text(
                 yaml.safe_dump(
                     {
-                        "schema_version": 4,
+                        "schema_version": 5,
+                        "review_snapshots": {},
                         "retired_legacy_entry_fingerprints": {},
-                        "entries": {"sample": entry},
+                        "entries": {},
+                    },
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "unknown keys"):
+                load_acceptance_ledger(path)
+
+    def test_content_bound_review_receipt_requires_independent_complete_review(self) -> None:
+        receipt = review_receipt_v2()
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "acceptance.yaml"
+            path.write_text(
+                yaml.safe_dump(
+                    {
+                        "schema_version": 5,
+                        "review_snapshots": {},
+                        "entries": {"sample": receipt},
                     },
                     sort_keys=False,
                 ),
@@ -311,21 +313,19 @@ class ProjectConfigTests(unittest.TestCase):
             )
             loaded = load_acceptance_ledger(path)
             self.assertEqual(
-                loaded["entries"]["sample"]["review_receipt"]["translator"],
+                loaded["entries"]["sample"]["translator"],
                 "codex:/root/translator",
             )
 
             same_identity = dict(receipt)
             same_identity["reviewer"] = same_identity["translator"]
             same_identity["fingerprint"] = review_receipt_fingerprint(same_identity)
-            entry["reviewer"] = same_identity["reviewer"]
-            entry["review_receipt"] = same_identity
             path.write_text(
                 yaml.safe_dump(
                     {
-                        "schema_version": 4,
-                        "retired_legacy_entry_fingerprints": {},
-                        "entries": {"sample": entry},
+                        "schema_version": 5,
+                        "review_snapshots": {},
+                        "entries": {"sample": same_identity},
                     },
                     sort_keys=False,
                 ),
@@ -335,6 +335,18 @@ class ProjectConfigTests(unittest.TestCase):
                 ValueError, "translator and reviewer must be different"
             ):
                 load_acceptance_ledger(path)
+
+    def test_v2_findings_are_bounded_single_line_summaries(self) -> None:
+        invalid_findings = (
+            ["first line\nsecond line"],
+            ["x" * 501],
+            [f"finding {index}" for index in range(9)],
+        )
+        for findings in invalid_findings:
+            with self.subTest(findings=len(findings)):
+                receipt = review_receipt_v2(findings=findings)
+                with self.assertRaisesRegex(ValueError, "at most 8 single-line"):
+                    validate_review_receipt(receipt, "receipt")
 
     def test_v1_receipt_uses_frozen_schema_rules(self) -> None:
         metadata = {
@@ -391,7 +403,7 @@ class ProjectConfigTests(unittest.TestCase):
 
     def test_unknown_review_receipt_schema_fails_closed(self) -> None:
         with self.assertRaisesRegex(ValueError, "supported integer version"):
-            validate_review_receipt({"schema_version": 2}, "receipt")
+            validate_review_receipt({"schema_version": 3}, "receipt")
 
     def test_assets_manifest_digest_changes_with_same_path_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

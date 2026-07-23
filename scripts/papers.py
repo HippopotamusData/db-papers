@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 from collections import Counter
+from datetime import date
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any
@@ -44,7 +45,6 @@ from project_config import (
     SOURCE_FILE,
     TARGET_LANGUAGE,
     TRANSLATION_FILE,
-    acceptance_entry_fingerprint,
     assets_manifest,
     assets_manifest_sha256,
     configured_paths,
@@ -54,6 +54,7 @@ from project_config import (
     load_taxonomy,
     load_yaml,
     load_yaml_text,
+    is_trimmed_single_line,
     review_receipt_fingerprint,
     review_gate_manifest_sha256,
     review_metadata_sha256,
@@ -430,6 +431,42 @@ def add_error(errors: list[str], path: Path, message: str) -> None:
     errors.append(f"{path.relative_to(ROOT)}: {message}")
 
 
+def is_absolute_http_url(value: Any) -> bool:
+    if not is_trimmed_single_line(value):
+        return False
+    if any(
+        character.isspace()
+        or ord(character) < 0x20
+        or character in "<>\\"
+        for character in value
+    ):
+        return False
+    try:
+        parsed = urlparse(value)
+        hostname = parsed.hostname
+        parsed.port
+        username = parsed.username
+        password = parsed.password
+    except ValueError:
+        return False
+    return (
+        parsed.scheme in {"http", "https"}
+        and bool(hostname)
+        and username is None
+        and password is None
+    )
+
+
+def is_regular_non_symlink(path: Path) -> bool:
+    return path.is_file() and not path.is_symlink()
+
+
+def file_contract_matches(path: Path, expected: bool) -> bool:
+    if expected:
+        return is_regular_non_symlink(path)
+    return not path.exists() and not path.is_symlink()
+
+
 def calculated_rating_score(rating: dict[str, Any]) -> Decimal:
     raw_score = sum(
         Decimal(rating[dimension]) * weight
@@ -447,7 +484,14 @@ def calculated_rating_score(rating: dict[str, Any]) -> Decimal:
     return rounded
 
 
-def validate_rating(errors: list[str], path: Path, rating: Any) -> None:
+def validate_rating(
+    errors: list[str],
+    path: Path,
+    rating: Any,
+    year: Any,
+    *,
+    current_year: int | None = None,
+) -> None:
     if not isinstance(rating, dict):
         add_error(errors, path, "rating must be a mapping")
         return
@@ -487,6 +531,18 @@ def validate_rating(errors: list[str], path: Path, rating: Any) -> None:
                 path,
                 f"rating.score must equal the weighted score {expected:.1f}",
             )
+        effective_year = date.today().year if current_year is None else current_year
+        if (
+            type(year) is int
+            and effective_year - year < 5
+            and rating["durability"] > 4
+        ):
+            add_error(
+                errors,
+                path,
+                "rating.durability must not exceed 4 for papers published "
+                "less than five years ago",
+            )
 
 
 def parse_translation_frontmatter(path: Path) -> dict[str, Any]:
@@ -497,10 +553,7 @@ def parse_translation_frontmatter(path: Path) -> dict[str, Any]:
         frontmatter, _body = text[4:].split("\n---\n", 1)
     except ValueError as exc:
         raise ValueError("translation.md frontmatter is not closed") from exc
-    value = yaml.safe_load(frontmatter)
-    if not isinstance(value, dict):
-        raise ValueError("translation.md frontmatter must be a mapping")
-    return value
+    return load_yaml_text(frontmatter, f"{path}: frontmatter")
 
 
 def validate(paper_id: str | None = None) -> int:
@@ -540,8 +593,8 @@ def validate(paper_id: str | None = None) -> int:
 
     acceptance_entries = acceptance["entries"]
     review_bases = {
-        entry["review_base_sha"]
-        for configured_id, entry in acceptance_entries.items()
+        receipt["review_base_sha"]
+        for configured_id, receipt in acceptance_entries.items()
         if paper_id is None or configured_id == paper_id
     }
     for review_base_sha in sorted(review_bases):
@@ -551,6 +604,20 @@ def validate(paper_id: str | None = None) -> int:
             errors.append(
                 f"{paths['acceptance_ledger'].relative_to(ROOT)}: "
                 f"invalid review_base_sha {review_base_sha}: {exc}"
+            )
+    review_heads = {
+        receipt["review_head_sha"]
+        for configured_id, receipt in acceptance_entries.items()
+        if receipt["schema_version"] >= 2
+        and (paper_id is None or configured_id == paper_id)
+    }
+    for review_head_sha in sorted(review_heads):
+        try:
+            validate_review_base_commit(ROOT, review_head_sha)
+        except (OSError, ValueError) as exc:
+            errors.append(
+                f"{paths['acceptance_ledger'].relative_to(ROOT)}: "
+                f"invalid review_head_sha {review_head_sha}: {exc}"
             )
 
     if paper_id is None:
@@ -584,7 +651,7 @@ def validate(paper_id: str | None = None) -> int:
         if unknown:
             add_error(errors, path, f"unknown keys: {', '.join(sorted(unknown))}")
         if "rating" in data:
-            validate_rating(errors, path, data["rating"])
+            validate_rating(errors, path, data["rating"], data.get("year"))
 
         slug = path.parent.name
         area = path.parent.parent.name
@@ -592,22 +659,28 @@ def validate(paper_id: str | None = None) -> int:
             add_error(errors, path, f"paper area is not registered: {area}")
         if not SLUG_RE.fullmatch(slug):
             add_error(errors, path, f"paper directory must be a kebab-case id: {slug}")
-        if not isinstance(data.get("title"), str) or not data["title"].strip():
-            add_error(errors, path, "title must be a non-empty string")
+        if not is_trimmed_single_line(data.get("title")):
+            add_error(errors, path, "title must be a trimmed, non-empty single-line string")
         authors = data.get("authors")
         if not isinstance(authors, list) or any(
-            not isinstance(author, str) or not author.strip() for author in authors
+            not is_trimmed_single_line(author) for author in authors
         ):
-            add_error(errors, path, "authors must be a list of non-empty strings")
+            add_error(
+                errors,
+                path,
+                "authors must be a list of trimmed, non-empty single-line strings",
+            )
+        elif len(authors) != len(set(authors)):
+            add_error(errors, path, "authors contains duplicates")
         year = data.get("year")
-        if year is not None and (not isinstance(year, int) or not 1800 <= year <= 2100):
+        if year is not None and (type(year) is not int or not 1800 <= year <= 2100):
             add_error(errors, path, "year must be null or an integer between 1800 and 2100")
-        if not isinstance(data.get("source_url"), str) or not data["source_url"].strip():
-            add_error(errors, path, "source_url must be a non-empty string")
-        else:
-            parsed_url = urlparse(data["source_url"])
-            if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
-                add_error(errors, path, "source_url must use an absolute HTTP(S) URL")
+        if not is_absolute_http_url(data.get("source_url")):
+            add_error(
+                errors,
+                path,
+                "source_url must be a safe absolute HTTP(S) URL on one line",
+            )
 
         topics = data.get("topics")
         if not isinstance(topics, list) or not topics:
@@ -634,20 +707,23 @@ def validate(paper_id: str | None = None) -> int:
         }
         if reading_status in expected_files:
             expect_source, expect_translation = expected_files[reading_status]
-            if source.is_file() != expect_source:
+            if not file_contract_matches(source, expect_source):
                 add_error(
                     errors,
                     path,
-                    f"reading_status={reading_status} requires {source_name}={expect_source}",
+                    f"reading_status={reading_status} requires "
+                    f"{source_name}={expect_source} as a regular non-symlink file",
                 )
-            if translation.is_file() != expect_translation:
+            if not file_contract_matches(translation, expect_translation):
                 add_error(
                     errors,
                     path,
-                    f"reading_status={reading_status} requires {translation_name}={expect_translation}",
+                    f"reading_status={reading_status} requires "
+                    f"{translation_name}={expect_translation} as a regular "
+                    "non-symlink file",
                 )
 
-        if translation.is_file():
+        if is_regular_non_symlink(translation):
             try:
                 frontmatter = parse_translation_frontmatter(translation)
             except (OSError, ValueError, yaml.YAMLError) as exc:
@@ -672,46 +748,38 @@ def validate(paper_id: str | None = None) -> int:
         if reading_status != "skipped" and paper_skip_reason:
             add_error(errors, path, "project-level skipped reason exists but reading_status is not skipped")
 
-        ledger_entry = acceptance["entries"].get(slug)
+        receipt = acceptance["entries"].get(slug)
         if reading_status == "translated":
-            if not ledger_entry:
+            if not receipt:
                 add_error(errors, path, "reading_status=translated requires an acceptance-ledger entry")
-            elif source.is_file() and translation.is_file():
-                if ledger_entry["reviewer"] == "pending-v3-re-review":
-                    add_error(
-                        errors,
-                        path,
-                        "pending-v3-re-review cannot support reading_status=translated",
-                    )
+            elif is_regular_non_symlink(source) and is_regular_non_symlink(translation):
                 current_source_hash = sha256_file(source)
                 current_translation_hash = sha256_file(translation)
                 current_assets_hash = assets_manifest_sha256(path.parent, ROOT)
-                if ledger_entry["source_sha256"] != current_source_hash:
+                if receipt["source_sha256"] != current_source_hash:
                     add_error(errors, path, "source.pdf changed after acceptance; set status to draft and review again")
-                if ledger_entry["translation_sha256"] != current_translation_hash:
+                if receipt["translation_sha256"] != current_translation_hash:
                     add_error(errors, path, "translation.md changed after acceptance; set status to draft and review again")
-                if ledger_entry["assets_manifest_sha256"] != current_assets_hash:
+                if receipt["assets_manifest_sha256"] != current_assets_hash:
                     add_error(
                         errors,
                         path,
                         "assets changed after acceptance; set status to draft and review again",
                     )
-                receipt = ledger_entry.get("review_receipt")
-                if receipt:
-                    if (
-                        receipt["review_metadata_sha256"]
-                        != review_metadata_sha256(
-                            data,
-                            receipt["schema_version"],
-                        )
-                    ):
-                        add_error(
-                            errors,
-                            path,
-                            "title/authors/year/source_url changed after review; "
-                            "set status to draft and review again",
-                        )
-        elif ledger_entry and reading_status not in {"draft"}:
+                if (
+                    receipt["review_metadata_sha256"]
+                    != review_metadata_sha256(
+                        data,
+                        receipt["schema_version"],
+                    )
+                ):
+                    add_error(
+                        errors,
+                        path,
+                        "title/authors/year/source_url changed after review; "
+                        "set status to draft and review again",
+                    )
+        elif receipt and reading_status not in {"draft"}:
             add_error(errors, path, "acceptance-ledger entry is only allowed for translated or re-reviewing draft papers")
 
     if paper_id is None:
@@ -766,16 +834,13 @@ def review_queue(limit: int | None = None) -> int:
         if data.get("reading_status") != "translated":
             continue
         paper_id = metadata_path.parent.name
-        entry = acceptance[paper_id]
+        receipt = acceptance[paper_id]
         score = 0
         reasons: list[str] = []
-        if "review_receipt" not in entry:
-            score += 100
-            reasons.append("no-content-bound-receipt")
-        if entry["reviewer"] == "historical-v2-reviewer-unrecorded":
-            score += 50
-            reasons.append("historical-reviewer-unrecorded")
-        waivers = entry.get("waivers", {})
+        if receipt["schema_version"] == 1 and not receipt["findings"]:
+            score += 40
+            reasons.append("legacy-empty-findings")
+        waivers = receipt.get("waivers", {})
         waiver_weights = {"abridgement": 30, "listings": 20, "resources": 10}
         for category, weight in waiver_weights.items():
             if category in waivers:
@@ -831,6 +896,19 @@ def catalog_rating(data: dict[str, Any]) -> str:
     return f"{score:.1f}"
 
 
+def markdown_link_label(value: str) -> str:
+    return (
+        value.replace("\\", "\\\\")
+        .replace("[", "\\[")
+        .replace("]", "\\]")
+        .replace("|", "\\|")
+    )
+
+
+def markdown_link_destination(value: str) -> str:
+    return f"<{value.replace('<', '%3C').replace('>', '%3E')}>"
+
+
 def build_catalog() -> str:
     paths = configured_paths(ROOT)
     source_name = paths["source"].name
@@ -848,7 +926,7 @@ def build_catalog() -> str:
         "# 论文目录",
         "",
         (
-            "> 本文件由 `python3 scripts/papers.py catalog` 从各论文的 `paper.yaml` 生成，"
+            "> 本文件由 `make catalog` 从各论文的 `paper.yaml` 生成，"
             "请勿手工编辑。"
         ),
         "",
@@ -868,7 +946,8 @@ def build_catalog() -> str:
     ]
     for area, details in taxonomy["areas"].items():
         if area_counts[area]:
-            lines.append(f"| {details['label_zh']} (`{area}`) | {area_counts[area]} |")
+            area_label = markdown_link_label(details["label_zh"])
+            lines.append(f"| {area_label} (`{area}`) | {area_counts[area]} |")
 
     lines.extend(["", "## 按领域浏览"])
     area_order = {area: index for index, area in enumerate(taxonomy["areas"])}
@@ -891,7 +970,8 @@ def build_catalog() -> str:
         lines.extend(
             [
                 "",
-                f"### {details['label_zh']} (`{area}`，{len(area_records)} 篇)",
+                f"### {markdown_link_label(details['label_zh'])} "
+                f"(`{area}`，{len(area_records)} 篇)",
                 "",
                 "| 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |",
                 "| --- | --- | ---: | ---: | --- | --- |",
@@ -899,16 +979,19 @@ def build_catalog() -> str:
         )
         for path, data in area_records:
             topic_labels = "、".join(
-                taxonomy["topics"][topic]["label_zh"]
+                markdown_link_label(
+                    taxonomy["topics"][topic]["label_zh"]
+                )
                 for topic in sorted(data["topics"], key=topic_order.__getitem__)
             )
             reading_target = catalog_reading_target(path, data, source_name, translation_name)
-            title = data["title"].replace("|", "\\|")
+            title = markdown_link_label(data["title"])
             year = data["year"] if data["year"] is not None else "—"
             rating = catalog_rating(data)
             lines.append(
                 f"| [{title}]({reading_target}) | {topic_labels} | "
-                f"{year} | {rating} | {data['reading_status']} | [原文]({data['source_url']}) |"
+                f"{year} | {rating} | {data['reading_status']} | "
+                f"[原文]({markdown_link_destination(data['source_url'])}) |"
             )
 
     lines.extend(["", "## 元数据完整性", "", "| 字段 | 已确认 | 待补证据 |", "| --- | ---: | ---: |"])
@@ -921,7 +1004,7 @@ def catalog(check: bool) -> int:
     content = build_catalog()
     if check:
         if not CATALOG.exists() or CATALOG.read_text(encoding="utf-8") != content:
-            print("ERROR: CATALOG.md is stale; run `python3 scripts/papers.py catalog`.", file=sys.stderr)
+            print("ERROR: CATALOG.md is stale; run `make catalog`.", file=sys.stderr)
             return 1
         print("Catalog is current.")
         return 0
@@ -947,9 +1030,15 @@ def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str
         print("ERROR: duplicate --topic values are not allowed.", file=sys.stderr)
         return 1
     topic_order = {topic: index for index, topic in enumerate(taxonomy["topics"])}
-    parsed_url = urlparse(url.strip())
-    if not title.strip() or parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
-        print("ERROR: --title and --url must be non-empty.", file=sys.stderr)
+    if (
+        not is_trimmed_single_line(title)
+        or not is_absolute_http_url(url)
+    ):
+        print(
+            "ERROR: --title and --url must be trimmed single-line values, "
+            "and --url must be absolute HTTP(S).",
+            file=sys.stderr,
+        )
         return 1
 
     target = PAPERS / area / paper_id
@@ -959,10 +1048,10 @@ def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str
         return 1
 
     data = {
-        "title": title.strip(),
+        "title": title,
         "authors": [],
         "year": None,
-        "source_url": url.strip(),
+        "source_url": url,
         "topics": sorted(topics, key=topic_order.__getitem__),
         "reading_status": "unavailable",
     }
@@ -1006,8 +1095,8 @@ def config_value(key: str, paper_id: str | None) -> int:
         if not paper_id:
             print("ERROR: --paper-id is required for acceptance_waivers", file=sys.stderr)
             return 1
-        entry = acceptance["entries"].get(paper_id)
-        print(encode_waiver_records(entry.get("waivers", {}) if entry else {}))
+        receipt = acceptance["entries"].get(paper_id)
+        print(encode_waiver_records(receipt.get("waivers", {}) if receipt else {}))
         return 0
     if key == "paper_title":
         if not paper_id:
@@ -1115,8 +1204,10 @@ def validation_manifest(
                 file=sys.stderr,
             )
             return 1
-        entry = acceptance["entries"].get(slug)
-        waivers = encode_waiver_records(entry.get("waivers", {}) if entry else {})
+        receipt = acceptance["entries"].get(slug)
+        waivers = encode_waiver_records(
+            receipt.get("waivers", {}) if receipt else {}
+        )
         if slug == preflight_paper_id:
             if preflight_target_status:
                 reading_status = preflight_target_status
@@ -1129,7 +1220,7 @@ def validation_manifest(
         review_grade = bool(
             reading_status == "draft"
             or slug == preflight_paper_id
-            or (entry and "review_receipt" in entry)
+            or receipt
         )
         fields = [
             "paper",
@@ -1152,13 +1243,32 @@ class AcceptanceInterrupted(RuntimeError):
 
 
 def _acceptance_lock_path(root: Path) -> Path:
-    root_key = hashlib.sha256(os.fsencode(root.resolve())).hexdigest()[:24]
+    common_dir = subprocess.run(
+        [
+            "git",
+            "-C",
+            os.fspath(root),
+            "rev-parse",
+            "--path-format=absolute",
+            "--git-common-dir",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    identity = (
+        Path(common_dir.stdout.strip()).resolve()
+        if common_dir.returncode == 0 and common_dir.stdout.strip()
+        else root.resolve()
+    )
+    root_key = hashlib.sha256(os.fsencode(identity)).hexdigest()[:24]
     return Path(tempfile.gettempdir()) / f"db-papers-acceptance-{root_key}.lock"
 
 
 @contextlib.contextmanager
 def acceptance_lock(root: Path):
-    """Serialize acceptance writers across processes for one repository root."""
+    """Serialize acceptance writers across every worktree of one repository."""
 
     lock_path = _acceptance_lock_path(root)
     with lock_path.open("a+b") as handle:
@@ -1275,6 +1385,16 @@ def _capture_review_snapshot(paper_id: str) -> dict[str, Any]:
         raise ValueError("review receipt requires source.pdf and translation.md")
     if not policy_path.is_file():
         raise ValueError("review receipt requires docs/translation-policy.md")
+    review_head_sha = current_git_head(ROOT)
+    review_gate_sha = review_gate_manifest_sha256(ROOT)
+    committed_review_gate_sha = review_gate_manifest_sha256(
+        ROOT, review_head_sha
+    )
+    if review_gate_sha != committed_review_gate_sha:
+        raise ValueError(
+            "review gate inputs differ from review_head_sha; commit the gate "
+            "implementation and workflow before generating a receipt"
+        )
     return {
         "metadata_path": metadata_path,
         "metadata_text": metadata_text,
@@ -1283,8 +1403,8 @@ def _capture_review_snapshot(paper_id: str) -> dict[str, Any]:
         "assets_manifest_sha256": assets_manifest_sha256(paper_dir, ROOT),
         "translation_policy_sha256": sha256_file(policy_path),
         "review_metadata_sha256": review_metadata_sha256(metadata),
-        "review_gate_manifest_sha256": review_gate_manifest_sha256(ROOT),
-        "git_head": current_git_head(ROOT),
+        "review_gate_manifest_sha256": review_gate_sha,
+        "review_head_sha": review_head_sha,
     }
 
 
@@ -1296,6 +1416,7 @@ def _build_review_receipt_from_snapshot(
     review_base_sha: str,
     checks: list[str],
     findings: list[str],
+    authorial_voice: dict[str, int],
     waiver_records: dict[str, dict[str, Any]],
     snapshot: dict[str, Any],
 ) -> dict[str, Any]:
@@ -1305,16 +1426,14 @@ def _build_review_receipt_from_snapshot(
         "source_sha256": snapshot["source_sha256"],
         "translation_sha256": snapshot["translation_sha256"],
         "assets_manifest_sha256": snapshot["assets_manifest_sha256"],
-        "translation_policy_sha256": snapshot["translation_policy_sha256"],
         "review_metadata_sha256": snapshot["review_metadata_sha256"],
-        "review_gate_manifest_sha256": snapshot["review_gate_manifest_sha256"],
         "review_action": review_action,
         "translator": translator,
         "reviewer": reviewer,
-        "identity_assurance": REVIEW_IDENTITY_ASSURANCE,
         "review_base_sha": review_base_sha,
-        "checks": sorted(checks),
+        "review_head_sha": snapshot["review_head_sha"],
         "findings": sorted(findings),
+        "authorial_voice": authorial_voice,
         "waivers": waiver_records,
     }
     receipt["fingerprint"] = review_receipt_fingerprint(receipt)
@@ -1408,6 +1527,7 @@ def build_review_receipt(
     review_base_sha: str,
     checks: list[str],
     findings: list[str],
+    authorial_voice: dict[str, int],
     waiver_records: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build a content-bound reviewer attestation without mutating the repository."""
@@ -1423,6 +1543,7 @@ def build_review_receipt(
         review_base_sha,
         checks,
         findings,
+        authorial_voice,
         waiver_records or {},
         snapshot,
     )
@@ -1436,14 +1557,15 @@ def emit_review_receipt(
     review_base_sha: str,
     checks: list[str],
     findings: list[str],
-    no_findings: bool,
+    authorial_voice: dict[str, int],
     waivers: list[str],
 ) -> int:
     """Run the scoped deep gate and emit a pure-YAML content-bound receipt."""
 
-    if bool(findings) == no_findings:
+    if not findings:
         print(
-            "ERROR: use one or more --finding values, or explicitly use --no-findings",
+            "ERROR: new review receipts require at least one --finding with "
+            "the review disposition",
             file=sys.stderr,
         )
         return 1
@@ -1526,6 +1648,7 @@ def emit_review_receipt(
             review_base_sha,
             checks,
             findings,
+            authorial_voice,
             waiver_records,
             after_snapshot,
         )
@@ -1791,6 +1914,11 @@ def _accept_record_locked(
         load_yaml_text(original_receipt, str(review_receipt_path)),
         str(review_receipt_path),
     )
+    if receipt["schema_version"] != REVIEW_RECEIPT_SCHEMA_VERSION:
+        raise ValueError(
+            "accept requires a receipt generated with the current review "
+            f"schema v{REVIEW_RECEIPT_SCHEMA_VERSION}"
+        )
     if receipt["paper_id"] != paper_id:
         raise ValueError("review receipt paper_id does not match --id")
     validate_review_base_commit(ROOT, receipt["review_base_sha"])
@@ -1799,27 +1927,38 @@ def _accept_record_locked(
         for category, record in receipt["waivers"].items()
     }
     expected_head_sha = current_git_head(ROOT)
+    if receipt["review_head_sha"] != expected_head_sha:
+        raise ValueError(
+            "review receipt review_head_sha does not match the current Git HEAD"
+        )
 
     source_hash = sha256_file(source)
     translation_hash = sha256_file(translation)
     assets_hash = assets_manifest_sha256(metadata_path.parent, ROOT)
     policy_hash = sha256_file(policy_path)
+    review_gate_hash = review_gate_manifest_sha256(ROOT)
     current_receipt_values = {
         "source_sha256": source_hash,
         "translation_sha256": translation_hash,
         "assets_manifest_sha256": assets_hash,
-        "translation_policy_sha256": policy_hash,
         "review_metadata_sha256": review_metadata_sha256(
             data,
             receipt["schema_version"],
         ),
-        "review_gate_manifest_sha256": review_gate_manifest_sha256(ROOT),
     }
     for key, current_value in current_receipt_values.items():
         if receipt[key] != current_value:
             raise ValueError(
                 f"review receipt {key} does not match the current review snapshot"
             )
+    committed_gate_hash = review_gate_manifest_sha256(
+        ROOT, receipt["review_head_sha"]
+    )
+    if review_gate_hash != committed_gate_hash:
+        raise ValueError(
+            "current review gate and translation policy cannot be reproduced "
+            "from review_head_sha"
+        )
 
     accepted, details, waiver_records = acceptance_preflight(paper_id, approved_waivers)
     if not accepted:
@@ -1841,32 +1980,23 @@ def _accept_record_locked(
         assets_sha256=assets_hash,
         policy_path=policy_path,
         policy_sha256=policy_hash,
-        review_gate_sha256=receipt["review_gate_manifest_sha256"],
+        review_gate_sha256=review_gate_hash,
         receipt_path=review_receipt_path,
         expected_receipt=original_receipt,
         expected_head_sha=expected_head_sha,
     )
 
-    previous_entry = ledger["entries"].get(paper_id)
-    if previous_entry is not None and "review_receipt" not in previous_entry:
-        retired = ledger["retired_legacy_entry_fingerprints"]
-        if paper_id in retired:
-            raise ValueError(
-                "receiptless legacy entry is already marked as retired"
-            )
-        retired[paper_id] = acceptance_entry_fingerprint(previous_entry)
-
-    ledger["entries"][paper_id] = {
-        "source_sha256": source_hash,
-        "translation_sha256": translation_hash,
-        "assets_manifest_sha256": assets_hash,
-        "review_action": receipt["review_action"],
-        "reviewer": receipt["reviewer"],
-        "review_base_sha": receipt["review_base_sha"],
-        "review_receipt": receipt,
+    ledger["entries"][paper_id] = receipt
+    referenced_snapshots = {
+        entry["review_snapshot"]
+        for entry in ledger["entries"].values()
+        if entry.get("schema_version") == 1
     }
-    if waiver_records:
-        ledger["entries"][paper_id]["waivers"] = waiver_records
+    ledger["review_snapshots"] = {
+        snapshot_id: snapshot
+        for snapshot_id, snapshot in ledger["review_snapshots"].items()
+        if snapshot_id in referenced_snapshots
+    }
     data["reading_status"] = "translated"
     accepted_ledger = dump_yaml(ledger)
     accepted_metadata = dump_yaml(data)
@@ -1885,7 +2015,7 @@ def _accept_record_locked(
         assets_manifest_sha256_value=assets_hash,
         policy_path=policy_path,
         policy_sha256=policy_hash,
-        review_gate_sha256=receipt["review_gate_manifest_sha256"],
+        review_gate_sha256=review_gate_hash,
         git_head=expected_head_sha,
     )
     expected_journal_text = dump_yaml(journal)
@@ -1909,7 +2039,7 @@ def _accept_record_locked(
             assets_sha256=assets_hash,
             policy_path=policy_path,
             policy_sha256=policy_hash,
-            review_gate_sha256=receipt["review_gate_manifest_sha256"],
+            review_gate_sha256=review_gate_hash,
             receipt_path=review_receipt_path,
             expected_receipt=original_receipt,
             expected_head_sha=expected_head_sha,
@@ -1928,7 +2058,7 @@ def _accept_record_locked(
             assets_sha256=assets_hash,
             policy_path=policy_path,
             policy_sha256=policy_hash,
-            review_gate_sha256=receipt["review_gate_manifest_sha256"],
+            review_gate_sha256=review_gate_hash,
             receipt_path=review_receipt_path,
             expected_receipt=original_receipt,
             expected_head_sha=expected_head_sha,
@@ -1948,7 +2078,7 @@ def _accept_record_locked(
             assets_sha256=assets_hash,
             policy_path=policy_path,
             policy_sha256=policy_hash,
-            review_gate_sha256=receipt["review_gate_manifest_sha256"],
+            review_gate_sha256=review_gate_hash,
             receipt_path=review_receipt_path,
             expected_receipt=original_receipt,
             expected_head_sha=expected_head_sha,
@@ -2127,28 +2257,46 @@ def _recover_acceptance_locked(mode: str) -> int:
             f"{journal_path}: accepted ledger",
         )
         accepted_entry = accepted_ledger["entries"].get(journal["paper_id"])
-        if not accepted_entry or "review_receipt" not in accepted_entry:
+        if not accepted_entry:
             raise ValueError(
                 "transaction target lacks a content-bound acceptance entry"
             )
-        receipt = accepted_entry["review_receipt"]
+        receipt = accepted_entry
         bound_values = {
             "source_sha256": context["source_sha256"],
             "translation_sha256": context["translation_sha256"],
             "assets_manifest_sha256": context["assets_manifest_sha256"],
-            "translation_policy_sha256": context[
-                "translation_policy_sha256"
-            ],
-            "review_gate_manifest_sha256": context[
-                "review_gate_manifest_sha256"
-            ],
         }
+        if receipt["schema_version"] == 1:
+            bound_values.update(
+                {
+                    "translation_policy_sha256": context[
+                        "translation_policy_sha256"
+                    ],
+                    "review_gate_manifest_sha256": context[
+                        "review_gate_manifest_sha256"
+                    ],
+                }
+            )
+        elif receipt["review_head_sha"] != context["git_head"]:
+            raise ValueError(
+                "transaction target review_head_sha does not match its context"
+            )
         for key, expected in bound_values.items():
-            value = receipt.get(key, accepted_entry.get(key))
+            value = receipt.get(key)
             if value != expected:
                 raise ValueError(
                     f"transaction target {key} does not match its context"
                 )
+        if (
+            receipt["schema_version"] >= 2
+            and review_gate_manifest_sha256(ROOT, receipt["review_head_sha"])
+            != context["review_gate_manifest_sha256"]
+        ):
+            raise ValueError(
+                "transaction target review gate cannot be reconstructed from "
+                "review_head_sha"
+            )
 
     ordered_paths = list(files)
     if mode == "rollback":
@@ -2186,10 +2334,10 @@ def _recover_acceptance_locked(mode: str) -> int:
         if not accepted_entry:
             raise ValueError("recovered acceptance entry failed validation")
         if (
-            accepted_entry["review_receipt"]["review_metadata_sha256"]
+            accepted_entry["review_metadata_sha256"]
             != review_metadata_sha256(
                 metadata,
-                accepted_entry["review_receipt"]["schema_version"],
+                accepted_entry["schema_version"],
             )
         ):
             raise ValueError(
@@ -2286,17 +2434,29 @@ def main() -> int:
         choices=sorted(REQUIRED_REVIEW_CHECKS),
         help="attest one required review dimension; every dimension is required exactly once",
     )
-    finding_group = receipt_parser.add_mutually_exclusive_group(required=True)
-    finding_group.add_argument(
+    receipt_parser.add_argument(
         "--finding",
         action="append",
-        default=[],
+        required=True,
         help="record one repaired or verified finding; repeat as needed",
     )
-    finding_group.add_argument(
-        "--no-findings",
-        action="store_true",
-        help="explicitly attest that the deep review found no defects",
+    receipt_parser.add_argument(
+        "--authorial-voice-source-items",
+        required=True,
+        type=int,
+        help="valid source authorial I/we/my/our/us items after exclusions",
+    )
+    receipt_parser.add_argument(
+        "--authorial-voice-verified-items",
+        required=True,
+        type=int,
+        help="source authorial items verified in the final translation",
+    )
+    receipt_parser.add_argument(
+        "--authorial-voice-shared-subject-merges",
+        required=True,
+        type=int,
+        help="verified source items represented by an explicit shared Chinese subject",
     )
     receipt_parser.add_argument(
         "--waiver",
@@ -2352,7 +2512,11 @@ def main() -> int:
             args.review_base_sha,
             args.check,
             args.finding,
-            args.no_findings,
+            {
+                "source_valid_items": args.authorial_voice_source_items,
+                "verified_items": args.authorial_voice_verified_items,
+                "shared_subject_merges": args.authorial_voice_shared_subject_merges,
+            },
             args.waiver,
         )
     if args.command == "accept":

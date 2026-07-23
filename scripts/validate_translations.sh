@@ -128,6 +128,9 @@ fi
 metadata_args=(validate)
 [[ -n "$target_paper_id" ]] && metadata_args+=(--paper-id "$target_paper_id")
 "$PYTHON" scripts/papers.py "${metadata_args[@]}" || exit 1
+source_args=(--root "$ROOT")
+[[ -n "$target_paper_id" ]] && source_args+=(--paper-id "$target_paper_id")
+"$PYTHON" scripts/validate_source_pdf.py "${source_args[@]}" || exit 1
 validation_tmp=$(mktemp -d "${TMPDIR:-/tmp}/db-papers-validation.XXXXXX")
 manifest="$validation_tmp/manifest"
 trap 'rm -rf "$validation_tmp"' EXIT

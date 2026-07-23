@@ -6,7 +6,8 @@
 
 ## 成功标准
 
-- 缺少原文时保持 `unavailable`；页数超限时使用 `skipped` 并停止。只有用户显式授权后，才能在 `config/policy.yaml` 为单篇记录更高上限和授权依据。
+- 开工前运行 `make source-check PAPER_ID=<paper-id>`；缺少原文或身份/可读性门禁失败时保持 `unavailable` 并停止。
+- 页数超限时停止翻译并报告。单篇译者不修改共享策略或状态；由 maintain workflow 同步受控 `skip_reason` 与 `source_only -> skipped`。只有用户显式授权后，维护者才能在 `config/policy.yaml` 为单篇记录更高上限和授权依据。
 - 开始形成译文后使用 `draft`。
 - `translation.md` 以 `templates/translation.md` 的 YAML frontmatter 开头；`paper_id` 与目录名一致，`title` 与 `paper.yaml` 一致，`language` 固定为 `zh-CN`，`source` 固定为 `source.pdf`。
 - `translation.md` 覆盖原文全部实质章节、公式、图表、算法、代码、附录和完整参考文献。
@@ -18,6 +19,11 @@
 ## 约束
 
 正文证据只来自当前目录的 `source.pdf`。不要用模型记忆补写模糊段落、实验数字、参考文献或图表内容。保留原文结构和主张，不添加论文未提出的解释性结论。
+
+单篇新论文若被要求“完整处理”，本工作流只拥有
+`source_only -> draft` 和论文目录内的译文资产；随后必须按 review workflow
+独立审阅并 accept，再按 rating workflow 评分并重建目录。未获 accept 权限
+时交付 `draft`，不得把“翻译完成”误报为 `translated`。
 
 完整质量要求见 `docs/translation-policy.md`。可以选择高效的提取、分栏、裁图和校对路径，但合并前必须检查编号、引用和顺序。
 

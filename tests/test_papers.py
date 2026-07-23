@@ -26,6 +26,11 @@ from acceptance_evidence import build_waiver_records  # noqa: E402
 REVIEWER = "human:reviewer@example.com"
 TRANSLATOR = "codex:/root/translator"
 REVIEW_BASE_SHA = "a" * 40
+AUTHORIAL_VOICE = {
+    "source_valid_items": 0,
+    "verified_items": 0,
+    "shared_subject_merges": 0,
+}
 
 
 def resource_waivers() -> dict[str, dict[str, object]]:
@@ -85,41 +90,32 @@ class PapersTests(unittest.TestCase):
         if status == "translated":
             waiver_records = resource_waivers()
             receipt = {
-                "schema_version": 1,
+                "schema_version": 2,
                 "paper_id": "sample-paper",
                 "source_sha256": sha256(paper / "source.pdf"),
                 "translation_sha256": sha256(paper / "translation.md"),
                 "assets_manifest_sha256": papers.assets_manifest_sha256(paper, root),
-                "translation_policy_sha256": sha256(
-                    root / "docs/translation-policy.md"
-                ),
                 "review_metadata_sha256": papers.review_metadata_sha256(metadata),
-                "review_gate_manifest_sha256": "f" * 64,
                 "review_action": "section-review",
                 "translator": TRANSLATOR,
                 "reviewer": REVIEWER,
-                "identity_assurance": papers.REVIEW_IDENTITY_ASSURANCE,
                 "review_base_sha": REVIEW_BASE_SHA,
-                "checks": sorted(papers.REQUIRED_REVIEW_CHECKS),
-                "findings": [],
+                "review_head_sha": "b" * 40,
+                "findings": ["All review dimensions passed against source.pdf."],
+                "authorial_voice": {
+                    "source_valid_items": 0,
+                    "verified_items": 0,
+                    "shared_subject_merges": 0,
+                },
                 "waivers": waiver_records,
             }
             receipt["fingerprint"] = papers.review_receipt_fingerprint(receipt)
-            entries["sample-paper"] = {
-                "source_sha256": receipt["source_sha256"],
-                "translation_sha256": receipt["translation_sha256"],
-                "assets_manifest_sha256": receipt["assets_manifest_sha256"],
-                "review_action": receipt["review_action"],
-                "reviewer": receipt["reviewer"],
-                "review_base_sha": receipt["review_base_sha"],
-                "waivers": waiver_records,
-                "review_receipt": receipt,
-            }
+            entries["sample-paper"] = receipt
         (root / "config/acceptance.yaml").write_text(
             yaml.safe_dump(
                 {
-                    "schema_version": 4,
-                    "retired_legacy_entry_fingerprints": {},
+                    "schema_version": 5,
+                    "review_snapshots": {},
                     "entries": entries,
                 },
                 sort_keys=False,
@@ -137,21 +133,23 @@ class PapersTests(unittest.TestCase):
         paper = root / "papers/query-processing/sample-paper"
         metadata = yaml.safe_load((paper / "paper.yaml").read_text(encoding="utf-8"))
         receipt: dict[str, object] = {
-            "schema_version": 1,
+            "schema_version": 2,
             "paper_id": "sample-paper",
             "source_sha256": sha256(paper / "source.pdf"),
             "translation_sha256": sha256(paper / "translation.md"),
             "assets_manifest_sha256": papers.assets_manifest_sha256(paper, root),
-            "translation_policy_sha256": sha256(root / "docs/translation-policy.md"),
             "review_metadata_sha256": papers.review_metadata_sha256(metadata),
-            "review_gate_manifest_sha256": "f" * 64,
             "review_action": "section-review",
             "translator": TRANSLATOR,
             "reviewer": REVIEWER,
-            "identity_assurance": papers.REVIEW_IDENTITY_ASSURANCE,
             "review_base_sha": REVIEW_BASE_SHA,
-            "checks": sorted(papers.REQUIRED_REVIEW_CHECKS),
-            "findings": [],
+            "review_head_sha": "b" * 40,
+            "findings": ["All review dimensions passed against source.pdf."],
+            "authorial_voice": {
+                "source_valid_items": 0,
+                "verified_items": 0,
+                "shared_subject_merges": 0,
+            },
             "waivers": waiver_records or {},
         }
         receipt.update(updates)
@@ -183,7 +181,7 @@ class PapersTests(unittest.TestCase):
             CATALOG=root / "CATALOG.md",
             validate_review_base_commit=lambda _root, _sha: None,
             current_git_head=lambda _root: "b" * 40,
-            review_gate_manifest_sha256=lambda _root: "f" * 64,
+            review_gate_manifest_sha256=lambda _root, _revision=None: "f" * 64,
         )
 
     def test_atomic_write_preserves_existing_mode_and_secures_new_file(self) -> None:
@@ -268,39 +266,13 @@ class PapersTests(unittest.TestCase):
         ):
             self.assertEqual(papers.validate(), 0)
 
-    def test_policy_and_gate_drift_do_not_rebind_receiptless_legacy(self) -> None:
-        root = self.make_root("translated")
-        ledger_path = root / "config/acceptance.yaml"
-        ledger = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
-        entry = ledger["entries"]["sample-paper"]
-        entry.pop("review_receipt")
-        ledger_path.write_text(
-            yaml.safe_dump(ledger, sort_keys=False),
-            encoding="utf-8",
-        )
-        frozen = {
-            "sample-paper": project_config.acceptance_entry_fingerprint(entry)
-        }
-        policy_path = root / "docs/translation-policy.md"
-        policy_path.write_text("changed legacy-era policy\n", encoding="utf-8")
-
-        with self.globals_patch(root), patch.object(
-            project_config,
-            "LEGACY_RECEIPTLESS_ENTRY_FINGERPRINTS",
-            frozen,
-        ), patch.object(
-            papers,
-            "review_gate_manifest_sha256",
-            side_effect=AssertionError("receiptless validation must not hash the gate"),
-        ):
-            self.assertEqual(papers.validate(), 0)
 
     def test_translated_paper_without_ledger_entry_is_rejected(self) -> None:
         root = self.make_root("translated")
         ledger_path = root / "config/acceptance.yaml"
         ledger_path.write_text(
-            "schema_version: 4\n"
-            "retired_legacy_entry_fingerprints: {}\n"
+            "schema_version: 5\n"
+            "review_snapshots: {}\n"
             "entries: {}\n",
             encoding="utf-8",
         )
@@ -358,7 +330,7 @@ class PapersTests(unittest.TestCase):
         )
         self.assertEqual(ledger["entries"]["sample-paper"]["reviewer"], REVIEWER)
         self.assertEqual(
-            ledger["entries"]["sample-paper"]["review_receipt"]["translator"],
+            ledger["entries"]["sample-paper"]["translator"],
             TRANSLATOR,
         )
         self.assertEqual(
@@ -377,53 +349,6 @@ class PapersTests(unittest.TestCase):
             (root / "config/.acceptance-transaction.cleanup.yaml").exists()
         )
 
-    def test_accept_atomically_retires_replaced_receiptless_legacy_entry(self) -> None:
-        root = self.make_root("draft")
-        paper = root / "papers/query-processing/sample-paper"
-        ledger_path = root / "config/acceptance.yaml"
-        ledger = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
-        legacy_entry = {
-            "source_sha256": sha256(paper / "source.pdf"),
-            "translation_sha256": sha256(paper / "translation.md"),
-            "assets_manifest_sha256": papers.assets_manifest_sha256(
-                paper,
-                root,
-            ),
-            "review_action": "section-review",
-            "reviewer": "codex:/root/legacy-reviewer",
-            "review_base_sha": REVIEW_BASE_SHA,
-            "waivers": resource_waivers(),
-        }
-        legacy_fingerprint = project_config.acceptance_entry_fingerprint(
-            legacy_entry
-        )
-        ledger["entries"]["sample-paper"] = legacy_entry
-        ledger_path.write_text(
-            yaml.safe_dump(ledger, sort_keys=False),
-            encoding="utf-8",
-        )
-
-        with self.globals_patch(root), patch.object(
-            project_config,
-            "LEGACY_RECEIPTLESS_ENTRY_FINGERPRINTS",
-            {"sample-paper": legacy_fingerprint},
-        ), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", resource_waivers()),
-        ):
-            result = self.accept(root, resource_waivers())
-
-        self.assertEqual(result, 0)
-        accepted = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
-        self.assertEqual(
-            accepted["retired_legacy_entry_fingerprints"],
-            {"sample-paper": legacy_fingerprint},
-        )
-        self.assertIn(
-            "review_receipt",
-            accepted["entries"]["sample-paper"],
-        )
 
     def test_accept_rejects_review_receipt_for_changed_translation(self) -> None:
         root = self.make_root("draft")
@@ -456,11 +381,17 @@ class PapersTests(unittest.TestCase):
             encoding="utf-8",
         )
         stderr = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
+        with self.globals_patch(root), patch.object(
+            papers,
+            "review_gate_manifest_sha256",
+            side_effect=lambda _root, revision=None: (
+                "f" * 64 if revision is not None else "e" * 64
+            ),
+        ), contextlib.redirect_stderr(stderr):
             result = papers.accept_record("sample-paper", receipt_path)
         self.assertEqual(result, 1)
         self.assertIn(
-            "review receipt translation_policy_sha256 does not match",
+            "cannot be reproduced from review_head_sha",
             stderr.getvalue(),
         )
 
@@ -490,12 +421,14 @@ class PapersTests(unittest.TestCase):
         with self.globals_patch(root), patch.object(
             papers,
             "review_gate_manifest_sha256",
-            return_value="e" * 64,
+            side_effect=lambda _root, revision=None: (
+                "f" * 64 if revision is not None else "e" * 64
+            ),
         ), contextlib.redirect_stderr(stderr):
             result = papers.accept_record("sample-paper", receipt_path)
         self.assertEqual(result, 1)
         self.assertIn(
-            "review receipt review_gate_manifest_sha256 does not match",
+            "cannot be reproduced from review_head_sha",
             stderr.getvalue(),
         )
 
@@ -527,7 +460,8 @@ class PapersTests(unittest.TestCase):
                 REVIEWER,
                 REVIEW_BASE_SHA,
                 checks[:-1],
-                [],
+                ["All review dimensions passed against source.pdf."],
+                AUTHORIAL_VOICE,
             )
         with self.globals_patch(root), self.assertRaisesRegex(
             ValueError, "translator and reviewer must be different"
@@ -539,7 +473,8 @@ class PapersTests(unittest.TestCase):
                 REVIEWER,
                 REVIEW_BASE_SHA,
                 checks,
-                [],
+                ["All review dimensions passed against source.pdf."],
+                AUTHORIAL_VOICE,
             )
 
     def test_review_receipt_rejects_content_changed_during_paper_check(self) -> None:
@@ -567,8 +502,8 @@ class PapersTests(unittest.TestCase):
                 REVIEWER,
                 REVIEW_BASE_SHA,
                 sorted(papers.REQUIRED_REVIEW_CHECKS),
-                [],
-                True,
+                ["All review dimensions passed against source.pdf."],
+                AUTHORIAL_VOICE,
                 [],
             )
         self.assertEqual(result, 1)
@@ -606,7 +541,7 @@ class PapersTests(unittest.TestCase):
                 REVIEW_BASE_SHA,
                 sorted(papers.REQUIRED_REVIEW_CHECKS),
                 ["source Figure 1 was visually checked against the PDF"],
-                False,
+                AUTHORIAL_VOICE,
                 [f"resources={waiver['fingerprint']}"],
             )
         self.assertEqual(result, 0)
@@ -616,10 +551,11 @@ class PapersTests(unittest.TestCase):
             receipt["waivers"]["resources"]["evidence_version"],
             4,
         )
-        self.assertEqual(
-            receipt["identity_assurance"],
-            papers.REVIEW_IDENTITY_ASSURANCE,
-        )
+        self.assertEqual(receipt["schema_version"], 2)
+        self.assertNotIn("identity_assurance", receipt)
+        self.assertNotIn("checks", receipt)
+        self.assertEqual(receipt["review_head_sha"], "b" * 40)
+        self.assertEqual(receipt["authorial_voice"], AUTHORIAL_VOICE)
 
     def test_review_receipt_rejects_unapproved_validator_waiver_evidence(self) -> None:
         root = self.make_root("draft")
@@ -650,8 +586,8 @@ class PapersTests(unittest.TestCase):
                 REVIEWER,
                 REVIEW_BASE_SHA,
                 sorted(papers.REQUIRED_REVIEW_CHECKS),
-                [],
-                True,
+                ["All review dimensions passed against source.pdf."],
+                AUTHORIAL_VOICE,
                 [],
             )
         self.assertEqual(result, 1)
@@ -707,30 +643,6 @@ class PapersTests(unittest.TestCase):
             self.assertEqual(papers.validate(), 1)
         self.assertIn("invalid review_base_sha", stderr.getvalue())
 
-    def test_review_queue_prioritizes_receiptless_accepted_papers(self) -> None:
-        root = self.make_root("translated")
-        ledger_path = root / "config/acceptance.yaml"
-        ledger = yaml.safe_load(ledger_path.read_text(encoding="utf-8"))
-        entry = ledger["entries"]["sample-paper"]
-        entry.pop("review_receipt")
-        ledger_path.write_text(
-            yaml.safe_dump(ledger, sort_keys=False),
-            encoding="utf-8",
-        )
-        frozen = {
-            "sample-paper": project_config.acceptance_entry_fingerprint(entry)
-        }
-        output = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            project_config,
-            "LEGACY_RECEIPTLESS_ENTRY_FINGERPRINTS",
-            frozen,
-        ), contextlib.redirect_stdout(output):
-            self.assertEqual(papers.review_queue(), 0)
-        self.assertIn("priority\tpaper_id\treasons", output.getvalue())
-        self.assertIn("sample-paper", output.getvalue())
-        self.assertIn("no-content-bound-receipt", output.getvalue())
-        self.assertIn("resources-waiver:1", output.getvalue())
 
     def test_review_queue_surfaces_strong_math_like_code_spans(self) -> None:
         root = self.make_root("translated")
@@ -1398,12 +1310,12 @@ class PapersTests(unittest.TestCase):
         ledger_path = root / "config/acceptance.yaml"
         original_metadata = metadata_path.read_text(encoding="utf-8")
         original_ledger = ledger_path.read_text(encoding="utf-8")
-        gate_hashes = iter(["f" * 64, "e" * 64])
+        gate_hashes = iter(["f" * 64, "f" * 64, "e" * 64])
 
         with self.globals_patch(root), patch.object(
             papers,
             "review_gate_manifest_sha256",
-            side_effect=lambda _root: next(gate_hashes),
+            side_effect=lambda _root, _revision=None: next(gate_hashes),
         ), patch.object(
             papers, "acceptance_preflight", return_value=(True, "", {})
         ), contextlib.redirect_stderr(io.StringIO()):
@@ -1504,6 +1416,44 @@ class PapersTests(unittest.TestCase):
                 handler(papers.signal.SIGTERM, None)
         self.assertIs(papers.signal.getsignal(papers.signal.SIGTERM), previous)
 
+    def test_source_and_translation_symlinks_are_rejected(self) -> None:
+        root = self.make_root("draft")
+        paper = root / "papers/query-processing/sample-paper"
+        source = paper / "source.pdf"
+        translation = paper / "translation.md"
+        external_source = root / "external-source.pdf"
+        external_translation = root / "external-translation.md"
+        source.replace(external_source)
+        translation.replace(external_translation)
+        source.symlink_to(external_source)
+        translation.symlink_to(external_translation)
+        stderr = io.StringIO()
+        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
+            self.assertEqual(papers.validate(), 1)
+        self.assertIn("source.pdf=True as a regular non-symlink", stderr.getvalue())
+        self.assertIn(
+            "translation.md=True as a regular non-symlink",
+            stderr.getvalue(),
+        )
+
+    def test_unavailable_rejects_a_broken_source_symlink(self) -> None:
+        root = self.make_root("source_only")
+        paper = root / "papers/query-processing/sample-paper"
+        metadata_path = paper / "paper.yaml"
+        metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
+        metadata["reading_status"] = "unavailable"
+        metadata_path.write_text(
+            yaml.safe_dump(metadata, sort_keys=False),
+            encoding="utf-8",
+        )
+        source = paper / "source.pdf"
+        source.unlink()
+        source.symlink_to("missing.pdf")
+        stderr = io.StringIO()
+        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
+            self.assertEqual(papers.validate(), 1)
+        self.assertIn("source.pdf=False as a regular non-symlink", stderr.getvalue())
+
     def test_catalog_omits_topic_index_and_contains_authoritative_link(self) -> None:
         root = self.make_root("source_only")
         with self.globals_patch(root):
@@ -1512,7 +1462,7 @@ class PapersTests(unittest.TestCase):
         self.assertIn("| 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |", catalog)
         self.assertNotIn("| 论文 | 作者 |", catalog)
         self.assertIn("| — | source_only |", catalog)
-        self.assertIn("[原文](https://example.com/paper)", catalog)
+        self.assertIn("[原文](<https://example.com/paper>)", catalog)
         self.assertIn("papers/query-processing/sample-paper/source.pdf", catalog)
 
     def test_catalog_uses_taxonomy_order_for_unordered_topics(self) -> None:
@@ -1637,47 +1587,6 @@ class PapersTests(unittest.TestCase):
         self.assertEqual(papers.decode_waiver_records(rows[1][4]), resource_waivers())
         self.assertEqual(rows[1][6:], ["Sample Paper", "error", "true"])
 
-    def test_validation_manifest_limits_legacy_mode_to_receiptless_translated(
-        self,
-    ) -> None:
-        root = self.make_root("translated")
-        ledger = yaml.safe_load(
-            (root / "config/acceptance.yaml").read_text(encoding="utf-8")
-        )
-        ledger["entries"]["sample-paper"].pop("review_receipt")
-        stdout = io.StringIO()
-        with (
-            self.globals_patch(root),
-            patch.object(papers, "load_acceptance_ledger", return_value=ledger),
-            contextlib.redirect_stdout(stdout),
-        ):
-            self.assertEqual(papers.validation_manifest("sample-paper"), 0)
-        row = stdout.getvalue().splitlines()[1].split(
-            papers.VALIDATION_FIELD_SEPARATOR
-        )
-        self.assertEqual(row[-1], "false")
-
-        stdout = io.StringIO()
-        with (
-            self.globals_patch(root),
-            patch.object(papers, "load_acceptance_ledger", return_value=ledger),
-            contextlib.redirect_stdout(stdout),
-        ):
-            self.assertEqual(
-                papers.validation_manifest(
-                    "sample-paper",
-                    preflight_paper_id="sample-paper",
-                    preflight_target_status="translated",
-                    preflight_waivers=papers.encode_waiver_records(
-                        resource_waivers()
-                    ),
-                ),
-                0,
-            )
-        preflight_row = stdout.getvalue().splitlines()[1].split(
-            papers.VALIDATION_FIELD_SEPARATOR
-        )
-        self.assertEqual(preflight_row[-1], "true")
 
     def test_new_record_uses_safe_defaults_matching_template(self) -> None:
         root = self.make_root("source_only")

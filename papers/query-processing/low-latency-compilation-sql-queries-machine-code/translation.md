@@ -26,7 +26,7 @@ Proceedings of the VLDB Endowment，Vol. 14，No. 12，ISSN 2150-8097。
 
 ## 摘要
 
-查询编译已被证明是最高效的查询处理技术之一。尽管它处理速度快，但额外编译时间限制了适用范围，因为只有当处理时间的改进明显超过编译时间时，这种方法才最有利。最近的研究展示了极低编译时间查询编译器的可行性，可能使查询编译成为更通用的方法。本文及对应现场演示展示 ReSQL 数据库系统的能力。ReSQL 使用中间表示 Flounder IR 实现极低编译时间。与现有基于 LLVM 的技术相比，ReSQL 在真实分析查询中把从 SQL 到机器码的编译时间最多降低 101.1 倍。
+查询编译已被证明是最高效的查询处理技术之一。尽管它处理速度快，但额外编译时间限制了适用范围，因为只有当处理时间的改进明显超过编译时间时，这种方法才最有利。最近的研究展示了极低编译时间查询编译器的可行性，可能使查询编译成为更通用的方法。在本文及对应现场演示中，我们展示 ReSQL 数据库系统的能力。ReSQL 使用中间表示 Flounder IR 实现极低编译时间。与现有基于 LLVM 的技术相比，ReSQL 在真实分析查询中把从 SQL 到机器码的编译时间最多降低 101.1 倍。
 
 ## 1. 引言
 
@@ -36,7 +36,7 @@ Proceedings of the VLDB Endowment，Vol. 14，No. 12，ISSN 2150-8097。
 
 ### 1.1 低延迟查询编译
 
-查询编译通常分两步：先把查询翻译成中间表示（IR），再把 IR 翻译成机器码。尤其是在第二步中，IR 的选择会显著影响编译时间。LLVM 等低层 IR 已被用于实现较短的编译时间 [4, 5]，但用 LLVM 生成机器码仍需数十毫秒；传统非 JIT 技术在这段时间内足以处理数百万 tuple，因而基于 LLVM 的查询编译对较小数据量的收益有限。此前关于 Flounder IR 的工作 [1] 已证明，编译时间远低于 LLVM 的查询编译器是可行的：Flounder IR 采用针对关系工作负载裁剪的特性集，并且在翻译成机器码时只运行很轻量的算法。
+查询编译通常分两步：先把查询翻译成中间表示（IR），再把 IR 翻译成机器码。尤其是在第二步中，IR 的选择会显著影响编译时间。LLVM 等低层 IR 已被用于实现较短的编译时间 [4, 5]，但用 LLVM 生成机器码仍需数十毫秒；传统非 JIT 技术在这段时间内足以处理数百万 tuple，因而基于 LLVM 的查询编译对较小数据量的收益有限。我们此前关于 Flounder IR 的工作 [1] 已证明，编译时间远低于 LLVM 的查询编译器是可行的：Flounder IR 采用针对关系工作负载裁剪的特性集，并且在翻译成机器码时只运行很轻量的算法。
 
 ![图 1：Flounder IR 的低延迟编译流程](assets/precise-manual-figure-01-flounder-flow.png)
 
@@ -44,17 +44,17 @@ Proceedings of the VLDB Endowment，Vol. 14，No. 12，ISSN 2150-8097。
 
 ### 1.2 贡献
 
-本文演示 Flounder IR 如何用于从 SQL 到机器码的完整翻译栈，从而实现查询的低延迟 JIT 编译。该演示允许检查翻译过程中的不同层次，并展示采用 Flounder IR 进行查询编译的实用性。下文先介绍用于低延迟查询编译的 IR（第 2 节），再说明如何使用 ReSQL 数据库系统进行演示（第 3 节），随后评估翻译性能（第 4 节），最后给出总结（第 5 节）。
+在这项工作中，我们演示 Flounder IR 如何用于从 SQL 到机器码的完整翻译栈，从而实现查询的低延迟 JIT 编译。该演示允许检查翻译过程中的不同层次，并展示采用 Flounder IR 进行查询编译的实用性。下文，我们先介绍用于低延迟查询编译的 IR（第 2 节）；然后，我们说明如何使用 ReSQL 数据库系统进行演示（第 3 节）；随后第 4 节评估翻译性能，第 5 节给出总结。
 
 ## 2. 面向快速翻译的低层 IR
 
 Flounder 和 LLVM 之类的低层 IR 用于在查询编译期间实现较短的编译时间。查询编译分为两步：先把查询翻译成 IR，再把 IR 翻译成机器码。相对于查询处理速度，LLVM 的第二步仍然相当耗时；Flounder 则能在短得多的时间内完成机器码翻译，方法是简化 IR，并针对关系工作负载裁剪 IR 及其翻译过程。
 
-下面用一个例子说明两种 IR 的异同。原文页边的查询计划展示一个 hash join probe 算子；假定 hash join build 的代码已经生成，接下来为使用 S 中 tuple 探测哈希表生成代码。下文先给出 probe 功能的高层描述，再比较支持快速编译的两种低层 IR；关于使用 Flounder IR 进行查询编译的更多细节见文献 [1]。
+现在，我们要结合一个例子指出两种 IR 的异同。为此，我们采用原文页边的查询计划，并讨论其中 hash join probe 算子的翻译。我们假定 hash join build 的代码已经生成，接下来为使用 S 中 tuple 探测哈希表生成代码。下文，我们先给出 probe 功能的高层描述，再考察支持快速编译的两种低层 IR；关于使用 Flounder IR 进行查询编译的更多细节，我们请读者参阅文献 [1]。
 
 ### 2.1 Join Probe 示例
 
-先用 C 代码描述为 hash join probe 生成的功能。这里并不把 C 用作 IR，但用 C 描述该功能最为直接。对于 $R \bowtie S$，其 probe 语义为：
+我们先用 C 代码描述为 hash join probe 生成的功能。这里并不把 C 用作 IR，但用 C 描述该功能最为直接。对于 $R \bowtie S$，其 probe 语义为：
 
 ```c
 [...] /* child code */
@@ -69,11 +69,11 @@ while (true) {
 [...] /* child code */
 ```
 
-probe entry 初始化为 null，随后在循环中调用 `ht_get(..)` 执行 hash probe。调用返回 null 时，表示没有更多匹配项，循环结束；循环体从哈希表位置 `entry` 读取属性值 `r_a` 和 `r_b`，随后执行后继的父算子。
+probe entry 初始化为 null，随后在循环中调用 `ht_get(..)` 执行 hash probe。调用返回 null 时，表示没有更多匹配项，我们退出循环；循环体从哈希表位置 `entry` 读取属性值 `r_a` 和 `r_b`，随后执行后继的父算子。
 
 ### 2.2 低层表示
 
-下面给出上述 C 代码所描述的 hash join probe 功能的低层表示。这些 IR 指令的粒度与处理器执行的指令相近，但仍包含若干便于翻译的抽象。原文 Figure 2(a) 给出 LLVM IR，Figure 2(b) 给出对应的 Flounder IR；该图主要是代码/IR，因此这里转写为代码块，并在后文比较两者的异同。
+现在，我们给出上述 C 代码所描述的 hash join probe 功能的低层表示。这些 IR 指令的粒度与处理器执行的指令相近，但仍包含若干便于翻译的抽象。原文 Figure 2(a) 给出 LLVM IR，Figure 2(b) 给出对应的 Flounder IR；结合这些 IR 代码，我们举例说明两者的异同。该图主要是代码/IR，因此这里转写为代码块，并在后文继续比较。
 
 **图 2：hash join probe 算子的中间表示：(a) LLVM IR；(b) Flounder IR。**
 
@@ -131,7 +131,7 @@ loop_footN:
 
 #### 结构
 
-LLVM IR 是 basic block 图：每个块以 label 开始、以 `br` 结束，jump 构成边；编译器可据此重新选择 fall-through。Flounder 只有一条线性指令序列，查询编译器已经确定常见路径，因此不需要通用编译器再做图级布局。较简单的表示直接提高翻译速度。
+LLVM IR 是 basic block 图：每个块以 label 开始、以 `br` 结束，jump 构成边；编译器可据此重新选择 fall-through。Flounder 只有一条线性指令序列，查询编译器已经确定默认路径，因此不需要通用编译器再做图级布局。较简单的表示直接提高翻译速度。
 
 #### 虚拟寄存器
 
@@ -164,11 +164,11 @@ SQL --Grammar (lemon)--> Expression Tree
 
 ### 3.2 IR 检查
 
-用户可以同时检查生成的 IR 和最终 machine assembly，并按算子观察 register allocation、post-projection optimization、关系算子实现、hash aggregation 和 hash join。Figure 2(b) 就是 hash join probe 的可检查输出。
+用户可以同时检查生成的 IR 和最终 machine assembly，并按算子观察 register allocation、post-projection optimization、关系算子实现、hash aggregation 和 hash join。Figure 2(b) 就是 hash join probe 的可检查输出。通过观察 IR 代码和 machine assembly，我们可以看到这些数据库与编译器技术如何实际发挥作用。下文，我们以哈希表 entry 的解物化为例考察 IR。
 
 ### 3.3 示例：寄存器分配
 
-论文回到 Figure 2 的解物化片段。假定 4 个 attribute register 中 3 个已占用，仅 `r8` 空闲，且栈上还没有 spill：
+为说明 IR 检查如何让我们观察寄存器分配，我们回到第 2 节的例子：每次匹配都要把哈希表 entry 读入寄存器。现在，我们要检查 IR 和 machine assembly，以理解该操作的寄存器分配方式。下面代码摘自 Figure 2(b)，负责把哈希表 entry 中的属性 `r_a` 和 `r_b` 读入寄存器。作为寄存器分配场景，我们假定 4 个 attribute register 中 3 个已占用，仅 `r8` 空闲，且栈上还没有 spill：
 
 ```asm
 vreg {r_a}
@@ -201,13 +201,13 @@ mov [rsp-8], rax   ; spill store
 
 ## 4. 评估
 
-论文以编译时间为演示的首要指标；执行时间结果见相关工作 [1]。测试机为 Intel Xeon E5-1607 v2 3.00 GHz、32 GB RAM、Ubuntu 18.04.4、LLVM 6.0.0，并使用同样基于 LLVM JIT 的 HyPer `v0.5-222-g04766a1` 对照。
+我们评估 ReSQL 在若干工作负载上的编译性能，并把编译时间作为演示的首要指标；执行时间方面，我们请读者参阅相关工作 [1]。我们使用的系统配备 Intel Xeon E5-1607 v2 3.00 GHz CPU 和 32 GB RAM。我们使用 Ubuntu 18.04.4 和 LLVM 6.0.0，还使用同样基于 LLVM JIT 的 HyPer `v0.5-222-g04766a1` 对照。
 
-复杂度模板 $Q _ {\pi}$ 改变投影属性数量， $Q _ {\bowtie}$ 改变 join 关系数；改变复杂度参数可以测量不同 JIT 技术的渐近编译时间。TPC-H 则用于刻画真实分析查询的编译速度；由于 ReSQL 当时的 planner 尚不支持 subquery，只选择无子查询的 Q1、Q3、Q5、Q6、Q10、Q12、Q14、Q19。
+我们使用图 4 所示的两个查询模板： $Q _ {\pi}$ 改变投影属性数量， $Q _ {\bowtie}$ 改变 join 关系数；这使我们能够通过改变复杂度参数，测量不同 JIT 技术的渐近编译时间。我们还评估若干 TPC-H 基准查询的编译时间，以刻画真实分析查询的编译速度；由于 ReSQL 当时的 planner 尚不支持 subquery，我们只选择无子查询的 Q1、Q3、Q5、Q6、Q10、Q12、Q14、Q19。
 
 ### 4.1 渐近编译时间
 
-$Q _ {\pi}$ 从投影 50 个属性增加到极端的 500 个，过滤选择率为 1%； $Q _ {\bowtie}$ 从连接 2 张表增加到 100 张。比较 Flounder、LLVM O0 和 LLVM O3。
+我们比较 LLVM 和 Flounder 对 $Q _ {\pi}$ 与 $Q _ {\bowtie}$ 的机器码编译时间。对 $Q _ {\pi}$，我们把投影属性数从 50 增加到极端的 500，过滤选择率为 1%；对 $Q _ {\bowtie}$，我们把连接关系数从 2 增加到 100。我们在图 5 中给出 Flounder、LLVM O0 和 LLVM O3 的结果。
 
 原文 Figure 4 给出两个复杂度查询模板，分别控制投影属性数量和连接关系数量：
 
@@ -233,11 +233,11 @@ where r₁.a = r₂.a
 
 图 5：查询复杂度对不同中间表示编译时间的影响。
 
-所有方法都随复杂度增长。 $Q _ {\bowtie}$ 最高 657 ms， $Q _ {\pi}$ 最高 560 ms。LLVM O0 在 10-265 ms 间，O3 在 28-657 ms 间，两者均呈超线性；Flounder 近似线性，只从 0.3 ms 增至 10.8 ms。100 表 join 上，它分别比 O0/O3 快 24.6/60.9 倍；投影模板相对 O0 的最大提升达 283 倍。
+所有方法都随复杂度增长。 $Q _ {\bowtie}$ 最高 657 ms， $Q _ {\pi}$ 最高 560 ms；我们重点考察 $Q _ {\bowtie}$。LLVM O0 在 10-265 ms 间，O3 在 28-657 ms 间，两者均呈超线性；Flounder 近似线性，只从 0.3 ms 增至 10.8 ms。100 表 join 上，它分别比 O0/O3 快 24.6/60.9 倍；投影模板相对 O0 的最大提升达 283 倍。
 
 ### 4.2 真实查询编译时间
 
-为评估真实工作负载的编译时间，论文用 HyPer 和 ReSQL 执行 TPC-H 查询，结果见 Figure 6。HyPer 的编译时间从 Q6 的 15 ms 到 Q5 的 90 ms；ReSQL 的编译时间从 Q6 的 0.21 ms 到 Q19 的 1.71 ms。ReSQL 的平均编译时间比 HyPer 短 70.1 倍，Q5 的最大提升为 101.1 倍。ReSQL 使用 Flounder IR 而不是 LLVM；Flounder IR 更简单，并针对关系工作负载裁剪，因此显著加快了编译过程。Figure 6 还标出了各查询生成的 166–1,134 条机器指令。
+为评估真实工作负载的编译时间，我们用 HyPer 和 ReSQL 执行 TPC-H 查询，结果见 Figure 6。HyPer 的编译时间从 Q6 的 15 ms 到 Q5 的 90 ms；ReSQL 的编译时间从 Q6 的 0.21 ms 到 Q19 的 1.71 ms。ReSQL 的平均编译时间比 HyPer 短 70.1 倍，Q5 的最大提升为 101.1 倍。ReSQL 使用 Flounder IR 而不是 LLVM；Flounder IR 更简单，并针对关系工作负载裁剪，因此显著加快了编译过程。Figure 6 还标出了各查询生成的 166–1,134 条机器指令。
 
 ![图 6：TPC-H 查询在 HyPer 和 ReSQL 中的编译时间](assets/precise-manual-figure-06-tpch-compile-time.png)
 
@@ -245,7 +245,7 @@ where r₁.a = r₂.a
 
 ## 5. 总结
 
-本文展示 Flounder IR 作为中间表示的能力，并从概念层面和编译性能视角对比 Flounder IR 与 LLVM IR。本文还说明了现场演示中可以观察到的编译与查询处理环节。
+本文展示 Flounder IR 作为中间表示的能力。我们从概念层面和编译性能视角对比 Flounder IR 与 LLVM IR；本文还说明了现场演示中可以观察到的编译与查询处理环节。
 
 ## 致谢
 

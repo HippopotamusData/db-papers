@@ -4,22 +4,26 @@
 
 Maintain a reader-first archive of database papers, complete Chinese translations, and direct reading-value ratings. Keep per-paper metadata minimal, use verifiable evidence, and never invent missing facts.
 
-## Authority by information type
+## Evidence and canonical storage
 
-Resolve conflicts only within the same information type:
+Do not confuse the place where a value is stored with the evidence that justifies
+it. Resolve conflicts only within the same information type:
 
-| Information | Authority |
-| --- | --- |
-| Paper content, numbers, formulas, and citations | `source.pdf` |
-| Paper ID and primary area | Directory path |
-| Title, authors, year, source URL, topics, reading status, and rating | `paper.yaml` |
-| Page policy, per-paper exceptions, and skip reasons | `config/policy.yaml` |
-| Controlled areas and topics | `config/taxonomy.yaml` |
-| Current accepted hashes, content-bound review receipt, review action, and waivers | `config/acceptance.yaml` |
-| Config schemas and controlled codes | `scripts/project_config.py` |
-| Operation scope and write authority | The user's current request and the Autonomy section below |
-| Current procedures | Active documents under `docs/` |
-| Superseded policy and detailed review history | Git history |
+| Information | Evidence source | Canonical storage |
+| --- | --- | --- |
+| Paper content, numbers, formulas, and citations | The acquired original paper | `source.pdf` |
+| Paper ID and primary area | The scoped ingest/classification decision | Directory path |
+| Title, authors, year, and source URL | Paper first page or a reliable original-paper entry | `paper.yaml` |
+| Assigned topics | The paper's core question plus `config/taxonomy.yaml` definitions | `paper.yaml` |
+| Reading status | Lifecycle rules plus current files, policy, and acceptance state | `paper.yaml` |
+| Rating | `source.pdf` and the evidence required by the rating workflow | `paper.yaml` |
+| Page policy, per-paper exceptions, and skip reasons | Project policy and explicit user authorization | `config/policy.yaml` |
+| Controlled areas and topics | Maintainer-approved taxonomy definitions | `config/taxonomy.yaml` |
+| Current accepted hashes, review evidence, action, and waivers | Independent PDF review plus the acceptance gates | `config/acceptance.yaml` |
+| Config schemas and controlled codes | Maintainer-approved executable contract | `scripts/project_config.py` |
+| Operation scope and write authority | The user's current request | The current request and the Autonomy section below |
+| Current procedures | Maintainer-approved workflow | Active documents under `docs/` |
+| Superseded policy and detailed review history | Prior committed states | Git history |
 
 User scope controls what may be changed; it does not override facts stated by the paper.
 
@@ -29,10 +33,12 @@ Before acting, read only the document or documents listed for the task:
 
 | Task | Required documents |
 | --- | --- |
-| Add or recover a source paper | `docs/workflows/ingest.md` |
+| Add or recover a source paper | `docs/workflows/ingest.md`, `docs/workflows/metadata.md` |
 | Classify or enrich reading metadata | `docs/workflows/metadata.md` |
 | Score a paper's reading value | `docs/workflows/rating.md` |
-| Create or repair a translation | `docs/workflows/translate.md`, `docs/translation-policy.md` |
+| Create or repair a translation draft | `docs/workflows/translate.md`, `docs/workflows/metadata.md`, `docs/translation-policy.md` |
+| Complete one newly added paper end to end | `docs/workflows/ingest.md`, `docs/workflows/metadata.md`, `docs/workflows/translate.md`, `docs/workflows/review.md`, `docs/workflows/rating.md`, `docs/translation-policy.md` |
+| Record a page-limit exception or a policy skip | `docs/workflows/maintain.md`, `docs/workflows/metadata.md` |
 | Coordinate a Codex translation or authorized historical-repair batch with direct subagents | `docs/workflows/batch-translate.md`, `docs/workflows/review.md`, `docs/translation-policy.md` |
 | Audit/review a translation (read-only by default) | `docs/workflows/review.md`, `docs/translation-policy.md` |
 | Review-and-repair or accept a translation (explicit write authorization) | `docs/workflows/review.md`, `docs/translation-policy.md` |
@@ -48,7 +54,7 @@ Before acting, read only the document or documents listed for the task:
 - Do not infer missing authors, publication years, paper content, experimental results, or citations.
 - Ratings follow `docs/workflows/rating.md` and measure the paper, not its translation or availability.
 - Full processing of a newly added paper includes rating after translation acceptance; do not call the paper complete while its rating is missing unless the evidence gap is reported as a blocker.
-- Do not translate a missing PDF or a PDF over the configured page limit without an explicit user override.
+- Do not translate a missing PDF or a PDF over the configured page limit without an explicit user override. Translation work detects and stops on this condition; maintain owns the matching policy record and `source_only <-> skipped` transition.
 - Do not regenerate an accepted translation merely to change wording; make evidence-backed, scoped repairs.
 - Default review scope is newly added papers, changed accepted content, and papers named by concrete new evidence. Do not start a repository-wide content re-review or bulk historical rewrite unless the user's current request explicitly authorizes that scope.
 - Preserve complete references, formulas, tables, algorithms, code, and semantically necessary figures. Whole-page screenshots and QA residue do not belong in the reading path.
@@ -63,8 +69,9 @@ For audit/review, explanation, diagnosis, rule design, or planning requests, ins
 ```bash
 make validate       # fast metadata, status/file, hash, and translation-structure checks
 make deep-validate  # full PDF, listing, image, reference, and coverage audit
+make source-check PAPER_ID=<paper-id>  # source identity and readability gate
 make paper-check PAPER_ID=<paper-id>  # scoped deep gate for one paper during a parallel batch
-python3 scripts/papers.py review-queue  # risk-first queue for deeper PDF re-review
+make review-queue   # risk-first queue for deeper PDF re-review
 make catalog        # regenerate CATALOG.md from paper.yaml files
 make check          # fast submission gate and generated-file check
 make deep-check     # full repository audit; reserve for validator/policy changes or an explicit audit

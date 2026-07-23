@@ -6,7 +6,7 @@ year: 2021
 source_url: https://vldb.org/pvldb/vol14/p2691-funke.pdf
 topics:
   - query-compilation
-reading_status: translated
+reading_status: draft
 rating:
   score: 2.5
   influence_breadth: 2

@@ -39,36 +39,59 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           BEFORE_SHA: ${{ github.event.before }}
           CURRENT_SHA: ${{ github.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           changed_paths="$RUNNER_TEMP/changed-paths.txt"
           : > "$changed_paths"
           force_deep=false
+          diff_base=
 
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             force_deep=true
+            if [ -n "$DEFAULT_BRANCH" ]; then
+              diff_base=$(git merge-base "origin/$DEFAULT_BRANCH" HEAD || true)
+            fi
           elif [ "$EVENT_NAME" = "pull_request" ]; then
-            git diff --name-only "origin/$BASE_REF...HEAD" > "$changed_paths"
+            diff_base=$(git merge-base "origin/$BASE_REF" HEAD || true)
+            if [ -n "$diff_base" ] && git cat-file -e "$diff_base^{commit}"; then
+              git diff --name-only "$diff_base..HEAD" > "$changed_paths"
+            else
+              force_deep=true
+            fi
           elif [ -n "$BEFORE_SHA" ] &&
                [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] &&
                git cat-file -e "$BEFORE_SHA^{commit}"; then
+            diff_base=$BEFORE_SHA
             git diff --name-only "$BEFORE_SHA..$CURRENT_SHA" > "$changed_paths"
-          elif git rev-parse --verify HEAD^ >/dev/null 2>&1; then
-            git diff --name-only "HEAD^..HEAD" > "$changed_paths"
+          elif [ "$REF_NAME" != "$DEFAULT_BRANCH" ] &&
+               [ -n "$DEFAULT_BRANCH" ]; then
+            diff_base=$(git merge-base "origin/$DEFAULT_BRANCH" "$CURRENT_SHA" || true)
+            if [ -n "$diff_base" ] && git cat-file -e "$diff_base^{commit}"; then
+              git diff --name-only "$diff_base..$CURRENT_SHA" > "$changed_paths"
+            else
+              force_deep=true
+            fi
           else
             force_deep=true
           fi
 
           cat "$changed_paths"
           echo "force_deep=$force_deep" >> "$GITHUB_OUTPUT"
+          echo "diff_base=$diff_base" >> "$GITHUB_OUTPUT"
 
       - name: Select validation scope
         id: scope
         env:
           FORCE_DEEP: ${{ steps.changes.outputs.force_deep }}
+          DIFF_BASE: ${{ steps.changes.outputs.diff_base }}
         run: |
           args=()
           if [ "$FORCE_DEEP" = "true" ]; then
             args+=(--force-deep)
+          fi
+          if [ -n "$DIFF_BASE" ]; then
+            args+=(--base-sha "$DIFF_BASE")
           fi
           python scripts/ci_validation_scope.py "${args[@]}" \
             < "$RUNNER_TEMP/changed-paths.txt" >> "$GITHUB_OUTPUT"
@@ -99,15 +122,12 @@ jobs:
 
       - name: Check whitespace
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          BASE_REF: ${{ github.base_ref }}
-          BEFORE_SHA: ${{ github.event.before }}
           CURRENT_SHA: ${{ github.sha }}
+          DIFF_BASE: ${{ steps.changes.outputs.diff_base }}
         run: |
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            git diff --check "origin/$BASE_REF...HEAD"
-          elif [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE_SHA^{commit}"; then
-            git diff --check "$BEFORE_SHA..$CURRENT_SHA"
+          if [ -n "$DIFF_BASE" ] && git cat-file -e "$DIFF_BASE^{commit}"; then
+            git diff --check "$DIFF_BASE..$CURRENT_SHA"
           else
-            git show --check --format= HEAD
+            empty_tree=$(git hash-object -t tree /dev/null)
+            git diff --check "$empty_tree..$CURRENT_SHA"
           fi
