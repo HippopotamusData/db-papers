@@ -5,8 +5,8 @@
 ## 总览
 
 - 论文记录：150
-- 已验收译文：134
-- 译文草稿：10
+- 已验收译文：144
+- 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
 - 原文不可用：0
@@ -41,9 +41,9 @@
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
-| [Data Prefetch Mechanisms](papers/implementation-foundations/data-prefetch-mechanisms/translation.md) | 程序编译与优化 | 2000 | 3.5 | draft | [原文](<https://doi.org/10.1145/358923.358939>) |
+| [Data Prefetch Mechanisms](papers/implementation-foundations/data-prefetch-mechanisms/translation.md) | 程序编译与优化 | 2000 | 3.5 | translated | [原文](<https://doi.org/10.1145/358923.358939>) |
 | [Expression Templates Revisited: A Performance Analysis of the Current ET Methodology](papers/implementation-foundations/expression-templates-revisited/translation.md) | 程序编译与优化 | 2011 | 3.5 | translated | [原文](<https://arxiv.org/pdf/1104.1729.pdf>) |
-| [LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation](papers/implementation-foundations/llvm-compilation-framework-lifelong-program-analysis-transformation/translation.md) | 程序编译与优化 | 2003 | 4.5 | draft | [原文](<https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf>) |
+| [LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation](papers/implementation-foundations/llvm-compilation-framework-lifelong-program-analysis-transformation/translation.md) | 程序编译与优化 | 2003 | 4.5 | translated | [原文](<https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf>) |
 | [Merge Path - A Visually Intuitive Approach to Parallel Merging](papers/implementation-foundations/merge-path-visually-intuitive-parallel-merging/translation.md) | 排序与归并 | 2014 | 4.0 | translated | [原文](<https://arxiv.org/abs/1406.2628>) |
 | [Pattern-defeating Quicksort](papers/implementation-foundations/pattern-defeating-quicksort/translation.md) | 排序与归并 | 2021 | 4.0 | translated | [原文](<https://arxiv.org/abs/2106.05123>) |
 | [Random Sampling with a Reservoir](papers/implementation-foundations/random-sampling-with-a-reservoir/translation.md) | 流处理 | 1985 | 5.0 | translated | [原文](<https://doi.org/10.1145/3147.3165>) |
@@ -65,7 +65,7 @@
 | [DuckDB: an Embeddable Analytical Database](papers/system-architecture/duckdb-embeddable-analytical-database/translation.md) | 数据库系统设计、分析型数据库 | 2019 | 4.5 | translated | [原文](<https://duckdb.org/library/duckdb/>) |
 | [F1 Query: Declarative Querying at Scale](papers/system-architecture/f1-query-declarative-querying-at-scale/translation.md) | 数据库系统设计 | 2018 | 3.5 | translated | [原文](<http://www.vldb.org/pvldb/vol11/p1835-samwel.pdf>) |
 | [GAMMA - A High Performance Dataflow Database Machine](papers/system-architecture/gamma-high-performance-dataflow-database-machine/translation.md) | 数据库系统设计、查询执行 | 1986 | 4.5 | translated | [原文](<https://www.vldb.org/conf/1986/P228.PDF>) |
-| [HAWQ: A Massively Parallel Processing SQL Engine in Hadoop](papers/system-architecture/hawq-a-massively-parallel-processing-sql-engine-in-hadoop/translation.md) | 数据库系统设计 | 2014 | 3.0 | draft | [原文](<https://doi.org/10.1145/2588555.2595636>) |
+| [HAWQ: A Massively Parallel Processing SQL Engine in Hadoop](papers/system-architecture/hawq-a-massively-parallel-processing-sql-engine-in-hadoop/translation.md) | 数据库系统设计 | 2014 | 3.0 | translated | [原文](<https://doi.org/10.1145/2588555.2595636>) |
 | [Lakehouse: A New Generation of Open Platforms that Unify Data Warehousing and Advanced Analytics](papers/system-architecture/lakehouse-new-generation-open-platforms/translation.md) | 数据库系统设计、云原生、面向 AI 的数据系统、湖仓一体 | 2021 | 4.5 | translated | [原文](<https://www.vldb.org/cidrdb/2021/lakehouse-a-new-generation-of-open-platforms-that-unify-data-warehousing-and-advanced-analytics.html>) |
 | [Napa: Powering Scalable Data Warehousing with Robust Query Performance at Google](papers/system-architecture/napa-powering-scalable-data-warehousing-with-robust-query-performance-at-google/translation.md) | 数据库系统设计 | 2021 | 3.5 | translated | [原文](<http://vldb.org/pvldb/vol14/p2986-sankaranarayanan.pdf>) |
 | [Procella: Unifying serving and analytical data at YouTube](papers/system-architecture/procella-unifying-serving-and-analytical-data-at-youtube/translation.md) | 数据库系统设计 | 2019 | 3.5 | translated | [原文](<http://www.vldb.org/pvldb/vol12/p2022-chattopadhyay.pdf>) |
@@ -87,7 +87,7 @@
 | [Adaptive Execution of Compiled Queries](papers/query-processing/adaptive-execution-compiled-queries/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](<https://db.in.tum.de/~leis/papers/adaptiveexecution.pdf>) |
 | [Adaptive Optimization of Very Large Join Queries](papers/query-processing/adaptive-optimization-very-large-join-queries/translation.md) | 查询优化 | 2018 | 3.5 | translated | [原文](<https://db.in.tum.de/~radke/papers/hugejoins.pdf>) |
 | [Advanced Join Strategies for Large-Scale Distributed Computation](papers/query-processing/advanced-join-strategies-large-scale-distributed-computation/translation.md) | 查询执行 | 2014 | 3.5 | translated | [原文](<https://www.vldb.org/pvldb/vol7/p1484-bruno.pdf>) |
-| [An Overview of Query Optimization in Relational Systems](papers/query-processing/overview-query-optimization-relational-systems/translation.md) | 查询优化 | 1998 | 4.0 | draft | [原文](<https://www.microsoft.com/en-us/research/publication/an-overview-of-query-optimization-in-relational-systems-paper/>) |
+| [An Overview of Query Optimization in Relational Systems](papers/query-processing/overview-query-optimization-relational-systems/translation.md) | 查询优化 | 1998 | 4.0 | translated | [原文](<https://www.microsoft.com/en-us/research/publication/an-overview-of-query-optimization-in-relational-systems-paper/>) |
 | [Apache Calcite: A Foundational Framework for Optimized Query Processing Over Heterogeneous Data Sources](papers/query-processing/apache-calcite-a-foundational-framework-for-optimized-query-processing-over-heterogeneous-data-sources/translation.md) | 查询优化、数据联邦 | 2018 | 5.0 | translated | [原文](<https://arxiv.org/pdf/1802.10233.pdf>) |
 | [Are We Ready For Learned Cardinality Estimation?](papers/query-processing/are-we-ready-for-learned-cardinality-estimation/translation.md) | 基数估计、AI 优化数据库 | 2021 | 3.5 | translated | [原文](<https://doi.org/10.14778/3461535.3461552>) |
 | [Balancing vectorized query execution with bandwidth-optimized storage](papers/query-processing/balancing-vectorized-query-execution-bandwidth-optimized-storage/source.pdf) | 向量化执行 | 2009 | 4.0 | skipped | [原文](<https://dare.uva.nl/search?identifier=5ccbb60a-38b8-4eeb-858a-e7735dd37487>) |
@@ -96,7 +96,7 @@
 | [BIPie: Fast Selection and Aggregation on Encoded Data using Operator Specialization](papers/query-processing/bipie-fast-selection-aggregation-encoded-data-operator-specialization/translation.md) | 向量化执行 | 2018 | 2.5 | translated | [原文](<https://doi.org/10.1145/3183713.3190658>) |
 | [DeepDB: Learn from Data, not from Queries!](papers/query-processing/deepdb-learn-from-data-not-from-queries/translation.md) | 基数估计、AI 优化数据库 | 2020 | 3.5 | translated | [原文](<https://doi.org/10.14778/3384345.3384349>) |
 | [Efficiency in the Columbia Database Query Optimizer](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | 查询优化 | 1998 | 3.5 | skipped | [原文](<https://15721.courses.cs.cmu.edu/spring2018/papers/15-optimizer1/xu-columbia-thesis1998.pdf>) |
-| [Efficiently Compiling Efficient Query Plans for Modern Hardware](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/translation.md) | 查询编译 | 2011 | 4.5 | draft | [原文](<https://www.vldb.org/pvldb/vol4/p539-neumann.pdf>) |
+| [Efficiently Compiling Efficient Query Plans for Modern Hardware](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/translation.md) | 查询编译 | 2011 | 4.5 | translated | [原文](<https://www.vldb.org/pvldb/vol4/p539-neumann.pdf>) |
 | [Everything You Always Wanted to Know About Compiled and Vectorized Queries But Were Afraid to Ask](papers/query-processing/compiled-and-vectorized-queries-afraid-to-ask/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](<https://www.vldb.org/pvldb/vol11/p2209-kersten.pdf>) |
 | [Exploiting Upper and Lower Bounds in Top-Down Query Optimization](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/translation.md) | 查询优化 | 2001 | 3.0 | translated | [原文](<https://doi.org/10.1109/IDEAS.2001.938068>) |
 | [Generating code for holistic query evaluation](papers/query-processing/generating-code-holistic-query-evaluation/translation.md) | 查询编译 | 2010 | 3.5 | translated | [原文](<https://doi.org/10.1109/ICDE.2010.5447892>) |
@@ -107,7 +107,7 @@
 | [Improving Unnesting of Complex Queries](papers/query-processing/improving-unnesting-of-complex-queries/translation.md) | 查询优化 | 2025 | 3.5 | translated | [原文](<https://portal.fis.tum.de/en/publications/improving-unnesting-of-complex-queries/>) |
 | [Interleaved Multi-Vectorizing](papers/query-processing/interleaved-multi-vectorizing/translation.md) | 向量化执行 | 2019 | 3.0 | translated | [原文](<http://www.vldb.org/pvldb/vol13/p226-fang.pdf>) |
 | [Learned Cardinalities: Estimating Correlated Joins with Deep Learning](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/translation.md) | 查询优化、基数估计、AI 优化数据库 | 2019 | 4.0 | translated | [原文](<https://vldb.org/cidrdb/2019/learned-cardinalities-estimating-correlated-joins-with-deep-learning.html>) |
-| [Low-Latency Compilation of SQL Queries to Machine Code](papers/query-processing/low-latency-compilation-sql-queries-machine-code/translation.md) | 查询编译 | 2021 | 2.5 | draft | [原文](<https://vldb.org/pvldb/vol14/p2691-funke.pdf>) |
+| [Low-Latency Compilation of SQL Queries to Machine Code](papers/query-processing/low-latency-compilation-sql-queries-machine-code/translation.md) | 查询编译 | 2021 | 2.5 | translated | [原文](<https://vldb.org/pvldb/vol14/p2691-funke.pdf>) |
 | [MonetDB/X100: Hyper-Pipelining Query Execution](papers/query-processing/monetdb-x100-hyper-pipelining-query-execution/translation.md) | 向量化执行 | 2005 | 5.0 | translated | [原文](<https://www.cidrdb.org/cidr2005/papers/P19.pdf>) |
 | [Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age](papers/query-processing/morsel-driven-parallelism/translation.md) | 查询执行 | 2014 | 4.5 | translated | [原文](<https://doi.org/10.1145/2588555.2610507>) |
 | [Neo: A Learned Query Optimizer](papers/query-processing/neo-a-learned-query-optimizer/translation.md) | 查询优化、AI 优化数据库 | 2019 | 4.0 | translated | [原文](<https://www.vldb.org/pvldb/vol12/p1705-marcus.pdf>) |
@@ -119,10 +119,10 @@
 | [Permutable Compiled Queries: Dynamically Adapting Compiled Queries without Recompiling](papers/query-processing/permutable-compiled-queries-dynamically-adapting-without-recompiling/translation.md) | 查询编译 | 2021 | 3.0 | translated | [原文](<https://db.cs.cmu.edu/papers/2020/p101-menon.pdf>) |
 | [Photon: A Fast Query Engine for Lakehouse Systems](papers/query-processing/photon-fast-query-engine-lakehouse-systems/translation.md) | 云原生、查询执行、向量化执行、湖仓一体 | 2022 | 4.0 | translated | [原文](<https://doi.org/10.1145/3514221.3526054>) |
 | [Presto: SQL on Everything](papers/query-processing/presto-sql-on-everything/translation.md) | 查询执行、数据联邦 | 2019 | 4.5 | translated | [原文](<https://trino.io/Presto_SQL_on_Everything.pdf>) |
-| [Push vs. Pull-Based Loop Fusion in Query Engines](papers/query-processing/push-vs-pull-loop-fusion/translation.md) | 查询执行 | 2016 | 3.5 | draft | [原文](<https://arxiv.org/abs/1610.09166>) |
+| [Push vs. Pull-Based Loop Fusion in Query Engines](papers/query-processing/push-vs-pull-loop-fusion/translation.md) | 查询执行 | 2016 | 3.5 | translated | [原文](<https://arxiv.org/abs/1610.09166>) |
 | [Relaxed Operator Fusion for In-Memory Databases: Making Compilation, Vectorization, and Prefetching Work Together At Last](papers/query-processing/relaxed-operator-fusion-in-memory-databases/translation.md) | 查询编译 | 2017 | 3.5 | translated | [原文](<http://www.vldb.org/pvldb/vol11/p1-menon.pdf>) |
 | [Rethinking SIMD Vectorization for In-Memory Databases](papers/query-processing/rethinking-simd-vectorization-in-memory-databases/translation.md) | 向量化执行 | 2015 | 4.0 | translated | [原文](<http://www.cs.columbia.edu/~orestis/sigmod15.pdf>) |
-| [Runtime Code Generation in Cloudera Impala](papers/query-processing/runtime-code-generation-cloudera-impala/translation.md) | 查询编译 | 2014 | 3.5 | draft | [原文](<http://sites.computer.org/debull/A14mar/p31.pdf>) |
+| [Runtime Code Generation in Cloudera Impala](papers/query-processing/runtime-code-generation-cloudera-impala/translation.md) | 查询编译 | 2014 | 3.5 | translated | [原文](<http://sites.computer.org/debull/A14mar/p31.pdf>) |
 | [SAHA: A String Adaptive Hash Table for Analytical Databases](papers/query-processing/saha-string-adaptive-hash-table-analytical-databases/translation.md) | 向量化执行 | 2020 | 3.0 | translated | [原文](<https://www.mdpi.com/2076-3417/10/6/1915>) |
 | [Spark SQL: Relational Data Processing in Spark](papers/query-processing/spark-sql-relational-data-processing-in-spark/translation.md) | 查询执行 | 2015 | 5.0 | translated | [原文](<https://cs.stanford.edu/~matei/papers/2015/sigmod_spark_sql.pdf>) |
 | [The Cascades Framework for Query Optimization](papers/query-processing/cascades-framework-query-optimization/translation.md) | 查询优化 | 1995 | 5.0 | translated | [原文](<https://www.sigmod.org/publications/dblp/db/journals/debu/Graefe95a.html>) |
@@ -179,7 +179,7 @@
 | --- | --- | ---: | ---: | --- | --- |
 | [Bigtable: A Distributed Storage System for Structured Data](papers/distributed-databases/bigtable-distributed-storage-system-structured-data/translation.md) | 存储引擎、分布式存储 | 2006 | 5.0 | translated | [原文](<https://research.google/pubs/bigtable-a-distributed-storage-system-for-structured-data/>) |
 | [CockroachDB: The Resilient Geo-Distributed SQL Database](papers/distributed-databases/cockroachdb-the-resilient-geo-distributed-sql-database/translation.md) | 分布式 SQL、事务处理 | 2020 | 3.5 | translated | [原文](<https://cdn2.hubspot.net/hubfs/1753393/guides/White%20Paper%20%7C%20CockroachDB%20The%20Resilient%20Geo-Distributed%20SQL%20Database%20%28SIGMOD%202020%29.pdf>) |
-| [Dynamo: Amazon’s Highly Available Key-value Store](papers/distributed-databases/dynamo-amazon-highly-available-key-value-store/translation.md) | 分布式存储 | 2007 | 5.0 | draft | [原文](<https://doi.org/10.1145/1294261.1294281>) |
+| [Dynamo: Amazon’s Highly Available Key-value Store](papers/distributed-databases/dynamo-amazon-highly-available-key-value-store/translation.md) | 分布式存储 | 2007 | 5.0 | translated | [原文](<https://doi.org/10.1145/1294261.1294281>) |
 | [F1: A Distributed SQL Database That Scales](papers/distributed-databases/f1-distributed-sql-database-scales/translation.md) | 数据库系统设计、分布式 SQL、事务处理 | 2013 | 4.0 | translated | [原文](<https://research.google/pubs/f1-a-distributed-sql-database-that-scales/>) |
 | [FoundationDB: A Distributed Unbundled Transactional Key Value Store](papers/distributed-databases/foundationdb-a-distributed-unbundled-transactional-key-value-store/translation.md) | 分布式存储、事务处理 | 2021 | 4.5 | translated | [原文](<https://www.foundationdb.org/files/fdb-paper.pdf>) |
 | [In Search of an Understandable Consensus Algorithm](papers/distributed-databases/raft-understandable-consensus-algorithm/translation.md) | 分布式存储 | 2014 | 5.0 | translated | [原文](<https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro>) |
@@ -210,7 +210,7 @@
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |
 | --- | --- | ---: | ---: | --- | --- |
 | [Automated SQL Query Generation for Systematic Testing of Database Engines](papers/reliability-and-testing/automated-sql-query-generation-systematic-testing-database-engines/translation.md) | 数据库测试 | 2010 | 3.0 | translated | [原文](<https://doi.org/10.1145/1858996.1859063>) |
-| [Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction](papers/reliability-and-testing/detecting-optimization-bugs-non-optimizing-reference-engine/translation.md) | 数据库测试 | 2020 | 4.5 | draft | [原文](<https://arxiv.org/abs/2007.08292>) |
+| [Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction](papers/reliability-and-testing/detecting-optimization-bugs-non-optimizing-reference-engine/translation.md) | 数据库测试 | 2020 | 4.5 | translated | [原文](<https://arxiv.org/abs/2007.08292>) |
 | [QAGen: Generating Query-Aware Test Databases](papers/reliability-and-testing/qagen-generating-query-aware-test-databases/translation.md) | 数据库测试 | 2007 | 3.0 | translated | [原文](<https://cs.uwaterloo.ca/~tozsu/publications/other/sigmod07-final.pdf>) |
 | [Quantifying TPC-H Choke Points and Their Optimizations](papers/reliability-and-testing/quantifying-tpch-choke-points/translation.md) | 数据库测试 | 2020 | 3.5 | translated | [原文](<http://www.vldb.org/pvldb/vol13/p1206-dreseler.pdf>) |
 | [Testing Database Engines via Pivoted Query Synthesis](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/translation.md) | 数据库测试 | 2020 | 4.0 | translated | [原文](<https://www.usenix.org/conference/osdi20/presentation/rigger>) |

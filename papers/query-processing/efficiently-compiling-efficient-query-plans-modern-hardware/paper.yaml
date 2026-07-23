@@ -5,7 +5,7 @@ year: 2011
 source_url: https://www.vldb.org/pvldb/vol4/p539-neumann.pdf
 topics:
   - query-compilation
-reading_status: draft
+reading_status: translated
 rating:
   score: 4.5
   influence_breadth: 4

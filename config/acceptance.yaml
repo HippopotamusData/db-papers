@@ -578,19 +578,34 @@ entries:
     fingerprint: cfa6db550cb610328f59420f88029f0e76dba035f215319e2f0dd53bbe6eedb3
     review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
   llvm-compilation-framework-lifelong-program-analysis-transformation:
-    schema_version: 1
+    schema_version: 2
     paper_id: llvm-compilation-framework-lifelong-program-analysis-transformation
     source_sha256: 431270af8684ef8278b615c1d75bbdaf22077697ae3c3bc99c49cdf7d937a034
-    translation_sha256: a6021db522018c3a24c98c6ee93d4d3e78e3e4193331333cd4527921d6915012
+    translation_sha256: 11fbb0ce4984ff7dd2328c72e83117c00bcfa392c1a2344e3040d1d5dc704c70
     assets_manifest_sha256: c2f8cb27dd0e9e91814f272b576e920afc4764c42555633fd5353222ff27be7f
     review_metadata_sha256: 0b3f3a7350af97c6742fbdecbd07e5b091caee741bdda284d98591d316593479
     review_action: repair-review
-    translator: codex:root
-    reviewer: codex:sap-iq-independent-gate
-    findings: []
+    translator: codex:legacy-repair-b
+    reviewer: codex:legacy-review-a
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
+    findings:
+      - 'authorial-voice PASS: all 58 valid first-person source items were individually mapped to 58 verified Chinese items;
+        no shared-subject merge, ownership loss, narrator substitution, or added first person remains.'
+      - 'semantic-fidelity PASS: LLVM representation, five framework capabilities, lifecycle stages, DSA/SAFECode/V-ISA applications,
+        all numeric claims, limitations, and conclusions were checked; the PGO capability-number conflict is transparently
+        preserved with no remaining defect.'
+      - 'source-inventory PASS: PDF 11 pages; title and author metadata, abstract and classifications, Sections 1-6, Figures
+        1-5, Table 1, code Figures 1-2, footnotes 1-11, and References 1-34 were located and checked in dual-column order.'
+      - 'source-native-anomaly disposition: source conflicts for PGO capability #2/#3, 74.6% versus Table 1''s 74.3%, the
+        176 data statement, and reference [3] name ''J. ery'' are faithfully retained and explicitly documented. No waiver
+        is required.'
+    authorial_voice:
+      source_valid_items: 58
+      verified_items: 58
+      shared_subject_merges: 0
     waivers: {}
-    fingerprint: 11c8d4f94449806c51758f9b9203acb0107a0abaeafcdf9f84f4ed49484e03a8
-    review_snapshot: e4beeea660f4e4250c70b0047755c47ee40244d9547a5c6811b9111d3c1dd61f
+    fingerprint: 4d956676dc1f4fa00062937fe6c4f975b4e6d7286e36fda69de79c0851356038
   memsql-query-optimizer:
     schema_version: 1
     paper_id: memsql-query-optimizer
@@ -754,23 +769,36 @@ entries:
     fingerprint: 64c52880b3fc63c1e5199246725cd5cb36f49995c55479a036af21086ccdaa54
     review_snapshot: e4beeea660f4e4250c70b0047755c47ee40244d9547a5c6811b9111d3c1dd61f
   overview-query-optimization-relational-systems:
-    schema_version: 1
+    schema_version: 2
     paper_id: overview-query-optimization-relational-systems
     source_sha256: cc216fb2d94b64791339618093620a779df04fb2c5c5cc9a8977bb763d709b30
-    translation_sha256: f81e25c2abbcb39f94a9846becde39ecd078d55c6c586f1caef438af8bb20445
+    translation_sha256: f4c74285e6aace18a7776d4a3cc695630123445f90f18d77b998bc726034d718
     assets_manifest_sha256: 8fb7a06a245c2afe21bf62956eb36f5ab16e81b4d39286c7cc585eb7b61bb46c
     review_metadata_sha256: 3e6905c28196b126e8de27059e16c70bde6a836902f03464b47542336f23f789
     review_action: repair-review
-    translator: codex:root
-    reviewer: codex:wave1-gate-verify
+    translator: codex:root-repair
+    reviewer: codex:implementation-audit
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
     findings:
-      - Independently re-reviewed all 10 source pages after repair; verified restored front matter, complete body citations,
-        five footnotes and anchors, author first-person narration, O(n 2^{n-1}), four figures and captions, source-literal
-        HAVING <, scanned SQL identifiers, portable GitHub math, and all 61 references; all 11 controlled checks pass.
+      - 'authorial-voice: verified all 54 valid I/we/my/our/us items; five items legally reuse an explicit Chinese subject
+        across four groups at translation lines 28, 186, 322, and 368.'
+      - 'semantic-fidelity: verified System R enumeration, outerjoin and group-by transformations, Semijoin formulas, O(n
+        2^(n-1)), source-literal HAVING less-than, SQL identifiers, numeric context, and removal of the source-external reference
+        preface.'
+      - 'source-inventory: checked all 10 scanned PDF pages, front matter, Sections 1-9, four figures, five footnotes, Conclusions,
+        Acknowledgments, and all 61 references in rendered double-column order.'
+      - 'source-native-anomaly and waiver: reviewed all 27 ordered delimiter-OCR reference-ID normalizations plus the low-token-overlap
+        candidates for references 20 and 21 against the scanned PDF; the source page 5 greater-than-or-equal versus transformed
+        less-than anomaly remains literal.'
+    authorial_voice:
+      source_valid_items: 54
+      verified_items: 54
+      shared_subject_merges: 5
     waivers:
       resources:
-        evidence_version: 1
-        fingerprint: 5e8bbc70f1bb25c5808b3e023879beac71130859aa127c50319871d0c5c25df4
+        evidence_version: 4
+        fingerprint: 92a3328a9c429a3ddf409fbe03b5eedf8e6a5037a85463b4950eaa99ab40b794
         findings:
           - low-token-overlap-reference:20
           - low-token-overlap-reference:21
@@ -806,8 +834,7 @@ entries:
             r31->3, [41->4, 151->5, vi->6, 171->7, pi->8, pi->9, io->10, ll->11, ml->16, ii71->17, wi->18, [i91->19, po1->20,
             wi->21, 1461->46, 1271->27, [so]->50, sl->51, [.52]->52, 1321->32, (391->39, i.581->58, [4l]->41, 1421->42'
           - 'RISK: translation reference has low source-token overlap for: 20, 21'
-    fingerprint: 39c4900f9da6846d84d2ed7067b8079efe3d37e1e4752e75f8c3a1188e13285d
-    review_snapshot: e4beeea660f4e4250c70b0047755c47ee40244d9547a5c6811b9111d3c1dd61f
+    fingerprint: e6b91b029100442bac1fef7fa6521f4c2d6cc5fc3277181466e5c8b2994e8bdb
   permutable-compiled-queries-dynamically-adapting-without-recompiling:
     schema_version: 1
     paper_id: permutable-compiled-queries-dynamically-adapting-without-recompiling
@@ -841,28 +868,39 @@ entries:
     fingerprint: 42e03f6cd30a769a83ba145a4072784ddd0d7745fdd4a827d9964780c40fc19c
     review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
   push-vs-pull-loop-fusion:
-    schema_version: 1
+    schema_version: 2
     paper_id: push-vs-pull-loop-fusion
     source_sha256: 83917fb9d1231464a04fd556065cc72f00f190ab74850a70784409ab511a1c9a
-    translation_sha256: ab555790ecff0f28603d8ced7fea2d880d48d9fb8e584e539b2d1c6dcba81cc2
+    translation_sha256: 662f376c3f450a7019a1f06c82c01af1c82b178f7c526d8147a95d32fa706a4d
     assets_manifest_sha256: 82e7e7af9764ad31f910132b308a68458d9ed02e538980cd74607cc1c0082fcb
     review_metadata_sha256: 59407243eb3cd15553f0b5d0a63bfd503b6c00e7b9d9969c474f53832667a63c
     review_action: repair-review
-    translator: codex:wave1-resource-audit
-    reviewer: codex:wave1-gate-verify
+    translator: codex:root-repair
+    reviewer: codex:implementation-audit
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
     findings:
-      - 论文 source、translation、assets 与旧内容绑定收据的哈希完全一致；原独立审阅者在当前 review-gate manifest 下重跑 scoped deep gate，并确认 11 项内容检查及既有人工结论仍绑定当前字节。
-      - 重新核对作者信息、5 个脚注、41 个正文引文、技术限制、Figures 2–10 与 Table 1；中等篇幅比机械提示仍由完整逐项内容复核覆盖。
+      - 'authorial-voice: verified all 91 valid I/we/my/our/us items; one source item in the contribution list on PDF page
+        1 legally shares the explicit Chinese subject at translation line 48.'
+      - 'semantic-fidelity: verified hashJoin, semiHashJoin, nested-collection scope, Figure 4 null-check qualifier, Step
+        and Visitor identifiers, experiment conditions, numeric context, and the source page 10 objective narrator repair.'
+      - 'source-inventory: checked all 14 PDF pages, front matter, Sections 1-8, 16 figures, 4 tables, 5 footnotes, Conclusions,
+        references [1]-[57], and Appendix A in source reading order.'
+      - 'waiver-disposition: independently reviewed the moderate abridgement candidate against the complete PDF; no omitted
+        technical content or source-native anomaly remains.'
+    authorial_voice:
+      source_valid_items: 91
+      verified_items: 91
+      shared_subject_merges: 1
     waivers:
       abridgement:
-        evidence_version: 1
-        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        evidence_version: 4
+        fingerprint: 925da8ad3974bc1b9f3ff7bf7e55ea5efa3f1acea34ca1a4464f981e28449e4a
         findings:
           - abridgement:moderate
         candidates:
-          - 'moderate mechanical abridgement risk: CJK/source-word ratio=6767/10581 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
-    fingerprint: b3af2f0ee5da6bda7e7abdfcd185dcb7bd271e1229b3ea38bc716eb9a67cf989
-    review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=7296/10581 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
+    fingerprint: 38710b173d42f1d4026b38a4187eb8bcfbe284a446be585d06cf12f206d88a0d
   relaxed-operator-fusion-in-memory-databases:
     schema_version: 1
     paper_id: relaxed-operator-fusion-in-memory-databases
@@ -906,20 +944,33 @@ entries:
     fingerprint: 0030fa9d5a8b175edb3e8e0bd4c568b25bb847f8371915aae79ec01c3ea96aef
     review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
   runtime-code-generation-cloudera-impala:
-    schema_version: 1
+    schema_version: 2
     paper_id: runtime-code-generation-cloudera-impala
     source_sha256: f403619421fcbb018d7e074917a1ddc9d155e5e0d76bbab7a73902034987d47f
-    translation_sha256: 743c11b0d131da52003c7a2fa3abb58a8829eca832c6a373299aacb904d2e825
+    translation_sha256: 58109ac72449b7cac6e297f96e4fe4440f5efdaed2f196c2e63c32b17422d6e1
     assets_manifest_sha256: a7a98766749bc449cb64375b1858b7c58419f5d0244976072b9ca8bd65ac5031
     review_metadata_sha256: 971b3aeb9b74580cb45db8f4a2d9a761fbe14c7aee82afd8ad299aca237d0ac5
     review_action: repair-review
-    translator: codex:root
-    reviewer: codex:sap-iq-independent-gate
-    findings: []
+    translator: codex:legacy-repair-a
+    reviewer: codex:legacy-review-b
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
+    findings:
+      - 'authorial-voice: 58个源候选中排除3个i.e.分词I；55个有效项全部验证，5项为中文共享主语合并，提出、实现、观察、计划和所有关系均保持第一人称，未见无来源“我们”。'
+      - 'numbers-and-context: 10–100倍、5倍以上、数万亿调用、10节点6亿行Avro、Table 3三组时间/加速、1TB Parquet及排序/解析器覆盖限制均与原文的指标、基线和实验条件一致。'
+      - 'semantic-fidelity: MaterializeTuple专用化、分支/加载/虚调用消除、IRBuilder与Clang路径、UDF及未来工作逐项对源；Figure 1/3代码、Figure 2表达式树和Figure
+        4全部查询标签/图例完整。'
+      - 'source-inventory: PDF 7页（31–37）逐页核验；标题、两位作者及邮箱、摘要、版权、§1–6、§3.1–3.3、Figures 1–4、Tables 3–4和9条参考文献完整；原文无脚注、致谢、附录或正式编号公式。'
+      - 'source-native-anomaly: Table 4计数直接相除约为Instructions 3.76x、Branches 4.36x，而源Speedup行写4.29x和3.76x；译文保留原表并显式说明，未替作者校正。'
+      - 'waiver-disposition: 4条resource候选均人工回PDF处置；Figure 1由两段完整代码承载，Tables 3/4为完整Markdown，所谓equation (1)来自SQL count(1)且7页PDF没有正式编号公式。'
+    authorial_voice:
+      source_valid_items: 55
+      verified_items: 55
+      shared_subject_merges: 5
     waivers:
       resources:
-        evidence_version: 1
-        fingerprint: 517336061fc9af6508af6eb5ce00c08bd6980c61cf3446f515367196fa2bf9df
+        evidence_version: 4
+        fingerprint: a965e412d6a129fce2f5f23c8fc75673f898833f3f3991c929024e2a6c95f982
         findings:
           - missing-display-equation:1
           - missing-formal-payload:figure:1
@@ -930,8 +981,7 @@ entries:
           - 'RISK: source Table 3 has no formal translation-side payload candidate'
           - 'RISK: source Table 4 has no formal translation-side payload candidate'
           - 'RISK: source equation (1) has no translation-side display/formula candidate'
-    fingerprint: 97f04991bc57e73790e6969b785ca08b5ed5f16233adb7e77079a35e03c6ad31
-    review_snapshot: e4beeea660f4e4250c70b0047755c47ee40244d9547a5c6811b9111d3c1dd61f
+    fingerprint: a1d975e6d6e1d31cfde543033366c2215333468e57d787a65c796220eb6a2815
   saha-string-adaptive-hash-table-analytical-databases:
     schema_version: 1
     paper_id: saha-string-adaptive-hash-table-analytical-databases
@@ -1085,20 +1135,32 @@ entries:
     fingerprint: 6ef739ddebacfba7d937f7d8f7ca4ba3a0997b60c6958b94477f0da45c3c8427
     review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
   detecting-optimization-bugs-non-optimizing-reference-engine:
-    schema_version: 1
+    schema_version: 2
     paper_id: detecting-optimization-bugs-non-optimizing-reference-engine
     source_sha256: d8ab4346ac1dad11371f98232ecf8d3639991e6d3a28d932043a1a7a345a4f2a
-    translation_sha256: 4a4201ed5af0fe0b1c1ad7e346b87f94357cad7f1ec40988acf4f65bf9243ef6
+    translation_sha256: adbb9a74c5b3725112a614d9deebaa66c830f80aa0af191df894084e8856f0a8
     assets_manifest_sha256: c068185d27d1032a7f601241d69e4f2ff7ef41f8ad506175c68cf4efe0d1b635
     review_metadata_sha256: f170c02ac4b61aee527784409d57e7f233b0fdee13703a6c70c25e01b2c487ec
     review_action: repair-review
-    translator: codex:root
-    reviewer: codex:sap-iq-independent-gate
-    findings: []
+    translator: codex:legacy-repair-a
+    reviewer: codex:legacy-review-b
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
+    findings:
+      - 'authorial-voice: 布局文本252个候选中排除6个i.e.分词I、1个I/O、CockroachDB第三方引语4项和SQLite用户引语2项；239个有效项逐项验证239项，17项为中文共享主语合并，未见责任主体漂移或反向添加“我们”。'
+      - 'figures-and-tables: Figure 1的rs1/rs2/rs3、φ与三步流程可读；Table 1/3 caption具体论断和159/141/51/58/27/23等数值完整；双栏页3–10渲染确认无串栏或资源错位。'
+      - 'semantic-fidelity: NoREC翻译/计数机制、JOIN/GROUP BY/非确定函数等边界、Listings 1–13的SQL/结果集与PQS 56.9%/82.4%/52.7%比较逐项对源；否定、限定、比较方向及标识符无误。'
+      - 'source-inventory: PDF 13页逐页核验；首页作者/机构/摘要/CCS/关键词、§1–7及全部小节、脚注1、Figure 1、Tables 1–3、Listings 1–13、致谢和61条参考文献均在译文中按阅读顺序完整呈现。'
+      - 'source-native-anomaly: Listing 4源SQL存在可见语法异常；Table 2 Fixed列合计144、全表合计167、caption 159/141与正文168互相不一致，译文分别忠实保留并明确说明，未静默校正。'
+      - 'waiver-disposition: 27条Listing候选均源于双栏/整页代码候选过捕获；人工核对13个Listing标题、完整SQL、字面量与预期/实际结果，均有正式译文载荷；Listing 4保留源PDF自身的SQL语法异常。'
+    authorial_voice:
+      source_valid_items: 239
+      verified_items: 239
+      shared_subject_merges: 17
     waivers:
       listings:
-        evidence_version: 1
-        fingerprint: 5fa0866126633cd576c51e60cae7fbcf74f773825a9145bb21ce463441a2d3c1
+        evidence_version: 4
+        fingerprint: 80b3bb28129d4502d30ab56c01d062be4401ebf2c5876f8e3f03ea094eb33d08
         findings:
           - listing:10:short-relative-to-source
           - listing:10:weak-distinctive-identifier-overlap
@@ -1155,8 +1217,7 @@ entries:
           - 'RISK: Listing 8 fenced payload is short relative to source code candidate (91/1344)'
           - 'RISK: Listing 9 fenced payload has weak distinctive-identifier overlap with source candidate (0.06)'
           - 'RISK: Listing 9 fenced payload is short relative to source code candidate (134/1344)'
-    fingerprint: abee4f0d90e56cd5617be38fe056b5d4d78ec4347e810edc758fbc39bd919bfb
-    review_snapshot: e4beeea660f4e4250c70b0047755c47ee40244d9547a5c6811b9111d3c1dd61f
+    fingerprint: 95dc1f3c424b794cd5bd3f2aab0bd2f5389c6ec22d0ec1101ddf0245a2ff96b6
   qagen-generating-query-aware-test-databases:
     schema_version: 1
     paper_id: qagen-generating-query-aware-test-databases
@@ -1652,28 +1713,40 @@ entries:
     fingerprint: 88be4908c33c4678e6b5a539e903c470739caddb5f6056a35488d2837e8df89f
     review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
   hawq-a-massively-parallel-processing-sql-engine-in-hadoop:
-    schema_version: 1
+    schema_version: 2
     paper_id: hawq-a-massively-parallel-processing-sql-engine-in-hadoop
     source_sha256: daef7735562a245bd486e6784f268375c92a1c36dc85b47eee32ebaec6e61d42
-    translation_sha256: a8d9ba6791222025b7a9ec9643bf05bae60c32bba3473524040b200b30c5cd6d
+    translation_sha256: 243fd5ea1f8fc34f698faea7d08ffc92850c4e77c5dc1a1e47f7a3fdc6242445
     assets_manifest_sha256: 0232e4de21482c8e3f280ccf331c5dc42cd98024344ceb3a45e03e2affc9f505
     review_metadata_sha256: d56e70f75e69514bdc36fee2affda417f1553a310245efd5c3759e2a020f9b67
     review_action: repair-review
-    translator: codex:wave1-gate-verify
-    reviewer: codex:wave1-math-audit
+    translator: codex:root-repair
+    reviewer: codex:implementation-audit
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
     findings:
-      - 论文 source、translation、assets 与旧内容绑定收据的哈希完全一致；原独立审阅者在当前 review-gate manifest 下重跑 scoped deep gate，并确认 11 项内容检查及既有人工结论仍绑定当前字节。
-      - 重新核对作者邮箱组、SIGMOD 2014 出版信息、全部章节、13 图、实验数字、结论和参考文献；篇幅提示由完整逐项内容复核覆盖。
+      - 'authorial-voice: verified all 38 valid I/we/my/our/us items with zero shared-subject merges and no impersonal replacement
+        or added author responsibility.'
+      - 'semantic-fidelity: checked UCS, QD/QE, slice and gang, CaQL, PXF, transaction and interconnect mechanics, 160 GB
+        and 1.6 TB experiments, 19/22 and 12/22 scopes, speedups, resource settings, and OOM conditions.'
+      - 'source-inventory: checked all 12 PDF pages, author and publication data, Sections 1-9, 13 figures, three source footnotes,
+        Conclusions, and all 40 references in rendered reading order.'
+      - 'source-native-anomaly and waiver: preserved and explicitly identified the PDF page 3 missing SQL comma and the store
+        versus storeid qualifier mismatch; restored the Impala and Presto OOM footnote, and cleared the moderate abridgement
+        candidate by complete PDF review.'
+    authorial_voice:
+      source_valid_items: 38
+      verified_items: 38
+      shared_subject_merges: 0
     waivers:
       abridgement:
-        evidence_version: 1
-        fingerprint: 7dad00595467c8b66aa54f893fccea6ad352cb9498f094c8a1946fbf41dab64b
+        evidence_version: 4
+        fingerprint: 925da8ad3974bc1b9f3ff7bf7e55ea5efa3f1acea34ca1a4464f981e28449e4a
         findings:
           - abridgement:moderate
         candidates:
-          - 'moderate mechanical abridgement risk: CJK/source-word ratio=5832/10449 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
-    fingerprint: 617f1d098065f55b3b74cba23ca55a6cd1a2fb3501b61a9bd5b1361dce2ba98d
-    review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
+          - 'moderate mechanical abridgement risk: CJK/source-word ratio=6266/10449 (<0.75; extractor=pypdf-6.14.2; metric=v1)'
+    fingerprint: 63a9a7a5eae5ceef3012ac53e383ff9494cfc80df8a6a6575ab30888ebec2dc0
   napa-powering-scalable-data-warehousing-with-robust-query-performance-at-google:
     schema_version: 1
     paper_id: napa-powering-scalable-data-warehousing-with-robust-query-performance-at-google
@@ -2043,19 +2116,34 @@ entries:
     fingerprint: b09c20024bfede8ea2867e400f1980c5ae5398456b23902120934eb48aa0d5ff
     review_snapshot: 7c874ccb4b836688b26e9b3c1861c9a3099abb7381bb3fd0f96962eaf03760da
   dynamo-amazon-highly-available-key-value-store:
-    schema_version: 1
+    schema_version: 2
     paper_id: dynamo-amazon-highly-available-key-value-store
     source_sha256: 5cacd624cd7bfd37e3d22e04d8c2e347a49579d2927dbb06f40a89c0bcd40bd4
-    translation_sha256: 96207b9112f548b79fbc16011d8e59a0d09129cfa43a27938e0b6fde9cf7f238
+    translation_sha256: 1f30bc5e6a639ff25eda1877c76e58bd6616db33f904d0c337b163403db35265
     assets_manifest_sha256: b32120503c12a733ad043ce6ad10c62a00f00e0ed4a6309f3eb6b3f035e47e28
     review_metadata_sha256: cae5437623b79bc792a71ff7c7cd16bb014af8899b607963c19fbefa37e4a6d0
-    review_action: full-translation-review
-    translator: codex:wave1-math-audit
-    reviewer: codex:wave1-gate-verify
-    findings: []
+    review_action: repair-review
+    translator: codex:legacy-repair-b
+    reviewer: codex:legacy-review-a
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
+    findings:
+      - 'authorial-voice PASS: 27 valid first-person source items were individually mapped to 27 verified Chinese items; no
+        shared-subject merges and no added or displaced narrator were found.'
+      - 'semantic-fidelity PASS: consistent hashing, vector clocks, N/R/W quorum rules, sloppy quorum, hinted handoff, failure
+        handling, experiments, numeric claims, conditions, and limitations were checked against source.pdf with no remaining
+        defect.'
+      - 'source-inventory PASS: PDF 16 pages; front matter, abstract, Sections 1-7, Figures 1-8, Tables 1-2, footnotes 1-2,
+        acknowledgments, and References 1-24 were located and checked in dual-column reading order.'
+      - 'source-native-anomaly disposition: Figure 3''s D5 visual clock omits punctuation between the Sy and Sz entries in
+        the source image; the source-native asset is retained and the adjacent translated prose preserves the correct three-entry
+        clock. No waiver is required.'
+    authorial_voice:
+      source_valid_items: 27
+      verified_items: 27
+      shared_subject_merges: 0
     waivers: {}
-    fingerprint: e124d88cfc91b6c6efa54bcc319a7c67cf1bb41bf4a8f9266ad6952564e1adfe
-    review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
+    fingerprint: eb1e6131cfa387308b53317180ce06cd082abe91cbf5c58a11198fb68d2f71ba
   bigtable-distributed-storage-system-structured-data:
     schema_version: 1
     paper_id: bigtable-distributed-storage-system-structured-data
@@ -3078,40 +3166,67 @@ entries:
     fingerprint: 3acb0fed661ba9344d69d7ab3a6a9c32fc9daa942f225c4cff2c7720ae6235d8
     review_snapshot: 91fcc4063c2e5b24c1259b0029d0bf45ab7a43794205a173c99b8a31395dad25
   efficiently-compiling-efficient-query-plans-modern-hardware:
-    schema_version: 1
+    schema_version: 2
     paper_id: efficiently-compiling-efficient-query-plans-modern-hardware
     source_sha256: 7e3f5001d09f13b1a5dbc6d1756b7d2dbe1db0f023f14817d02226b00c09726c
-    translation_sha256: a6ceb233c7b7e7f98483af7a78e8744b3c5fedc02a6f07185e2b21b72ba5054f
+    translation_sha256: 718b402d23689b9b86aeaebaa6d5c8582dda1870dc46942a84206d9db0a12924
     assets_manifest_sha256: 13be39fe482111cdf4e4f7aa1dc4bbae95ed8f9cf5bfafc8c31020a356132c71
     review_metadata_sha256: b7b10b299838094cb9da1013d6abaf9f68370c7051994f007ccacad997206640
     review_action: repair-review
-    translator: codex:efficient-codegen-repair
-    reviewer: codex:efficient-codegen-independent-gate
-    findings: []
+    translator: codex:legacy-repair-b
+    reviewer: codex:legacy-review-a
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
+    findings:
+      - 'authorial-voice PASS: 142 valid source items were individually verified; 140 explicit Chinese first-person forms
+        preserve all actions and ownership, with exactly 2 reviewed shared-subject merges in Appendix B.'
+      - 'semantic-fidelity PASS: repaired related-work, LLVM/C++ integration, backend-benefit, Callgrind, microbenchmark,
+        filter-condition, optimization-setting, and TPC-C ownership passages were rechecked at source pages 2, 4, 7, 11, and
+        12 with no remaining defect.'
+      - 'source-inventory PASS: PDF 12 pages; front matter, Sections 1-8, Figures 1-9, Tables 1-3, References 1-16, Appendices
+        A-D, and all SQL, pseudocode, C++, and LLVM code were located and checked in dual-column order.'
+      - 'source-native-anomaly disposition: Figure 4 symbols, Figure 7 branch identifiers, and Appendix A Scan/HashJoin code
+        anomalies are faithfully retained and explicitly noted in the translation; ordinary source spelling slips do not alter
+        meaning. No waiver is required.'
+    authorial_voice:
+      source_valid_items: 142
+      verified_items: 142
+      shared_subject_merges: 2
     waivers: {}
-    fingerprint: 2946b13e8d6e809a30cf12fcc71f0d6b0af1fa23ae26cb9b311395d255feb206
-    review_snapshot: e4beeea660f4e4250c70b0047755c47ee40244d9547a5c6811b9111d3c1dd61f
+    fingerprint: 10c570cdd46a49079aea2916cb439b29ccafb2e417021135ab0b2cddead7f739
   low-latency-compilation-sql-queries-machine-code:
-    schema_version: 1
+    schema_version: 2
     paper_id: low-latency-compilation-sql-queries-machine-code
     source_sha256: 7492417add1690acce4161c34859ccfacd7cf2196f915d87e3cc38f93a2a1216
-    translation_sha256: 0aad81b460ff4010234f461faf689951582bde9294d0e4447a7209794e47e8a1
+    translation_sha256: 89378466892f95b4037c3b41a926a96ac5eef25f769fd3c7db9bb631cfd9e90d
     assets_manifest_sha256: 7ad185fa003cbaabca8cbccba0f0df0ca647e82b630da2118e6cdf8bafffa3a6
     review_metadata_sha256: 9747638fdd06347f2a18582db88e6d09a53a19e6eb50d033742d8a3773a7b022
     review_action: repair-review
-    translator: codex:root
-    reviewer: codex:sap-iq-independent-gate
-    findings: []
+    translator: codex:legacy-repair-a
+    reviewer: codex:legacy-review-b
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
+    findings:
+      - 'authorial-voice: 源文38个I/we/my/our/us有效项全部逐项验证，译文35处“我们”对应3项中文共享主语合并；贡献、演示步骤、评估选择和系统配置的责任主体均保持，无遗漏或反向添加。'
+      - 'figures-and-tables: Figures 1/3/5/6裁图标签、轴、图例和166–1,134条机器指令可读；Figure 4两个SQL模板完整；Figure 2虽无图片载荷，但两列IR代码与caption完整承载源内容，resource
+        waiver可接受。'
+      - 'numbers-and-context: Xeon E5-1607 v2/3GHz/32GB、Ubuntu18.04.4/LLVM6/HyPer版本、p=50–500/1%/j=2–100、10–657/28–657/0.3–10.8ms、24.6/60.9/283倍均绑定正确查询和基线。'
+      - 'semantic-fidelity: Figure 2的LLVM/Flounder IR逐行核验；default path、marker virtual register、live-range splitting及r_a→r8、r_b→[rsp-8]经rax的分配/溢出流程与源文一致。'
+      - 'source-inventory: PDF 4页（2691–2694）逐页核验；作者/机构/邮箱、摘要、PVLDB信息与许可、§1–5及全部小节、Figures 1–6、致谢和5条参考文献完整；原文无表格、正式公式、脚注、附录或收稿记录。'
+      - 'source-native-anomaly: 源PDF的troughput、funtionality、demonstation、ontop等明显拼写/语法错误仅作语义归一化；Figure 2 C代码中的字面null按源保留，未引入技术改写。'
+    authorial_voice:
+      source_valid_items: 38
+      verified_items: 38
+      shared_subject_merges: 3
     waivers:
       resources:
-        evidence_version: 1
-        fingerprint: c5a513edddc9f6489925a11e3f8476b3f0e8c20fb42c945f7cb93f4842d3bdd6
+        evidence_version: 4
+        fingerprint: 2d291a8de9cdd292841e66fd478bcdeff2b4ee1e023a1eaf09776c4a485d6df2
         findings:
           - missing-formal-payload:figure:2
         candidates:
           - 'RISK: source Figure 2 has no formal translation-side payload candidate'
-    fingerprint: c08d19ec4a92ed21bfe1436cc00e0c600654e29bb163c6070b7dd9bb9e1ffcae
-    review_snapshot: e4beeea660f4e4250c70b0047755c47ee40244d9547a5c6811b9111d3c1dd61f
+    fingerprint: 30d838984d0376019efec25c64e055bec5e57c3e2bddfec57f434d8fbf436765
   vectorization-vs-compilation-query-execution:
     schema_version: 1
     paper_id: vectorization-vs-compilation-query-execution
@@ -3894,26 +4009,30 @@ entries:
     fingerprint: e055583da5350b71fba034f655721bb82cd810040d9883fd0da49e637c5d388d
     review_snapshot: 23269efaadd2c0843daf4cf099fd804023199fd95215b62dadb838c85a5eada2
   data-prefetch-mechanisms:
-    schema_version: 1
+    schema_version: 2
     paper_id: data-prefetch-mechanisms
     source_sha256: 96c64c200651ab53a132f5697d1aad1776d42233381a40432c34ee0e07d2c519
-    translation_sha256: f81ff843f726633db38fb92f40743a4457a0c22fb588bb57d971932bef565621
+    translation_sha256: 813ccf5b1484697743268afd88b5421ff1b367bc4e733bcfa4c383f98feb1094
     assets_manifest_sha256: dcf65f7afd18be264e393e000fd51b46b750be977ea2148114b79d4ed50b373b
     review_metadata_sha256: 850d4d113c2e46bacde40f6570be2747d3c7f64ce4210939a9027b3ad25f78a4
-    review_action: full-translation-review
-    translator: codex-agent:translator-data-prefetch
-    reviewer: codex-agent:reviewer-data-prefetch
+    review_action: repair-review
+    translator: codex:root-repair
+    reviewer: codex:implementation-audit
+    review_base_sha: 102a2b5873dd7e7d5da8b15d3e4e6618216a847f
+    review_head_sha: 3a6b1e7f6d216490d80a2f8d00cfd631e484a93b
     findings:
-      - 'authorial-voice: six effective items (five we, one us) checked 6/6; email us excluded; no shared-subject merge or
-        impersonal replacement'
-      - 'source-inventory: 26 PDF pages; front matter, unheaded abstract, contents, Sections 1-7, acknowledgments, 47 references,
-        and received/revised/accepted dates checked complete'
-      - 'source-native-anomaly: Figures 8-11 drawings and literal captions are consecutively misaligned in source.pdf; translation
-        preserves each literal source caption without correction'
-      - 'technical-content: all formulas, explicit numbers/units/comparison directions/limits, and Figure 4/5/10/12 code plus
-        Figure 10 three RPT tables checked'
-      - 'visual-assets: all 12 figures compared at original detail; repaired Figure 3/8/11 crops are complete; axes, legends,
-        subfigure labels, boundaries, and links checked'
+      - 'authorial-voice: verified all six valid source items, five we and one us, with zero shared-subject merges; excluded
+        the us.ibm.com email and code index i false positives.'
+      - 'semantic-fidelity: checked fetch, RPT, LA-PC, stride and state transitions, formulas, prefetch limits, all explicit
+        numeric contexts, Figure 4 and 5 loop code, Figure 10 code and three RPT tables, and Figure 12 multiprocessor code.'
+      - 'source-inventory: checked all 26 PDF pages, author and publication data, unheaded abstract, Contents, Sections 1-7,
+        12 figures, Acknowledgments, 47 author-year references, and received, revised, and accepted dates.'
+      - 'source-native-anomaly: visually confirmed the consecutive PDF pages 14-17 mismatch between Figures 8-11 drawings
+        and literal captions; the translation explicitly identifies actual image contents while preserving each source caption
+        verbatim.'
+    authorial_voice:
+      source_valid_items: 6
+      verified_items: 6
+      shared_subject_merges: 0
     waivers: {}
-    fingerprint: 3433ccc62b4604230fbb55010dbc2c249ab38557250e3b494c38bb3e910a8e37
-    review_snapshot: 23269efaadd2c0843daf4cf099fd804023199fd95215b62dadb838c85a5eada2
+    fingerprint: 8c7bb91bf8b443ae9af2d707161f4f1488398dc1280ee9f89ece778620ca5113

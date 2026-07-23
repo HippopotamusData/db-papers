@@ -120,14 +120,7 @@ class ProjectConfigTests(unittest.TestCase):
         }
         self.assertEqual(
             legacy_empty_findings,
-            {
-                "detecting-optimization-bugs-non-optimizing-reference-engine",
-                "dynamo-amazon-highly-available-key-value-store",
-                "efficiently-compiling-efficient-query-plans-modern-hardware",
-                "llvm-compilation-framework-lifelong-program-analysis-transformation",
-                "low-latency-compilation-sql-queries-machine-code",
-                "runtime-code-generation-cloudera-impala",
-            },
+            set(),
         )
 
     def test_taxonomy_reader_text_must_be_trimmed_single_line(self) -> None:

@@ -6,7 +6,7 @@ year: 2003
 source_url: https://llvm.org/pubs/2003-09-30-LifelongOptimizationTR.pdf
 topics:
   - program-compilation-and-optimization
-reading_status: draft
+reading_status: translated
 rating:
   score: 4.5
   influence_breadth: 4
