@@ -1,4 +1,5 @@
 title: On Optimistic Methods for Concurrency Control
+title_zh: 论并发控制的乐观方法
 authors:
   - H. T. Kung
   - John T. Robinson

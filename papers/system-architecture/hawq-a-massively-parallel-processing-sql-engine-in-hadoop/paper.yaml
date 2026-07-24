@@ -1,4 +1,5 @@
 title: 'HAWQ: A Massively Parallel Processing SQL Engine in Hadoop'
+title_zh: HAWQ：Hadoop 中的大规模并行 SQL 引擎
 authors:
   - Lei Chang
   - Zhanwei Wang

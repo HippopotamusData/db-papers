@@ -1,4 +1,5 @@
 title: 'QAGen: Generating Query-Aware Test Databases'
+title_zh: QAGen：生成查询感知的测试数据库
 authors:
   - Carsten Binnig
   - Donald Kossmann

@@ -1,4 +1,5 @@
 title: 'Optimizing Queries Using Materialized Views: A Practical, Scalable Solution'
+title_zh: 利用物化视图优化查询：一种实用且可扩展的方案
 authors:
   - Jonathan Goldstein
   - Per-Åke Larson

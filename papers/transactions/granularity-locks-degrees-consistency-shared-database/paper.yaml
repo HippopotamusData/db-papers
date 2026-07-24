@@ -1,4 +1,5 @@
 title: Granularity of Locks and Degrees of Consistency in a Shared Data Base
+title_zh: 共享数据库中的锁粒度与一致性程度
 authors:
   - Jim Gray
   - Raymond A. Lorie

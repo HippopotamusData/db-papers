@@ -1,4 +1,5 @@
 title: 'FoundationDB: A Distributed Unbundled Transactional Key Value Store'
+title_zh: FoundationDB：解耦式分布式事务键值存储
 authors:
   - Jingyu Zhou
   - Meng Xu

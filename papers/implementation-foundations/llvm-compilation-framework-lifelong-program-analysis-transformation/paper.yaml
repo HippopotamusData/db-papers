@@ -1,4 +1,5 @@
 title: 'LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation'
+title_zh: LLVM：面向程序全生命周期分析与转换的编译框架
 authors:
   - Chris Lattner
   - Vikram Adve

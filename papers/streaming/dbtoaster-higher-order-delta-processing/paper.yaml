@@ -1,4 +1,5 @@
 title: 'DBToaster: Higher-order Delta Processing for Dynamic, Frequently Fresh Views'
+title_zh: DBToaster：面向动态高频刷新视图的高阶 Delta 处理
 authors:
   - Yanif Ahmad
   - Oliver Kennedy

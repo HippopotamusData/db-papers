@@ -1,4 +1,5 @@
 title: Volcano—An Extensible and Parallel Query Evaluation System
+title_zh: Volcano：可扩展的并行查询求值系统
 authors:
   - Goetz Graefe
 year: 1994

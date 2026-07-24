@@ -1,5 +1,6 @@
 title: 'The Dataflow Model: A Practical Approach to Balancing Correctness, Latency, and Cost in Massive-Scale, Unbounded,
   Out-of-Order Data Processing'
+title_zh: Dataflow 模型：在超大规模无界乱序数据处理中平衡正确性、延迟与成本的实用方法
 authors:
   - Tyler Akidau
   - Robert Bradshaw

@@ -1,4 +1,5 @@
 title: 'Permutable Compiled Queries: Dynamically Adapting Compiled Queries without Recompiling'
+title_zh: 可重排的编译查询：无需重新编译即可动态调整
 authors:
   - Prashanth Menon
   - Amadou Ngom

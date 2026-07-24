@@ -1,4 +1,5 @@
 title: 'Amazon Aurora: Design Considerations for High Throughput Cloud-Native Relational Databases'
+title_zh: Amazon Aurora：高吞吐云原生关系数据库的设计考量
 authors:
   - Alexandre Verbitski
   - Anurag Gupta

@@ -1,4 +1,5 @@
 title: 'Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age'
+title_zh: Morsel 驱动并行：面向众核时代的 NUMA 感知查询求值框架
 authors:
   - Viktor Leis
   - Peter Boncz

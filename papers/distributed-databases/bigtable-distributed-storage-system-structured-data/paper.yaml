@@ -1,4 +1,5 @@
 title: 'Bigtable: A Distributed Storage System for Structured Data'
+title_zh: Bigtable：面向结构化数据的分布式存储系统
 authors:
   - Fay Chang
   - Jeffrey Dean

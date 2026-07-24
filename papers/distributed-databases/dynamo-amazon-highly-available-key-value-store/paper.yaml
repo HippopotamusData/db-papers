@@ -1,4 +1,5 @@
 title: 'Dynamo: Amazon’s Highly Available Key-value Store'
+title_zh: Dynamo：亚马逊的高可用键值存储
 authors:
   - Giuseppe DeCandia
   - Deniz Hastorun

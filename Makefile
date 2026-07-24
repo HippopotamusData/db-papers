@@ -18,10 +18,12 @@ python-compile:
 paper-new:
 	@test -n "$(PAPER_ID)" || { echo "ERROR: PAPER_ID is required" >&2; exit 1; }
 	@test -n "$(TITLE)" || { echo "ERROR: TITLE is required" >&2; exit 1; }
+	@test -n "$(TITLE_ZH)" || { echo "ERROR: TITLE_ZH is required" >&2; exit 1; }
 	@test -n "$(AREA)" || { echo "ERROR: AREA is required" >&2; exit 1; }
 	@test -n "$(TOPICS)$(TOPIC)" || { echo "ERROR: TOPICS or TOPIC is required" >&2; exit 1; }
 	@test -n "$(URL)" || { echo "ERROR: URL is required" >&2; exit 1; }
 	$(PYTHON) scripts/papers.py new --id "$(PAPER_ID)" --title "$(TITLE)" \
+		--title-zh "$(TITLE_ZH)" \
 		--area "$(AREA)" \
 		$(foreach topic,$(if $(strip $(TOPICS)),$(TOPICS),$(TOPIC)),--topic "$(topic)") \
 		--url "$(URL)"

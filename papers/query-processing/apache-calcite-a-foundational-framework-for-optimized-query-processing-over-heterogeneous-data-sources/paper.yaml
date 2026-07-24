@@ -1,4 +1,5 @@
 title: 'Apache Calcite: A Foundational Framework for Optimized Query Processing Over Heterogeneous Data Sources'
+title_zh: Apache Calcite：面向异构数据源优化查询处理的基础框架
 authors:
   - Edmon Begoli
   - Jesús Camacho-Rodríguez

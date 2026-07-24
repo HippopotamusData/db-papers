@@ -60,6 +60,7 @@ class BuildSiteTests(unittest.TestCase):
         )
         accepted_metadata = {
             "title": "Accepted Paper",
+            "title_zh": "已验收论文",
             "authors": ["Ada Example"],
             "year": 2024,
             "source_url": "https://example.com/accepted",
@@ -69,6 +70,7 @@ class BuildSiteTests(unittest.TestCase):
         }
         draft_metadata = {
             "title": "Draft Paper",
+            "title_zh": "草稿论文",
             "authors": ["Grace Example"],
             "year": 2025,
             "source_url": "https://example.com/draft",
@@ -144,6 +146,10 @@ source: source.pdf
             self.assertNotIn("<dt>作者</dt>", accepted)
             self.assertIn("<dt>主题</dt>", accepted)
             self.assertIn("Accepted Paper（中文译文）", accepted)
+            self.assertIn(
+                '<p class="paper-title-zh paper-title-zh--page">已验收论文</p>',
+                accepted,
+            )
             self.assertNotIn("source: source.pdf", accepted)
             self.assertTrue(
                 (
@@ -182,6 +188,11 @@ source: source.pdf
             self.assertNotIn("阅读价值评分", home)
             catalog = (output / "catalog.md").read_text(encoding="utf-8")
             self.assertIn("Accepted Paper", catalog)
+            self.assertIn(
+                '<p class="paper-card__title-zh">已验收论文</p>',
+                catalog,
+            )
+            self.assertIn("accepted paper 已验收论文 ada example", catalog)
             self.assertIn("Draft Paper", catalog)
             self.assertEqual(catalog.count(">阅读原文</a>"), 2)
             self.assertIn(

@@ -1,4 +1,5 @@
 title: Handling Data Skew in Parallel Joins in Shared-Nothing Systems
+title_zh: 无共享系统并行连接中的数据倾斜处理
 authors:
   - Yu Xu
   - Pekka Kostamaa

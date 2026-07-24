@@ -1,4 +1,5 @@
 title: Adaptive Optimization of Very Large Join Queries
+title_zh: 超大规模连接查询的自适应优化
 authors:
   - Thomas Neumann
   - Bernhard Radke

@@ -1,4 +1,5 @@
 title: Vectorization vs. Compilation in Query Execution
+title_zh: 查询执行中的向量化与编译
 authors:
   - Juliusz Sompolski
   - Marcin Żukowski

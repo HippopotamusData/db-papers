@@ -1,4 +1,5 @@
 title: 'Umbra: A Disk-Based System with In-Memory Performance'
+title_zh: Umbra：具有内存级性能的磁盘数据库系统
 authors:
   - Thomas Neumann
   - Michael Freitag

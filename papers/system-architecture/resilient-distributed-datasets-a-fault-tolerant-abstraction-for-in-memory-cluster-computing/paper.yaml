@@ -1,4 +1,5 @@
 title: 'Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing'
+title_zh: 弹性分布式数据集：面向内存集群计算的容错抽象
 authors:
   - Matei Zaharia
   - Mosharaf Chowdhury

@@ -1,5 +1,6 @@
 title: 'Relaxed Operator Fusion for In-Memory Databases: Making Compilation, Vectorization, and Prefetching Work Together
   At Last'
+title_zh: 内存数据库中的宽松算子融合：让编译、向量化与预取终于协同工作
 authors:
   - Prashanth Menon
   - Todd C. Mowry

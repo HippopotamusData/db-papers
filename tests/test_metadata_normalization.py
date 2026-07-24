@@ -40,6 +40,10 @@ class MetadataNormalizationTests(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertFalse(papers.is_trimmed_single_line(value))
 
+    def test_chinese_display_title_must_contain_han_characters(self) -> None:
+        self.assertTrue(papers.contains_han("数据库系统 Architecture"))
+        self.assertFalse(papers.contains_han("Database Architecture"))
+
     def test_catalog_escapes_link_labels_and_destinations(self) -> None:
         self.assertEqual(
             papers.markdown_link_label(r"A [B] | C"),

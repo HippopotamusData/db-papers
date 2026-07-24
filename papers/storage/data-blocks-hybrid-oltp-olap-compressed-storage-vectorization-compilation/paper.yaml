@@ -1,4 +1,5 @@
 title: 'Data Blocks: Hybrid OLTP and OLAP on Compressed Storage using both Vectorization and Compilation'
+title_zh: Data Blocks：在压缩存储上结合向量化与编译实现混合 OLTP/OLAP
 authors:
   - Harald Lang
   - Tobias Mühlbauer

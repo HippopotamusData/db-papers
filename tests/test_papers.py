@@ -70,6 +70,7 @@ class PapersTests(unittest.TestCase):
         paper = root / "papers/query-processing/sample-paper"
         metadata = {
             "title": "Sample Paper",
+            "title_zh": "示例论文",
             "authors": [],
             "year": None,
             "source_url": "https://example.com/paper",
@@ -243,6 +244,18 @@ class PapersTests(unittest.TestCase):
             self.assertEqual(papers.validate(), 1)
         self.assertIn("changed after review", stderr.getvalue())
 
+    def test_chinese_display_title_change_preserves_acceptance(self) -> None:
+        root = self.make_root("translated")
+        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
+        metadata["title_zh"] = "审校后的示例论文标题"
+        metadata_path.write_text(
+            yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+        with self.globals_patch(root):
+            self.assertEqual(papers.validate(), 0)
+
     def test_translation_policy_drift_preserves_content_bound_acceptance(
         self,
     ) -> None:
@@ -287,6 +300,7 @@ class PapersTests(unittest.TestCase):
             yaml.safe_dump(
                 {
                     "title": "Other Paper",
+                    "title_zh": "其他论文",
                     "authors": [],
                     "year": None,
                     "source_url": "https://example.com/other",
@@ -1489,6 +1503,7 @@ class PapersTests(unittest.TestCase):
             catalog,
         )
         self.assertIn("[官方链接](<https://example.com/paper>)", catalog)
+        self.assertNotIn("示例论文", catalog)
 
     def test_catalog_uses_taxonomy_order_for_unordered_topics(self) -> None:
         root = self.make_root("source_only")
@@ -1619,6 +1634,7 @@ class PapersTests(unittest.TestCase):
             result = papers.new_record(
                 "new-paper",
                 "New Paper",
+                "新论文",
                 "query-processing",
                 ["query-execution"],
                 "https://example.com/new",
@@ -1629,6 +1645,7 @@ class PapersTests(unittest.TestCase):
         )
         template = yaml.safe_load((REPO_ROOT / "templates/paper.yaml").read_text(encoding="utf-8"))
         self.assertEqual(created["authors"], template["authors"])
+        self.assertEqual(created["title_zh"], "新论文")
         self.assertEqual(created["year"], template["year"])
         self.assertEqual(created["reading_status"], template["reading_status"])
 

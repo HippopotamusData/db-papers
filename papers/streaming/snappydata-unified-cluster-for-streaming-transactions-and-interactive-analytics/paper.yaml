@@ -1,4 +1,5 @@
 title: 'SnappyData: A Unified Cluster for Streaming, Transactions, and Interactive Analytics'
+title_zh: SnappyData：统一支持流处理、事务与交互式分析的集群
 authors:
   - Barzan Mozafari
   - Jags Ramnarayan

@@ -1,4 +1,5 @@
 title: 'ARIES: A Transaction Recovery Method Supporting Fine-Granularity Locking and Partial Rollbacks Using Write-Ahead Logging'
+title_zh: ARIES：使用预写日志支持细粒度锁和部分回滚的事务恢复方法
 authors:
   - C. Mohan
   - Don Haderle

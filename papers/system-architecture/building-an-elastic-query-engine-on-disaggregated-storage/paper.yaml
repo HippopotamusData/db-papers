@@ -1,4 +1,5 @@
 title: Building An Elastic Query Engine on Disaggregated Storage
+title_zh: 在解耦存储上构建弹性查询引擎
 authors:
   - Midhul Vuppalapati
   - Justin Miron

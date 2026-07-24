@@ -1,4 +1,5 @@
 title: 'MonetDB/X100: Hyper-Pipelining Query Execution'
+title_zh: MonetDB/X100：超流水线查询执行
 authors:
   - Peter Boncz
   - Marcin Żukowski

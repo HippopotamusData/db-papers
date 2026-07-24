@@ -1,4 +1,5 @@
 title: 'WinMagic: Subquery Elimination Using Window Aggregation'
+title_zh: WinMagic：使用窗口聚合消除子查询
 authors:
   - Calisto Zuzarte
   - Hamid Pirahesh

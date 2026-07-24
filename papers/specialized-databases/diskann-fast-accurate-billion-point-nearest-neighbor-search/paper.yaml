@@ -1,4 +1,5 @@
 title: 'DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node'
+title_zh: DiskANN：单机上快速而精确的十亿数据点级最近邻搜索
 authors:
   - Suhas Jayaram Subramanya
   - Fnu Devvrit

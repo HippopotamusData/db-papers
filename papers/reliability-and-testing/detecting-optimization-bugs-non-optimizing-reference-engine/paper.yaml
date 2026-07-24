@@ -1,4 +1,5 @@
 title: Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction
+title_zh: 通过构建非优化参考引擎检测数据库引擎中的优化错误
 authors:
   - Manuel Rigger
   - Zhendong Su

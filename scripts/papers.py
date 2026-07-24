@@ -68,7 +68,15 @@ from validate_github_math import math_like_code_span_issues
 ROOT = Path(__file__).resolve().parents[1]
 PAPERS = ROOT / "papers"
 CATALOG = ROOT / "CATALOG.md"
-REQUIRED_TOP_LEVEL_KEYS = {"title", "authors", "year", "source_url", "topics", "reading_status"}
+REQUIRED_TOP_LEVEL_KEYS = {
+    "title",
+    "title_zh",
+    "authors",
+    "year",
+    "source_url",
+    "topics",
+    "reading_status",
+}
 OPTIONAL_TOP_LEVEL_KEYS = {"rating"}
 READING_STATUSES = {"unavailable", "source_only", "draft", "translated", "skipped"}
 RATING_DIMENSIONS = {
@@ -112,6 +120,16 @@ def dump_yaml(data: dict[str, Any]) -> str:
         allow_unicode=True,
         sort_keys=False,
         width=120,
+    )
+
+
+def contains_han(value: str) -> bool:
+    """Return whether a string contains at least one Han character."""
+
+    return any(
+        "\u3400" <= character <= "\u4dbf"
+        or "\u4e00" <= character <= "\u9fff"
+        for character in value
     )
 
 
@@ -664,6 +682,13 @@ def validate(paper_id: str | None = None) -> int:
             add_error(errors, path, f"paper directory must be a kebab-case id: {slug}")
         if not is_trimmed_single_line(data.get("title")):
             add_error(errors, path, "title must be a trimmed, non-empty single-line string")
+        title_zh = data.get("title_zh")
+        if not is_trimmed_single_line(title_zh) or not contains_han(title_zh):
+            add_error(
+                errors,
+                path,
+                "title_zh must be a trimmed, non-empty single-line string containing Chinese characters",
+            )
         authors = data.get("authors")
         if not isinstance(authors, list) or any(
             not is_trimmed_single_line(author) for author in authors
@@ -1026,7 +1051,14 @@ def catalog(check: bool) -> int:
     return 0
 
 
-def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str) -> int:
+def new_record(
+    paper_id: str,
+    title: str,
+    title_zh: str,
+    area: str,
+    topics: list[str],
+    url: str,
+) -> int:
     taxonomy = load_taxonomy(ROOT / "config/taxonomy.yaml")
     metadata_name = METADATA_FILE
     if not SLUG_RE.fullmatch(paper_id):
@@ -1045,11 +1077,14 @@ def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str
     topic_order = {topic: index for index, topic in enumerate(taxonomy["topics"])}
     if (
         not is_trimmed_single_line(title)
+        or not is_trimmed_single_line(title_zh)
+        or not contains_han(title_zh)
         or not is_absolute_http_url(url)
     ):
         print(
-            "ERROR: --title and --url must be trimmed single-line values, "
-            "and --url must be absolute HTTP(S).",
+            "ERROR: --title and --title-zh must be trimmed single-line values, "
+            "--title-zh must contain Chinese characters, and --url must be "
+            "absolute HTTP(S).",
             file=sys.stderr,
         )
         return 1
@@ -1062,6 +1097,7 @@ def new_record(paper_id: str, title: str, area: str, topics: list[str], url: str
 
     data = {
         "title": title,
+        "title_zh": title_zh,
         "authors": [],
         "year": None,
         "source_url": url,
@@ -2304,6 +2340,7 @@ def main() -> int:
     new_parser = subparsers.add_parser("new", help="create a minimal unavailable paper record")
     new_parser.add_argument("--id", required=True, help="globally unique kebab-case paper id")
     new_parser.add_argument("--title", required=True, help="official paper title")
+    new_parser.add_argument("--title-zh", required=True, help="reviewed Chinese display title")
     new_parser.add_argument("--area", required=True, help="registered directory area")
     new_parser.add_argument(
         "--topic",
@@ -2424,7 +2461,14 @@ def main() -> int:
         return accept_record(args.paper_id, args.review_receipt)
     if args.command == "recover-acceptance":
         return recover_acceptance(args.mode)
-    return new_record(args.id, args.title, args.area, args.topics, args.url)
+    return new_record(
+        args.id,
+        args.title,
+        args.title_zh,
+        args.area,
+        args.topics,
+        args.url,
+    )
 
 
 if __name__ == "__main__":
