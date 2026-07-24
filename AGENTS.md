@@ -79,12 +79,14 @@ make source-check PAPER_ID=<paper-id>  # source identity and readability gate
 make paper-check PAPER_ID=<paper-id>  # scoped deep gate for one paper during a parallel batch
 make review-queue   # risk-first queue for deeper PDF re-review
 make catalog        # regenerate CATALOG.md from paper.yaml files
+make site-check     # build and verify the reader-facing Pages artifact
 make check          # fast submission gate and generated-file check
 make deep-check     # check superset with full repository audit
 make diff-check     # whitespace gate including untracked translation files
 ```
 
-Before finishing an ordinary integrated change, run `make check` and `make diff-check`. For validator changes, project-wide translation-policy changes, or an explicit full audit, run `make deep-check` **instead of** `make check`, then run `make diff-check`.
+Before finishing an ordinary integrated change, run `make check` and `make diff-check`. Run `make deep-check` **instead of** `make check` only when a dependency, policy, or workflow change affects paper-content interpretation, acceptance semantics, or global-validator behavior, or when the user explicitly requests a full audit. Pages, documentation, packaging, and release-flow changes that do not affect those semantics use `make check`. Then run `make diff-check`.
+Changes to the site generator, theme, or Pages workflow also run `make site-check`.
 
 In a Codex translation batch, the translator runs `make paper-check`. An independent reviewer performs the PDF review and emits a content-bound receipt; receipt generation captures one fresh single-paper check. Accept performs one final translated-grade check before writing. The root agent owns accept, shared state, checkpoints, and integration. Ordinary translation batches do not run `make deep-check`.
 

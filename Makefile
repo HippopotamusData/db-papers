@@ -6,6 +6,7 @@ MATHJAX_MODULE ?= node_modules/mathjax
 	fix-math math-check math-audit-github math-audit-github-changed \
 	math-audit-github-worktree math-audit-katex validate deep-validate paper-check \
 	review-queue batch-start batch-check batch-state accept-preflight diff-check \
+	site-prepare site-build site-check site-serve \
 	test doctor doctor-accept check deep-check
 
 python-path:
@@ -175,6 +176,18 @@ accept-preflight:
 
 diff-check:
 	bash scripts/check_diff.sh
+
+site-prepare:
+	$(PYTHON) scripts/build_site.py prepare
+
+site-build: site-prepare
+	$(PYTHON) -m zensical build --clean --config-file site.generated.toml
+
+site-check: site-build
+	$(PYTHON) scripts/build_site.py check
+
+site-serve: site-prepare
+	$(PYTHON) -m zensical serve --config-file site.generated.toml
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
