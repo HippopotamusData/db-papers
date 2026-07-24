@@ -69,12 +69,16 @@ Zensical 再把它构建到 `site/`。三个文件或目录都是可丢弃产物
 
 - 首页、领域页和从权威元数据生成的论文目录；
 - `reading_status: translated` 且存在当前 acceptance entry 的译文；
+- 每篇论文目录中未经改写的 `source.pdf`；
 - 这些译文目录中的阅读资源；
 - 版本化的站点样式与浏览器脚本。
 
-`source.pdf`、`paper.yaml`、acceptance ledger、维护文档、脚本、测试和未验收
-译文不进入 Pages artifact。论文页的原文按钮使用 `paper.yaml.source_url`，
-不复制 PDF。站点构建不改写权威论文文件。
+`paper.yaml`、acceptance ledger、维护文档、脚本、测试和未验收译文不进入
+Pages artifact。论文页的“阅读原文”按钮直接打开 Pages 中从仓库复制的
+`source.pdf`，“官方链接”按钮使用 `paper.yaml.source_url`；目录和领域卡片
+的“阅读原文”链接也直接打开该 PDF，让浏览器使用内置 PDF 阅读器。已验收
+论文的卡片标题进入中文译文，未翻译论文的卡片标题同样直接打开 PDF。站点
+构建只复制 PDF，不改写权威论文文件。
 
 本地预览和门禁：
 

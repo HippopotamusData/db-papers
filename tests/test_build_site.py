@@ -107,6 +107,9 @@ source: source.pdf
         (root / "papers/query-processing/accepted-paper/source.pdf").write_bytes(
             b"not published"
         )
+        (root / "papers/query-processing/draft-paper/source.pdf").write_bytes(
+            b"not published"
+        )
         (root / "papers/query-processing/accepted-paper/assets/figure.png").write_bytes(
             b"image"
         )
@@ -131,7 +134,15 @@ source: source.pdf
                 output
                 / "papers/query-processing/accepted-paper/index.md"
             ).read_text(encoding="utf-8")
-            self.assertIn("阅读权威原文", accepted)
+            self.assertIn(
+                '<a class="md-button md-button--primary" href="source.pdf"',
+                accepted,
+            )
+            self.assertIn(">阅读原文</a>", accepted)
+            self.assertIn('href="https://example.com/accepted"', accepted)
+            self.assertIn(">官方链接</a>", accepted)
+            self.assertNotIn("<dt>作者</dt>", accepted)
+            self.assertIn("<dt>主题</dt>", accepted)
             self.assertIn("Accepted Paper（中文译文）", accepted)
             self.assertNotIn("source: source.pdf", accepted)
             self.assertTrue(
@@ -143,7 +154,16 @@ source: source.pdf
             self.assertFalse(
                 (output / "papers/query-processing/draft-paper/index.md").exists()
             )
-            self.assertFalse(any(output.rglob("source.pdf")))
+            self.assertEqual(
+                {
+                    path.relative_to(output).as_posix()
+                    for path in output.rglob("source.pdf")
+                },
+                {
+                    "papers/query-processing/accepted-paper/source.pdf",
+                    "papers/query-processing/draft-paper/source.pdf",
+                },
+            )
             generated_config = (root / "site.generated.toml").read_text(
                 encoding="utf-8"
             )
@@ -152,13 +172,40 @@ source: source.pdf
             self.assertNotIn('"首页" = "index.md"', generated_config)
             self.assertIn('"查询处理" = "papers/query-processing/index.md"', generated_config)
             home = (output / "index.md").read_text(encoding="utf-8")
+            self.assertIn("title: 数据库系统论文档案馆", home)
+            self.assertNotIn("title: DB Papers", home)
             self.assertIn("数据库系统论文档案馆", home)
+            self.assertIn("同时提供经过审校的中文译文与论文原文", home)
+            self.assertNotIn("GitHub 仓库", home)
             self.assertNotIn("完整性与准确性检查", home)
             self.assertNotIn("发布边界", home)
             self.assertNotIn("阅读价值评分", home)
             catalog = (output / "catalog.md").read_text(encoding="utf-8")
             self.assertIn("Accepted Paper", catalog)
             self.assertIn("Draft Paper", catalog)
+            self.assertEqual(catalog.count(">阅读原文</a>"), 2)
+            self.assertIn(
+                'href="papers/query-processing/accepted-paper/source.pdf"',
+                catalog,
+            )
+            self.assertIn(
+                'href="papers/query-processing/draft-paper/source.pdf"',
+                catalog,
+            )
+            self.assertIn(
+                '<h3><a href="papers/query-processing/accepted-paper/">'
+                "Accepted Paper</a></h3>",
+                catalog,
+            )
+            self.assertIn(
+                '<h3><a href="papers/query-processing/draft-paper/source.pdf"'
+                ' target="_blank" rel="noopener noreferrer">'
+                "Draft Paper</a></h3>",
+                catalog,
+            )
+            self.assertNotIn("https://example.com/draft", catalog)
+            self.assertNotIn("阅读中文译文", catalog)
+            self.assertNotIn("访问权威原文", catalog)
 
     def test_translated_record_requires_acceptance_entry(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -6,7 +6,7 @@
 
 译文尽量保留原论文的章节结构、公式、图表、代码和参考文献，既适合连续阅读，也便于与原文对照。
 
-[在线阅读](https://hippopotamusdata.github.io/db-papers/) · [浏览全部论文](CATALOG.md) · [算法与实现基础](papers/implementation-foundations/) · [查询处理](papers/query-processing/) · [系统架构](papers/system-architecture/) · [存储](papers/storage/) · [分布式数据库](papers/distributed-databases/)
+### [在线阅读 →](https://hippopotamusdata.github.io/db-papers/)
 
 ## 这里有什么
 
