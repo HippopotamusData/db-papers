@@ -980,8 +980,8 @@ def build_catalog() -> str:
                 f"### {markdown_link_label(details['label_zh'])} "
                 f"(`{area}`，{len(area_records)} 篇)",
                 "",
-                "| 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |",
-                "| --- | --- | ---: | ---: | --- | --- |",
+                "| 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |",
+                "| --- | --- | ---: | ---: | --- | --- | --- |",
             ]
         )
         for path, data in area_records:
@@ -995,10 +995,16 @@ def build_catalog() -> str:
             title = markdown_link_label(data["title"])
             year = data["year"] if data["year"] is not None else "—"
             rating = catalog_rating(data)
+            source_target = (
+                "—"
+                if data["reading_status"] == "unavailable"
+                else f"[原文]({path.parent.relative_to(ROOT).as_posix()}/{source_name})"
+            )
             lines.append(
                 f"| [{title}]({reading_target}) | {topic_labels} | "
                 f"{year} | {rating} | {data['reading_status']} | "
-                f"[原文]({markdown_link_destination(data['source_url'])}) |"
+                f"{source_target} | "
+                f"[官方链接]({markdown_link_destination(data['source_url'])}) |"
             )
 
     lines.extend(["", "## 元数据完整性", "", "| 字段 | 已确认 | 待补证据 |", "| --- | ---: | ---: |"])

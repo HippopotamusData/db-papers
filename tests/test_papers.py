@@ -1473,16 +1473,22 @@ class PapersTests(unittest.TestCase):
             self.assertEqual(papers.validate(), 1)
         self.assertIn("source.pdf=False as a regular non-symlink", stderr.getvalue())
 
-    def test_catalog_omits_topic_index_and_contains_authoritative_link(self) -> None:
+    def test_catalog_omits_topic_index_and_separates_source_links(self) -> None:
         root = self.make_root("source_only")
         with self.globals_patch(root):
             catalog = papers.build_catalog()
         self.assertNotIn("## 按主题浏览", catalog)
-        self.assertIn("| 论文 | 主题 | 年份 | 评分 | 阅读状态 | 权威原文入口 |", catalog)
+        self.assertIn(
+            "| 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |",
+            catalog,
+        )
         self.assertNotIn("| 论文 | 作者 |", catalog)
         self.assertIn("| — | source_only |", catalog)
-        self.assertIn("[原文](<https://example.com/paper>)", catalog)
-        self.assertIn("papers/query-processing/sample-paper/source.pdf", catalog)
+        self.assertIn(
+            "[原文](papers/query-processing/sample-paper/source.pdf)",
+            catalog,
+        )
+        self.assertIn("[官方链接](<https://example.com/paper>)", catalog)
 
     def test_catalog_uses_taxonomy_order_for_unordered_topics(self) -> None:
         root = self.make_root("source_only")

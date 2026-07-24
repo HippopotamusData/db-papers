@@ -37,7 +37,6 @@ PAPER_STATUS_LABELS = {
     "unavailable": "原文不可用",
 }
 FORBIDDEN_PUBLISHED_NAMES = {
-    "source.pdf",
     "paper.yaml",
     "acceptance.yaml",
 }
@@ -260,19 +259,18 @@ def render_paper_page(paper: Paper, taxonomy: dict[str, Any]) -> str:
     )
     year = str(paper.year) if paper.year is not None else "待考证"
     rating = f"{paper.rating:.1f} / 5" if paper.rating is not None else "暂未评分"
-    authors = "、".join(html.escape(author) for author in paper.authors)
     area_label = taxonomy["areas"][paper.area]["label_zh"]
     meta = f"""
 <div class="paper-meta">
   <dl>
-    <div><dt>作者</dt><dd>{authors}</dd></div>
     <div><dt>年份</dt><dd>{year}</dd></div>
     <div><dt>领域</dt><dd>{html.escape(area_label)}</dd></div>
     <div><dt>阅读评分</dt><dd>{rating}</dd></div>
+    <div class="paper-meta__topics"><dt>主题</dt><dd><div class="topic-row">{topics}</div></dd></div>
   </dl>
-  <div class="topic-row">{topics}</div>
   <div class="paper-actions">
-    <a class="md-button md-button--primary" href="{html.escape(paper.source_url, quote=True)}" target="_blank" rel="noopener noreferrer">阅读权威原文</a>
+    <a class="md-button md-button--primary" href="source.pdf" target="_blank" rel="noopener noreferrer">阅读原文</a>
+    <a class="md-button" href="{html.escape(paper.source_url, quote=True)}" target="_blank" rel="noopener noreferrer">官方链接</a>
     <a class="md-button" href="{html.escape(issue_url(paper), quote=True)}" target="_blank" rel="noopener noreferrer">反馈译文问题</a>
     <a class="md-button" href="../">返回领域目录</a>
   </div>
@@ -320,14 +318,13 @@ def paper_card(
             year,
         ]
     ).casefold()
+    pdf_target = f"{translated_prefix}{paper.paper_id}/source.pdf"
     if paper.reading_status == "translated":
         target = f"{translated_prefix}{paper.paper_id}/"
         target_attributes = ""
-        action_label = "阅读中文译文"
     else:
-        target = paper.source_url
+        target = pdf_target
         target_attributes = ' target="_blank" rel="noopener noreferrer"'
-        action_label = "访问权威原文"
     return f"""
 <article class="paper-card"
   data-area="{html.escape(paper.area, quote=True)}"
@@ -346,7 +343,8 @@ def paper_card(
   <footer>
     <span>{year}</span>
     {rating}
-    <a href="{html.escape(target, quote=True)}"{target_attributes}>{action_label} →</a>
+    <a href="{html.escape(pdf_target, quote=True)}" target="_blank" rel="noopener noreferrer"
+      aria-label="阅读原文：{html.escape(paper.title, quote=True)}">阅读原文</a>
   </footer>
 </article>
 """.strip()
@@ -377,7 +375,7 @@ description: 数据库系统论文中文全文翻译集
 <section class="site-hero">
   <p class="site-hero__kicker">DB PAPERS</p>
   <h1>数据库系统论文档案馆</h1>
-  <p>本仓库收录数据库系统领域具有代表性的论文，提供经过审校的中文全文译文，并按研究领域和主题整理。论文原文可在 <a href="https://github.com/HippopotamusData/db-papers" target="_blank" rel="noopener noreferrer">GitHub 仓库</a>中查看。</p>
+  <p>本档案馆收录数据库系统领域具有代表性的论文，按研究领域和主题整理，并同时提供经过审校的中文译文与论文原文，便于查找、阅读和对照。</p>
   <div class="site-hero__actions">
     <a class="md-button md-button--primary" href="catalog/">浏览全部论文</a>
   </div>
@@ -611,6 +609,17 @@ def prepare_site(root: Path, output: Path) -> dict[str, int]:
                 encoding="utf-8",
             )
 
+        for paper in papers:
+            source_pdf = paper.paper_dir / "source.pdf"
+            if (
+                not source_pdf.is_file()
+                or source_pdf.is_symlink()
+            ):
+                raise fail(f"{source_pdf}: source PDF must be a regular file")
+            target = staging / "papers" / paper.area / paper.paper_id
+            target.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_pdf, target / "source.pdf")
+
         for paper in translated:
             target = staging / "papers" / paper.area / paper.paper_id
             target.mkdir(parents=True, exist_ok=True)
@@ -638,6 +647,7 @@ def prepare_site(root: Path, output: Path) -> dict[str, int]:
     summary = {
         "records": len(papers),
         "translated_pages": len(translated),
+        "published_pdfs": len(papers),
         "copied_assets": copied_assets,
     }
     print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
@@ -659,6 +669,10 @@ def validate_site_source(
         Path("papers") / paper.area / paper.paper_id / "index.md"
         for paper in papers
         if paper.reading_status == "translated"
+    )
+    required.update(
+        Path("papers") / paper.area / paper.paper_id / "source.pdf"
+        for paper in papers
     )
     missing = sorted(
         path.as_posix() for path in required if not (source / path).is_file()
@@ -741,6 +755,21 @@ def check_site(root: Path, source: Path, site: Path) -> dict[str, int]:
     )
     if missing:
         raise fail("built site is missing expected HTML: " + ", ".join(missing))
+
+    expected_pdfs = {
+        site / "papers" / paper.area / paper.paper_id / "source.pdf"
+        for paper in papers
+    }
+    missing_pdfs = sorted(
+        path.relative_to(site).as_posix()
+        for path in expected_pdfs
+        if not path.is_file()
+    )
+    if missing_pdfs:
+        raise fail(
+            "built site is missing expected source PDFs: "
+            + ", ".join(missing_pdfs)
+        )
 
     total_bytes = 0
     file_count = 0
