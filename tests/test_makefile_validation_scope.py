@@ -27,10 +27,15 @@ class MakefileValidationScopeTests(unittest.TestCase):
     def test_global_validation_clears_ambient_scope_and_metadata_skip(self) -> None:
         for target in ("validate", "deep-validate", "check", "deep-check"):
             with self.subTest(target=target):
+                environment = {
+                    "PAPER_ID": "ambient-paper",
+                    "SKIP_METADATA_VALIDATION": "1",
+                }
+                if target == "deep-check":
+                    environment["DEEP_REASON"] = "full-audit"
                 output = self.dry_run(
                     target,
-                    PAPER_ID="ambient-paper",
-                    SKIP_METADATA_VALIDATION="1",
+                    **environment,
                 )
                 validation_command = next(
                     line
@@ -132,6 +137,55 @@ class MakefileValidationScopeTests(unittest.TestCase):
         self.assertIn("scripts/verify_math_rendering.py", output)
         self.assertIn("scripts/fix_portable_math.py check", output)
         self.assertNotIn("scripts/validate_github_math.py", output)
+
+    def test_check_omits_repository_wide_math_rendering(self) -> None:
+        output = self.dry_run("check")
+        self.assertNotIn("scripts/verify_math_rendering.py", output)
+        self.assertNotIn("scripts/fix_portable_math.py check", output)
+
+    def test_scoped_math_check_requires_explicit_translation_files(self) -> None:
+        result = subprocess.run(
+            ["make", "math-check-files"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("FILES is required", result.stderr)
+
+        translation = (
+            "papers/query-processing/"
+            "access-path-selection-relational-database-management-system/"
+            "translation.md"
+        )
+        output = self.dry_run("math-check-files", FILES=translation)
+        self.assertIn(
+            f'scripts/verify_math_rendering.py --mathjax-module '
+            f'"node_modules/mathjax" {translation}',
+            output,
+        )
+        self.assertIn(f"scripts/fix_portable_math.py check {translation}", output)
+
+    def test_deep_check_requires_a_controlled_reason(self) -> None:
+        result = subprocess.run(
+            ["make", "deep-check"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("deep-check requires DEEP_REASON", result.stderr)
+
+        output = self.dry_run(
+            "deep-check",
+            DEEP_REASON="validator-semantics",
+        )
+        self.assertIn("DEEP_VALIDATION=1", output)
+        self.assertIn("scripts/verify_math_rendering.py", output)
 
     def test_translation_validator_reserves_math_profile_for_deep_or_draft_scope(
         self,

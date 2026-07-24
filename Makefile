@@ -3,11 +3,11 @@ MATHJAX_MODULE ?= node_modules/mathjax
 
 .PHONY: python-path python-compile paper-new source-check \
 	catalog catalog-check metadata-check normalize-headers normalize-headers-check \
-	fix-math math-check math-audit-github math-audit-github-changed \
+	fix-math math-check math-check-files math-audit-github math-audit-github-changed \
 	math-audit-github-worktree math-audit-katex validate deep-validate paper-check \
 	review-queue batch-start batch-check batch-state accept-preflight diff-check \
 	site-prepare site-build site-check site-serve \
-	test doctor doctor-accept check deep-check
+	test doctor doctor-accept check deep-check _deep-check
 
 python-path:
 	@printf '%s\n' "$(PYTHON)"
@@ -65,6 +65,17 @@ fix-math:
 math-check:
 	find papers -mindepth 3 -maxdepth 3 -name translation.md -exec $(PYTHON) scripts/verify_math_rendering.py --mathjax-module "$(MATHJAX_MODULE)" {} +
 	find papers -mindepth 3 -maxdepth 3 -name translation.md -exec $(PYTHON) scripts/fix_portable_math.py check {} +
+
+math-check-files:
+	@test -n "$(FILES)" || { echo "ERROR: FILES is required for scoped math validation" >&2; exit 1; }
+	@for file in $(FILES); do \
+		case "$$file" in papers/*/*/translation.md) ;; \
+			*) echo "ERROR: invalid translation path: $$file" >&2; exit 1;; \
+		esac; \
+		test -f "$$file" || { echo "ERROR: translation not found: $$file" >&2; exit 1; }; \
+	done
+	$(PYTHON) scripts/verify_math_rendering.py --mathjax-module "$(MATHJAX_MODULE)" $(FILES)
+	$(PYTHON) scripts/fix_portable_math.py check $(FILES)
 
 math-audit-github:
 	@if [ -n "$(FILES)" ]; then \
@@ -200,6 +211,16 @@ doctor:
 doctor-accept:
 	REQUIRE_GITHUB=1 PYTHON=$(PYTHON) bash scripts/doctor.sh
 
-check: test validate catalog-check normalize-headers-check math-check
+check: test validate catalog-check normalize-headers-check
 
-deep-check: test deep-validate catalog-check normalize-headers-check math-check
+deep-check:
+	@case "$(DEEP_REASON)" in \
+		content-semantics|acceptance-semantics|validator-semantics|full-audit) ;; \
+		*) \
+			echo "ERROR: deep-check requires DEEP_REASON=" \
+				"{content-semantics,acceptance-semantics,validator-semantics,full-audit}" >&2; \
+			exit 1;; \
+	esac
+	@$(MAKE) --no-print-directory _deep-check
+
+_deep-check: test deep-validate catalog-check normalize-headers-check math-check

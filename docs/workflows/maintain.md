@@ -48,7 +48,7 @@ python3 -m venv .venv
 npm ci
 ```
 
-依赖只装入项目虚拟环境。标题约定变化时用 `make normalize-headers` 机械迁移。公式专项修复按 `docs/portable-math-maintainers.md` 限定文件，并显式运行 `make fix-math FILES='...'`；`make check` 只读。
+依赖只装入项目虚拟环境。标题约定变化时用 `make normalize-headers` 机械迁移。公式专项修复按 `docs/portable-math-maintainers.md` 限定文件，并显式运行 `make fix-math FILES='...'`；普通 `make check` 不扫描全库公式，变更译文由 CI 运行限定文件的本地公式门禁。
 
 维护 GitHub Pages 站点时另安装锁定的 `site` dependency group：
 
@@ -107,21 +107,33 @@ make doctor
 make python-compile
 node --check scripts/render_mathjax.cjs
 make check       # 普通变更
-# 或 make deep-check  # 影响论文内容解释、验收语义、全局校验器，或明确的全库审计
+# 或 make deep-check DEEP_REASON=validator-semantics
+# DEEP_REASON 仅允许 content-semantics、acceptance-semantics、
+# validator-semantics、full-audit
 make diff-check
 # 站点生成器、主题或 Pages workflow 变化时另运行 make site-check
 ```
 
-`make deep-check` 是 `make check` 的深检替代项，不叠加运行。两者都包含锁定 MathJax 的本地 TeX 结构门禁；accept 还会在写入前审计当前译文的 GitHub 节点。
+`make deep-check` 是 `make check` 的深检替代项，不叠加运行，并要求用
+`DEEP_REASON` 明确记录触发原因。只有 deep-check 包含锁定 MathJax 的全库
+TeX 结构门禁；普通变更译文用 `make math-check-files FILES='...'` 做同样的
+限定文件检查。accept 还会在写入前审计当前译文的 GitHub 节点。
 未 accept 的公式专项变更、公式校验器或全局公式策略变更按公式维护指南执行限定范围或全库审计。外部审计依赖 `gh` 和网络，由 CI 重复执行；结果必须写入完成报告。
 
 依赖、策略或流程实现变化时，先判断它是否会改变论文内容解释、验收语义或全局校验器行为。只有会改变这些语义时才运行 `make deep-check`，扫描全库并列出受影响论文；Pages、文档、打包、发布流程和其他与这些语义无关的变更运行 `make check`。深检不授权全库复审：无确定性历史影响时保留既有验收，有明确影响时按 paper ID 修复和复审。只有用户明确要求时才扩展为全库逐篇内容复审。
 
 CI 的 `archive-check` 保持同一个必需检查名：
 
-- 每次运行都执行 `make check`，CI 不执行 `make deep-check`；
-- 论文内容或元数据变化时，再对受影响 paper ID 运行 `paper-check`；
+- 每次 PR 和默认分支推送都执行 `make check`，功能分支推送不再与 PR 重复触发；CI 不执行 `make deep-check`；
+- `source.pdf`、`translation.md`、assets 或验收相关元数据变化时，再对受影响 paper ID 运行 `paper-check`；
+- 仅 `title_zh`、`topics` 或 `rating` 变化时依靠 fast metadata、目录和站点检查，不运行单篇深门禁；
+- 变更译文只运行限定文件的本地公式门禁；只有公式 profile、实现或锁文件变化时升级为全库 `math-check`；
 - acceptance entry 的局部变化按可信 base/head 精确计算 paper ID；
 - acceptance 差异无法可靠定位时直接失败，不猜测 paper ID。
 
 `make deep-check` 只在本地用于会影响论文内容解释、验收语义或全局校验器行为的依赖、policy、全局翻译策略和流程变更，或明确的全库审计；不要把它加入 CI，也不要用于与这些语义无关的 Pages、文档、打包或发布流程变更。
+
+Pages 使用同一个差异计划器。只有论文阅读资源、分类法、站点生成器、主题、
+站点依赖或 Pages workflow 发生变化时才构建站点；其他 PR 仍会快速完成
+`site-build` 必需检查，但跳过依赖安装、构建与 artifact 上传。默认分支只在
+站点受影响时上传和部署，手工触发始终强制完整构建。

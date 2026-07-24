@@ -63,20 +63,27 @@ GitHub 正确解析和渲染是唯一硬平台要求。仓库仍采用 `$...$`�
 
 ```bash
 npm ci
-make math-check
+make math-check-files FILES='papers/<area>/<paper-id>/translation.md'
 make fix-math FILES='papers/<area>/<paper-id>/translation.md'
 
 # 需要已登录 gh 和网络；单篇或一批变更必须限定 FILES
 make math-audit-github FILES='papers/<area>/<paper-id>/translation.md'
 
-# 全库 profile/迁移才省略 FILES
+# 全库 profile/迁移才运行全量本地与 GitHub 门禁
+make math-check
 make math-audit-github
 
 # 可选，不是验收门禁
 make math-audit-katex KATEX_MODULE='/path/to/katex'
 ```
 
-`make check` 和 `make deep-check` 都包含只读 `math-check`：静态解析后，用 `package-lock.json` 锁定的 MathJax 对每个 TeX 载荷做结构渲染。该本地门禁捕获括号、命令参数、`\left`/`\right` 与环境配对等错误，但不代替 GitHub 自身的 Markdown 解析。
+`make math-check-files` 与全库 `make math-check` 都是只读检查：静态解析后，
+用 `package-lock.json` 锁定的 MathJax 对每个 TeX 载荷做结构渲染。普通
+`make check` 不再重复扫描 144 篇既有译文；CI 根据 Git diff 对变更译文运行
+`math-check-files`，公式 profile、扫描器、渲染器或锁文件变化时才升级为
+全库 `math-check`。`make deep-check` 仍包含全库门禁。该本地门禁捕获括号、
+命令参数、`\left`/`\right` 与环境配对等错误，但不代替 GitHub 自身的
+Markdown 解析。
 
 GitHub 的链接化和 Markdown 规则会随上下文组合，无法靠静态规则穷举。accept 在写入账本和状态前自动对当前译文运行 GitHub Markdown API 审计；其他未经过 accept 的变更译文在提交前必须运行限定 `FILES` 的同一审计。CI 根据 Git diff 重复这项检查。公式 profile、扫描器、审计器、MathJax 锁或工作流发生变化时，CI 自动升级为全库审计；全库迁移也运行不带 `FILES` 的审计。
 
@@ -96,7 +103,7 @@ make python-compile
 node --check scripts/render_mathjax.cjs
 # 仅当 render_katex.cjs 或可选 KaTeX 审计路径变化时运行：
 node --check scripts/render_katex.cjs
-make deep-check  # 替代 make check
+make deep-check DEEP_REASON=validator-semantics  # 替代 make check
 make diff-check
 make math-audit-github
 ```
