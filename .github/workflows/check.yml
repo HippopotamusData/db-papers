@@ -2,11 +2,16 @@ name: check
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   archive-check:
@@ -112,6 +117,30 @@ jobs:
             fi
             make paper-check PAPER_ID="$paper_id"
           done <<< "$PAPER_IDS"
+
+      - name: Run full math gate
+        if: steps.scope.outputs.math_all == 'true'
+        run: make math-check
+
+      - name: Run scoped math gate
+        if: >-
+          steps.scope.outputs.math_all != 'true' &&
+          steps.scope.outputs.math_files != ''
+        env:
+          MATH_FILES: ${{ steps.scope.outputs.math_files }}
+        run: |
+          files=()
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            if [ -f "$file" ]; then
+              files+=("$file")
+            else
+              echo "Skipping removed translation: $file"
+            fi
+          done <<< "$MATH_FILES"
+          if [ "${#files[@]}" -gt 0 ]; then
+            make math-check-files FILES="${files[*]}"
+          fi
 
       - name: Check whitespace
         env:
