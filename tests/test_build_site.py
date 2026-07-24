@@ -172,6 +172,8 @@ source: source.pdf
             self.assertNotIn('"首页" = "index.md"', generated_config)
             self.assertIn('"查询处理" = "papers/query-processing/index.md"', generated_config)
             home = (output / "index.md").read_text(encoding="utf-8")
+            self.assertIn("title: 数据库系统论文档案馆", home)
+            self.assertNotIn("title: DB Papers", home)
             self.assertIn("数据库系统论文档案馆", home)
             self.assertIn("同时提供经过审校的中文译文与论文原文", home)
             self.assertNotIn("GitHub 仓库", home)

@@ -368,7 +368,7 @@ def render_home(taxonomy: dict[str, Any], papers: list[Paper]) -> str:
 """.strip()
         )
     return f"""---
-title: DB Papers
+title: 数据库系统论文档案馆
 description: 数据库系统论文中文全文翻译集
 ---
 
