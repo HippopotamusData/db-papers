@@ -7,7 +7,7 @@
 ## 成功标准
 
 - 路径为 `papers/<area>/<paper-id>/`，ID 全库唯一。
-- `paper.yaml` 只有六个字段；未知作者和年份分别为 `[]`、`null`。
+- `paper.yaml` 只有七个基础字段；未知作者和年份分别为 `[]`、`null`。
 - `source_url` 是一个权威原文入口，`topics` 来自受控词表。
 - 成功取得且验证 PDF 时保存为 `source.pdf`，状态改为 `source_only`。
 - 未取得 PDF 时不创建占位文件，保持 `reading_status: unavailable`。
@@ -20,6 +20,7 @@
 make paper-new \
   PAPER_ID=<paper-id> \
   TITLE="<title>" \
+  TITLE_ZH="<reviewed Chinese title>" \
   AREA=<area> \
   TOPICS="<topic> [<topic> ...]" \
   URL=<url>

@@ -6,11 +6,12 @@
 
 ## 数据契约
 
-每份 `paper.yaml` 必须包含且只包含以下六个基础字段；完成评分后可额外包含一个完整的 `rating`：
+每份 `paper.yaml` 必须包含且只包含以下七个基础字段；完成评分后可额外包含一个完整的 `rating`：
 
 | 字段 | 类型 | 规则 |
 | --- | --- | --- |
 | `title` | string | 原文正式标题 |
+| `title_zh` | string | 经人工审校的中文展示标题；仅供在线阅读站显示和搜索 |
 | `authors` | string list | 仅填写有可靠证据的作者；未知时为 `[]` |
 | `year` | integer/null | 仅填写可靠发表年份；未知时为 `null` |
 | `source_url` | string | 一个权威 HTTP(S) 原文入口 |
@@ -18,6 +19,8 @@
 | `reading_status` | enum | `unavailable`、`source_only`、`draft`、`translated` 或 `skipped` |
 
 论文 ID 和一级领域由目录表达；原文、译文和资源可用性由 `source.pdf`、`translation.md`、`assets/` 表达。文件名、中文目标语言和质量底线是代码不变量；默认页数上限、单篇例外与 skipped 原因属于 `config/policy.yaml`，验收内容快照、内容绑定 review receipt、固定基线和必要 waivers 属于 `config/acceptance.yaml`。这些信息不得在 `paper.yaml` 中重复。
+
+`title_zh` 保留原文产品名、系统名和通行缩写，准确表达原题限定关系，不能用逐词拼接或未经审校的机器直译代替。它只进入 GitHub Pages 的论文卡片、论文阅读页和中文关键词索引；仓库根目录 `CATALOG.md`、译文 H1 与验收元数据哈希仍以正式原文标题 `title` 为准。润色 `title_zh` 不改变译文验收状态。
 
 `rating` 的字段、证据和计算规则只由 `docs/workflows/rating.md` 定义。本工作流不得创建、删除或修改 `rating`。
 

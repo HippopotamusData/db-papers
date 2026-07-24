@@ -1,4 +1,5 @@
 title: The Log-Structured Merge-Tree (LSM-Tree)
+title_zh: 日志结构合并树（LSM-Tree）
 authors:
   - Patrick O'Neil
   - Edward Cheng

@@ -1,4 +1,5 @@
 title: Rethinking SIMD Vectorization for In-Memory Databases
+title_zh: 重新思考内存数据库中的 SIMD 向量化
 authors:
   - Orestis Polychroniou
   - Arun Raghavan

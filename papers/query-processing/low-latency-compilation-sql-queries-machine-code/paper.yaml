@@ -1,4 +1,5 @@
 title: Low-Latency Compilation of SQL Queries to Machine Code
+title_zh: 将 SQL 查询低延迟编译为机器码
 authors:
   - Henning Funke
   - Jens Teubner

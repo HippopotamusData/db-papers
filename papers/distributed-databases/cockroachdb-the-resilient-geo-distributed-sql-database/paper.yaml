@@ -1,4 +1,5 @@
 title: 'CockroachDB: The Resilient Geo-Distributed SQL Database'
+title_zh: CockroachDB：高韧性的地理分布式 SQL 数据库
 authors:
   - Rebecca Taft
   - Irfan Sharif

@@ -1,4 +1,5 @@
 title: Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs
+title_zh: 大语言模型已经能充当数据库接口了吗？面向大规模数据库的 Text-to-SQL 综合基准
 authors:
   - Jinyang Li
   - Binyuan Hui

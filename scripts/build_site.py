@@ -47,6 +47,7 @@ class Paper:
     area: str
     paper_id: str
     title: str
+    title_zh: str
     authors: tuple[str, ...]
     year: int | None
     source_url: str
@@ -143,10 +144,13 @@ def load_papers(root: Path) -> tuple[dict[str, Any], list[Paper]]:
         ):
             raise fail(f"{metadata_path}: authors must be a list of names")
         title = data.get("title")
+        title_zh = data.get("title_zh")
         source_url = data.get("source_url")
         year = data.get("year")
         if not isinstance(title, str) or not title:
             raise fail(f"{metadata_path}: title must be non-empty")
+        if not isinstance(title_zh, str) or not title_zh:
+            raise fail(f"{metadata_path}: title_zh must be non-empty")
         if not isinstance(source_url, str) or not source_url.startswith(
             ("http://", "https://")
         ):
@@ -161,6 +165,7 @@ def load_papers(root: Path) -> tuple[dict[str, Any], list[Paper]]:
                 area=area,
                 paper_id=paper_id,
                 title=title,
+                title_zh=title_zh,
                 authors=tuple(authors),
                 year=year,
                 source_url=source_url,
@@ -217,7 +222,7 @@ def site_front_matter(paper: Paper, taxonomy: dict[str, Any]) -> str:
     ]
     data = {
         "title": paper.title,
-        "description": f"{paper.title} 的中文全文译文",
+        "description": f"《{paper.title_zh}》的中文全文译文与论文原文",
         "tags": topic_labels,
     }
     return (
@@ -279,6 +284,7 @@ def render_paper_page(paper: Paper, taxonomy: dict[str, Any]) -> str:
     return (
         site_front_matter(paper, taxonomy)
         + heading
+        + f'\n\n<p class="paper-title-zh paper-title-zh--page">{html.escape(paper.title_zh)}</p>'
         + "\n\n"
         + meta
         + "\n\n"
@@ -311,6 +317,7 @@ def paper_card(
     search_text = " ".join(
         [
             paper.title,
+            paper.title_zh,
             authors,
             paper.paper_id,
             area_label,
@@ -338,6 +345,7 @@ def paper_card(
     <span class="status-pill status-pill--{html.escape(paper.reading_status)}">{html.escape(status_label)}</span>
   </div>
   <h3><a href="{html.escape(target, quote=True)}"{target_attributes}>{html.escape(paper.title)}</a></h3>
+  <p class="paper-card__title-zh">{html.escape(paper.title_zh)}</p>
   <p class="paper-card__authors">{html.escape(authors)}</p>
   <div class="topic-row">{topic_chips}</div>
   <footer>
@@ -434,7 +442,7 @@ description: 按领域、主题、状态和关键词浏览数据库论文
 <div class="catalog-controls" role="search" aria-label="筛选和排序论文">
   <label>
     <span>关键词</span>
-    <input id="catalog-search" type="search" placeholder="标题、作者、论文 ID…" autocomplete="off">
+    <input id="catalog-search" type="search" placeholder="中英文标题、作者、论文 ID…" autocomplete="off">
   </label>
   <label>
     <span>领域</span>

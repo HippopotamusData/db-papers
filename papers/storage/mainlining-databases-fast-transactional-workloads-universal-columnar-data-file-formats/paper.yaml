@@ -1,4 +1,5 @@
 title: 'Mainlining Databases: Supporting Fast Transactional Workloads on Universal Columnar Data File Formats'
+title_zh: 让数据库直连通用列式数据文件格式：支持快速事务工作负载
 authors:
   - Tianyu Li
   - Matthew Butrovich

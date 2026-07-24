@@ -1,4 +1,5 @@
 title: Improving Hash Join Performance through Prefetching
+title_zh: 利用预取提升哈希连接性能
 authors:
   - Shimin Chen
   - Anastassia Ailamaki

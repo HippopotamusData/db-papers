@@ -1,4 +1,5 @@
 title: 'SAHA: A String Adaptive Hash Table for Analytical Databases'
+title_zh: SAHA：面向分析型数据库的字符串自适应哈希表
 authors:
   - Tianqi Zheng
   - Zhibin Zhang

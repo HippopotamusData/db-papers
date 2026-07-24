@@ -1,4 +1,5 @@
 title: 'C-Store: A Column-oriented DBMS'
+title_zh: C-Store：列式数据库管理系统
 authors:
   - Michael Stonebraker
   - Daniel J. Abadi

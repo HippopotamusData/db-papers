@@ -1,4 +1,5 @@
 title: 'BIPie: Fast Selection and Aggregation on Encoded Data using Operator Specialization'
+title_zh: BIPie：利用算子特化在编码数据上实现快速选择与聚合
 authors:
   - Michal Nowakiewicz
   - Eric Boutin

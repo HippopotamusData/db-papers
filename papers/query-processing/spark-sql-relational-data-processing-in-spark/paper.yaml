@@ -1,4 +1,5 @@
 title: 'Spark SQL: Relational Data Processing in Spark'
+title_zh: Spark SQL：Spark 中的关系数据处理
 authors:
   - Michael Armbrust
   - Reynold S. Xin

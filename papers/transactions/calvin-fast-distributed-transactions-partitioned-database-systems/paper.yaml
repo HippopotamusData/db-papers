@@ -1,4 +1,5 @@
 title: 'Calvin: Fast Distributed Transactions for Partitioned Database Systems'
+title_zh: Calvin：面向分区数据库系统的快速分布式事务
 authors:
   - Alexander Thomson
   - Thaddeus Diamond

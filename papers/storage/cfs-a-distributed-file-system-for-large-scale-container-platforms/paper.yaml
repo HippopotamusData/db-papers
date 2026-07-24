@@ -1,4 +1,5 @@
 title: 'CFS: A Distributed File System for Large Scale Container Platforms'
+title_zh: CFS：面向大规模容器平台的分布式文件系统
 authors:
   - Haifeng Liu
   - Wei Ding
