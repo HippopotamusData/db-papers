@@ -68,10 +68,11 @@ make diff-check
 
 校验器、依赖或流程实现变化时，`make deep-check` 扫描全库并列出受影响论文，但不授权全库复审。无确定性历史影响时保留既有验收；有明确影响时按 paper ID 修复和复审。只有用户明确要求时才扩展为全库逐篇内容复审。
 
-CI 的 `archive-check` 保持同一个必需检查名，并按差异选择范围：
+CI 的 `archive-check` 保持同一个必需检查名：
 
-- 普通文档和目录变更运行 `make check`；
+- 每次运行都执行 `make check`，CI 不执行 `make deep-check`；
 - 论文内容或元数据变化时，再对受影响 paper ID 运行 `paper-check`；
 - acceptance entry 的局部变化按可信 base/head 精确计算 paper ID；
-- 基线、YAML 结构或验收顶层状态不可信时 fail safe 到 `make deep-check`；
-- 深度校验器、依赖锁、policy、全局翻译策略或 CI 选域逻辑变化时运行深检。
+- acceptance 差异无法可靠定位时直接失败，不猜测 paper ID。
+
+`make deep-check` 只在本地用于校验器、依赖锁、policy、全局翻译策略、CI 选域逻辑变更或明确的全库审计；不要把它加入 CI。

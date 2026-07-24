@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Select the smallest safe CI validation scope from changed repository paths."""
+"""Locate changed papers that need a scoped CI validation gate."""
 
 from __future__ import annotations
 
@@ -14,30 +14,6 @@ from typing import Any
 import yaml
 
 
-DEEP_CHECK_PATHS = frozenset(
-    {
-        "AGENTS.md",
-        ".github/workflows/check.yml",
-        "Makefile",
-        "config/policy.yaml",
-        "docs/translation-policy.md",
-        "package-lock.json",
-        "package.json",
-        "pyproject.toml",
-        "scripts/acceptance_evidence.py",
-        "scripts/ci_validation_scope.py",
-        "scripts/markdown_visibility.py",
-        "scripts/papers.py",
-        "scripts/pdf_metrics.py",
-        "scripts/project_config.py",
-        "scripts/reference_sections.py",
-        "scripts/validate_source_pdf.py",
-        "scripts/validate_listings.py",
-        "scripts/validate_resources.py",
-        "scripts/validate_translations.sh",
-        "scripts/validation_policy.py",
-    }
-)
 ACCEPTANCE_PATH = "config/acceptance.yaml"
 ACCEPTANCE_SCHEMA_VERSION = 5
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -50,6 +26,12 @@ def normalize_path(value: str) -> str:
     return normalized
 
 
+def decode_changed_paths(payload: bytes) -> list[str]:
+    """Decode Git's NUL-delimited path output without losing special characters."""
+
+    return [os.fsdecode(value) for value in payload.split(b"\0") if value]
+
+
 def changed_paper_id(path: str) -> str | None:
     parts = PurePosixPath(path).parts
     if len(parts) < 4 or parts[0] != "papers":
@@ -59,42 +41,45 @@ def changed_paper_id(path: str) -> str | None:
     return parts[2]
 
 
-def changed_acceptance_paper_ids(
-    base: Any, head: Any
-) -> tuple[bool, list[str]]:
-    """Return whether a ledger diff is unsafe and its changed paper IDs."""
+def changed_acceptance_paper_ids(base: Any, head: Any) -> list[str]:
+    """Return changed acceptance entry IDs or reject an ambiguous ledger."""
 
     if not isinstance(base, dict) or not isinstance(head, dict):
-        return True, []
+        raise ValueError("base and head acceptance ledgers must be mappings")
     expected_keys = {"schema_version", "review_snapshots", "entries"}
     if set(base) != expected_keys or set(head) != expected_keys:
-        return True, []
+        raise ValueError("acceptance ledger has unexpected top-level keys")
     if (
         type(base["schema_version"]) is not int
         or type(head["schema_version"]) is not int
         or base["schema_version"] != ACCEPTANCE_SCHEMA_VERSION
         or head["schema_version"] != ACCEPTANCE_SCHEMA_VERSION
     ):
-        return True, []
+        raise ValueError(
+            f"acceptance ledger schema_version must be {ACCEPTANCE_SCHEMA_VERSION}"
+        )
     if (
         not isinstance(base["review_snapshots"], dict)
         or not isinstance(head["review_snapshots"], dict)
         or base["review_snapshots"] != head["review_snapshots"]
     ):
-        return True, []
+        raise ValueError("acceptance review_snapshots changed or are invalid")
     base_entries = base["entries"]
     head_entries = head["entries"]
     if not isinstance(base_entries, dict) or not isinstance(head_entries, dict):
-        return True, []
+        raise ValueError("acceptance entries must be mappings")
     all_ids = set(base_entries) | set(head_entries)
-    if any(not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id) for paper_id in all_ids):
-        return True, []
+    if any(
+        not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id)
+        for paper_id in all_ids
+    ):
+        raise ValueError("acceptance entry IDs must be canonical paper slugs")
     if any(
         not isinstance(entry, dict)
         for entry in list(base_entries.values()) + list(head_entries.values())
     ):
-        return True, []
-    return False, sorted(
+        raise ValueError("acceptance entries must be mappings")
+    return sorted(
         paper_id
         for paper_id in all_ids
         if base_entries.get(paper_id) != head_entries.get(paper_id)
@@ -128,13 +113,12 @@ def acceptance_at_revision(root: Path, revision: str) -> dict[str, Any]:
     return value
 
 
-def select_scope(
+def select_paper_ids(
     changed_paths: list[str],
     *,
-    force_deep: bool = False,
     acceptance_base: dict[str, Any] | None = None,
     acceptance_head: dict[str, Any] | None = None,
-) -> tuple[bool, list[str], list[str]]:
+) -> list[str]:
     normalized = sorted(
         {
             path
@@ -142,7 +126,6 @@ def select_scope(
             if (path := normalize_path(value))
         }
     )
-    deep_paths = sorted(path for path in normalized if path in DEEP_CHECK_PATHS)
     paper_ids = sorted(
         {
             paper_id
@@ -151,17 +134,15 @@ def select_scope(
         }
     )
     if ACCEPTANCE_PATH in normalized:
-        unsafe, acceptance_ids = changed_acceptance_paper_ids(
-            acceptance_base, acceptance_head
+        acceptance_ids = changed_acceptance_paper_ids(
+            acceptance_base,
+            acceptance_head,
         )
         paper_ids = sorted(set(paper_ids) | set(acceptance_ids))
-        if unsafe:
-            deep_paths = sorted(set(deep_paths) | {ACCEPTANCE_PATH})
-    return force_deep or bool(deep_paths), paper_ids, deep_paths
+    return paper_ids
 
 
-def emit_github_output(deep_check: bool, paper_ids: list[str]) -> None:
-    print(f"deep_check={'true' if deep_check else 'false'}")
+def emit_github_output(paper_ids: list[str]) -> None:
     print("paper_ids<<__DB_PAPERS__")
     print("\n".join(paper_ids))
     print("__DB_PAPERS__")
@@ -169,11 +150,6 @@ def emit_github_output(deep_check: bool, paper_ids: list[str]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--force-deep",
-        action="store_true",
-        help="select the full repository gate when no trustworthy diff base exists",
-    )
     parser.add_argument(
         "--base-sha",
         help="trusted Git diff base used to compare acceptance entries",
@@ -191,40 +167,40 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    changed_paths = sys.stdin.read().splitlines()
+    changed_paths = decode_changed_paths(sys.stdin.buffer.read())
     normalized = {normalize_path(path) for path in changed_paths}
     acceptance_base = None
     acceptance_head = None
-    acceptance_error = ""
     if ACCEPTANCE_PATH in normalized:
         if not args.base_sha:
-            acceptance_error = "missing trusted --base-sha"
-        else:
-            try:
-                acceptance_base = acceptance_at_revision(args.root, args.base_sha)
-                acceptance_head = acceptance_at_revision(args.root, args.head_sha)
-            except ValueError as exc:
-                acceptance_error = str(exc)
-    deep_check, paper_ids, deep_paths = select_scope(
-        changed_paths,
-        force_deep=args.force_deep,
-        acceptance_base=acceptance_base,
-        acceptance_head=acceptance_head,
-    )
-    if acceptance_error:
+            print(
+                "ERROR: acceptance changes require a trusted --base-sha",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            acceptance_base = acceptance_at_revision(args.root, args.base_sha)
+            acceptance_head = acceptance_at_revision(args.root, args.head_sha)
+        except ValueError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
+    try:
+        paper_ids = select_paper_ids(
+            changed_paths,
+            acceptance_base=acceptance_base,
+            acceptance_head=acceptance_head,
+        )
+    except ValueError as exc:
         print(
-            f"CI acceptance diff is not safely locatable: {acceptance_error}; "
-            "selecting deep-check",
+            f"ERROR: cannot safely locate changed acceptance entries: {exc}",
             file=sys.stderr,
         )
+        return 1
     print(
-        "CI validation scope: "
-        f"deep_check={str(deep_check).lower()}, "
-        f"paper_ids={','.join(paper_ids) or '-'}, "
-        f"deep_paths={','.join(deep_paths) or '-'}",
+        f"CI changed paper IDs: {','.join(paper_ids) or '-'}",
         file=sys.stderr,
     )
-    emit_github_output(deep_check, paper_ids)
+    emit_github_output(paper_ids)
     return 0
 
 

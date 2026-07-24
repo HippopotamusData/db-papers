@@ -3,25 +3,27 @@ from __future__ import annotations
 import io
 import unittest
 from contextlib import redirect_stdout
+from pathlib import Path
 
 from scripts.ci_validation_scope import (
     changed_acceptance_paper_ids,
+    decode_changed_paths,
     emit_github_output,
-    select_scope,
+    select_paper_ids,
 )
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class CiValidationScopeTests(unittest.TestCase):
-    def test_docs_and_catalog_changes_use_fast_gate(self) -> None:
-        deep, paper_ids, deep_paths = select_scope(
+    def test_docs_and_catalog_changes_select_no_papers(self) -> None:
+        paper_ids = select_paper_ids(
             ["README.md", "CATALOG.md", "docs/workflows/metadata.md"]
         )
-        self.assertFalse(deep)
         self.assertEqual(paper_ids, [])
-        self.assertEqual(deep_paths, [])
 
     def test_paper_changes_select_only_affected_papers(self) -> None:
-        deep, paper_ids, deep_paths = select_scope(
+        paper_ids = select_paper_ids(
             [
                 "papers/storage/paper-b/translation.md",
                 "papers/query-processing/paper-a/assets/figure-1.png",
@@ -29,43 +31,28 @@ class CiValidationScopeTests(unittest.TestCase):
                 "papers/query-processing/paper-a/notes.txt",
             ]
         )
-        self.assertFalse(deep)
         self.assertEqual(paper_ids, ["paper-a", "paper-b"])
-        self.assertEqual(deep_paths, [])
 
-    def test_validator_dependency_and_global_policy_changes_use_deep_gate(
-        self,
-    ) -> None:
-        for path in (
-            "AGENTS.md",
-            ".github/workflows/check.yml",
-            "Makefile",
-            "config/policy.yaml",
-            "docs/translation-policy.md",
-            "package-lock.json",
-            "pyproject.toml",
-            "scripts/ci_validation_scope.py",
-            "scripts/pdf_metrics.py",
-            "scripts/validate_source_pdf.py",
-            "scripts/validate_resources.py",
-            "scripts/validate_translations.sh",
-            "scripts/validation_policy.py",
-        ):
-            with self.subTest(path=path):
-                deep, _, deep_paths = select_scope([path])
-                self.assertTrue(deep)
-                self.assertEqual(deep_paths, [path])
+    def test_nul_delimited_paths_preserve_unicode_and_newlines(self) -> None:
+        changed_paths = decode_changed_paths(
+            "papers/query-processing/paper-a/assets/图\n1.png\0"
+            "README.md\0".encode()
+        )
+        self.assertEqual(
+            select_paper_ids(changed_paths),
+            ["paper-a"],
+        )
 
-    def test_fast_validator_changes_do_not_force_deep_gate(self) -> None:
-        deep, paper_ids, deep_paths = select_scope(
+    def test_non_paper_implementation_changes_select_no_papers(self) -> None:
+        paper_ids = select_paper_ids(
             [
+                "Makefile",
+                "scripts/ci_validation_scope.py",
                 "scripts/validate_github_math.py",
                 "tests/test_validate_resources.py",
             ]
         )
-        self.assertFalse(deep)
         self.assertEqual(paper_ids, [])
-        self.assertEqual(deep_paths, [])
 
     def test_acceptance_only_change_selects_exact_paper_ids(self) -> None:
         base = {
@@ -85,16 +72,28 @@ class CiValidationScopeTests(unittest.TestCase):
                 "paper-c": {"fingerprint": "c"},
             },
         }
-        deep, paper_ids, deep_paths = select_scope(
+        paper_ids = select_paper_ids(
             ["config/acceptance.yaml"],
             acceptance_base=base,
             acceptance_head=head,
         )
-        self.assertFalse(deep)
         self.assertEqual(paper_ids, ["paper-a", "paper-c"])
-        self.assertEqual(deep_paths, [])
 
-    def test_acceptance_schema_or_top_level_change_forces_deep_gate(self) -> None:
+    def test_review_snapshot_changes_are_rejected(self) -> None:
+        base = {
+            "schema_version": 5,
+            "review_snapshots": {"old": {}},
+            "entries": {"paper-a": {"fingerprint": "a"}},
+        }
+        head = {
+            "schema_version": 5,
+            "review_snapshots": {"old": {}, "new": {}},
+            "entries": {"paper-a": {"fingerprint": "changed"}},
+        }
+        with self.assertRaises(ValueError):
+            changed_acceptance_paper_ids(base, head)
+
+    def test_acceptance_schema_or_top_level_change_is_rejected(self) -> None:
         valid = {"schema_version": 5, "review_snapshots": {}, "entries": {}}
         unsafe_heads = (
             {"schema_version": 6, "review_snapshots": {}, "entries": {}},
@@ -105,63 +104,51 @@ class CiValidationScopeTests(unittest.TestCase):
                 "unexpected": {},
             },
             {"schema_version": 5, "review_snapshots": {}, "entries": []},
-            {
-                "schema_version": 5,
-                "review_snapshots": {"changed": {}},
-                "entries": {},
-            },
+            {"schema_version": 5, "review_snapshots": [], "entries": {}},
         )
         for head in unsafe_heads:
             with self.subTest(head=head):
-                deep, paper_ids, deep_paths = select_scope(
-                    ["config/acceptance.yaml"],
-                    acceptance_base=valid,
-                    acceptance_head=head,
-                )
-                self.assertTrue(deep)
-                self.assertEqual(paper_ids, [])
-                self.assertEqual(deep_paths, ["config/acceptance.yaml"])
+                with self.assertRaises(ValueError):
+                    select_paper_ids(
+                        ["config/acceptance.yaml"],
+                        acceptance_base=valid,
+                        acceptance_head=head,
+                    )
 
-    def test_acceptance_change_without_trusted_snapshots_forces_deep_gate(self) -> None:
-        deep, paper_ids, deep_paths = select_scope(
-            ["config/acceptance.yaml"]
-        )
-        self.assertTrue(deep)
-        self.assertEqual(paper_ids, [])
-        self.assertEqual(deep_paths, ["config/acceptance.yaml"])
+    def test_acceptance_change_without_trusted_ledgers_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            select_paper_ids(["config/acceptance.yaml"])
 
     def test_acceptance_diff_rejects_invalid_entry_shapes(self) -> None:
-        unsafe, paper_ids = changed_acceptance_paper_ids(
-            {"schema_version": 5, "review_snapshots": {}, "entries": {}},
-            {
-                "schema_version": 5,
-                "review_snapshots": {},
-                "entries": {"paper-a": "not-a-receipt"},
-            },
-        )
-        self.assertTrue(unsafe)
-        self.assertEqual(paper_ids, [])
-
-    def test_unknown_diff_base_forces_deep_gate(self) -> None:
-        deep, paper_ids, deep_paths = select_scope(
-            ["README.md"], force_deep=True
-        )
-        self.assertTrue(deep)
-        self.assertEqual(paper_ids, [])
-        self.assertEqual(deep_paths, [])
+        with self.assertRaises(ValueError):
+            changed_acceptance_paper_ids(
+                {"schema_version": 5, "review_snapshots": {}, "entries": {}},
+                {
+                    "schema_version": 5,
+                    "review_snapshots": {},
+                    "entries": {"paper-a": "not-a-receipt"},
+                },
+            )
 
     def test_github_output_is_deterministic(self) -> None:
         output = io.StringIO()
         with redirect_stdout(output):
-            emit_github_output(True, ["paper-a", "paper-b"])
+            emit_github_output(["paper-a", "paper-b"])
         self.assertEqual(
             output.getvalue(),
-            "deep_check=true\n"
             "paper_ids<<__DB_PAPERS__\n"
             "paper-a\n"
             "paper-b\n"
             "__DB_PAPERS__\n",
         )
+
+    def test_workflow_never_runs_deep_check(self) -> None:
+        workflow = (ROOT / ".github/workflows/check.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("run: make check", workflow)
+        self.assertNotIn("make deep-check", workflow)
+        self.assertNotIn("deep_check", workflow)
 
 
 if __name__ == "__main__":

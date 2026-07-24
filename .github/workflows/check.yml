@@ -49,64 +49,56 @@ jobs:
         run: |
           changed_paths="$RUNNER_TEMP/changed-paths.txt"
           : > "$changed_paths"
-          force_deep=false
           diff_base=
 
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            force_deep=true
-            if [ -n "$DEFAULT_BRANCH" ]; then
-              diff_base=$(git merge-base "origin/$DEFAULT_BRANCH" HEAD || true)
-            fi
+            echo "Manual run: no changed-paper scope selected"
           elif [ "$EVENT_NAME" = "pull_request" ]; then
             diff_base=$(git merge-base "origin/$BASE_REF" HEAD || true)
             if [ -n "$diff_base" ] && git cat-file -e "$diff_base^{commit}"; then
-              git diff --name-only "$diff_base..HEAD" > "$changed_paths"
+              git diff --name-only -z "$diff_base..HEAD" > "$changed_paths"
             else
-              force_deep=true
+              echo "Cannot determine a trusted pull-request diff base" >&2
+              exit 1
             fi
           elif [ -n "$BEFORE_SHA" ] &&
                [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] &&
                git cat-file -e "$BEFORE_SHA^{commit}"; then
             diff_base=$BEFORE_SHA
-            git diff --name-only "$BEFORE_SHA..$CURRENT_SHA" > "$changed_paths"
+            git diff --name-only -z "$BEFORE_SHA..$CURRENT_SHA" > "$changed_paths"
           elif [ "$REF_NAME" != "$DEFAULT_BRANCH" ] &&
                [ -n "$DEFAULT_BRANCH" ]; then
             diff_base=$(git merge-base "origin/$DEFAULT_BRANCH" "$CURRENT_SHA" || true)
             if [ -n "$diff_base" ] && git cat-file -e "$diff_base^{commit}"; then
-              git diff --name-only "$diff_base..$CURRENT_SHA" > "$changed_paths"
+              git diff --name-only -z "$diff_base..$CURRENT_SHA" > "$changed_paths"
             else
-              force_deep=true
+              echo "Cannot determine a trusted branch diff base" >&2
+              exit 1
             fi
           else
-            force_deep=true
+            echo "Cannot determine a trusted push diff base" >&2
+            exit 1
           fi
 
-          cat "$changed_paths"
-          echo "force_deep=$force_deep" >> "$GITHUB_OUTPUT"
           echo "diff_base=$diff_base" >> "$GITHUB_OUTPUT"
 
       - name: Select validation scope
         id: scope
         env:
-          FORCE_DEEP: ${{ steps.changes.outputs.force_deep }}
           DIFF_BASE: ${{ steps.changes.outputs.diff_base }}
         run: |
           args=()
-          if [ "$FORCE_DEEP" = "true" ]; then
-            args+=(--force-deep)
-          fi
           if [ -n "$DIFF_BASE" ]; then
             args+=(--base-sha "$DIFF_BASE")
           fi
           python scripts/ci_validation_scope.py "${args[@]}" \
             < "$RUNNER_TEMP/changed-paths.txt" >> "$GITHUB_OUTPUT"
 
-      - name: Run fast archive gate
-        if: steps.scope.outputs.deep_check != 'true'
+      - name: Run archive gate
         run: make check
 
       - name: Run scoped paper gates
-        if: steps.scope.outputs.deep_check != 'true' && steps.scope.outputs.paper_ids != ''
+        if: steps.scope.outputs.paper_ids != ''
         env:
           PAPER_IDS: ${{ steps.scope.outputs.paper_ids }}
         run: |
@@ -120,10 +112,6 @@ jobs:
             fi
             make paper-check PAPER_ID="$paper_id"
           done <<< "$PAPER_IDS"
-
-      - name: Run full archive gate
-        if: steps.scope.outputs.deep_check == 'true'
-        run: make deep-check
 
       - name: Check whitespace
         env:
