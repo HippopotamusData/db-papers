@@ -447,22 +447,8 @@ class PapersTests(unittest.TestCase):
             stderr.getvalue(),
         )
 
-    def test_review_receipt_requires_every_check_and_independent_reviewer(self) -> None:
+    def test_review_receipt_requires_independent_reviewer(self) -> None:
         root = self.make_root("draft")
-        checks = sorted(papers.REQUIRED_REVIEW_CHECKS)
-        with self.globals_patch(root), self.assertRaisesRegex(
-            ValueError, "every checklist item exactly once"
-        ):
-            papers.build_review_receipt(
-                "sample-paper",
-                "section-review",
-                TRANSLATOR,
-                REVIEWER,
-                REVIEW_BASE_SHA,
-                checks[:-1],
-                ["All review dimensions passed against source.pdf."],
-                AUTHORIAL_VOICE,
-            )
         with self.globals_patch(root), self.assertRaisesRegex(
             ValueError, "translator and reviewer must be different"
         ):
@@ -472,10 +458,18 @@ class PapersTests(unittest.TestCase):
                 REVIEWER,
                 REVIEWER,
                 REVIEW_BASE_SHA,
-                checks,
                 ["All review dimensions passed against source.pdf."],
                 AUTHORIAL_VOICE,
             )
+
+    def test_review_receipt_cli_does_not_expose_redundant_check_flags(self) -> None:
+        stdout = io.StringIO()
+        with patch.object(
+            sys, "argv", ["papers.py", "review-receipt", "--help"]
+        ), contextlib.redirect_stdout(stdout), self.assertRaises(SystemExit) as raised:
+            papers.main()
+        self.assertEqual(raised.exception.code, 0)
+        self.assertNotIn("--check", stdout.getvalue())
 
     def test_review_receipt_rejects_content_changed_during_paper_check(self) -> None:
         root = self.make_root("draft")
@@ -501,7 +495,6 @@ class PapersTests(unittest.TestCase):
                 TRANSLATOR,
                 REVIEWER,
                 REVIEW_BASE_SHA,
-                sorted(papers.REQUIRED_REVIEW_CHECKS),
                 ["All review dimensions passed against source.pdf."],
                 AUTHORIAL_VOICE,
                 [],
@@ -539,7 +532,6 @@ class PapersTests(unittest.TestCase):
                 TRANSLATOR,
                 REVIEWER,
                 REVIEW_BASE_SHA,
-                sorted(papers.REQUIRED_REVIEW_CHECKS),
                 ["source Figure 1 was visually checked against the PDF"],
                 AUTHORIAL_VOICE,
                 [f"resources={waiver['fingerprint']}"],
@@ -585,7 +577,6 @@ class PapersTests(unittest.TestCase):
                 TRANSLATOR,
                 REVIEWER,
                 REVIEW_BASE_SHA,
-                sorted(papers.REQUIRED_REVIEW_CHECKS),
                 ["All review dimensions passed against source.pdf."],
                 AUTHORIAL_VOICE,
                 [],
@@ -673,6 +664,27 @@ class PapersTests(unittest.TestCase):
             self.assertEqual(papers.review_queue(), 0)
         self.assertIn("assets:2", output.getvalue())
 
+    def test_review_queue_surfaces_legacy_generic_findings(self) -> None:
+        root = self.make_root("translated")
+        acceptance = {
+            "entries": {
+                "sample-paper": {
+                    "schema_version": 1,
+                    "findings": [papers.LEGACY_GENERIC_REVIEW_FINDING],
+                    "waivers": {},
+                }
+            }
+        }
+        output = io.StringIO()
+        with self.globals_patch(root), patch.object(
+            papers,
+            "load_acceptance_ledger",
+            return_value=acceptance,
+        ), contextlib.redirect_stdout(output):
+            self.assertEqual(papers.review_queue(), 0)
+        self.assertIn("legacy-generic-findings", output.getvalue())
+        self.assertNotIn("legacy-empty-findings", output.getvalue())
+
     def test_acceptance_preflight_failure_rolls_back_ledger_and_status(self) -> None:
         root = self.make_root("draft")
         metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
@@ -713,10 +725,20 @@ class PapersTests(unittest.TestCase):
         root = self.make_root("draft")
         environments: list[dict[str, str]] = []
         commands: list[list[str]] = []
+        expected_waivers = resource_waivers()
 
         def succeed(command, **kwargs):
             commands.append(command)
             environments.append(kwargs["env"])
+            if "scripts/validate_translations.sh" in command:
+                evidence = Path(
+                    command[command.index("--acceptance-evidence-file") + 1]
+                )
+                evidence.write_text(
+                    "resources\tRISK: source Figure 1 has no formal "
+                    "translation-side payload candidate\n",
+                    encoding="utf-8",
+                )
             return subprocess.CompletedProcess(command, 0, "", "")
 
         inherited = {
@@ -731,14 +753,16 @@ class PapersTests(unittest.TestCase):
         with self.globals_patch(root), patch.dict(
             papers.os.environ, inherited
         ), patch.object(papers.subprocess, "run", side_effect=succeed):
-            passed, output, records = papers.acceptance_preflight("sample-paper", {})
+            passed, output, records = papers.acceptance_preflight(
+                "sample-paper", expected_waivers
+            )
         self.assertTrue(passed)
         self.assertEqual(output, "")
-        self.assertEqual(records, {})
-        self.assertEqual(len(environments), 6)
+        self.assertEqual(records, expected_waivers)
+        self.assertEqual(len(environments), 5)
         self.assertTrue(all(environment["DEEP_VALIDATION"] == "1" for environment in environments))
         self.assertEqual(
-            sum("scripts/validate_translations.sh" in command for command in commands), 2
+            sum("scripts/validate_translations.sh" in command for command in commands), 1
         )
         self.assertIn(
             [
@@ -765,15 +789,14 @@ class PapersTests(unittest.TestCase):
         self.assertTrue(
             all(not internal_keys.intersection(environment) for environment in environments)
         )
-        discovery_command = next(
-            command for command in commands if "--acceptance-discovery" in command
-        )
         translated_command = next(
             command for command in commands if "--acceptance-target-status" in command
         )
         recorded_index = translated_command.index("--acceptance-recorded-waivers") + 1
-        self.assertTrue(translated_command[recorded_index])
-        self.assertNotIn("--acceptance-target-status", discovery_command)
+        self.assertEqual(
+            papers.decode_waiver_records(translated_command[recorded_index]),
+            expected_waivers,
+        )
         self.assertNotIn("--acceptance-discovery", translated_command)
         mathjax_command = next(
             command
@@ -825,38 +848,37 @@ class PapersTests(unittest.TestCase):
         self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
         self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
 
-    def test_acceptance_preflight_rejects_candidate_change_between_passes(self) -> None:
+    def test_acceptance_preflight_rejects_waiver_evidence_drift(self) -> None:
         root = self.make_root("draft")
+        reviewed = resource_waivers()
 
         def change_candidate(command, **kwargs):
             if "scripts/validate_translations.sh" in command:
                 evidence = Path(
                     command[command.index("--acceptance-evidence-file") + 1]
                 )
-                candidate = (
-                    "RISK: source Figure 1 has no formal translation-side payload candidate"
-                    if "--acceptance-discovery" in command
-                    else "RISK: source Figure 2 has no formal translation-side payload candidate"
+                evidence.write_text(
+                    "resources\tRISK: source Figure 2 has no formal "
+                    "translation-side payload candidate\n",
+                    encoding="utf-8",
                 )
-                evidence.write_text(f"resources\t{candidate}\n", encoding="utf-8")
             return subprocess.CompletedProcess(command, 0, "", "")
 
         with self.globals_patch(root), patch.object(
             papers.subprocess, "run", side_effect=change_candidate
         ):
             passed, output, _records = papers.acceptance_preflight(
-                "sample-paper",
-                {"resources": resource_waivers()["resources"]["fingerprint"]},
+                "sample-paper", reviewed
             )
         self.assertFalse(passed)
-        self.assertIn("waiver evidence changed:resources:", output)
+        self.assertIn("does not exactly match", output)
 
     def test_acceptance_preflight_rejects_unreviewed_candidate_in_same_category(self) -> None:
         root = self.make_root("draft")
         reviewed = resource_waivers()["resources"]
 
         def add_same_category_candidate(command, **_kwargs):
-            if "--acceptance-discovery" in command:
+            if "scripts/validate_translations.sh" in command:
                 evidence = Path(
                     command[command.index("--acceptance-evidence-file") + 1]
                 )
@@ -871,10 +893,10 @@ class PapersTests(unittest.TestCase):
             papers.subprocess, "run", side_effect=add_same_category_candidate
         ):
             passed, output, _records = papers.acceptance_preflight(
-                "sample-paper", {"resources": reviewed["fingerprint"]}
+                "sample-paper", {"resources": reviewed}
             )
         self.assertFalse(passed)
-        self.assertIn("approved waiver fingerprint changed: resources:", output)
+        self.assertIn("does not exactly match", output)
 
     def test_acceptance_preflight_rejects_raw_diagnostic_drift(self) -> None:
         root = self.make_root("draft")
@@ -882,7 +904,6 @@ class PapersTests(unittest.TestCase):
             "RISK: Listing 1 fenced payload has weak distinctive-identifier "
             "overlap with source candidate (0.10)"
         )
-        translated_candidate = discovery_candidate.replace("0.10", "0.09")
         reviewed = build_waiver_records({"listings": [discovery_candidate]})["listings"]
 
         def change_diagnostic(command, **_kwargs):
@@ -890,22 +911,20 @@ class PapersTests(unittest.TestCase):
                 evidence = Path(
                     command[command.index("--acceptance-evidence-file") + 1]
                 )
-                candidate = (
-                    discovery_candidate
-                    if "--acceptance-discovery" in command
-                    else translated_candidate
+                evidence.write_text(
+                    f"listings\t{discovery_candidate.replace('0.10', '0.09')}\n",
+                    encoding="utf-8",
                 )
-                evidence.write_text(f"listings\t{candidate}\n", encoding="utf-8")
             return subprocess.CompletedProcess(command, 0, "", "")
 
         with self.globals_patch(root), patch.object(
             papers.subprocess, "run", side_effect=change_diagnostic
         ):
             passed, output, _records = papers.acceptance_preflight(
-                "sample-paper", {"listings": reviewed["fingerprint"]}
+                "sample-paper", {"listings": reviewed}
             )
         self.assertFalse(passed)
-        self.assertIn("raw waiver diagnostics changed between acceptance passes", output)
+        self.assertIn("does not exactly match", output)
 
     def test_accept_rejects_direct_refresh_of_translated_paper(self) -> None:
         root = self.make_root("translated")

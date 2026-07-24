@@ -7,7 +7,7 @@ authors:
   - Thomas Neumann
   - Andrew Pavlo
 year: 2016
-source_url: http://justinlevandoski.org/papers/fnt-mmdb.pdf
+source_url: https://justinlevandoski.io/papers/fnt-mmdb.pdf
 topics:
   - storage-engine
 reading_status: skipped

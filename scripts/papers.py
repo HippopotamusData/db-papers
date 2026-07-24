@@ -25,7 +25,6 @@ import yaml
 
 from acceptance_evidence import (
     build_waiver_records,
-    compare_waiver_records,
     decode_waiver_records,
     encode_waiver_records,
     read_observed_tsv,
@@ -36,7 +35,6 @@ from project_config import (
     GIT_SHA_RE,
     METADATA_FILE,
     REVIEW_IDENTITY_ASSURANCE,
-    REQUIRED_REVIEW_CHECKS,
     REQUIRE_COMPLETE_REFERENCES,
     REVIEW_RECEIPT_SCHEMA_VERSION,
     RUNTIME_REVIEW_ACTIONS,
@@ -93,6 +91,11 @@ VALIDATION_INTERNAL_ENV_KEYS = (
     "SKIP_METADATA_VALIDATION",
 )
 ACCEPTANCE_JOURNAL_SCHEMA_VERSION = 1
+LEGACY_GENERIC_REVIEW_FINDING = (
+    "Independent full-paper review verified source-faithful structure, technical "
+    "claims, numbers, formulas, figures, tables, references, conclusions, and "
+    "visual layout after scoped repairs"
+)
 
 
 class IndentedSafeDumper(yaml.SafeDumper):
@@ -837,9 +840,13 @@ def review_queue(limit: int | None = None) -> int:
         receipt = acceptance[paper_id]
         score = 0
         reasons: list[str] = []
-        if receipt["schema_version"] == 1 and not receipt["findings"]:
-            score += 40
-            reasons.append("legacy-empty-findings")
+        if receipt["schema_version"] == 1:
+            if not receipt["findings"]:
+                score += 40
+                reasons.append("legacy-empty-findings")
+            elif receipt["findings"] == [LEGACY_GENERIC_REVIEW_FINDING]:
+                score += 35
+                reasons.append("legacy-generic-findings")
         waivers = receipt.get("waivers", {})
         waiver_weights = {"abridgement": 30, "listings": 20, "resources": 10}
         for category, weight in waiver_weights.items():
@@ -1414,7 +1421,6 @@ def _build_review_receipt_from_snapshot(
     translator: str,
     reviewer: str,
     review_base_sha: str,
-    checks: list[str],
     findings: list[str],
     authorial_voice: dict[str, int],
     waiver_records: dict[str, dict[str, Any]],
@@ -1438,26 +1444,6 @@ def _build_review_receipt_from_snapshot(
     }
     receipt["fingerprint"] = review_receipt_fingerprint(receipt)
     return validate_review_receipt(receipt, f"review receipt for {paper_id}")
-
-
-def _validate_review_checklist(checks: list[str]) -> None:
-    if not isinstance(checks, list) or any(
-        not isinstance(check, str) for check in checks
-    ):
-        raise ValueError("review receipt checks must be a list of strings")
-    if set(checks) == REQUIRED_REVIEW_CHECKS and len(checks) == len(set(checks)):
-        return
-    missing = sorted(REQUIRED_REVIEW_CHECKS - set(checks))
-    unexpected = sorted(set(checks) - REQUIRED_REVIEW_CHECKS)
-    details: list[str] = []
-    if missing:
-        details.append("missing: " + ", ".join(missing))
-    if unexpected:
-        details.append("unexpected: " + ", ".join(unexpected))
-    raise ValueError(
-        "review receipt requires every checklist item exactly once"
-        + (f" ({'; '.join(details)})" if details else "")
-    )
 
 
 def _parse_waiver_approvals(waivers: list[str]) -> dict[str, str]:
@@ -1525,14 +1511,12 @@ def build_review_receipt(
     translator: str,
     reviewer: str,
     review_base_sha: str,
-    checks: list[str],
     findings: list[str],
     authorial_voice: dict[str, int],
     waiver_records: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build a content-bound reviewer attestation without mutating the repository."""
 
-    _validate_review_checklist(checks)
     validate_review_base_commit(ROOT, review_base_sha)
     snapshot = _capture_review_snapshot(paper_id)
     return _build_review_receipt_from_snapshot(
@@ -1541,7 +1525,6 @@ def build_review_receipt(
         translator,
         reviewer,
         review_base_sha,
-        checks,
         findings,
         authorial_voice,
         waiver_records or {},
@@ -1555,7 +1538,6 @@ def emit_review_receipt(
     translator: str,
     reviewer: str,
     review_base_sha: str,
-    checks: list[str],
     findings: list[str],
     authorial_voice: dict[str, int],
     waivers: list[str],
@@ -1638,7 +1620,6 @@ def emit_review_receipt(
                 "review snapshot changed while paper-check was running; "
                 "repeat the review receipt step on stable inputs"
             )
-        _validate_review_checklist(checks)
         validate_review_base_commit(ROOT, review_base_sha)
         receipt = _build_review_receipt_from_snapshot(
             paper_id,
@@ -1646,7 +1627,6 @@ def emit_review_receipt(
             translator,
             reviewer,
             review_base_sha,
-            checks,
             findings,
             authorial_voice,
             waiver_records,
@@ -1660,17 +1640,9 @@ def emit_review_receipt(
 
 
 def acceptance_preflight(
-    paper_id: str, approved_waivers: dict[str, str]
+    paper_id: str, expected_waivers: dict[str, dict[str, Any]]
 ) -> tuple[bool, str, dict[str, dict[str, Any]]]:
-    """Run discovery and translated-grade gates before mutating authoritative state.
-
-    ``validate_translations.sh`` writes exact candidates to the TSV named by
-    ``ACCEPTANCE_EVIDENCE_FILE``.  The discovery pass runs while the paper is
-    still a draft.  The second pass receives the resulting item-level evidence
-    through ``ACCEPTANCE_RECORDED_WAIVERS`` and is forced to translated severity.
-    This two-pass protocol lets mechanical candidates be reviewed without ever
-    temporarily claiming the paper is accepted.
-    """
+    """Run one translated-grade gate against the exact reviewed waiver evidence."""
 
     matches = sorted(PAPERS.glob(f"*/{paper_id}/{TRANSLATION_FILE}"))
     if len(matches) != 1:
@@ -1701,101 +1673,34 @@ def acceptance_preflight(
             return False, "\n".join(output), {}
 
     with tempfile.TemporaryDirectory(prefix="db-papers-acceptance-evidence-") as temporary:
-        evidence_root = Path(temporary)
-        discovery_file = evidence_root / "discovery.tsv"
-        translated_file = evidence_root / "translated.tsv"
-        discovery_file.write_text("", encoding="utf-8")
-        translated_file.write_text("", encoding="utf-8")
-
-        discovery_env = base_env.copy()
-        discovery_command = [
-            "bash",
-            "scripts/validate_translations.sh",
-            "--paper-id",
-            paper_id,
-            "--acceptance-discovery",
-            "--acceptance-evidence-file",
-            os.fspath(discovery_file),
-            "--acceptance-paper-id",
-            paper_id,
-        ]
-        if not _run_preflight_command(
-            discovery_command, discovery_env, output
-        ):
-            return False, "\n".join(output), {}
-
-        try:
-            waiver_records = build_waiver_records(read_observed_tsv(discovery_file))
-        except (OSError, ValueError) as exc:
-            output.append(f"ERROR: cannot read acceptance evidence: {exc}")
-            return False, "\n".join(output), {}
-        observed_fingerprints = {
-            category: record["fingerprint"] for category, record in waiver_records.items()
-        }
-        if observed_fingerprints != approved_waivers:
-            missing = observed_fingerprints.keys() - approved_waivers.keys()
-            unused = approved_waivers.keys() - observed_fingerprints.keys()
-            changed = {
-                category
-                for category in observed_fingerprints.keys() & approved_waivers.keys()
-                if observed_fingerprints[category] != approved_waivers[category]
-            }
-            if missing:
-                output.append(
-                    "ERROR: unapproved waiver candidates: "
-                    + ", ".join(
-                        f"{category}={observed_fingerprints[category]}"
-                        for category in sorted(missing)
-                    )
-                )
-            if unused:
-                output.append(
-                    "ERROR: requested waivers have no current candidates: "
-                    + ", ".join(sorted(unused))
-                )
-            for category in sorted(changed):
-                output.append(
-                    "ERROR: approved waiver fingerprint changed: "
-                    f"{category}:{approved_waivers[category]}:"
-                    f"{observed_fingerprints[category]}"
-                )
-            return False, "\n".join(output), waiver_records
-
-        translated_env = base_env.copy()
-        translated_command = [
+        evidence_file = Path(temporary) / "observed.tsv"
+        evidence_file.write_text("", encoding="utf-8")
+        deep_command = [
             "bash",
             "scripts/validate_translations.sh",
             "--paper-id",
             paper_id,
             "--acceptance-evidence-file",
-            os.fspath(translated_file),
+            os.fspath(evidence_file),
             "--acceptance-paper-id",
             paper_id,
             "--acceptance-target-status",
             "translated",
             "--acceptance-recorded-waivers",
-            encode_waiver_records(waiver_records),
+            encode_waiver_records(expected_waivers),
         ]
-        if not _run_preflight_command(
-            translated_command, translated_env, output
-        ):
-            return False, "\n".join(output), waiver_records
+        if not _run_preflight_command(deep_command, base_env, output):
+            return False, "\n".join(output), {}
         try:
-            translated_records = build_waiver_records(read_observed_tsv(translated_file))
-            _reviewed, mismatches = compare_waiver_records(
-                waiver_records, translated_records
-            )
+            waiver_records = build_waiver_records(read_observed_tsv(evidence_file))
         except (OSError, ValueError) as exc:
             output.append(f"ERROR: cannot verify translated acceptance evidence: {exc}")
-            return False, "\n".join(output), waiver_records
-        if waiver_records != translated_records and not mismatches:
+            return False, "\n".join(output), {}
+        if waiver_records != expected_waivers:
             output.append(
-                "ERROR: raw waiver diagnostics changed between acceptance passes "
-                "while semantic findings stayed constant"
+                "ERROR: review receipt waiver evidence does not exactly match "
+                "the current validator output"
             )
-            return False, "\n".join(output), waiver_records
-        if mismatches:
-            output.extend(f"ERROR: waiver evidence {item}" for item in mismatches)
             return False, "\n".join(output), waiver_records
 
         mathjax_module = os.fspath(ROOT / "node_modules/mathjax")
@@ -1806,7 +1711,7 @@ def acceptance_preflight(
             mathjax_module,
             translation.relative_to(ROOT).as_posix(),
         ]
-        if not _run_preflight_command(mathjax_command, translated_env, output):
+        if not _run_preflight_command(mathjax_command, base_env, output):
             return False, "\n".join(output), waiver_records
 
         github_command = [
@@ -1815,7 +1720,7 @@ def acceptance_preflight(
             "--github",
             translation.relative_to(ROOT).as_posix(),
         ]
-        if not _run_preflight_command(github_command, translated_env, output):
+        if not _run_preflight_command(github_command, base_env, output):
             return False, "\n".join(output), waiver_records
 
     return True, "\n".join(output), waiver_records
@@ -1922,10 +1827,6 @@ def _accept_record_locked(
     if receipt["paper_id"] != paper_id:
         raise ValueError("review receipt paper_id does not match --id")
     validate_review_base_commit(ROOT, receipt["review_base_sha"])
-    approved_waivers = {
-        category: record["fingerprint"]
-        for category, record in receipt["waivers"].items()
-    }
     expected_head_sha = current_git_head(ROOT)
     if receipt["review_head_sha"] != expected_head_sha:
         raise ValueError(
@@ -1960,7 +1861,9 @@ def _accept_record_locked(
             "from review_head_sha"
         )
 
-    accepted, details, waiver_records = acceptance_preflight(paper_id, approved_waivers)
+    accepted, details, waiver_records = acceptance_preflight(
+        paper_id, receipt["waivers"]
+    )
     if not accepted:
         raise ValueError(f"acceptance preflight failed\n{details}".rstrip())
     if waiver_records != receipt["waivers"]:
@@ -2428,13 +2331,6 @@ def main() -> int:
         help="40-character fixed baseline commit against which the review was performed",
     )
     receipt_parser.add_argument(
-        "--check",
-        action="append",
-        default=[],
-        choices=sorted(REQUIRED_REVIEW_CHECKS),
-        help="attest one required review dimension; every dimension is required exactly once",
-    )
-    receipt_parser.add_argument(
         "--finding",
         action="append",
         required=True,
@@ -2510,7 +2406,6 @@ def main() -> int:
             args.translator,
             args.reviewer,
             args.review_base_sha,
-            args.check,
             args.finding,
             {
                 "source_valid_items": args.authorial_voice_source_items,

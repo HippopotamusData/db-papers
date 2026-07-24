@@ -56,4 +56,6 @@ paper.yaml       标题、作者、年份、来源、主题和阅读状态
 
 翻译难免存在疏漏。用于学术引用、实现验证或精确数据核对时，请以论文原文为准。论文版权及授权以原文和出版平台的标注为准。
 
-如果发现错译、漏译或排版问题，欢迎通过 GitHub Issue 反馈。
+如果发现错译、漏译或排版问题，欢迎通过 [GitHub Issue](https://github.com/HippopotamusData/db-papers/issues) 反馈。
+
+参与元数据、文档、脚本或论文内容维护前，请先阅读 [参与维护](CONTRIBUTING.md)。

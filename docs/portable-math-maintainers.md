@@ -96,8 +96,7 @@ make python-compile
 node --check scripts/render_mathjax.cjs
 # 仅当 render_katex.cjs 或可选 KaTeX 审计路径变化时运行：
 node --check scripts/render_katex.cjs
-make check
-make deep-check
+make deep-check  # 替代 make check
 make diff-check
 make math-audit-github
 ```

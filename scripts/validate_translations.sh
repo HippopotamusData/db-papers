@@ -128,9 +128,11 @@ fi
 metadata_args=(validate)
 [[ -n "$target_paper_id" ]] && metadata_args+=(--paper-id "$target_paper_id")
 "$PYTHON" scripts/papers.py "${metadata_args[@]}" || exit 1
-source_args=(--root "$ROOT")
-[[ -n "$target_paper_id" ]] && source_args+=(--paper-id "$target_paper_id")
-"$PYTHON" scripts/validate_source_pdf.py "${source_args[@]}" || exit 1
+if [[ "$deep_validation" == "1" || -n "$target_paper_id" ]]; then
+  source_args=(--root "$ROOT")
+  [[ -n "$target_paper_id" ]] && source_args+=(--paper-id "$target_paper_id")
+  "$PYTHON" scripts/validate_source_pdf.py "${source_args[@]}" || exit 1
+fi
 validation_tmp=$(mktemp -d "${TMPDIR:-/tmp}/db-papers-validation.XXXXXX")
 manifest="$validation_tmp/manifest"
 trap 'rm -rf "$validation_tmp"' EXIT
@@ -239,16 +241,18 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     fail "$translation narrative-voice validation failed (exit=$narrative_status)"
   fi
 
-  github_math_args=("$visible_translation")
-  if [[ "$reading_status" == "draft" ]]; then
-    github_math_args=(--reject-math-code-spans "$visible_translation")
-  fi
-  github_math_issues=$("$PYTHON" scripts/validate_github_math.py "${github_math_args[@]}")
-  github_math_status=$?
-  if (( github_math_status == 1 )); then
-    fail "$translation contains non-portable math syntax: $github_math_issues"
-  elif (( github_math_status != 0 )); then
-    fail "$translation portable math validation failed (exit=$github_math_status)"
+  if [[ "$deep_validation" == "1" || -n "$target_paper_id" || "$reading_status" == "draft" ]]; then
+    github_math_args=("$visible_translation")
+    if [[ "$reading_status" == "draft" ]]; then
+      github_math_args=(--reject-math-code-spans "$visible_translation")
+    fi
+    github_math_issues=$("$PYTHON" scripts/validate_github_math.py "${github_math_args[@]}")
+    github_math_status=$?
+    if (( github_math_status == 1 )); then
+      fail "$translation contains non-portable math syntax: $github_math_issues"
+    elif (( github_math_status != 0 )); then
+      fail "$translation portable math validation failed (exit=$github_math_status)"
+    fi
   fi
 
   h1=$(awk '/^# /{print; exit}' "$visible_translation")

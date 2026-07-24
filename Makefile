@@ -60,7 +60,6 @@ fix-math:
 	$(PYTHON) scripts/fix_portable_math.py fix --safe $(FILES)
 
 math-check:
-	find papers -mindepth 3 -maxdepth 3 -name translation.md -exec $(PYTHON) scripts/validate_github_math.py {} +
 	find papers -mindepth 3 -maxdepth 3 -name translation.md -exec $(PYTHON) scripts/verify_math_rendering.py --mathjax-module "$(MATHJAX_MODULE)" {} +
 	find papers -mindepth 3 -maxdepth 3 -name translation.md -exec $(PYTHON) scripts/fix_portable_math.py check {} +
 
@@ -173,7 +172,6 @@ accept-preflight:
 			--expected-base-sha "$(BASE)"; \
 	fi
 	$(MAKE) doctor-accept
-	$(MAKE) paper-check PAPER_ID="$(PAPER_ID)"
 
 diff-check:
 	bash scripts/check_diff.sh

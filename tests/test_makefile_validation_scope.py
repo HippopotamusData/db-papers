@@ -115,6 +115,38 @@ class MakefileValidationScopeTests(unittest.TestCase):
         )
         self.assertIn(routing, script)
 
+    def test_source_identity_scan_is_reserved_for_deep_or_scoped_validation(
+        self,
+    ) -> None:
+        script = (ROOT / "scripts/validate_translations.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            'if [[ "$deep_validation" == "1" || -n "$target_paper_id" ]]; then\n'
+            '  source_args=(--root "$ROOT")',
+            script,
+        )
+
+    def test_math_check_uses_one_static_parse_before_rendering(self) -> None:
+        output = self.dry_run("math-check")
+        self.assertIn("scripts/verify_math_rendering.py", output)
+        self.assertIn("scripts/fix_portable_math.py check", output)
+        self.assertNotIn("scripts/validate_github_math.py", output)
+
+    def test_translation_validator_reserves_math_profile_for_deep_or_draft_scope(
+        self,
+    ) -> None:
+        script = (ROOT / "scripts/validate_translations.sh").read_text(
+            encoding="utf-8"
+        )
+        marker = (
+            'if [[ "$deep_validation" == "1" || -n "$target_paper_id" '
+            '|| "$reading_status" == "draft" ]]; then'
+        )
+        math_call = 'scripts/validate_github_math.py "${github_math_args[@]}"'
+        self.assertIn(marker, script)
+        self.assertIn(math_call, script)
+
 
 if __name__ == "__main__":
     unittest.main()

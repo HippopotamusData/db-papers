@@ -44,6 +44,8 @@ Before acting, read only the document or documents listed for the task:
 | Review-and-repair or accept a translation (explicit write authorization) | `docs/workflows/review.md`, `docs/translation-policy.md` |
 | Change required metadata fields | `docs/workflows/maintain.md`, `docs/workflows/metadata.md` |
 | Change rating structure | `docs/workflows/maintain.md`, `docs/workflows/rating.md` |
+| Repair portable-math syntax in named translations | `docs/portable-math-maintainers.md` |
+| Change formula rules, validators, or safe fixers | `docs/workflows/maintain.md`, `docs/portable-math-maintainers.md` |
 | Change taxonomy, scripts, generated catalog, or maintainer environment | `docs/workflows/maintain.md` |
 
 ## Global invariants
@@ -62,7 +64,11 @@ Before acting, read only the document or documents listed for the task:
 
 ## Autonomy
 
-For audit/review, explanation, diagnosis, rule design, or planning requests, inspect relevant files and report without modifying papers. Full processing of a newly added paper carries standing authorization to write its evidence-backed `rating` after acceptance; rating an existing paper outside that lifecycle still requires an explicitly named scope. Only `review-and-repair`, `accept`, or another explicit change authorization may edit a reviewed paper or its status. Validator or workflow maintenance may run repository-wide non-destructive checks, but those checks do not authorize repository-wide content review or edits: repair only papers identified by concrete findings within the authorized scope, and ask before expanding to a full historical re-review. For change, build, fix, translate, rate, or archive requests, make in-scope local edits and run non-destructive validation. Ask before external publication, destructive cleanup, acquiring paid material, or materially expanding scope.
+For audit/review, explanation, diagnosis, rule design, or planning, inspect and report without modifying papers. Full processing of a newly added paper may write its evidence-backed `rating` after acceptance; rating an existing paper still requires an explicitly named scope.
+
+Only `review-and-repair`, `accept`, or another explicit change authorization may edit a reviewed paper or its status. Repository-wide non-destructive checks do not authorize repository-wide content review or edits. Repair only papers identified by concrete findings within the authorized scope, and ask before expanding to a historical re-review.
+
+For change, build, fix, translate, rate, or archive requests, make in-scope local edits and run non-destructive validation. Ask before external publication, destructive cleanup, paid acquisition, or material scope expansion.
 
 ## Commands
 
@@ -74,11 +80,15 @@ make paper-check PAPER_ID=<paper-id>  # scoped deep gate for one paper during a 
 make review-queue   # risk-first queue for deeper PDF re-review
 make catalog        # regenerate CATALOG.md from paper.yaml files
 make check          # fast submission gate and generated-file check
-make deep-check     # full repository audit; reserve for validator/policy changes or an explicit audit
+make deep-check     # check superset with full repository audit
 make diff-check     # whitespace gate including untracked translation files
 ```
 
-Before finishing an integrated repository change, run `make check` and `make diff-check`. In a Codex translation batch, translation and review subagents use `make paper-check`; an independent reviewer then emits a content-bound review receipt, while the root agent owns accept, shared state, per-round checkpoints, and final integration. Paper acceptance always runs the deep validator for that paper and rejects content changed after the receipt, so ordinary translation batches do not run `make deep-check`. Reserve `make deep-check` for validator changes, project-wide translation-policy changes that may affect historical papers, or an explicit full-repository audit. A full mechanical check is not standing authority to re-review or rewrite every historical translation; report impact and keep remediation scoped unless the user explicitly requests a full corpus pass. If a required tool or source is unavailable, state the exact unrun check and why.
+Before finishing an ordinary integrated change, run `make check` and `make diff-check`. For validator changes, project-wide translation-policy changes, or an explicit full audit, run `make deep-check` **instead of** `make check`, then run `make diff-check`.
+
+In a Codex translation batch, the translator runs `make paper-check`. An independent reviewer performs the PDF review and emits a content-bound receipt; receipt generation captures one fresh single-paper check. Accept performs one final translated-grade check before writing. The root agent owns accept, shared state, checkpoints, and integration. Ordinary translation batches do not run `make deep-check`.
+
+A full mechanical check does not authorize a repository-wide content review or rewrite. Report the affected paper IDs and keep repairs within the authorized scope. If a required tool or source is unavailable, state exactly which check was not run and why.
 
 ## Completion report
 

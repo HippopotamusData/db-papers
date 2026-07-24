@@ -100,6 +100,77 @@ class SourcePdfValidationTests(unittest.TestCase):
         self.assertTrue(any("title tokens" in error for error in errors))
         self.assertTrue(any("authors" in error for error in errors))
 
+    def test_scattered_title_words_are_not_treated_as_a_title(self) -> None:
+        metadata, pdf, temporary = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        filler = " ".join(f"filler{index}" for index in range(40))
+        first = " ".join(
+            [
+                "Ada Lovelace Grace Hopper",
+                "Reliable",
+                filler,
+                "Query",
+                filler,
+                "Processing",
+                filler,
+                "Engine",
+            ]
+        )
+        last = "references one two three four five six seven eight nine ten"
+        with patch.object(
+            validate_source_pdf,
+            "PdfReader",
+            return_value=FakeReader([FakePage(first), FakePage(last)]),
+        ):
+            errors = validate_source_pdf.validate_source_pdf(metadata, pdf)
+        self.assertTrue(any("48-token window" in error for error in errors))
+        self.assertFalse(any("authors" in error for error in errors))
+
+    def test_partial_title_match_requires_the_metadata_year(self) -> None:
+        metadata, pdf, temporary = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        metadata.write_text(
+            metadata.read_text(encoding="utf-8").replace(
+                "A Reliable Query Processing Engine",
+                "A Reliable Distributed Query Processing Engine",
+            ),
+            encoding="utf-8",
+        )
+        first = " ".join(
+            [
+                "A Reliable Query Processing Engine",
+                "Ada Lovelace Grace Hopper",
+                "abstract database systems query processing execution",
+                "one two three four five six seven eight nine ten eleven twelve",
+            ]
+        )
+        last = "references one two three four five six seven eight nine ten"
+        with patch.object(
+            validate_source_pdf,
+            "PdfReader",
+            return_value=FakeReader([FakePage(first), FakePage(last)]),
+        ):
+            errors = validate_source_pdf.validate_source_pdf(metadata, pdf)
+        self.assertTrue(any("publication year" in error for error in errors))
+
+    def test_pqs_metadata_rejects_the_norec_pdf(self) -> None:
+        metadata = (
+            ROOT
+            / "papers"
+            / "reliability-and-testing"
+            / "pivoted-query-synthesis-testing-database-engines"
+            / "paper.yaml"
+        )
+        pdf = (
+            ROOT
+            / "papers"
+            / "reliability-and-testing"
+            / "detecting-optimization-bugs-non-optimizing-reference-engine"
+            / "source.pdf"
+        )
+        errors = validate_source_pdf.validate_source_pdf(metadata, pdf)
+        self.assertTrue(any("title tokens" in error for error in errors))
+
     def test_non_pdf_signature_is_rejected_before_parsing(self) -> None:
         metadata, pdf, temporary = self.fixture()
         self.addCleanup(temporary.cleanup)

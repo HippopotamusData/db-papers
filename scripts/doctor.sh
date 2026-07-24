@@ -40,6 +40,10 @@ fi
 
 if [[ -x "$PYTHON" ]] || command -v "$PYTHON" >/dev/null 2>&1; then
   "$PYTHON" --version
+  if ! "$PYTHON" -m pip --version; then
+    echo "ERROR: pip 26.1.2 is required in the configured Python environment" >&2
+    failures=$((failures + 1))
+  fi
 fi
 
 if [[ "$REQUIRE_GITHUB" == "1" ]] && command -v gh >/dev/null 2>&1; then
@@ -104,7 +108,7 @@ fi
 if [[ -x "$PYTHON" ]] || command -v "$PYTHON" >/dev/null 2>&1; then
   "$PYTHON" - <<'PY' || failures=$((failures + 1))
 import sys
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 
 if sys.version_info < (3, 11):
     raise SystemExit("ERROR: Python 3.11 or newer is required")
@@ -115,17 +119,17 @@ import yaml
 
 markdown_it_version = version("markdown-it-py")
 mdurl_version = version("mdurl")
+try:
+    pip_version = version("pip")
+except PackageNotFoundError:
+    raise SystemExit("ERROR: pip 26.1.2 is required") from None
 
-
-def major_minor(version: str) -> tuple[int, int]:
-    values = version.split(".")
-    return int(values[0]), int(values[1]) if len(values) > 1 else 0
-
-
-if not ((6, 0) <= major_minor(yaml.__version__) < (7, 0)):
-    raise SystemExit(f"ERROR: PyYAML >=6.0,<7 is required (found {yaml.__version__})")
-if not ((10, 0) <= major_minor(PIL.__version__) < (13, 0)):
-    raise SystemExit(f"ERROR: Pillow >=10,<13 is required (found {PIL.__version__})")
+if pip_version != "26.1.2":
+    raise SystemExit(f"ERROR: pip 26.1.2 is required (found {pip_version})")
+if yaml.__version__ != "6.0.3":
+    raise SystemExit(f"ERROR: PyYAML 6.0.3 is required (found {yaml.__version__})")
+if PIL.__version__ != "12.3.0":
+    raise SystemExit(f"ERROR: Pillow 12.3.0 is required (found {PIL.__version__})")
 if markdown_it_version != "4.2.0":
     raise SystemExit(
         f"ERROR: markdown-it-py 4.2.0 is required (found {markdown_it_version})"
@@ -140,6 +144,7 @@ print(f"Pillow: {PIL.__version__}")
 print(f"pypdf: {pypdf.__version__}")
 print(f"markdown-it-py: {markdown_it_version}")
 print(f"mdurl: {mdurl_version}")
+print(f"pip: {pip_version}")
 PY
 fi
 

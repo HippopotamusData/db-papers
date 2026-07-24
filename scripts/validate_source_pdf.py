@@ -18,7 +18,8 @@ from project_config import load_yaml
 
 MIN_EDGE_TEXT_TOKENS = 10
 MIN_FIRST_TEXT_TOKENS = 20
-MIN_TITLE_TOKEN_COVERAGE = 0.70
+TITLE_WINDOW_TOKENS = 48
+MIN_TITLE_TOKEN_COVERAGE = 0.80
 MIN_AUTHOR_COVERAGE = 0.50
 PAPER_ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 
@@ -28,10 +29,38 @@ def normalized_tokens(value: str) -> list[str]:
     return re.findall(r"[a-z0-9]{2,}", normalized)
 
 
-def token_coverage(expected: list[str], observed: set[str]) -> float:
-    if not expected:
+def ordered_token_coverage(expected: list[str], observed: list[str]) -> float:
+    """Return the share of expected tokens found in order in observed."""
+    if not expected or not observed:
         return 0.0
-    return sum(token in observed for token in expected) / len(expected)
+    previous = [0] * (len(observed) + 1)
+    for expected_token in expected:
+        current = [0]
+        for index, observed_token in enumerate(observed, start=1):
+            if expected_token == observed_token:
+                current.append(previous[index - 1] + 1)
+            else:
+                current.append(max(previous[index], current[-1]))
+        previous = current
+    return previous[-1] / len(expected)
+
+
+def windowed_token_coverage(expected: list[str], observed: list[str]) -> float:
+    """Return the best ordered title coverage within one local window."""
+    if not expected or not observed:
+        return 0.0
+    for start in range(len(observed) - len(expected) + 1):
+        if observed[start : start + len(expected)] == expected:
+            return 1.0
+    if len(observed) <= TITLE_WINDOW_TOKENS:
+        return ordered_token_coverage(expected, observed)
+    return max(
+        ordered_token_coverage(
+            expected,
+            observed[start : start + TITLE_WINDOW_TOKENS],
+        )
+        for start in range(len(observed) - TITLE_WINDOW_TOKENS + 1)
+    )
 
 
 def author_coverage(authors: Any, observed: set[str]) -> float:
@@ -93,12 +122,20 @@ def validate_source_pdf(metadata_path: Path, pdf_path: Path) -> list[str]:
     observed = set(first_tokens)
     title = metadata.get("title")
     title_tokens = normalized_tokens(title) if isinstance(title, str) else []
-    title_match = token_coverage(title_tokens, observed)
+    title_match = windowed_token_coverage(title_tokens, first_tokens)
     if title_match < MIN_TITLE_TOKEN_COVERAGE:
         errors.append(
             f"{pdf_path}: first pages match only {title_match:.0%} of title tokens "
+            f"in order within one {TITLE_WINDOW_TOKENS}-token window "
             f"(need {MIN_TITLE_TOKEN_COVERAGE:.0%})"
         )
+    elif title_match < 1.0:
+        year = metadata.get("year")
+        if not isinstance(year, int) or str(year) not in first_tokens:
+            errors.append(
+                f"{pdf_path}: partial title match is not corroborated by "
+                "the metadata publication year on the first pages"
+            )
 
     authors = metadata.get("authors")
     if not isinstance(authors, list):
