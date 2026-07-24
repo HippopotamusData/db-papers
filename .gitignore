@@ -5,6 +5,9 @@ __pycache__/
 .venv/
 node_modules/
 .DS_Store
+site_src/
+site/
+site.generated.toml
 
 # Non-deliverable notes and source unpacking scratch space.
 **/reading_notes.md

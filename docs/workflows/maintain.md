@@ -11,7 +11,7 @@
 - 生成文件由脚本重建，不手工修补统计。
 - `config/policy.yaml`、`config/taxonomy.yaml` 与 `config/acceptance.yaml` 都通过版本化强类型 schema 校验。
 - 已有原文、译文正文和资源不因结构调整而改变；相对资源链接仍有效。
-- 普通变更通过 `make check`；校验器或全局策略变更改用 `make deep-check`。所有变更都通过 `make diff-check`。
+- 普通变更通过 `make check`。只有依赖、策略或流程变更会影响论文内容解释、验收语义或全局校验器行为，或明确进行全库审计时，才改用 `make deep-check`。所有变更都通过 `make diff-check`。
 
 ## 变更规则
 
@@ -50,6 +50,50 @@ npm ci
 
 依赖只装入项目虚拟环境。标题约定变化时用 `make normalize-headers` 机械迁移。公式专项修复按 `docs/portable-math-maintainers.md` 限定文件，并显式运行 `make fix-math FILES='...'`；`make check` 只读。
 
+维护 GitHub Pages 站点时另安装锁定的 `site` dependency group：
+
+```bash
+.venv/bin/python -m pip install --group site
+```
+
+## GitHub Pages 发布
+
+组织站点固定发布到
+`https://hippopotamusdata.github.io/db-papers/`。`scripts/build_site.py`
+从 `paper.yaml`、`config/taxonomy.yaml` 和当前验收状态生成一次性的
+`site_src/`，并从同一分类法生成 `site.generated.toml` 中的导航；
+Zensical 再把它构建到 `site/`。三个文件或目录都是可丢弃产物，不得提交
+或手工维护。
+
+读者站只发布：
+
+- 首页、领域页和从权威元数据生成的论文目录；
+- `reading_status: translated` 且存在当前 acceptance entry 的译文；
+- 这些译文目录中的阅读资源；
+- 版本化的站点样式与浏览器脚本。
+
+`source.pdf`、`paper.yaml`、acceptance ledger、维护文档、脚本、测试和未验收
+译文不进入 Pages artifact。论文页的原文按钮使用 `paper.yaml.source_url`，
+不复制 PDF。站点构建不改写权威论文文件。
+
+本地预览和门禁：
+
+```bash
+make site-serve   # 生成阅读树并启动本地预览
+make site-check   # 构建后检查页面集合、禁止文件、产物大小和站内链接
+```
+
+`.github/workflows/pages.yml` 在 PR 上运行 `site-build`，但不部署。合并到
+默认分支后，只有 `check` workflow 对该 `main` 提交成功，Pages workflow
+才会检出同一个 SHA、重新运行 `make site-check`、上传 artifact，并通过
+`github-pages` environment 部署。也可用 `workflow_dispatch` 对当前默认分支
+进行人工重建。工作流不使用仓库 secret；Actions 只在部署 job 获得
+`pages: write` 和 `id-token: write`。
+
+站点故障优先回滚导致故障的仓库提交，让 `main` 门禁成功后自动重新部署；
+不要直接修改 Pages artifact。若代码未变而部署基础设施短暂失败，可在
+Actions 中重跑失败 job，或手工触发 `pages` workflow。
+
 `scripts/validate_ci_trust.py` 是 `pull_request_target` 从默认分支执行的信任根，并绑定其调用的公式审计脚本。普通 PR 不得修改这些文件。更新信任基线需要明确授权的管理员变更、定向测试、`make deep-check` 和 `make diff-check`。
 
 ## 验证
@@ -59,14 +103,15 @@ make doctor
 make python-compile
 node --check scripts/render_mathjax.cjs
 make check       # 普通变更
-# 或 make deep-check  # 校验器、全局翻译策略或明确的全库审计
+# 或 make deep-check  # 影响论文内容解释、验收语义、全局校验器，或明确的全库审计
 make diff-check
+# 站点生成器、主题或 Pages workflow 变化时另运行 make site-check
 ```
 
 `make deep-check` 是 `make check` 的深检替代项，不叠加运行。两者都包含锁定 MathJax 的本地 TeX 结构门禁；accept 还会在写入前审计当前译文的 GitHub 节点。
 未 accept 的公式专项变更、公式校验器或全局公式策略变更按公式维护指南执行限定范围或全库审计。外部审计依赖 `gh` 和网络，由 CI 重复执行；结果必须写入完成报告。
 
-校验器、依赖或流程实现变化时，`make deep-check` 扫描全库并列出受影响论文，但不授权全库复审。无确定性历史影响时保留既有验收；有明确影响时按 paper ID 修复和复审。只有用户明确要求时才扩展为全库逐篇内容复审。
+依赖、策略或流程实现变化时，先判断它是否会改变论文内容解释、验收语义或全局校验器行为。只有会改变这些语义时才运行 `make deep-check`，扫描全库并列出受影响论文；Pages、文档、打包、发布流程和其他与这些语义无关的变更运行 `make check`。深检不授权全库复审：无确定性历史影响时保留既有验收，有明确影响时按 paper ID 修复和复审。只有用户明确要求时才扩展为全库逐篇内容复审。
 
 CI 的 `archive-check` 保持同一个必需检查名：
 
@@ -75,4 +120,4 @@ CI 的 `archive-check` 保持同一个必需检查名：
 - acceptance entry 的局部变化按可信 base/head 精确计算 paper ID；
 - acceptance 差异无法可靠定位时直接失败，不猜测 paper ID。
 
-`make deep-check` 只在本地用于校验器、依赖锁、policy、全局翻译策略、CI 选域逻辑变更或明确的全库审计；不要把它加入 CI。
+`make deep-check` 只在本地用于会影响论文内容解释、验收语义或全局校验器行为的依赖、policy、全局翻译策略和流程变更，或明确的全库审计；不要把它加入 CI，也不要用于与这些语义无关的 Pages、文档、打包或发布流程变更。

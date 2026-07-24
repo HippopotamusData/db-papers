@@ -6,3 +6,15 @@ dev = [
     "PyYAML==6.0.3",
     "Pillow==12.3.0",
 ]
+site = [
+    "click==8.4.2",
+    "deepmerge==2.1.0",
+    "Jinja2==3.1.6",
+    "Markdown==3.10.2",
+    "MarkupSafe==3.0.3",
+    "Pygments==2.20.0",
+    "pymdown-extensions==11.0.1",
+    "PyYAML==6.0.3",
+    "tomli==2.4.1",
+    "zensical==0.0.51",
+]

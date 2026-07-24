@@ -18,5 +18,17 @@ make check
 make diff-check
 ```
 
-若改动校验器、项目级翻译策略或其他全局门禁，使用 `make deep-check`
-替代 `make check`，再运行 `make diff-check`。
+只有依赖、策略或流程变更会影响论文内容解释、验收语义或全局校验器行为，
+或明确进行全库审计时，才使用 `make deep-check` 替代 `make check`。
+Pages、文档、打包和发布流程等不影响这些语义的变更仍运行 `make check`，
+再运行 `make diff-check`。
+
+修改站点生成器、主题或 Pages 工作流时，另安装锁定的站点依赖并运行：
+
+```bash
+.venv/bin/python -m pip install --group site
+make site-check
+```
+
+站点内容由权威元数据和已验收译文生成；不要提交 `site_src/`、`site/`
+或 `site.generated.toml`，也不要在生成产物中手工修补论文页面。
