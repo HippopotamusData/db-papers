@@ -44,6 +44,14 @@ logo = "lucide/library-big"
 repo = "fontawesome/brands/github"
 
 [[project.theme.palette]]
+media = "(prefers-color-scheme)"
+primary = "teal"
+accent = "amber"
+toggle.icon = "lucide/monitor"
+toggle.name = "切换到浅色模式"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
 scheme = "default"
 primary = "teal"
 accent = "amber"
@@ -51,11 +59,12 @@ toggle.icon = "lucide/sun"
 toggle.name = "切换到深色模式"
 
 [[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
 scheme = "slate"
 primary = "teal"
 accent = "amber"
 toggle.icon = "lucide/moon"
-toggle.name = "切换到浅色模式"
+toggle.name = "跟随系统主题"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/github"

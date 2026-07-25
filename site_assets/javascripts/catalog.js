@@ -8,6 +8,9 @@ function setupCatalogFilters() {
   const count = document.querySelector("#catalog-count");
   const empty = document.querySelector("#catalog-empty");
   const activeFilters = document.querySelector("#catalog-active-filters");
+  const advancedToggle = document.querySelector(
+    ".catalog-advanced__toggle",
+  );
 
   if (
     !grid ||
@@ -87,6 +90,11 @@ function setupCatalogFilters() {
     control.addEventListener("input", apply);
     control.addEventListener("change", apply);
   }
+  advancedToggle?.addEventListener("click", () => {
+    const expanded =
+      advancedToggle.getAttribute("aria-expanded") !== "true";
+    advancedToggle.setAttribute("aria-expanded", String(expanded));
+  });
   apply();
 }
 

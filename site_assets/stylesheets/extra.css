@@ -302,13 +302,15 @@
   color: var(--dbp-ink) !important;
   background:
     linear-gradient(145deg, var(--dbp-surface), var(--dbp-surface-soft));
+  text-decoration: none !important;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 160ms ease;
 }
 
-.area-card:hover {
+.area-card:hover,
+.area-card:focus-visible {
   border-color: var(--dbp-accent);
   box-shadow: 0 0.8rem 2.2rem rgba(20, 46, 67, 0.1);
   transform: translateY(-2px);
@@ -361,12 +363,34 @@
   margin-top: 0.75rem;
 }
 
-.catalog-advanced > summary {
+.catalog-advanced__toggle {
   display: none;
 }
 
-.catalog-advanced__fields,
-.catalog-advanced:not([open]) > .catalog-advanced__fields {
+.catalog-advanced__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.catalog-advanced__chevron {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 150ms ease;
+}
+
+.catalog-advanced__toggle[aria-expanded="true"]
+  .catalog-advanced__chevron {
+  transform: rotate(180deg);
+}
+
+.catalog-advanced__fields {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
@@ -840,8 +864,7 @@ mjx-mtd[extra] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .catalog-advanced__fields,
-  .catalog-advanced:not([open]) > .catalog-advanced__fields {
+  .catalog-advanced__fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -860,7 +883,7 @@ mjx-mtd[extra] {
     min-height: 5rem;
     grid-column: 1 / -1;
     flex-direction: row;
-    align-items: baseline;
+    align-items: center;
     gap: 0.65rem;
   }
 
@@ -877,8 +900,9 @@ mjx-mtd[extra] {
     padding: 0.85rem;
   }
 
-  .catalog-advanced > summary {
+  .catalog-advanced__toggle {
     display: flex;
+    width: 100%;
     min-height: 2.4rem;
     box-sizing: border-box;
     align-items: center;
@@ -890,9 +914,11 @@ mjx-mtd[extra] {
     color: var(--dbp-ink);
     background: var(--dbp-surface);
     cursor: pointer;
+    appearance: none;
+    font-family: inherit;
     font-size: 0.72rem;
     font-weight: 700;
-    list-style-position: inside;
+    text-align: left;
   }
 
   .catalog-advanced__fields {
@@ -902,7 +928,8 @@ mjx-mtd[extra] {
     border-top: 1px solid var(--dbp-line);
   }
 
-  .catalog-advanced:not([open]) > .catalog-advanced__fields {
+  .catalog-advanced__toggle[aria-expanded="false"]
+    + .catalog-advanced__fields {
     display: none;
   }
 

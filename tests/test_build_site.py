@@ -176,17 +176,31 @@ source: source.pdf
             )
             self.assertIn('{ "开始" = [', generated_config)
             self.assertIn('{ "论文领域" = [', generated_config)
-            self.assertNotIn('"首页" = "index.md"', generated_config)
+            self.assertIn(
+                '{ "开始" = [\n'
+                '    { "首页" = "index.md" },\n'
+                '    { "论文目录" = "catalog.md" },',
+                generated_config,
+            )
             self.assertIn('"查询处理" = "papers/query-processing/index.md"', generated_config)
             home = (output / "index.md").read_text(encoding="utf-8")
             self.assertIn("title: 数据库系统论文档案馆", home)
+            self.assertIn(
+                "提供论文原文和经过审校的中文译文。",
+                home,
+            )
+            self.assertNotIn("便于查找、阅读和对照", home)
             self.assertNotIn("title: DB Papers", home)
             self.assertIn("数据库系统论文档案馆", home)
-            self.assertIn("同时提供经过审校的中文译文与论文原文", home)
             self.assertNotIn("GitHub 仓库", home)
             self.assertNotIn("完整性与准确性检查", home)
             self.assertNotIn("发布边界", home)
-            self.assertNotIn("阅读价值评分", home)
+            self.assertIn(
+                "综合考虑影响广度、技术价值、实际应用、长期生命力和阅读回报",
+                home,
+            )
+            self.assertIn("评分不评价译文质量", home)
+            self.assertIn("无法精确体现论文对不同读者的全部价值", home)
             catalog = (output / "catalog.md").read_text(encoding="utf-8")
             self.assertIn("Accepted Paper", catalog)
             self.assertIn(
@@ -194,7 +208,13 @@ source: source.pdf
                 "Accepted Paper</p>",
                 catalog,
             )
-            self.assertIn("<summary>", catalog)
+            self.assertNotIn("<details", catalog)
+            self.assertIn(
+                'class="catalog-advanced__toggle" type="button"',
+                catalog,
+            )
+            self.assertIn('aria-controls="catalog-advanced-fields"', catalog)
+            self.assertIn('class="catalog-advanced__chevron"', catalog)
             self.assertIn("更多筛选与排序", catalog)
             self.assertIn('id="catalog-active-filters"', catalog)
             self.assertIn("accepted paper 已验收论文 ada example", catalog)
@@ -244,6 +264,45 @@ source: source.pdf
 
 
 class SiteAssetTests(unittest.TestCase):
+    def test_theme_palette_cycles_system_light_and_dark(self) -> None:
+        config = tomllib.loads(
+            (ROOT / "zensical.toml").read_text(encoding="utf-8")
+        )
+        palette = config["project"]["theme"]["palette"]
+        self.assertEqual(
+            [entry["media"] for entry in palette],
+            [
+                "(prefers-color-scheme)",
+                "(prefers-color-scheme: light)",
+                "(prefers-color-scheme: dark)",
+            ],
+        )
+        self.assertNotIn("scheme", palette[0])
+        self.assertEqual(palette[1]["scheme"], "default")
+        self.assertEqual(palette[2]["scheme"], "slate")
+        self.assertEqual(
+            [entry["toggle"]["name"] for entry in palette],
+            ["切换到浅色模式", "切换到深色模式", "跟随系统主题"],
+        )
+
+    def test_home_area_cards_do_not_repeat_link_underlines(self) -> None:
+        stylesheet = (
+            ROOT / "site_assets/stylesheets/extra.css"
+        ).read_text(encoding="utf-8")
+        area_rule = stylesheet.split(".area-card {", 1)[1].split("}", 1)[0]
+        self.assertIn("text-decoration: none !important;", area_rule)
+        self.assertIn(".area-card:focus-visible", stylesheet)
+
+    def test_mobile_full_width_stat_is_vertically_centered(self) -> None:
+        stylesheet = (
+            ROOT / "site_assets/stylesheets/extra.css"
+        ).read_text(encoding="utf-8")
+        stat_rule = stylesheet.split(
+            ".stat-grid > div:last-child {", 1
+        )[1].split("}", 1)[0]
+        self.assertIn("align-items: center;", stat_rule)
+        self.assertNotIn("align-items: baseline;", stat_rule)
+
     def test_header_title_uses_theme_default_behavior(self) -> None:
         navigation = (
             ROOT / "site_assets/javascripts/navigation.js"
