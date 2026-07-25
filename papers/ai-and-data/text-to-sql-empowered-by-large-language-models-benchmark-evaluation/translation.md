@@ -89,7 +89,7 @@ source: source.pdf
 本节中，我们首先讨论零样本文本到 SQL 中的问题表示。给定数据库 $D$ 上的自然语言目标问题 $q$，问题表示的目标是最大化 LLM $M$ 生成正确 SQL $s^{\ast}$ 的概率：
 
 $$
-\max _ {\sigma}\thickspace{} P_M\bigl(s^{\ast} \mid \sigma(q,D)\bigr),
+\max _ {\sigma} P_M\bigl(s^{\ast} \mid \sigma(q,D)\bigr),
 $$
 
 其中，函数 $\sigma(\cdot,\cdot)$ 决定如何表示问题 $q$ 及数据库 $D$ 模式中的有用信息，也可以包含指令、规则暗示与外键。按照这一定义，我们从文献中选取四种代表性零样本表示；此外，我们还加入监督微调中常用的 Alpaca [44] 表示。表 1 汇总五种表示及原论文报告的信息。
@@ -194,9 +194,9 @@ SELECT
 给定三元组集合 $Q=\lbrace{}(q_i,s_i,D_i)\rbrace{}$，其中 $q_i$ 是自然语言问题， $s_i$ 是数据库 $D_i$ 上对应的 SQL，文本到 SQL 上下文学习的目标是针对目标问题 $q$ 与数据库 $D$，最大化 LLM $M$ 生成正确 SQL $s^{\ast}$ 的概率：
 
 $$
-\max _ {Q',\sigma}\thickspace{} P_M\bigl(s^{\ast}\mid\sigma(q,D,Q')\bigr),
+\max _ {Q',\sigma} P_M\bigl(s^{\ast}\mid\sigma(q,D,Q')\bigr),
 \qquad
-\text{s.t. } |Q'|=k,\thickspace{} Q'\subset Q.
+\text{s.t. } |Q'|=k, Q'\subset Q.
 $$
 
 函数 $\sigma(\cdot,\cdot,\cdot)$ 决定如何表示目标问题 $q$、数据库 $D$ 的模式信息及从 $Q$ 中选出的 $k$ 个样例。我们研究跨领域文本到 SQL，即目标数据库不出现在候选样例数据库中： $D\notin\lbrace{}D_i\mid(q_i,s_i,D_i)\in Q\rbrace{}$。因此，上下文学习包含两个子任务：选择最有帮助的 $Q'$，以及把所选样例的信息组织进提示。接下来，我们讨论这两个子任务。
@@ -281,7 +281,7 @@ ${TARGET_QUESTION}
 给定 LLM $M$ 和文本到 SQL 训练集 $T=\lbrace{}(q_i,s_i,D_i)\rbrace{}$，其中 $q_i$ 与 $s_i$ 分别是数据库 $D_i$ 上的自然语言问题和对应查询，监督微调的目标是最小化经验损失：
 
 $$
-\min _ {\sigma,M^{\ast}}\thickspace{} \sum _ {i=1}^{|T|}
+\min _ {\sigma,M^{\ast}} \sum _ {i=1}^{|T|}
 \mathcal{L} _ {M^{\ast}}\bigl(\sigma(q_i,D_i),s_i\bigr),
 $$
 

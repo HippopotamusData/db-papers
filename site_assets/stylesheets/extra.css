@@ -733,6 +733,64 @@
   overflow-y: hidden;
 }
 
+/*
+ * MathJax 4 can load TeX table wrappers after its adaptive CHTML stylesheet
+ * has been generated. Keep aligned, array, cases, and other mtable-based
+ * expressions in their intended rows when those adaptive rules are absent.
+ * These declarations mirror MathJax's CHTML wrapper defaults; dynamically
+ * generated MathJax styles remain free to override them.
+ */
+mjx-mtable {
+  position: relative;
+  box-sizing: border-box;
+  border-spacing: 0;
+  border-collapse: collapse;
+  text-align: center;
+  vertical-align: 0.25em;
+}
+
+mjx-table {
+  display: inline-block;
+  box-sizing: border-box;
+  vertical-align: -0.5ex;
+}
+
+mjx-table > mjx-itable {
+  box-sizing: border-box;
+  vertical-align: middle;
+  text-align: left;
+}
+
+mjx-mtr {
+  display: table-row;
+}
+
+mjx-mtd {
+  display: table-cell;
+  padding: 0.215em 0.4em;
+  text-align: center;
+}
+
+mjx-mtd:first-child {
+  padding-left: 0;
+}
+
+mjx-mtd:last-child {
+  padding-right: 0;
+}
+
+mjx-mtable > * > mjx-itable > *:first-child > mjx-mtd {
+  padding-top: 0;
+}
+
+mjx-mtable > * > mjx-itable > *:last-child > mjx-mtd {
+  padding-bottom: 0;
+}
+
+mjx-mtd[extra] {
+  padding: 0;
+}
+
 @media (max-width: 76rem) {
   .area-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
