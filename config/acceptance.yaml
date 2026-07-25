@@ -2167,26 +2167,45 @@ entries:
     fingerprint: 8445e4a55cdbf3b087cd379704e2dc2ec4d4aa900688326cba9493d305e55cdf
     review_snapshot: bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18
   text-to-sql-empowered-by-large-language-models-benchmark-evaluation:
-    schema_version: 1
+    schema_version: 2
     paper_id: text-to-sql-empowered-by-large-language-models-benchmark-evaluation
     source_sha256: 56181dfada89034f424326b09a86a5fa72e3eb8129ac9309054eb98e5c606084
-    translation_sha256: c27aa5b41d37ebb41706081c7f0a05c0d2ca3622aa5daec9ee193046080ca0db
+    translation_sha256: 783174d3947b1902a822608da45138cf2a4051c56cbd368d5388c76207acc297
     assets_manifest_sha256: 8e7c4fa7a131e1f192a48eeab80df8f16d9302a23fd589eea9b0106641b47f2c
     review_metadata_sha256: 09e15bd7b8bd8876aa9decd7466ef472cf46e9c1cb84af82bc2754cc6fdeb380
     review_action: repair-review
-    translator: codex:data-blocks-independent
-    reviewer: codex:text2sql-final-audit
+    translator: codex:issue-11-repairer
+    reviewer: codex:issue-11-independent-reviewer
+    review_base_sha: ec2d0fd95a69c3422cda150ae0a186d6281c24f3
+    review_head_sha: ec2d0fd95a69c3422cda150ae0a186d6281c24f3
     findings:
-      - Independently checked all 14 source pages, 7 figures, Tables 1-4, Listings 1-8, 138 math expressions, 95 citation
-        groups/142 anchors, and 58 references against the frozen translation hash.
-      - Repaired the mistranslated preliminary-predictor phrase, restored two compressed authorial claims, and restored missing
-        citations [27] and [9].
-      - Restored and independently mapped all 160 valid authorial first-person items; excluded two We tokens in reference
-        title [8]; zero omissions, extras, multi-mappings, or attribution errors.
+      - 'authorial-voice PASS: 149 valid source items (122 we and 27 our) were individually mapped and verified; two i.e.
+        extraction false positives and reference-title tokens were excluded. Zero narrator substitution, ownership loss, added
+        responsibility, or shared-subject merge remains.'
+      - 'figures-tables-listings PASS: all seven figures and four tables retain axes, legends, subfigure labels, values, captions,
+        and conclusions; Listings 1-8 retain titles, placeholders, literals, and complete SQL/code payloads. All 25 Listing
+        candidates were individually checked and are scanner pairing/overlap artifacts covered by the bound listings waiver.'
+      - 'issue-11 formula repair PASS: at translation lines 91, 196, 198, and 283 only the four spacing-only thickspace macros
+        were removed; normalized byte comparison is identical to HEAD, so operands, subscripts, relations, constraints, punctuation,
+        display blocks, and equation positions are unchanged.'
+      - 'semantic-fidelity PASS: checked all explicit numeric claims, units and percentage-point directions, datasets and
+        model baselines, modality and limiting conditions, DAIL selection/organization/SFT mechanisms, identifiers, conclusions,
+        and citation anchors; no substantive defect remains.'
+      - 'source-inventory PASS: independently checked all 14 rendered PDF pages, front matter and co-first-author footnote,
+        Sections 1-6 and all subsections, three display-equation groups, Figures 1-7, Tables 1-4, Listings 1-8, conclusion,
+        and References 1-58 in double-column reading order.'
+      - 'source-native-anomaly disposition: the translation explicitly identifies the source misspelling Demostration, Figure
+        4 caption saying Spider-dev although panels e-h are Spider-Realistic, and the source conclusion saying 30B although
+        the experiment and Figure 6 use 33B; the prose-only CREAT typo is normalized to canonical CREATE without semantic
+        change.'
+    authorial_voice:
+      source_valid_items: 149
+      verified_items: 149
+      shared_subject_merges: 0
     waivers:
       listings:
-        evidence_version: 1
-        fingerprint: 6659b3f2720eeb2e5cae174ee8ad9f9b0e8f63bcbf6dd2afbe0dfb9fd39ab855
+        evidence_version: 4
+        fingerprint: 803c4dee8084c3cafa98556fbd81ded3d529ee55e018233ad347a4fd9584d90d
         findings:
           - listing:1:no-shared-literals
           - listing:1:short-relative-to-source
@@ -2241,8 +2260,7 @@ entries:
           - 'RISK: Listing 8 fenced payload has weak distinctive-identifier overlap with source candidate (0.09)'
           - 'RISK: Listing 8 fenced payload is short relative to source code candidate (240/883)'
           - 'RISK: Listing 8 fenced payload shares no literals with source candidate'
-    fingerprint: 57d3b6aab3ad2a5a98cce0de1e5c4843c594663ee67b1d6c3a18c3c0e692b0b5
-    review_snapshot: 91fcc4063c2e5b24c1259b0029d0bf45ab7a43794205a173c99b8a31395dad25
+    fingerprint: d6bf9673f115f8631dc22f45f67f3e0496a9ccbc778e3f97f6c1c7ef571773f3
   a-relational-model-of-data-for-large-shared-data-banks:
     schema_version: 1
     paper_id: a-relational-model-of-data-for-large-shared-data-banks
