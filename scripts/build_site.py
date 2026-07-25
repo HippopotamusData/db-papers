@@ -383,7 +383,7 @@ description: 数据库系统论文中文全文翻译集
 <section class="site-hero">
   <p class="site-hero__kicker">DB PAPERS</p>
   <h1>数据库系统论文档案馆</h1>
-  <p>本档案馆收录数据库系统领域具有代表性的论文，按研究领域和主题整理，并同时提供经过审校的中文译文与论文原文，便于查找、阅读和对照。</p>
+  <p>本档案馆收录数据库系统领域具有代表性的论文，按研究领域和主题整理。提供论文原文和经过审校的中文译文。</p>
   <div class="site-hero__actions">
     <a class="md-button md-button--primary" href="catalog/">浏览全部论文</a>
   </div>
@@ -404,6 +404,8 @@ description: 数据库系统论文中文全文翻译集
 ## 如何使用本档案馆
 
 你可以按领域浏览，也可以在论文目录中搜索标题、作者或主题。每篇已完成的译文都有独立阅读页；遇到公式、实验数据或引用等需要精确核对的内容，可以随时打开原文对照。
+
+目录中的评分用于判断论文是否值得优先阅读，综合考虑影响广度、技术价值、实际应用、长期生命力和阅读回报。评分不评价译文质量，也不依据作者、机构或会议声望。它只是基于现有证据的阅读参考，无法精确体现论文对不同读者的全部价值。
 
 如果阅读时发现错译、漏译或排版问题，可以通过论文页的“反馈译文问题”告诉我们。
 """
@@ -444,12 +446,19 @@ description: 按领域、主题、状态和关键词浏览数据库论文
     <span>关键词</span>
     <input id="catalog-search" type="search" placeholder="中英文标题、作者、论文 ID…" autocomplete="off">
   </label>
-  <details class="catalog-advanced">
-    <summary>
-      <span>更多筛选与排序</span>
-      <span class="catalog-active-filters" id="catalog-active-filters" hidden></span>
-    </summary>
-    <div class="catalog-advanced__fields">
+  <div class="catalog-advanced">
+    <button class="catalog-advanced__toggle" type="button"
+      aria-expanded="false" aria-controls="catalog-advanced-fields">
+      <span class="catalog-advanced__label">更多筛选与排序</span>
+      <span class="catalog-advanced__meta">
+        <span class="catalog-active-filters" id="catalog-active-filters" hidden></span>
+        <svg class="catalog-advanced__chevron" viewBox="0 0 24 24"
+          aria-hidden="true" focusable="false">
+          <path d="m6 9 6 6 6-6"></path>
+        </svg>
+      </span>
+    </button>
+    <div class="catalog-advanced__fields" id="catalog-advanced-fields">
       <label>
         <span>领域</span>
         <select id="catalog-area">
@@ -482,7 +491,7 @@ description: 按领域、主题、状态和关键词浏览数据库论文
         </select>
       </label>
     </div>
-  </details>
+  </div>
 </div>
 
 <p class="catalog-result"><strong id="catalog-count">{len(papers)}</strong> 篇论文</p>
@@ -572,6 +581,7 @@ def write_generated_config(
     nav = (
         "\nnav = [\n"
         '  { "开始" = [\n'
+        '    { "首页" = "index.md" },\n'
         '    { "论文目录" = "catalog.md" },\n'
         "  ] },\n"
         '  { "论文领域" = [\n'
