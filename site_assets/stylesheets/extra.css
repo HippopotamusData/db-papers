@@ -636,11 +636,16 @@
   grid-template-columns: 1fr;
   gap: 0.65rem;
   margin: 0.8rem 0 1.5rem;
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1rem;
   border: 1px solid var(--dbp-line);
-  border-left: 0.25rem solid var(--dbp-accent);
-  border-radius: 0.75rem;
-  background: var(--dbp-surface-soft);
+  border-radius: 0.6rem;
+  background: var(--dbp-surface);
+}
+
+.md-content__inner:has(> .paper-meta) {
+  max-width: 44rem;
+  /* Override the theme's asymmetric sidebar margins at wide breakpoints. */
+  margin-inline: auto !important;
 }
 
 .paper-title-zh--page {
