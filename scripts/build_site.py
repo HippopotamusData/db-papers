@@ -344,8 +344,8 @@ def paper_card(
     <span>{html.escape(area_label)}</span>
     <span class="status-pill status-pill--{html.escape(paper.reading_status)}">{html.escape(status_label)}</span>
   </div>
-  <h3><a href="{html.escape(target, quote=True)}"{target_attributes}>{html.escape(paper.title_zh)}</a></h3>
-  <p class="paper-card__title-original" lang="en">{html.escape(paper.title)}</p>
+  <h3><a href="{html.escape(target, quote=True)}"{target_attributes}>{html.escape(paper.title)}</a></h3>
+  <p class="paper-card__title-zh">{html.escape(paper.title_zh)}</p>
   <p class="paper-card__authors">{html.escape(authors)}</p>
   <div class="topic-row">{topic_chips}</div>
   <footer>

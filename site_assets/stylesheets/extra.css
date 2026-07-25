@@ -10,6 +10,8 @@
   --dbp-action-bg-hover: #005f5a;
   --dbp-action-ink: #ffffff;
   --dbp-warm: #f3a712;
+  --dbp-browse-width: 64rem;
+  --dbp-reader-width: 44rem;
   --md-accent-fg-color: var(--dbp-accent);
   --md-typeset-a-color: var(--dbp-accent);
 }
@@ -498,7 +500,7 @@
   color: inherit;
 }
 
-.paper-card__title-original {
+.paper-card__title-zh {
   margin: -0.1rem 0 0.55rem !important;
   color: var(--dbp-muted);
   font-size: 0.69rem;
@@ -545,7 +547,7 @@
   grid-template-areas:
     "eyebrow eyebrow"
     "title footer"
-    "title-original footer"
+    "title-zh footer"
     "authors footer"
     "topics footer";
   grid-template-columns: minmax(0, 1fr) auto;
@@ -566,8 +568,8 @@
   margin: 0.55rem 0 0.25rem;
 }
 
-#paper-grid .paper-card__title-original {
-  grid-area: title-original;
+#paper-grid .paper-card__title-zh {
+  grid-area: title-zh;
   margin: -0.05rem 0 0.35rem !important;
 }
 
@@ -852,8 +854,13 @@ mjx-mtd[extra] {
 }
 
 @media (min-width: 60em) {
+  .md-content__inner:not(:has(> .paper-meta)) {
+    max-width: var(--dbp-browse-width);
+    margin-inline: auto !important;
+  }
+
   .md-content__inner:has(> .paper-meta) {
-    max-width: 44rem;
+    max-width: var(--dbp-reader-width);
     /* Override the theme's asymmetric sidebar margins only with wide sidebars. */
     margin-inline: auto !important;
   }
@@ -937,7 +944,7 @@ mjx-mtd[extra] {
     grid-template-areas:
       "eyebrow"
       "title"
-      "title-original"
+      "title-zh"
       "authors"
       "topics"
       "footer";

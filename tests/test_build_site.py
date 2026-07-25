@@ -204,8 +204,7 @@ source: source.pdf
             catalog = (output / "catalog.md").read_text(encoding="utf-8")
             self.assertIn("Accepted Paper", catalog)
             self.assertIn(
-                '<p class="paper-card__title-original" lang="en">'
-                "Accepted Paper</p>",
+                '<p class="paper-card__title-zh">已验收论文</p>',
                 catalog,
             )
             self.assertNotIn("<details", catalog)
@@ -230,13 +229,13 @@ source: source.pdf
             )
             self.assertIn(
                 '<h3><a href="papers/query-processing/accepted-paper/">'
-                "已验收论文</a></h3>",
+                "Accepted Paper</a></h3>",
                 catalog,
             )
             self.assertIn(
                 '<h3><a href="papers/query-processing/draft-paper/source.pdf"'
                 ' target="_blank" rel="noopener noreferrer">'
-                "草稿论文</a></h3>",
+                "Draft Paper</a></h3>",
                 catalog,
             )
             self.assertNotIn("https://example.com/draft", catalog)
@@ -302,6 +301,29 @@ class SiteAssetTests(unittest.TestCase):
         )[1].split("}", 1)[0]
         self.assertIn("align-items: center;", stat_rule)
         self.assertNotIn("align-items: baseline;", stat_rule)
+
+    def test_browse_and_reader_content_use_centered_width_limits(self) -> None:
+        stylesheet = (
+            ROOT / "site_assets/stylesheets/extra.css"
+        ).read_text(encoding="utf-8")
+        self.assertIn("--dbp-browse-width: 64rem;", stylesheet)
+        self.assertIn("--dbp-reader-width: 44rem;", stylesheet)
+        self.assertIn(
+            ".md-content__inner:not(:has(> .paper-meta)) {",
+            stylesheet,
+        )
+        self.assertIn(
+            "max-width: var(--dbp-browse-width);",
+            stylesheet,
+        )
+        self.assertIn(
+            "max-width: var(--dbp-reader-width);",
+            stylesheet,
+        )
+        self.assertGreaterEqual(
+            stylesheet.count("margin-inline: auto !important;"),
+            2,
+        )
 
     def test_header_title_uses_theme_default_behavior(self) -> None:
         navigation = (
