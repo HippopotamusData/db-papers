@@ -344,8 +344,8 @@ def paper_card(
     <span>{html.escape(area_label)}</span>
     <span class="status-pill status-pill--{html.escape(paper.reading_status)}">{html.escape(status_label)}</span>
   </div>
-  <h3><a href="{html.escape(target, quote=True)}"{target_attributes}>{html.escape(paper.title)}</a></h3>
-  <p class="paper-card__title-zh">{html.escape(paper.title_zh)}</p>
+  <h3><a href="{html.escape(target, quote=True)}"{target_attributes}>{html.escape(paper.title_zh)}</a></h3>
+  <p class="paper-card__title-original" lang="en">{html.escape(paper.title)}</p>
   <p class="paper-card__authors">{html.escape(authors)}</p>
   <div class="topic-row">{topic_chips}</div>
   <footer>
@@ -440,41 +440,49 @@ description: 按领域、主题、状态和关键词浏览数据库论文
 可按关键词、领域、主题和状态筛选。已完成的译文可直接阅读，其他论文提供原文入口。
 
 <div class="catalog-controls" role="search" aria-label="筛选和排序论文">
-  <label>
+  <label class="catalog-search-field">
     <span>关键词</span>
     <input id="catalog-search" type="search" placeholder="中英文标题、作者、论文 ID…" autocomplete="off">
   </label>
-  <label>
-    <span>领域</span>
-    <select id="catalog-area">
-      <option value="">全部领域</option>
-      {area_options}
-    </select>
-  </label>
-  <label>
-    <span>主题</span>
-    <select id="catalog-topic">
-      <option value="">全部主题</option>
-      {topic_options}
-    </select>
-  </label>
-  <label>
-    <span>状态</span>
-    <select id="catalog-status">
-      <option value="">全部状态</option>
-      {status_options}
-    </select>
-  </label>
-  <label>
-    <span>排序</span>
-    <select id="catalog-sort">
-      <option value="default">默认顺序</option>
-      <option value="year-desc">年份：从新到旧</option>
-      <option value="year-asc">年份：从旧到新</option>
-      <option value="rating-desc">评分：从高到低</option>
-      <option value="rating-asc">评分：从低到高</option>
-    </select>
-  </label>
+  <details class="catalog-advanced">
+    <summary>
+      <span>更多筛选与排序</span>
+      <span class="catalog-active-filters" id="catalog-active-filters" hidden></span>
+    </summary>
+    <div class="catalog-advanced__fields">
+      <label>
+        <span>领域</span>
+        <select id="catalog-area">
+          <option value="">全部领域</option>
+          {area_options}
+        </select>
+      </label>
+      <label>
+        <span>主题</span>
+        <select id="catalog-topic">
+          <option value="">全部主题</option>
+          {topic_options}
+        </select>
+      </label>
+      <label>
+        <span>状态</span>
+        <select id="catalog-status">
+          <option value="">全部状态</option>
+          {status_options}
+        </select>
+      </label>
+      <label>
+        <span>排序</span>
+        <select id="catalog-sort">
+          <option value="default">默认顺序</option>
+          <option value="year-desc">年份：从新到旧</option>
+          <option value="year-asc">年份：从旧到新</option>
+          <option value="rating-desc">评分：从高到低</option>
+          <option value="rating-asc">评分：从低到高</option>
+        </select>
+      </label>
+    </div>
+  </details>
 </div>
 
 <p class="catalog-result"><strong id="catalog-count">{len(papers)}</strong> 篇论文</p>

@@ -7,6 +7,7 @@ function setupCatalogFilters() {
   const sort = document.querySelector("#catalog-sort");
   const count = document.querySelector("#catalog-count");
   const empty = document.querySelector("#catalog-empty");
+  const activeFilters = document.querySelector("#catalog-active-filters");
 
   if (
     !grid ||
@@ -71,6 +72,15 @@ function setupCatalogFilters() {
 
     count.textContent = String(visible);
     empty.hidden = visible !== 0;
+    if (activeFilters) {
+      const activeCount =
+        Number(Boolean(area.value)) +
+        Number(Boolean(topic.value)) +
+        Number(Boolean(status.value)) +
+        Number(sort.value !== "default");
+      activeFilters.textContent = `${activeCount} 项已启用`;
+      activeFilters.hidden = activeCount === 0;
+    }
   };
 
   for (const control of [search, area, topic, status, sort]) {

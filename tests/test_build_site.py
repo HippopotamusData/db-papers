@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -189,9 +190,13 @@ source: source.pdf
             catalog = (output / "catalog.md").read_text(encoding="utf-8")
             self.assertIn("Accepted Paper", catalog)
             self.assertIn(
-                '<p class="paper-card__title-zh">已验收论文</p>',
+                '<p class="paper-card__title-original" lang="en">'
+                "Accepted Paper</p>",
                 catalog,
             )
+            self.assertIn("<summary>", catalog)
+            self.assertIn("更多筛选与排序", catalog)
+            self.assertIn('id="catalog-active-filters"', catalog)
             self.assertIn("accepted paper 已验收论文 ada example", catalog)
             self.assertIn("Draft Paper", catalog)
             self.assertEqual(catalog.count(">阅读原文</a>"), 2)
@@ -205,13 +210,13 @@ source: source.pdf
             )
             self.assertIn(
                 '<h3><a href="papers/query-processing/accepted-paper/">'
-                "Accepted Paper</a></h3>",
+                "已验收论文</a></h3>",
                 catalog,
             )
             self.assertIn(
                 '<h3><a href="papers/query-processing/draft-paper/source.pdf"'
                 ' target="_blank" rel="noopener noreferrer">'
-                "Draft Paper</a></h3>",
+                "草稿论文</a></h3>",
                 catalog,
             )
             self.assertNotIn("https://example.com/draft", catalog)
@@ -236,6 +241,32 @@ source: source.pdf
                     ValueError, "dedicated directory inside the repo"
                 ):
                     build_site.prepare_site(root, Path(outside) / "site")
+
+
+class SiteAssetTests(unittest.TestCase):
+    def test_header_title_uses_theme_default_behavior(self) -> None:
+        navigation = (
+            ROOT / "site_assets/javascripts/navigation.js"
+        ).read_text(encoding="utf-8")
+        self.assertIn("expandPrimaryNavigation", navigation)
+        self.assertNotIn(".md-header__title", navigation)
+        self.assertNotIn("window.scrollTo", navigation)
+        self.assertNotIn("dbpHeaderLink", navigation)
+
+    def test_search_enhancement_is_loaded(self) -> None:
+        config = tomllib.loads(
+            (ROOT / "zensical.toml").read_text(encoding="utf-8")
+        )
+        self.assertIn(
+            "javascripts/search.js",
+            config["project"]["extra_javascript"],
+        )
+        search = (ROOT / "site_assets/javascripts/search.js").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("搜索论文标题或正文", search)
+        self.assertIn("当前显示", search)
+        self.assertIn("dbp-search-group-toggle", search)
 
 
 if __name__ == "__main__":
