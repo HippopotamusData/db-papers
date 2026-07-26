@@ -1,0 +1,21 @@
+title: 'ACORN: Performant and Predicate-Agnostic Search Over Vector Embeddings and Structured Data'
+title_zh: ACORN：向量嵌入与结构化数据上的高性能谓词无关搜索
+authors:
+  - Liana Patel
+  - Peter Kraft
+  - Carlos Guestrin
+  - Matei Zaharia
+year: 2024
+source_url: https://doi.org/10.1145/3654923
+topics:
+  - indexing
+  - databases-for-ai
+  - vector-search
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 4
+  reader_payoff: 4

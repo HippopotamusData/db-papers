@@ -1,0 +1,22 @@
+title: 'DocETL: Agentic Query Rewriting and Evaluation for Complex Document Processing'
+title_zh: DocETL：面向复杂文档处理的智能体式查询重写与评估
+authors:
+  - Shreya Shankar
+  - Tristan Chambers
+  - Tarak Shah
+  - Aditya G. Parameswaran
+  - Eugene Wu
+year: 2025
+source_url: https://www.vldb.org/pvldb/vol18/p3035-shankar.pdf
+topics:
+  - query-optimization
+  - databases-for-ai
+  - language-models-for-data
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 3
+  reader_payoff: 4

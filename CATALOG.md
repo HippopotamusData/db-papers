@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：153
-- 已审阅译文：147
+- 论文记录：157
+- 已审阅译文：151
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -18,15 +18,15 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 6 |
 | 系统架构 (`system-architecture`) | 26 |
-| 查询处理 (`query-processing`) | 52 |
+| 查询处理 (`query-processing`) | 53 |
 | 存储 (`storage`) | 20 |
 | 事务与并发控制 (`transactions`) | 8 |
 | 分布式数据库 (`distributed-databases`) | 8 |
 | 数据集成 (`data-integration`) | 2 |
 | 流处理 (`streaming`) | 8 |
 | 可靠性与测试 (`reliability-and-testing`) | 5 |
-| 专用数据库 (`specialized-databases`) | 10 |
-| AI 与数据系统 (`ai-and-data`) | 6 |
+| 专用数据库 (`specialized-databases`) | 11 |
+| AI 与数据系统 (`ai-and-data`) | 8 |
 
 ## 按领域浏览
 
@@ -79,7 +79,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，52 篇)
+### 查询处理 (`query-processing`，53 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -101,6 +101,7 @@
 | [Exploiting Upper and Lower Bounds in Top-Down Query Optimization](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/translation.md) | 查询优化 | 2001 | 3.0 | translated | [原文](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/source.pdf) | [官方链接](<https://doi.org/10.1109/IDEAS.2001.938068>) |
 | [Generating code for holistic query evaluation](papers/query-processing/generating-code-holistic-query-evaluation/translation.md) | 查询编译 | 2010 | 3.5 | translated | [原文](papers/query-processing/generating-code-holistic-query-evaluation/source.pdf) | [官方链接](<https://doi.org/10.1109/ICDE.2010.5447892>) |
 | [Handling Data Skew in Parallel Joins in Shared-Nothing Systems](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/translation.md) | 查询执行 | 2008 | 4.0 | translated | [原文](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/source.pdf) | [官方链接](<https://doi.org/10.1145/1376616.1376720>) |
+| [How Good are Learned Cost Models, Really? Insights from Query Optimization Tasks](papers/query-processing/how-good-are-learned-cost-models-really/translation.md) | 查询优化、AI 优化数据库 | 2025 | 3.0 | translated | [原文](papers/query-processing/how-good-are-learned-cost-models-really/source.pdf) | [官方链接](<https://doi.org/10.1145/3725309>) |
 | [How Good Are Query Optimizers, Really?](papers/query-processing/how-good-are-query-optimizers-really/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](papers/query-processing/how-good-are-query-optimizers-really/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol9/p204-leis.pdf>) |
 | [Impala: A Modern, Open-Source SQL Engine for Hadoop](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/translation.md) | 查询执行 | 2015 | 4.0 | translated | [原文](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/source.pdf) | [官方链接](<http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf>) |
 | [Improving Hash Join Performance through Prefetching](papers/query-processing/improving-hash-join-performance-prefetching/translation.md) | 查询执行 | 2007 | 4.0 | translated | [原文](papers/query-processing/improving-hash-join-performance-prefetching/source.pdf) | [官方链接](<https://www.shimin-chen.com/papers/hashjoin_tods_preliminary.pdf>) |
@@ -217,10 +218,11 @@
 | [Quantifying TPC-H Choke Points and Their Optimizations](papers/reliability-and-testing/quantifying-tpch-choke-points/translation.md) | 数据库测试 | 2020 | 3.5 | translated | [原文](papers/reliability-and-testing/quantifying-tpch-choke-points/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol13/p1206-dreseler.pdf>) |
 | [Testing Database Engines via Pivoted Query Synthesis](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/translation.md) | 数据库测试 | 2020 | 4.0 | translated | [原文](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/source.pdf) | [官方链接](<https://www.usenix.org/conference/osdi20/presentation/rigger>) |
 
-### 专用数据库 (`specialized-databases`，10 篇)
+### 专用数据库 (`specialized-databases`，11 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
+| [ACORN: Performant and Predicate-Agnostic Search Over Vector Embeddings and Structured Data](papers/specialized-databases/acorn-performant-predicate-agnostic-search-vector-embeddings-structured-data/translation.md) | 索引、面向 AI 的数据系统、向量检索 | 2024 | 4.0 | translated | [原文](papers/specialized-databases/acorn-performant-predicate-agnostic-search-vector-embeddings-structured-data/source.pdf) | [官方链接](<https://doi.org/10.1145/3654923>) |
 | [AnalyticDB-V: A Hybrid Analytical Engine Towards Query Fusion for Structured and Unstructured Data](papers/specialized-databases/analyticdb-v-hybrid-analytical-engine-query-fusion/translation.md) | 查询优化、分析型数据库、面向 AI 的数据系统、向量检索 | 2020 | 3.5 | translated | [原文](papers/specialized-databases/analyticdb-v-hybrid-analytical-engine-query-fusion/source.pdf) | [官方链接](<https://doi.org/10.14778/3415478.3415541>) |
 | [DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node](papers/specialized-databases/diskann-fast-accurate-billion-point-nearest-neighbor-search/translation.md) | 索引、面向 AI 的数据系统、向量检索 | 2019 | 4.5 | translated | [原文](papers/specialized-databases/diskann-fast-accurate-billion-point-nearest-neighbor-search/source.pdf) | [官方链接](<https://papers.nips.cc/paper_files/paper/2019/hash/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Abstract.html>) |
 | [Druid: A Real-time Analytical Data Store](papers/specialized-databases/druid-a-real-time-analytical-data-store/translation.md) | 分析型数据库 | 2014 | 4.5 | translated | [原文](papers/specialized-databases/druid-a-real-time-analytical-data-store/source.pdf) | [官方链接](<http://static.druid.io/docs/druid.pdf>) |
@@ -232,20 +234,22 @@
 | [SPANN: Highly-efficient Billion-scale Approximate Nearest Neighbor Search](papers/specialized-databases/spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search/translation.md) | 索引、面向 AI 的数据系统、向量检索 | 2021 | 4.0 | translated | [原文](papers/specialized-databases/spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search/source.pdf) | [官方链接](<https://proceedings.neurips.cc/paper/2021/hash/299dc35e747eb77177d9cea10a802da2-Abstract.html>) |
 | [VBASE: Unifying Online Vector Similarity Search and Relational Queries via Relaxed Monotonicity](papers/specialized-databases/vbase-unifying-vector-search-relational-queries/translation.md) | 查询优化、面向 AI 的数据系统、向量检索 | 2023 | 3.5 | translated | [原文](papers/specialized-databases/vbase-unifying-vector-search-relational-queries/source.pdf) | [官方链接](<https://www.usenix.org/conference/osdi23/presentation/zhang-qianxi>) |
 
-### AI 与数据系统 (`ai-and-data`，6 篇)
+### AI 与数据系统 (`ai-and-data`，8 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
 | [Can Foundation Models Wrangle Your Data?](papers/ai-and-data/can-foundation-models-wrangle-your-data/translation.md) | AI 优化数据库、语言模型与数据 | 2022 | 3.5 | translated | [原文](papers/ai-and-data/can-foundation-models-wrangle-your-data/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol16/p738-narayan.pdf>) |
 | [Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs](papers/ai-and-data/bird-can-llm-already-serve-as-a-database-interface/translation.md) | 面向 AI 的数据系统、语言模型与数据 | 2023 | 4.0 | translated | [原文](papers/ai-and-data/bird-can-llm-already-serve-as-a-database-interface/source.pdf) | [官方链接](<https://proceedings.neurips.cc/paper_files/paper/2023/hash/83fc8fab1710363050bbd1d4b8cc0021-Abstract-Datasets_and_Benchmarks.html>) |
 | [DBAIOps: A Reasoning LLM-Enhanced Database Operation and Maintenance System using Knowledge Graphs](papers/ai-and-data/dbaiops-reasoning-llm-database-operation-maintenance-knowledge-graphs/translation.md) | AI 优化数据库、语言模型与数据 | 2026 | 3.0 | translated | [原文](papers/ai-and-data/dbaiops-reasoning-llm-database-operation-maintenance-knowledge-graphs/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol19/p1319-zhou.pdf>) |
+| [DocETL: Agentic Query Rewriting and Evaluation for Complex Document Processing](papers/ai-and-data/docetl-agentic-query-rewriting-complex-document-processing/translation.md) | 查询优化、面向 AI 的数据系统、语言模型与数据 | 2025 | 3.5 | translated | [原文](papers/ai-and-data/docetl-agentic-query-rewriting-complex-document-processing/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol18/p3035-shankar.pdf>) |
 | [Language Models Enable Simple Systems for Generating Structured Views of Heterogeneous Data Lakes](papers/ai-and-data/language-models-enable-structured-views-heterogeneous-data-lakes/translation.md) | 面向 AI 的数据系统、语言模型与数据 | 2023 | 3.5 | translated | [原文](papers/ai-and-data/language-models-enable-structured-views-heterogeneous-data-lakes/source.pdf) | [官方链接](<https://doi.org/10.14778/3626292.3626294>) |
 | [Palimpzest: Optimizing AI-Powered Analytics with Declarative Query Processing](papers/ai-and-data/palimpzest-optimizing-ai-powered-analytics-declarative-query-processing/translation.md) | 查询优化、面向 AI 的数据系统、语言模型与数据 | 2025 | 2.5 | translated | [原文](papers/ai-and-data/palimpzest-optimizing-ai-powered-analytics-declarative-query-processing/source.pdf) | [官方链接](<https://www.vldb.org/cidrdb/2025/palimpzest-optimizing-ai-powered-analytics-with-declarative-query-processing.html>) |
+| [Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows](papers/ai-and-data/spider-2-0-enterprise-text-to-sql-workflows/translation.md) | 面向 AI 的数据系统、语言模型与数据 | 2025 | 3.5 | translated | [原文](papers/ai-and-data/spider-2-0-enterprise-text-to-sql-workflows/source.pdf) | [官方链接](<https://proceedings.iclr.cc/paper_files/paper/2025/hash/46c10f6c8ea5aa6f267bcdabcb123f97-Abstract-Conference.html>) |
 | [Text-to-SQL Empowered by Large Language Models: A Benchmark Evaluation](papers/ai-and-data/text-to-sql-empowered-by-large-language-models-benchmark-evaluation/translation.md) | 面向 AI 的数据系统、语言模型与数据 | 2024 | 4.0 | translated | [原文](papers/ai-and-data/text-to-sql-empowered-by-large-language-models-benchmark-evaluation/source.pdf) | [官方链接](<https://doi.org/10.14778/3641204.3641221>) |
 
 ## 元数据完整性
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 153 | 0 |
-| 发表年份 | 153 | 0 |
+| 作者 | 157 | 0 |
+| 发表年份 | 157 | 0 |
