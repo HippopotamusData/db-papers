@@ -1,0 +1,14 @@
+title: How Good are Learned Cost Models, Really? Insights from Query Optimization Tasks
+title_zh: 学习型代价模型究竟有多好？来自查询优化任务的洞见
+authors:
+  - Roman Heinrich
+  - Manisha Luthra
+  - Johannes Wehrstein
+  - Harald Kornmayer
+  - Carsten Binnig
+year: 2025
+source_url: https://doi.org/10.1145/3725309
+topics:
+  - query-optimization
+  - ai-for-databases
+reading_status: source_only

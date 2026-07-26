@@ -1,0 +1,25 @@
+title: 'Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows'
+title_zh: Spider 2.0：面向真实企业级 Text-to-SQL 工作流的语言模型评测
+authors:
+  - Fangyu Lei
+  - Jixuan Chen
+  - Yuxiao Ye
+  - Ruisheng Cao
+  - Dongchan Shin
+  - Hongjin Su
+  - Zhaoqing Suo
+  - Hongcheng Gao
+  - Wenjing Hu
+  - Pengcheng Yin
+  - Victor Zhong
+  - Caiming Xiong
+  - Ruoxi Sun
+  - Qian Liu
+  - Sida I. Wang
+  - Tao Yu
+year: 2025
+source_url: https://proceedings.iclr.cc/paper_files/paper/2025/hash/46c10f6c8ea5aa6f267bcdabcb123f97-Abstract-Conference.html
+topics:
+  - databases-for-ai
+  - language-models-for-data
+reading_status: source_only
