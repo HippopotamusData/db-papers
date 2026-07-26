@@ -200,6 +200,8 @@ def main() -> int:
                 raise ValueError(f"refusing a symlink or non-regular file: {path}")
             original = path.read_text(encoding="utf-8")
             edits = _safe_edits(original)
+            if not edits:
+                continue
             fixed = _apply_edits(original, edits)
             _assert_safe(original, fixed, edits)
             if fixed != original:

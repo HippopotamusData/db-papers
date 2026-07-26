@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate minimal reading metadata, expose status rows, and generate the catalog."""
+"""Validate minimal reading metadata and generate the catalog."""
 
 from __future__ import annotations
 
@@ -19,9 +19,7 @@ from project_config import (
     METADATA_FILE,
     REQUIRE_COMPLETE_REFERENCES,
     SLUG_RE,
-    SOURCE_FILE,
     TARGET_LANGUAGE,
-    TRANSLATION_FILE,
     configured_paths,
     effective_page_limit,
     load_project_policy,
@@ -409,12 +407,6 @@ def validate(paper_id: str | None = None) -> int:
     return 0
 
 
-def status_rows() -> int:
-    for path, data in records():
-        print(f"{path.parent.relative_to(ROOT)}\t{data['reading_status']}")
-    return 0
-
-
 def catalog_reading_target(
     path: Path, data: dict[str, Any], source_name: str, translation_name: str
 ) -> str:
@@ -621,54 +613,6 @@ def new_record(
     return 0
 
 
-def config_value(key: str, paper_id: str | None) -> int:
-    try:
-        paths = configured_paths(ROOT)
-        policy = load_project_policy(paths["policy"])
-    except ValueError as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
-        return 1
-    values: dict[str, Any] = {
-        "max_source_pages": policy["default_max_source_pages"],
-        "require_complete_references": REQUIRE_COMPLETE_REFERENCES,
-        "allow_whole_page_images_in_reading_path": ALLOW_WHOLE_PAGE_IMAGES_IN_READING_PATH,
-        "source_pdf": SOURCE_FILE,
-        "translation_file": TRANSLATION_FILE,
-    }
-    if key == "paper_page_limit":
-        if not paper_id:
-            print("ERROR: --paper-id is required for paper_page_limit", file=sys.stderr)
-            return 1
-        print(effective_page_limit(policy, paper_id))
-        return 0
-    if key == "skip_reason":
-        if not paper_id:
-            print("ERROR: --paper-id is required for skip_reason", file=sys.stderr)
-            return 1
-        print(configured_skip_reason(policy, paper_id))
-        return 0
-    if key == "paper_title":
-        if not paper_id:
-            print("ERROR: --paper-id is required for paper_title", file=sys.stderr)
-            return 1
-        matches = sorted(PAPERS.glob(f"*/{paper_id}/{paths['metadata'].name}"))
-        if len(matches) != 1:
-            print(f"ERROR: paper id must resolve exactly once: {paper_id}", file=sys.stderr)
-            return 1
-        title = load_yaml(matches[0]).get("title")
-        if not isinstance(title, str) or not title.strip():
-            print(f"ERROR: paper has no valid title: {paper_id}", file=sys.stderr)
-            return 1
-        print(title)
-        return 0
-    if key not in values:
-        print(f"ERROR: unsupported config key: {key}", file=sys.stderr)
-        return 1
-    value = values[key]
-    print(str(value).lower() if isinstance(value, bool) else value)
-    return 0
-
-
 def validation_manifest(
     paper_id: str | None,
 ) -> int:
@@ -742,10 +686,6 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     validate_parser = subparsers.add_parser("validate", help="validate minimal paper metadata")
     validate_parser.add_argument("--paper-id", help="validate only one paper record")
-    subparsers.add_parser("status", help="print tab-separated rows for deep validation")
-    config_parser = subparsers.add_parser("config", help="print a validated project config value")
-    config_parser.add_argument("--key", required=True)
-    config_parser.add_argument("--paper-id")
     manifest_parser = subparsers.add_parser(
         "validation-manifest", help="print one batched snapshot for deep translation validation"
     )
@@ -769,10 +709,6 @@ def main() -> int:
 
     if args.command == "validate":
         return validate(args.paper_id)
-    if args.command == "status":
-        return status_rows()
-    if args.command == "config":
-        return config_value(args.key, args.paper_id)
     if args.command == "validation-manifest":
         return validation_manifest(args.paper_id)
     if args.command == "catalog":

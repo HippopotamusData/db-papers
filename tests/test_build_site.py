@@ -31,7 +31,6 @@ class BuildSiteTests(unittest.TestCase):
         (root / "config/taxonomy.yaml").write_text(
             yaml.safe_dump(
                 {
-                    "schema_version": 1,
                     "areas": {
                         "query-processing": {
                             "label_zh": "查询处理",

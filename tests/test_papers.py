@@ -27,13 +27,11 @@ class PapersTests(unittest.TestCase):
         paper = root / "papers/query-processing/sample-paper"
         paper.mkdir(parents=True)
         (root / "config/policy.yaml").write_text(
-            "schema_version: 1\n"
             "default_max_source_pages: 60\n"
             "papers: {}\n",
             encoding="utf-8",
         )
         (root / "config/taxonomy.yaml").write_text(
-            "schema_version: 1\n"
             "areas:\n"
             "  query-processing:\n"
             "    label_zh: 查询处理\n"
@@ -328,25 +326,6 @@ class PapersTests(unittest.TestCase):
             io.StringIO()
         ):
             self.assertEqual(papers.validate(), 1)
-
-    def test_config_command_exposes_named_page_limit_exception(self) -> None:
-        root = self.make_root()
-        (root / "config/policy.yaml").write_text(
-            "schema_version: 1\n"
-            "default_max_source_pages: 60\n"
-            "papers:\n"
-            "  sample-paper:\n"
-            "    max_source_pages: 80\n"
-            "    authorization: explicit test override\n",
-            encoding="utf-8",
-        )
-        stdout = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stdout(stdout):
-            self.assertEqual(
-                papers.config_value("paper_page_limit", "sample-paper"),
-                0,
-            )
-        self.assertEqual(stdout.getvalue().strip(), "80")
 
     def test_validation_manifest_contains_only_current_paper_state(self) -> None:
         root = self.make_root("translated")

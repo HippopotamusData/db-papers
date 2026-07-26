@@ -48,7 +48,6 @@ class ProjectConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "taxonomy.yaml"
             path.write_text(
-                "schema_version: 1\n"
                 "areas:\n"
                 "  query-processing:\n"
                 "    label_zh: ' 查询处理'\n"
@@ -71,7 +70,7 @@ class ProjectConfigTests(unittest.TestCase):
             with self.subTest(record=record), tempfile.TemporaryDirectory() as temporary:
                 path = Path(temporary) / "policy.yaml"
                 path.write_text(
-                    "schema_version: 1\ndefault_max_source_pages: 60\npapers:\n"
+                    "default_max_source_pages: 60\npapers:\n"
                     "  sample:\n"
                     + record,
                     encoding="utf-8",
@@ -94,25 +93,6 @@ class ProjectConfigTests(unittest.TestCase):
         self.assertEqual(effective_page_limit(policy, "other-paper"), 60)
         self.assertEqual(skip_reason(policy, "skipped-paper"), "out-of-scope")
         self.assertEqual(skip_reason(policy, "other-paper"), "")
-
-    def test_schema_versions_reject_boolean_and_float_lookalikes(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-
-            policy = root / "policy.yaml"
-            policy.write_text(
-                "schema_version: 1.0\ndefault_max_source_pages: 60\npapers: {}\n",
-                encoding="utf-8",
-            )
-            with self.assertRaisesRegex(ValueError, "must be integer 1"):
-                load_project_policy(policy)
-
-            taxonomy = root / "taxonomy.yaml"
-            taxonomy.write_text(
-                "schema_version: 1.0\nareas: {}\ntopics: {}\n", encoding="utf-8"
-            )
-            with self.assertRaisesRegex(ValueError, "must be integer 1"):
-                load_taxonomy(taxonomy)
 
 if __name__ == "__main__":
     unittest.main()

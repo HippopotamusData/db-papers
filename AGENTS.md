@@ -47,6 +47,7 @@ Before acting, read only the document or documents listed for the task:
 | Change rating structure | `docs/workflows/maintain.md`, `docs/workflows/rating.md` |
 | Repair portable-math syntax in named translations | `docs/portable-math-maintainers.md` |
 | Change formula rules, validators, or safe fixers | `docs/workflows/maintain.md`, `docs/portable-math-maintainers.md` |
+| Change AI instructions, workflows, CI, or release flow | `docs/workflows/maintain.md` |
 | Change taxonomy, scripts, generated catalog, or maintainer environment | `docs/workflows/maintain.md` |
 
 ## Global invariants
@@ -81,7 +82,7 @@ make paper-check PAPER_ID=<paper-id>  # scoped deep gate for one paper during a 
 make catalog        # regenerate CATALOG.md from paper.yaml files
 make site-check     # build and verify the reader-facing Pages artifact
 make check          # fast submission gate and generated-file check
-make deep-check     # check superset with full repository audit
+make deep-check DEEP_REASON=<reason>  # check superset with full repository audit
 make math-check-files FILES='papers/<area>/<paper-id>/translation.md'  # scoped math gate
 make diff-check     # whitespace gate including untracked translation files
 ```

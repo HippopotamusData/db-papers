@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import os
 import subprocess
 import sys
@@ -139,6 +140,45 @@ class FixPortableMathTests(unittest.TestCase):
             )
             self.assertEqual(safe_fix.returncode, 0)
             self.assertEqual(path.read_text(encoding="utf-8"), fixed)
+
+    def test_cli_skips_full_safety_proof_without_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "translation.md"
+            path.write_text("value $x$.\n", encoding="utf-8")
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    ["fix_portable_math.py", "check", str(path)],
+                ),
+                mock.patch.object(
+                    fix_portable_math,
+                    "_assert_safe",
+                    wraps=fix_portable_math._assert_safe,
+                ) as assert_safe,
+            ):
+                self.assertEqual(fix_portable_math.main(), 0)
+            assert_safe.assert_not_called()
+
+    def test_cli_runs_full_safety_proof_for_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "translation.md"
+            path.write_text("中文，$x$。\n", encoding="utf-8")
+            with (
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    ["fix_portable_math.py", "check", str(path)],
+                ),
+                mock.patch.object(
+                    fix_portable_math,
+                    "_assert_safe",
+                    wraps=fix_portable_math._assert_safe,
+                ) as assert_safe,
+                mock.patch.object(sys, "stdout", new=io.StringIO()),
+            ):
+                self.assertEqual(fix_portable_math.main(), 1)
+            assert_safe.assert_called_once()
 
     def test_batch_write_failure_rolls_back_replaced_files(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

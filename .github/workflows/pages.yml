@@ -2,23 +2,29 @@ name: pages
 
 on:
   pull_request:
-  workflow_dispatch:
   workflow_run:
     workflows: [check]
     types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: pages-${{ github.event.pull_request.number || 'production' }}
+  group: >-
+    pages-${{
+      github.event_name == 'pull_request' &&
+      format('pr-{0}', github.event.pull_request.number) ||
+      github.event.workflow_run.event == 'push' &&
+      'production' ||
+      format('ignored-{0}', github.run_id)
+    }}
   cancel-in-progress: true
 
 jobs:
   site-build:
     if: >-
       github.event_name == 'pull_request' ||
-      github.event_name == 'workflow_dispatch' ||
       (
         github.event.workflow_run.event == 'push' &&
         github.event.workflow_run.head_branch == github.event.repository.default_branch &&
@@ -26,8 +32,6 @@ jobs:
         github.event.workflow_run.conclusion == 'success'
       )
     runs-on: ubuntu-24.04
-    outputs:
-      site_changed: ${{ steps.scope.outputs.site_changed }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -48,19 +52,15 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
           CURRENT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "workflow_run" ]; then
             echo "site_changed=true" >> "$GITHUB_OUTPUT"
-            echo "Manual run: forcing a site build"
+            echo "Successful main check: forcing a complete production build"
             exit 0
           fi
 
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            diff_base=$(git merge-base "origin/$BASE_REF" HEAD || true)
-          else
-            diff_base=$(git rev-parse "$CURRENT_SHA^" 2>/dev/null || true)
-          fi
+          diff_base=$(git merge-base "origin/$BASE_REF" HEAD || true)
           if [ -z "$diff_base" ] || ! git cat-file -e "$diff_base^{commit}"; then
-            echo "Cannot determine a trusted Pages diff base" >&2
+            echo "Cannot determine a trusted pull-request Pages diff base" >&2
             exit 1
           fi
 
@@ -79,7 +79,7 @@ jobs:
         run: make site-check PYTHON=python
       - name: Upload GitHub Pages artifact
         if: >-
-          github.event_name != 'pull_request' &&
+          github.event_name == 'workflow_run' &&
           steps.scope.outputs.site_changed == 'true'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
@@ -87,8 +87,8 @@ jobs:
 
   deploy:
     if: >-
-      github.event_name != 'pull_request' &&
-      needs.site-build.outputs.site_changed == 'true'
+      github.event_name == 'workflow_run' &&
+      needs.site-build.result == 'success'
     needs: site-build
     permissions:
       pages: write

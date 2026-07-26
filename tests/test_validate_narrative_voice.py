@@ -3,11 +3,13 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import validate_narrative_voice  # noqa: E402
 from validate_narrative_voice import find_ambiguous_author_narration  # noqa: E402
 
 
@@ -51,6 +53,20 @@ class NarrativeVoiceValidationTests(unittest.TestCase):
             ),
             [],
         )
+
+    def test_prepared_visible_markdown_is_not_parsed_again(self) -> None:
+        with mock.patch.object(
+            validate_narrative_voice,
+            "reader_visible_markdown",
+            side_effect=AssertionError("visible Markdown was parsed again"),
+        ):
+            self.assertEqual(
+                find_ambiguous_author_narration(
+                    "作者提出一种方法。\n",
+                    already_visible=True,
+                ),
+                [(1, "作者提出一种方法。")],
+            )
 
 
 if __name__ == "__main__":

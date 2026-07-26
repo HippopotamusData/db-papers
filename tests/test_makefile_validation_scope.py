@@ -215,6 +215,36 @@ class MakefileValidationScopeTests(unittest.TestCase):
         self.assertIn(marker, script)
         self.assertIn(math_call, script)
 
+    def test_translation_validator_reuses_prepared_visible_markdown(self) -> None:
+        script = (ROOT / "scripts/validate_translations.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            'scripts/validate_narrative_voice.py --already-visible '
+            '"$visible_translation"',
+            script,
+        )
+
+    def test_python_metadata_gate_owns_status_file_contract(self) -> None:
+        script = (ROOT / "scripts/validate_translations.sh").read_text(
+            encoding="utf-8"
+        )
+        metadata_gate = (
+            '"$PYTHON" scripts/papers.py "${metadata_args[@]}" || exit 1'
+        )
+        self.assertLess(script.index(metadata_gate), script.index("while IFS="))
+        for duplicate_message in (
+            "is unavailable but source.pdf exists",
+            "is unavailable but translation.md exists",
+            "has reading_status=$reading_status but source.pdf is missing",
+            "has reading_status=$reading_status but translation.md exists",
+            "is draft but translation.md is missing",
+            "is draft but source.pdf is missing",
+            "is translated but translation.md is missing",
+            "is translated but source.pdf is missing",
+        ):
+            self.assertNotIn(duplicate_message, script)
+
 
 if __name__ == "__main__":
     unittest.main()

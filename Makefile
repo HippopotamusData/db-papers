@@ -1,16 +1,37 @@
 PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 MATHJAX_MODULE ?= node_modules/mathjax
+TEST_VERBOSE ?= 0
 
-.PHONY: python-path python-compile paper-new source-check \
-	catalog catalog-check metadata-check normalize-headers normalize-headers-check \
+.DEFAULT_GOAL := help
+
+.PHONY: help python-compile paper-new source-check \
+	catalog normalize-headers \
 	fix-math math-check math-check-files math-audit-github math-audit-github-changed \
 	math-audit-github-worktree math-audit-katex validate deep-validate paper-check \
 	batch-start batch-check batch-state diff-check \
-	site-prepare site-build site-check site-serve \
-	test doctor check deep-check _deep-check
+	site-check site-serve test doctor check deep-check \
+	_catalog-check _normalize-headers-check _site-prepare _site-build _deep-check
 
-python-path:
-	@printf '%s\n' "$(PYTHON)"
+help:
+	@printf '%s\n' \
+		'DB Papers maintenance commands:' \
+		'  make check                         fast repository submission gate' \
+		'  make diff-check                    whitespace and untracked-translation gate' \
+		'  make validate                      fast metadata and translation-structure checks' \
+		'  make deep-validate                 full PDF, resource, and coverage audit' \
+		'  make paper-check PAPER_ID=<id>     deep gate for one paper' \
+		'  make source-check PAPER_ID=<id>    source identity and readability gate' \
+		'  make catalog                       regenerate CATALOG.md' \
+		'  make site-check                    build and verify the reader site' \
+		'  make site-serve                    serve the reader site locally' \
+		'  make deep-check DEEP_REASON=<reason>  full audit for semantic changes' \
+		'    reasons: content-semantics, publication-semantics, validator-semantics, full-audit' \
+		'  make math-check-files FILES="..."  scoped portable-math gate' \
+		'  make paper-new ...                 create one minimal paper record' \
+		'  make batch-start|batch-check|batch-state ...  temporary batch coordination' \
+		'  make doctor                        verify the maintainer environment' \
+		'' \
+		'Use TEST_VERBOSE=1 with make test/check for verbose unittest output.'
 
 python-compile:
 	$(PYTHON) -m py_compile scripts/*.py
@@ -46,16 +67,13 @@ source-check:
 catalog:
 	$(PYTHON) scripts/papers.py catalog
 
-catalog-check:
+_catalog-check:
 	$(PYTHON) scripts/papers.py catalog --check
-
-metadata-check:
-	$(PYTHON) scripts/papers.py validate
 
 normalize-headers:
 	$(PYTHON) scripts/normalize_translation_headers.py
 
-normalize-headers-check:
+_normalize-headers-check:
 	$(PYTHON) scripts/normalize_translation_headers.py --check
 
 fix-math:
@@ -151,25 +169,25 @@ batch-state:
 diff-check:
 	bash scripts/check_diff.sh
 
-site-prepare:
+_site-prepare:
 	$(PYTHON) scripts/build_site.py prepare
 
-site-build: site-prepare
+_site-build: _site-prepare
 	$(PYTHON) -m zensical build --clean --config-file site.generated.toml
 
-site-check: site-build
+site-check: _site-build
 	$(PYTHON) scripts/build_site.py check
 
-site-serve: site-prepare
+site-serve: _site-prepare
 	$(PYTHON) -m zensical serve --config-file site.generated.toml
 
 test:
-	$(PYTHON) -m unittest discover -s tests -v
+	$(PYTHON) -m unittest discover -s tests $(if $(filter 1 true yes,$(TEST_VERBOSE)),-v)
 
 doctor:
 	PYTHON=$(PYTHON) bash scripts/doctor.sh
 
-check: test validate catalog-check normalize-headers-check
+check: test validate _catalog-check _normalize-headers-check
 
 deep-check:
 	@case "$(DEEP_REASON)" in \
@@ -179,6 +197,7 @@ deep-check:
 				"{content-semantics,publication-semantics,validator-semantics,full-audit}" >&2; \
 			exit 1;; \
 	esac
+	@printf '%s\n' "Deep validation reason: $(DEEP_REASON)"
 	@$(MAKE) --no-print-directory _deep-check
 
-_deep-check: test deep-validate catalog-check normalize-headers-check math-check
+_deep-check: test deep-validate _catalog-check _normalize-headers-check math-check

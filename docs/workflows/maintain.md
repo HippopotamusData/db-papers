@@ -4,7 +4,7 @@
 
 在不破坏论文资产的前提下，维护 `paper.yaml` 契约、项目策略、分类法、当前
 校验器和读者站。仓库只保存当前内容与当前规则；Git 保存历史，不建立平行的
-验收版本数据库。
+发布版本数据库。
 
 ## 成功标准
 
@@ -24,9 +24,8 @@
 - `source.pdf`、`translation.md` 和 `assets/` 保存读者内容。
 - Git commit 保存内容版本；PR、提交和任务报告保存审阅过程。
 
-不要新增 acceptance ledger、review receipt、内容摘要注册表、per-paper waiver、
-流程日志或历史 schema reader。旧规则和旧证据需要时从 Git 历史读取，不作为
-当前运行时输入。
+不要新增平行版本账本、内容摘要注册表、per-paper waiver、流程日志或历史
+schema reader。旧规则和旧证据需要时从 Git 历史读取，不作为当前运行时输入。
 
 ## 规则设计
 
@@ -50,12 +49,18 @@
 ## Git 与发布模型
 
 `reading_status: translated` 表示当前 Git revision 中的译文已经人工审阅并通过
-当前确定性门禁。站点只按该状态选择译文，Pages 只在同一个 `main` commit 的
-`check` 成功后构建和部署。
+当前确定性门禁。站点只按该状态选择译文；`main` 的 `check` 成功表示同一 SHA
+已经通过归档检查和 push-side GitHub 公式审计，Pages 随后对该 SHA 完整构建并
+部署。
 
-内容变化不依赖额外摘要锁来“重新验收”。PR 或 push 的 Git diff 直接定位受影响
-paper ID，并运行 `paper-check`；严格的独立身份要求应由 GitHub required
-reviewer 实现，而不是由提交者可同时填写的元数据模拟。
+内容变化不依赖额外摘要锁来确认发布状态。PR 或 push 的 Git diff 直接定位受影响
+paper ID，并运行 `paper-check`；严格的独立身份要求应由 GitHub required reviewer
+实现，而不是由提交者可同时填写的元数据模拟。
+
+`pull_request_target` 公式审计及其受保护运行时代码属于 CI 信任边界。普通 PR
+会拒绝这些文件的差异；只有用户明确授权信任边界更新时，维护者才可在完成本地
+全库门禁后使用管理员 bypass 直接落地主分支，并继续等待同 SHA 的 `check` 和
+Pages 部署。不得在同一 PR 中放宽保护来让自身通过。
 
 批次 manifest 只允许放在 gitignored 的 `tmp/batches/`，仅用于当前任务分派和
 恢复，不参与论文状态、校验或发布判断。
@@ -93,9 +98,10 @@ make site-serve
 make site-check
 ```
 
-PR 只构建不部署。默认分支的 `check` workflow 成功后，Pages workflow 检出同一
-SHA、重新运行 `make site-check` 并部署。站点故障优先 revert 导致故障的仓库
-提交，不直接修改 artifact。
+PR 只构建不部署。默认分支的 `check` workflow 在同一 SHA 完成归档检查和
+push-side GitHub 公式审计后，Pages workflow 检出该 SHA、完整运行
+`make site-check` 并部署。站点故障优先 revert 导致故障的仓库提交，不直接修改
+artifact。
 
 ## CI 范围
 

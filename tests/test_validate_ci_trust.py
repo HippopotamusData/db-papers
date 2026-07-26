@@ -61,9 +61,13 @@ class ValidateCiTrustTests(unittest.TestCase):
     def test_trusted_workflow_keeps_minimum_security_invariants(self) -> None:
         text = (REPO_ROOT / MATH_WORKFLOW).read_text(encoding="utf-8")
         self.assertIn("  pull_request_target:\n", text)
+        self.assertNotIn("  push:\n", text)
+        self.assertIn("edited", text)
+        self.assertNotIn("ready_for_review", text)
         self.assertIn("permissions:\n  contents: read\n", text)
         self.assertIn("persist-credentials: false", text)
         self.assertNotIn("ref: ${{ github.event.pull_request.head.sha }}", text)
+        self.assertNotIn('AUDIT_BASE="HEAD^"', text)
         self.assertIn('AUDIT_UNTRUSTED_DATA: "1"', text)
         self.assertIn(
             '"$GITHUB_WORKSPACE/scripts/audit_changed_math.sh"', text
@@ -90,6 +94,33 @@ class ValidateCiTrustTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("audit_args+=(--unchecked-input)", text)
+        self.assertIn('git rev-parse --verify "$base^{commit}"', text)
+        self.assertIn('git merge-base "$base" HEAD', text)
+
+    def test_github_audit_profile_contains_only_runtime_inputs(self) -> None:
+        text = (REPO_ROOT / "scripts/audit_changed_math.sh").read_text(
+            encoding="utf-8"
+        )
+        for path in (
+            ".github/workflows/github-math-audit.yml",
+            "scripts/audit_changed_math.sh",
+            "scripts/validate_github_math.py",
+            "scripts/verify_math_rendering.py",
+        ):
+            self.assertIn(f"  {path}\n", text)
+        for path in (
+            ".github/workflows/check.yml",
+            "Makefile",
+            "docs/portable-math-maintainers.md",
+            "docs/translation-policy.md",
+            "package-lock.json",
+            "package.json",
+            "pyproject.toml",
+            "scripts/fix_portable_math.py",
+            "scripts/render_mathjax.cjs",
+            "scripts/validate_ci_trust.py",
+        ):
+            self.assertNotIn(f"  {path}\n", text)
 
 
 if __name__ == "__main__":

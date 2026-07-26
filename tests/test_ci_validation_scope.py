@@ -123,6 +123,7 @@ class CiValidationScopeTests(unittest.TestCase):
         self.assertEqual(plan.paper_ids, ())
         self.assertEqual(plan.math_files, ())
         self.assertFalse(plan.math_all)
+        self.assertFalse(plan.deep_validate_all)
         self.assertTrue(plan.site_changed)
 
     def test_paper_metadata_change_requires_trusted_base(self) -> None:
@@ -141,6 +142,7 @@ class CiValidationScopeTests(unittest.TestCase):
         self.assertEqual(plan.paper_ids, ("paper-a",))
         self.assertEqual(plan.math_files, (path,))
         self.assertFalse(plan.math_all)
+        self.assertFalse(plan.deep_validate_all)
         self.assertTrue(plan.site_changed)
 
     def test_math_profile_change_selects_full_math_only(self) -> None:
@@ -151,6 +153,48 @@ class CiValidationScopeTests(unittest.TestCase):
         self.assertEqual(plan.paper_ids, ())
         self.assertEqual(plan.math_files, ())
         self.assertTrue(plan.math_all)
+        self.assertFalse(plan.deep_validate_all)
+        self.assertFalse(plan.site_changed)
+
+    def test_global_validator_and_policy_changes_select_deep_validation(
+        self,
+    ) -> None:
+        for path in (
+            "config/policy.yaml",
+            "scripts/papers.py",
+            "scripts/pdf_metrics.py",
+            "scripts/project_config.py",
+            "scripts/validate_resources.py",
+            "scripts/validate_translations.sh",
+        ):
+            with self.subTest(path=path):
+                plan = select_validation_plan([path], root=ROOT)
+                self.assertTrue(plan.deep_validate_all)
+
+    def test_makefile_change_selects_all_implementation_domains(self) -> None:
+        plan = select_validation_plan(["Makefile"], root=ROOT)
+        self.assertTrue(plan.math_all)
+        self.assertTrue(plan.deep_validate_all)
+        self.assertTrue(plan.site_changed)
+
+    def test_dev_dependency_change_selects_math_and_deep_validation(
+        self,
+    ) -> None:
+        with mock.patch(
+            "scripts.ci_validation_scope.pyproject_groups_at_revision",
+            side_effect=[
+                (["markdown-it-py==4.2.0"], ["zensical==0.0.24"]),
+                (["markdown-it-py==4.3.0"], ["zensical==0.0.24"]),
+            ],
+        ):
+            plan = select_validation_plan(
+                ["pyproject.toml"],
+                root=ROOT,
+                base_sha="base",
+                head_sha="proposed",
+            )
+        self.assertTrue(plan.math_all)
+        self.assertTrue(plan.deep_validate_all)
         self.assertFalse(plan.site_changed)
 
     def test_docs_change_selects_no_validation_domain(self) -> None:
@@ -182,10 +226,11 @@ class CiValidationScopeTests(unittest.TestCase):
             "papers/query-processing/paper-a/translation.md\n"
             "__DB_PAPERS__\n"
             "math_all=false\n"
+            "deep_validate_all=false\n"
             "site_changed=true\n",
         )
 
-    def test_workflow_uses_minimal_domains_and_never_runs_deep_check(
+    def test_workflow_uses_minimal_domains_and_conditional_deep_validation(
         self,
     ) -> None:
         workflow = (ROOT / ".github/workflows/check.yml").read_text(
@@ -195,22 +240,51 @@ class CiValidationScopeTests(unittest.TestCase):
         self.assertIn("run: make check", workflow)
         self.assertIn("Run scoped paper gates", workflow)
         self.assertIn("Run scoped math gate", workflow)
+        self.assertIn("Run global deep validation", workflow)
+        self.assertIn(
+            "steps.scope.outputs.deep_validate_all == 'true'",
+            workflow,
+        )
+        self.assertIn("run: make deep-validate", workflow)
+        self.assertIn("Audit changed GitHub math", workflow)
+        self.assertIn(
+            'git merge-base --is-ancestor "$BEFORE_SHA" "$CURRENT_SHA"',
+            workflow,
+        )
+        self.assertIn(
+            'scripts/audit_changed_math.sh "$DIFF_BASE"',
+            workflow,
+        )
+        self.assertIn(
+            "AUDIT_ALL: ${{ steps.scope.outputs.math_all }}",
+            workflow,
+        )
         self.assertNotIn("make deep-check", workflow)
-        self.assertNotIn("deep_check", workflow)
+        self.assertNotIn("workflow_dispatch", workflow)
 
-    def test_pages_workflow_skips_build_for_unaffected_changes(self) -> None:
+    def test_pages_workflow_separates_pr_and_full_production_builds(
+        self,
+    ) -> None:
         workflow = (ROOT / ".github/workflows/pages.yml").read_text(
             encoding="utf-8"
         )
         self.assertIn("Determine site impact", workflow)
         self.assertIn(
+            "Successful main check: forcing a complete production build",
+            workflow,
+        )
+        self.assertIn(
             "if: steps.scope.outputs.site_changed == 'true'",
             workflow,
         )
         self.assertIn(
-            "needs.site-build.outputs.site_changed == 'true'",
+            "needs.site-build.result == 'success'",
             workflow,
         )
+        self.assertIn("format('ignored-{0}', github.run_id)", workflow)
+        self.assertIn("branches: [main]", workflow)
+        self.assertNotIn('git rev-parse "$CURRENT_SHA^"', workflow)
+        self.assertNotIn("workflow_dispatch", workflow)
 
 
 if __name__ == "__main__":

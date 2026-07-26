@@ -8,7 +8,7 @@
 
 - 元数据只使用 `paper.yaml` 已有字段和 `config/taxonomy.yaml` 的受控主题。
 - 不手工编辑 `CATALOG.md`；元数据变化后运行 `make catalog`。
-- 已验收论文的原文、译文或资源如需实质修改，先通过 Issue 确认修复范围，再遵循 `docs/workflows/review.md` 的独立复核与验收流程。
+- `reading_status: translated` 论文的原文、译文或资源如需实质修改，先通过 Issue 确认修复范围，再遵循 `docs/workflows/review.md` 的独立审阅与修复流程。
 - 保留无关文件和其他贡献者的修改。
 
 提交前至少运行：
@@ -18,8 +18,13 @@ make check
 make diff-check
 ```
 
-只有依赖、策略或流程变更会影响论文内容解释、验收语义或全局校验器行为，
-或明确进行全库审计时，才使用 `make deep-check` 替代 `make check`。
+只有依赖、策略或流程变更会影响论文内容解释、发布语义或全局校验器行为，
+或明确进行全库审计时，才使用带原因的 `make deep-check` 替代 `make check`：
+
+```bash
+make deep-check DEEP_REASON=<content-semantics|publication-semantics|validator-semantics|full-audit>
+```
+
 Pages、文档、打包和发布流程等不影响这些语义的变更仍运行 `make check`，
 再运行 `make diff-check`。
 
@@ -30,5 +35,5 @@ Pages、文档、打包和发布流程等不影响这些语义的变更仍运行
 make site-check
 ```
 
-站点内容由权威元数据和已验收译文生成；不要提交 `site_src/`、`site/`
+站点内容由权威元数据和 `reading_status: translated` 译文生成；不要提交 `site_src/`、`site/`
 或 `site.generated.toml`，也不要在生成产物中手工修补论文页面。

@@ -79,7 +79,7 @@ make math-audit-katex KATEX_MODULE='/path/to/katex'
 
 `make math-check-files` 与全库 `make math-check` 都是只读检查：静态解析后，
 用 `package-lock.json` 锁定的 MathJax 对每个 TeX 载荷做结构渲染。普通
-`make check` 不再重复扫描 144 篇既有译文；CI 根据 Git diff 对变更译文运行
+`make check` 不再重复扫描全部既有译文；CI 根据 Git diff 对变更译文运行
 `math-check-files`，公式 profile、扫描器、渲染器或锁文件变化时才升级为
 全库 `math-check`。`make deep-check` 仍包含全库门禁。该本地门禁捕获括号、
 命令参数、`\left`/`\right` 与环境配对等错误，但不代替 GitHub 自身的
@@ -89,7 +89,7 @@ GitHub 的链接化和 Markdown 规则会随上下文组合，无法靠静态规
 
 普通 `pull_request` 检查不接收 API token。带只读 token 的外部审计由默认分支上的受信任脚本运行；PR worktree 只作为 Markdown 数据读取，禁止执行其中的脚本、依赖或配置，并拒绝符号链接和非普通输入。该审计只信任仓库既定的 `$`/`$$` 边界提取，不信任 PR 自己修改的 TeX allowlist；PR 内的新静态规则仍由无 token 的普通 CI 验证。
 
-GitHub Markdown API 审计证明 GitHub 为每个公式创建节点且未改写载荷；它不执行网页端最终渲染。因此 profile 或全库迁移完成后，先推送固定候选 commit，再逐篇打开 `blob/<40-character-sha>/.../translation.md` 的真实 GitHub 文件页。检查必须覆盖全部变更译文和每个被修改的公式，确认公式主体保持横向或原有多行结构、编号可见且与原文及正文引用一致，并且没有渲染错误、纵向堆叠、截断或异常溢出；完成报告记录候选 SHA、逐篇 URL、公式编号和结果。任何失败项必须重新进入 `draft -> repair-review -> accept`，不得合并或推送到 `main`。KaTeX 失败不能单独成为改写数学语义的理由。
+GitHub Markdown API 审计证明 GitHub 为每个公式创建节点且未改写载荷；它不执行网页端最终渲染。因此 profile 或全库迁移完成后，先推送固定候选 commit，再逐篇打开 `blob/<40-character-sha>/.../translation.md` 的真实 GitHub 文件页。检查必须覆盖全部变更译文和每个被修改的公式，确认公式主体保持横向或原有多行结构、编号可见且与原文及正文引用一致，并且没有渲染错误、纵向堆叠、截断或异常溢出；完成报告记录候选 SHA、逐篇 URL、公式编号和结果。任何失败项都必须回到 `draft`，完成修复和复审后再标记为 `translated`，不得带着失败项合并或推送到 `main`。KaTeX 失败不能单独成为改写数学语义的理由。
 
 ## 变更要求
 

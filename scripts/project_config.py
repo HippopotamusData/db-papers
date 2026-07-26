@@ -11,8 +11,6 @@ from typing import Any
 import yaml
 
 
-POLICY_SCHEMA_VERSION = 1
-TAXONOMY_SCHEMA_VERSION = 1
 METADATA_FILE = "paper.yaml"
 SOURCE_FILE = "source.pdf"
 TRANSLATION_FILE = "translation.md"
@@ -117,15 +115,9 @@ def _nonempty_string(value: Any, label: str) -> str:
     return value
 
 
-def _schema_version(value: Any, expected: int, label: str) -> None:
-    if type(value) is not int or value != expected:
-        raise ValueError(f"{label} must be integer {expected}, got {value!r}")
-
-
 def load_project_policy(path: Path) -> dict[str, Any]:
     data = load_yaml(path)
-    _exact_keys(data, {"schema_version", "default_max_source_pages", "papers"}, str(path))
-    _schema_version(data["schema_version"], POLICY_SCHEMA_VERSION, f"{path}: schema_version")
+    _exact_keys(data, {"default_max_source_pages", "papers"}, str(path))
 
     pages = data["default_max_source_pages"]
     if isinstance(pages, bool) or not isinstance(pages, int) or pages < 1:
@@ -171,8 +163,7 @@ def load_project_policy(path: Path) -> dict[str, Any]:
 
 def load_taxonomy(path: Path) -> dict[str, Any]:
     data = load_yaml(path)
-    _exact_keys(data, {"schema_version", "areas", "topics"}, str(path))
-    _schema_version(data["schema_version"], TAXONOMY_SCHEMA_VERSION, f"{path}: schema_version")
+    _exact_keys(data, {"areas", "topics"}, str(path))
     areas = _mapping(data["areas"], f"{path}: areas")
     topics = _mapping(data["topics"], f"{path}: topics")
     if not areas or not topics:

@@ -104,37 +104,27 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit skip
 
   case "$reading_status" in
     unavailable)
-      [[ ! -f "$pdf" ]] || fail "$dir is unavailable but source.pdf exists"
-      [[ ! -f "$translation" ]] || fail "$dir is unavailable but translation.md exists"
       continue
       ;;
     source_only|skipped)
-      [[ -f "$pdf" ]] || fail "$dir has reading_status=$reading_status but source.pdf is missing"
-      [[ ! -f "$translation" ]] || fail "$dir has reading_status=$reading_status but translation.md exists"
-      if [[ -f "$pdf" ]]; then
-        pages=$(pdfinfo "$pdf" 2>/dev/null | awk '/^Pages:/{print $2}')
-        [[ -n "$pages" ]] || fail "$pdf is unreadable"
-        if [[ -n "$pages" ]] && [[ "$reading_status" == "source_only" ]] && (( pages > paper_page_limit )); then
-          fail "$dir is source_only but exceeds its page limit ($pages pages; limit=$paper_page_limit); use skipped or an explicit exception"
-        fi
-        if [[ -n "$pages" ]] && [[ "$reading_status" == "skipped" ]]; then
-          if [[ "$skip_reason" == "over-page-limit" ]] && (( pages <= paper_page_limit )); then
-            fail "$dir has skipped reason over-page-limit but now fits policy ($pages pages; limit=$paper_page_limit); review policy status"
-          fi
+      pages=$(pdfinfo "$pdf" 2>/dev/null | awk '/^Pages:/{print $2}')
+      [[ -n "$pages" ]] || fail "$pdf is unreadable"
+      if [[ -n "$pages" ]] && [[ "$reading_status" == "source_only" ]] && (( pages > paper_page_limit )); then
+        fail "$dir is source_only but exceeds its page limit ($pages pages; limit=$paper_page_limit); use skipped or an explicit exception"
+      fi
+      if [[ -n "$pages" ]] && [[ "$reading_status" == "skipped" ]]; then
+        if [[ "$skip_reason" == "over-page-limit" ]] && (( pages <= paper_page_limit )); then
+          fail "$dir has skipped reason over-page-limit but now fits policy ($pages pages; limit=$paper_page_limit); review policy status"
         fi
       fi
       continue
       ;;
     draft)
       translation_file_count=$((translation_file_count + 1))
-      [[ -f "$translation" ]] || fail "$dir is draft but translation.md is missing"
-      [[ -f "$pdf" ]] || fail "$dir is draft but source.pdf is missing"
       ;;
     translated)
       translation_count=$((translation_count + 1))
       translation_file_count=$((translation_file_count + 1))
-      [[ -f "$translation" ]] || fail "$dir is translated but translation.md is missing"
-      [[ -f "$pdf" ]] || fail "$dir is translated but source.pdf is missing"
       ;;
     *)
       fail "$dir has invalid reading_status: $reading_status"
@@ -173,7 +163,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit skip
     quality_issue "$translation contains double-numbered references"
   fi
 
-  narrative_issues=$("$PYTHON" scripts/validate_narrative_voice.py "$visible_translation")
+  narrative_issues=$("$PYTHON" scripts/validate_narrative_voice.py --already-visible "$visible_translation")
   narrative_status=$?
   if (( narrative_status == 1 )); then
     warn "$translation contains ambiguous bare-author narration: $narrative_issues"

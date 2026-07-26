@@ -4,7 +4,7 @@
 
 一个批次使用固定 Git 基线、`codex/` 分支和隔离工作树。子代理只并行修改互斥
 论文目录；独立审阅者负责 PDF 复核；根代理负责范围、共享生成文件、检查点和
-集成。批次状态是临时编排信息，不是论文验收元数据。
+集成。批次状态是临时编排信息，不是论文发布元数据。
 
 ## 授权与启动
 
@@ -75,14 +75,15 @@ make batch-state \
    逐项对照轮。缺陷退回修复者；未通过项保持 `draft`。
 5. 审阅通过后将 `reading_status` 改为 `translated`，再次运行当前论文的
    `paper-check`，并把临时状态改为 `reviewed`。审阅范围和结论写入任务报告、
-   PR 或提交，不生成 receipt、hash、waiver 或共享账本。
+   PR 或提交，不生成额外 hash、waiver 或共享账本。
 6. 只给本批新增论文执行 rating workflow。证据不足时不写 `rating`，标为
    `blocked`；历史修复保留原 rating，除非另有授权。
 7. 每轮运行 `make catalog`、`make check`、`make diff-check`。全绿且已授权时
    创建 checkpoint commit。
 
-不同论文没有共享验收文件，可以自然并行；同一论文的并发修改由 Git 冲突处理。
-批次运行期间不要 merge 或 rebase。
+不同论文没有共享发布状态文件，可以自然并行；同一论文禁止并发修改。发现范围
+重叠、基线外变化或未经分派的论文改动时停止，由根代理重新分派。批次运行期间
+不要 merge 或 rebase。
 
 ## 关闭与集成
 
@@ -101,7 +102,7 @@ make batch-state \
 ## 恢复与清理
 
 根据 checkpoint、临时 manifest、论文文件和工作区差异恢复，再运行
-`make batch-check`。不存在验收事务 marker 或恢复协议；普通 Git 状态和门禁
+`make batch-check`。不存在共享发布事务 marker 或恢复协议；普通 Git 状态和门禁
 足以暴露部分完成的工作。
 
 只有全部子代理停止、工作区干净、分支已按授权集成且用户授权清理时，才从工作树

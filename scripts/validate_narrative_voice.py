@@ -17,8 +17,13 @@ QUALIFIED_AUTHOR = re.compile(
 )
 
 
-def find_ambiguous_author_narration(text: str) -> list[tuple[int, str]]:
-    text = reader_visible_markdown(text)
+def find_ambiguous_author_narration(
+    text: str,
+    *,
+    already_visible: bool = False,
+) -> list[tuple[int, str]]:
+    if not already_visible:
+        text = reader_visible_markdown(text)
     findings: list[tuple[int, str]] = []
     in_fence = False
     for line_number, line in enumerate(text.splitlines(), start=1):
@@ -34,12 +39,23 @@ def find_ambiguous_author_narration(text: str) -> list[tuple[int, str]]:
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print("usage: validate_narrative_voice.py TRANSLATION", file=sys.stderr)
+    arguments = sys.argv[1:]
+    already_visible = False
+    if arguments[:1] == ["--already-visible"]:
+        already_visible = True
+        arguments = arguments[1:]
+    if len(arguments) != 1:
+        print(
+            "usage: validate_narrative_voice.py [--already-visible] TRANSLATION",
+            file=sys.stderr,
+        )
         return 2
-    path = Path(sys.argv[1])
+    path = Path(arguments[0])
     try:
-        findings = find_ambiguous_author_narration(path.read_text(encoding="utf-8"))
+        findings = find_ambiguous_author_narration(
+            path.read_text(encoding="utf-8"),
+            already_visible=already_visible,
+        )
     except OSError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2

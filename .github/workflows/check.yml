@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -56,9 +55,7 @@ jobs:
           : > "$changed_paths"
           diff_base=
 
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            echo "Manual run: no changed-paper scope selected"
-          elif [ "$EVENT_NAME" = "pull_request" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ]; then
             diff_base=$(git merge-base "origin/$BASE_REF" HEAD || true)
             if [ -n "$diff_base" ] && git cat-file -e "$diff_base^{commit}"; then
               git diff --name-only -z "$diff_base..HEAD" > "$changed_paths"
@@ -66,22 +63,22 @@ jobs:
               echo "Cannot determine a trusted pull-request diff base" >&2
               exit 1
             fi
-          elif [ -n "$BEFORE_SHA" ] &&
-               [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] &&
-               git cat-file -e "$BEFORE_SHA^{commit}"; then
-            diff_base=$BEFORE_SHA
-            git diff --name-only -z "$BEFORE_SHA..$CURRENT_SHA" > "$changed_paths"
-          elif [ "$REF_NAME" != "$DEFAULT_BRANCH" ] &&
-               [ -n "$DEFAULT_BRANCH" ]; then
-            diff_base=$(git merge-base "origin/$DEFAULT_BRANCH" "$CURRENT_SHA" || true)
-            if [ -n "$diff_base" ] && git cat-file -e "$diff_base^{commit}"; then
-              git diff --name-only -z "$diff_base..$CURRENT_SHA" > "$changed_paths"
-            else
-              echo "Cannot determine a trusted branch diff base" >&2
+          elif [ "$EVENT_NAME" = "push" ] &&
+               [ "$REF_NAME" = "$DEFAULT_BRANCH" ]; then
+            if [ -z "$BEFORE_SHA" ] ||
+               [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ] ||
+               ! git cat-file -e "$BEFORE_SHA^{commit}"; then
+              echo "Cannot resolve a trusted push diff base" >&2
               exit 1
             fi
+            if ! git merge-base --is-ancestor "$BEFORE_SHA" "$CURRENT_SHA"; then
+              echo "Push diff base is not an ancestor of the current commit" >&2
+              exit 1
+            fi
+            diff_base=$BEFORE_SHA
+            git diff --name-only -z "$BEFORE_SHA..$CURRENT_SHA" > "$changed_paths"
           else
-            echo "Cannot determine a trusted push diff base" >&2
+            echo "Unsupported validation event or branch" >&2
             exit 1
           fi
 
@@ -102,8 +99,14 @@ jobs:
       - name: Run archive gate
         run: make check
 
+      - name: Run global deep validation
+        if: steps.scope.outputs.deep_validate_all == 'true'
+        run: make deep-validate
+
       - name: Run scoped paper gates
-        if: steps.scope.outputs.paper_ids != ''
+        if: >-
+          steps.scope.outputs.deep_validate_all != 'true' &&
+          steps.scope.outputs.paper_ids != ''
         env:
           PAPER_IDS: ${{ steps.scope.outputs.paper_ids }}
         run: |
@@ -141,6 +144,14 @@ jobs:
           if [ "${#files[@]}" -gt 0 ]; then
             make math-check-files FILES="${files[*]}"
           fi
+
+      - name: Audit changed GitHub math
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIFF_BASE: ${{ steps.changes.outputs.diff_base }}
+          AUDIT_ALL: ${{ steps.scope.outputs.math_all }}
+        run: PYTHON=python scripts/audit_changed_math.sh "$DIFF_BASE"
 
       - name: Check whitespace
         env:

@@ -9,26 +9,31 @@ fi
 
 base=$1
 PYTHON=${PYTHON:-python3}
+audit_all=${AUDIT_ALL:-false}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 files=()
 profile_paths=(
   .github/workflows/github-math-audit.yml
-  .github/workflows/check.yml
-  Makefile
-  docs/portable-math-maintainers.md
-  docs/translation-policy.md
-  package-lock.json
-  package.json
-  pyproject.toml
   scripts/audit_changed_math.sh
-  scripts/fix_portable_math.py
-  scripts/render_mathjax.cjs
-  scripts/validate_ci_trust.py
   scripts/validate_github_math.py
   scripts/verify_math_rendering.py
 )
 
-if ! git diff --quiet "$base...HEAD" -- "${profile_paths[@]}"; then
+if [[ "$audit_all" != "false" && "$audit_all" != "true" ]]; then
+  echo "ERROR: AUDIT_ALL must be true or false" >&2
+  exit 1
+fi
+if ! base=$(git rev-parse --verify "$base^{commit}" 2>/dev/null); then
+  echo "ERROR: cannot resolve trusted audit base: $1" >&2
+  exit 1
+fi
+if ! git merge-base "$base" HEAD >/dev/null 2>&1; then
+  echo "ERROR: trusted audit base has no common ancestor with HEAD: $base" >&2
+  exit 1
+fi
+
+if [[ "$audit_all" == "true" ]] ||
+   ! git diff --quiet "$base...HEAD" -- "${profile_paths[@]}"; then
   while IFS= read -r -d '' path; do
     files+=("$path")
   done < <(

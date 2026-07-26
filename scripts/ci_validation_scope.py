@@ -18,12 +18,31 @@ import yaml
 READER_ONLY_METADATA_FIELDS = frozenset({"rating", "title_zh", "topics"})
 MATH_PROFILE_PATHS = frozenset(
     {
+        "Makefile",
         "package.json",
         "package-lock.json",
         "scripts/fix_portable_math.py",
         "scripts/render_mathjax.cjs",
         "scripts/validate_github_math.py",
         "scripts/verify_math_rendering.py",
+    }
+)
+DEEP_VALIDATION_PATHS = frozenset(
+    {
+        "Makefile",
+        "config/policy.yaml",
+        "scripts/markdown_visibility.py",
+        "scripts/papers.py",
+        "scripts/pdf_metrics.py",
+        "scripts/project_config.py",
+        "scripts/reference_sections.py",
+        "scripts/validate_github_math.py",
+        "scripts/validate_listings.py",
+        "scripts/validate_narrative_voice.py",
+        "scripts/validate_resources.py",
+        "scripts/validate_source_pdf.py",
+        "scripts/validate_translations.sh",
+        "scripts/validation_policy.py",
     }
 )
 SITE_EXACT_PATHS = frozenset(
@@ -47,6 +66,7 @@ class ValidationPlan:
     paper_ids: tuple[str, ...] = ()
     math_files: tuple[str, ...] = ()
     math_all: bool = False
+    deep_validate_all: bool = False
     site_changed: bool = False
 
 
@@ -195,6 +215,9 @@ def select_validation_plan(
     paper_ids: set[str] = set()
     math_files: set[str] = set()
     math_all = any(path in MATH_PROFILE_PATHS for path in normalized)
+    deep_validate_all = any(
+        path in DEEP_VALIDATION_PATHS for path in normalized
+    )
     site_changed = any(is_site_path(path) for path in normalized)
 
     for path in normalized:
@@ -239,12 +262,14 @@ def select_validation_plan(
         base_dev, base_site = pyproject_groups_at_revision(root, base_sha)
         head_dev, head_site = pyproject_groups_at_revision(root, head_sha)
         math_all = math_all or base_dev != head_dev
+        deep_validate_all = deep_validate_all or base_dev != head_dev
         site_changed = site_changed or base_site != head_site
 
     return ValidationPlan(
         paper_ids=tuple(sorted(paper_ids)),
         math_files=tuple(sorted(math_files)),
         math_all=math_all,
+        deep_validate_all=deep_validate_all,
         site_changed=site_changed,
     )
 
@@ -261,6 +286,10 @@ def emit_github_output(plan: ValidationPlan | list[str]) -> None:
     _emit_multiline_output("paper_ids", plan.paper_ids)
     _emit_multiline_output("math_files", plan.math_files)
     print(f"math_all={'true' if plan.math_all else 'false'}")
+    print(
+        "deep_validate_all="
+        f"{'true' if plan.deep_validate_all else 'false'}"
+    )
     print(f"site_changed={'true' if plan.site_changed else 'false'}")
 
 
@@ -301,6 +330,7 @@ def main() -> int:
         "CI validation plan: "
         f"papers={','.join(plan.paper_ids) or '-'} "
         f"math={'all' if plan.math_all else ','.join(plan.math_files) or '-'} "
+        f"deep={'yes' if plan.deep_validate_all else 'no'} "
         f"site={'yes' if plan.site_changed else 'no'}",
         file=sys.stderr,
     )
