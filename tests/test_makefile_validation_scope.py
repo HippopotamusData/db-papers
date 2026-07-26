@@ -169,9 +169,18 @@ class MakefileValidationScopeTests(unittest.TestCase):
         self.assertIn(f"scripts/fix_portable_math.py check {translation}", output)
 
     def test_deep_check_requires_a_controlled_reason(self) -> None:
+        environment = os.environ.copy()
+        for variable in (
+            "DEEP_REASON",
+            "MAKEFLAGS",
+            "MAKEOVERRIDES",
+            "MFLAGS",
+        ):
+            environment.pop(variable, None)
         result = subprocess.run(
             ["make", "deep-check"],
             cwd=ROOT,
+            env=environment,
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

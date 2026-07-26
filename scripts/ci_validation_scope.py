@@ -105,12 +105,12 @@ def changed_acceptance_paper_ids(base: Any, head: Any) -> list[str]:
         raise ValueError(
             f"acceptance ledger schema_version must be {ACCEPTANCE_SCHEMA_VERSION}"
         )
-    if (
-        not isinstance(base["review_snapshots"], dict)
-        or not isinstance(head["review_snapshots"], dict)
-        or base["review_snapshots"] != head["review_snapshots"]
+    base_snapshots = base["review_snapshots"]
+    head_snapshots = head["review_snapshots"]
+    if not isinstance(base_snapshots, dict) or not isinstance(
+        head_snapshots, dict
     ):
-        raise ValueError("acceptance review_snapshots changed or are invalid")
+        raise ValueError("acceptance review_snapshots must be mappings")
     base_entries = base["entries"]
     head_entries = head["entries"]
     if not isinstance(base_entries, dict) or not isinstance(head_entries, dict):
@@ -126,11 +126,71 @@ def changed_acceptance_paper_ids(base: Any, head: Any) -> list[str]:
         for entry in list(base_entries.values()) + list(head_entries.values())
     ):
         raise ValueError("acceptance entries must be mappings")
-    return sorted(
+    changed_ids = sorted(
         paper_id
         for paper_id in all_ids
         if base_entries.get(paper_id) != head_entries.get(paper_id)
     )
+    added_snapshots = set(head_snapshots) - set(base_snapshots)
+    changed_snapshots = {
+        snapshot_id
+        for snapshot_id in set(base_snapshots) & set(head_snapshots)
+        if base_snapshots[snapshot_id] != head_snapshots[snapshot_id]
+    }
+    if added_snapshots or changed_snapshots:
+        raise ValueError(
+            "acceptance review_snapshots may only remove newly unreferenced "
+            "snapshots"
+        )
+
+    removed_snapshots = set(base_snapshots) - set(head_snapshots)
+    if removed_snapshots:
+        base_references: dict[Any, set[str]] = {}
+        head_references: set[Any] = set()
+        for paper_id, entry in base_entries.items():
+            if "review_snapshot" in entry:
+                snapshot_id = entry["review_snapshot"]
+                if not isinstance(snapshot_id, str):
+                    raise ValueError(
+                        "acceptance entry review_snapshot must be a string"
+                    )
+                base_references.setdefault(snapshot_id, set()).add(paper_id)
+        for entry in head_entries.values():
+            if "review_snapshot" in entry:
+                snapshot_id = entry["review_snapshot"]
+                if not isinstance(snapshot_id, str):
+                    raise ValueError(
+                        "acceptance entry review_snapshot must be a string"
+                    )
+                head_references.add(snapshot_id)
+
+        safely_pruned = True
+        for snapshot_id in removed_snapshots:
+            referencing_ids = base_references.get(snapshot_id, set())
+            if not referencing_ids or snapshot_id in head_references:
+                safely_pruned = False
+                break
+            for paper_id in referencing_ids:
+                base_entry = base_entries[paper_id]
+                head_entry = head_entries.get(paper_id)
+                if (
+                    type(base_entry.get("schema_version")) is not int
+                    or base_entry["schema_version"] != 1
+                    or head_entry is None
+                    or type(head_entry.get("schema_version")) is not int
+                    or head_entry["schema_version"] != 2
+                    or "review_snapshot" in head_entry
+                ):
+                    safely_pruned = False
+                    break
+            if not safely_pruned:
+                break
+        if not safely_pruned:
+            raise ValueError(
+                "acceptance review_snapshots may only remove newly "
+                "unreferenced snapshots"
+            )
+    return changed_ids
 
 
 def file_at_revision(
