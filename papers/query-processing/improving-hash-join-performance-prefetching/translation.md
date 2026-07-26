@@ -667,7 +667,7 @@ CPU 缓存性能是哈希连接用户态性能的主要因素，而 Itanium 2 �
 - Chen, S., Gibbons, P. B., Mowry, T. C., and Valentin, G. 2002. Fractal Prefetching B+-Trees: Optimizing Both Cache and Disk Performance. In *Proceedings of the 2002 ACM SIGMOD International Conference on Management of Data*. Madison, WI, USA, 157–168.
 - Gold, B. T., Ailamaki, A., Huston, L., and Falsafi, B. 2005. Accelerating Database Operations Using a Network Processor. In *Proceedings of the First International Workshop on Data Management on New Hardware (DaMoN 2005)*. Baltimore, MD, USA.
 - Graefe, G. 1993. Query Evaluation Techniques for Large Databases. *ACM Computing Surveys* 25, 2, 73–170.
-- Hepkin, D. 2006. *Guide to Multiple Page Size Support on AIX 5L Version 5.3*. http://www03.ibm.com/servers/aix/whitepapers/multiple_page.pdf.
+- Hepkin, D. 2006. *Guide to Multiple Page Size Support on AIX 5L Version 5.3*. http://www-03.ibm.com/servers/aix/whitepapers/multiple_page.pdf.
 - IBM Corporation. 2004. *IBM DB2 Universal Database Administration Guide Version 8.2*.
 - Intel Corporation. 2004. *Intel Itanium 2 Processor Reference Manual for Software Development and Optimization*. Order Number 251110-003.
 - Intel Corporation. 2006. *IA-32 Intel Architecture Software Developer's Manual (Volumes 3A and 3B): System Programming Guide*.

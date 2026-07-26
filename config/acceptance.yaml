@@ -40,10 +40,6 @@ review_snapshots:
     translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
     review_gate_manifest_sha256: 375cb93738e459da5e684d66618a0990a53594cf8399dbe20d524617034adbb0
     review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
-  b10c8126a663c86774072a6a6744c0b7403523c18fe63f4dc7868f5cd24efd37:
-    translation_policy_sha256: 11b96d05c22b7a9d4bef0a0eabf6069762b07cda421ca072e7c644b82745cd97
-    review_gate_manifest_sha256: e05c47d188591afd3e93222c21e2ef1685d20fe650d9755594dcc12bc769729a
-    review_base_sha: bac13c8f1c61f0dc7e093c502438bbe9a8d543a6
   bfba1a12ced453873e57326001d4dc9ab6ef259f7dbb205efdb524c5ad5f7c18:
     translation_policy_sha256: 523d7f426cae35d8b7ca7cb4385e6354262b4ec29753c78318db1c7319a32b0f
     review_gate_manifest_sha256: 5c7e5c857efcdf76b916888e46650883b130c0a285dffe74f69e73136703d12e
@@ -273,21 +269,34 @@ entries:
     fingerprint: c7831876a9c574b4a802247047427eb1341018418e250447739047d720b9740c
     review_snapshot: e4beeea660f4e4250c70b0047755c47ee40244d9547a5c6811b9111d3c1dd61f
   complete-story-of-joins-hyper:
-    schema_version: 1
+    schema_version: 2
     paper_id: complete-story-of-joins-hyper
     source_sha256: 4f8c81c4ca7697a01093ed9cece827df314e742c1071509da5d7c65155e86e7a
-    translation_sha256: 72b8285d777e12e2761937e2326e9a0752a1e13980d0f723fe7ab7bf49498eb0
+    translation_sha256: 0ab4149c07c574eefe59f592b74228e448db00e1387b66361f65ea7b77dd8e87
     assets_manifest_sha256: 428c7804e267d9e1c622e92b8de62b26b38ae41fa3aca37427fc4a94bde969a0
     review_metadata_sha256: bafcbff34c4d5b87ee65654f6d0d5c0d94143548ee875bb45bd6f6e5523e4e11
     review_action: repair-review
-    translator: codex:root
-    reviewer: codex:independent-reviewer
+    translator: codex:repair-joins-20260726
+    reviewer: codex:review-joins-20260726
+    review_base_sha: 7dc3d6477672f0ffbaa5af75d85f755aec24a63b
+    review_head_sha: 7dc3d6477672f0ffbaa5af75d85f755aec24a63b
     findings:
-      - Independent full-paper review verified source-faithful structure, technical claims, numbers, formulas, figures, tables,
-        references, conclusions, and visual layout after scoped repairs
+      - 'Authorial voice: source body contains 97 first-person items and all 97 are individually preserved in the translation
+        with 0 shared-subject merges.'
+      - 'Group-by definition: the repaired translation preserves both the input provenance parenthetical and the distinction
+        that multiple aggregation functions are comma separated.'
+      - 'Hash join terminology: the repaired translation accurately defines the left input as the build input and the right
+        input as the probe input.'
+      - 'Semantic fidelity: independent PDF review found the technical claims, predicates, NULL and error semantics, numeric
+        results, algorithms, table cells, figures, and repaired passages complete and faithful.'
+      - 'Source inventory: all 20 PDF pages, front matter, Sections 1 through 8, seven listings, two figures, one table, footnotes,
+        17 references, formulas, and code are accounted for.'
+    authorial_voice:
+      source_valid_items: 97
+      verified_items: 97
+      shared_subject_merges: 0
     waivers: {}
-    fingerprint: 48c89899c56a396aacc3b3d8f3370712ac01b340f6c3983b577808111b463445
-    review_snapshot: 00a74b789bf281cf29a549c9e211a1d9382e9b9958997dc5cca42bdf9e211b73
+    fingerprint: cc98bd0d28d71259f9985d9ca02d087d4beaf4d5e0bf2d2151c91bc84c012a05
   exploiting-upper-lower-bounds-top-down-query-optimization:
     schema_version: 1
     paper_id: exploiting-upper-lower-bounds-top-down-query-optimization
@@ -3865,31 +3874,41 @@ entries:
     fingerprint: 061c4190a09ebea2890e6f9a370c708ca7c37895c0085d4d81625611d1db66b3
     review_snapshot: 1294a6b2cfef7b95f3ae6be73d1731c7ce99f5a322295453e6c57761109d265c
   volcano-extensible-parallel-query-evaluation-system:
-    schema_version: 1
+    schema_version: 2
     paper_id: volcano-extensible-parallel-query-evaluation-system
     source_sha256: 46dd869fc795434f7f85e329faa3d3dc9b6736d088d090b3a0d33e86e89cc180
-    translation_sha256: dbd39a74cce65c1771d4136bbe770d70ead4686c3f439d7ed12c9d1f30ff3d62
-    assets_manifest_sha256: e61eb931e001f9263edfab8bebbb5bc9107736a37f32a7182cb7445abe4acbad
+    translation_sha256: 4a7b746c13c0377e3868561372709688791890c5dadfc7cef48cdc4e02a3e63b
+    assets_manifest_sha256: 110a69223d3f81d034c8b89485821f537fe03cdbfa58182e46a25fd6604d0dff
     review_metadata_sha256: 55367fe2fd8816b15486a7005ad67bd49f3d4481d8398196702dba3b07efab83
-    review_action: full-translation-review
-    translator: codex-agent:frontier-candidates
-    reviewer: codex-agent:volcano-reviewer
+    review_action: repair-review
+    translator: codex:repair-volcano-20260726
+    reviewer: codex:review-volcano-20260726
+    review_base_sha: 7dc3d6477672f0ffbaa5af75d85f755aec24a63b
+    review_head_sha: 7dc3d6477672f0ffbaa5af75d85f755aec24a63b
     findings:
-      - 'Authorial narration verified: 53 effective source items, 53 passed; Chinese shared-subject merges preserve attribution
-        for We/our pairs.'
-      - Figures 1-7 and all eight cropped assets visually reviewed at 300 dpi; labels, boundaries, captions, and cross-references
-        passed.
-      - 'Reference 30 verified at 600 dpi: source visibly ends Mar. 199. and the translation preserves it without conjectural
-        completion.'
-      - 'Resources evidence v3 verified: complete references 1-35 recovered; parsed marker mappings l->1, 2->2, lo->10, 12->12,
-        13->13, 14->14, is->15, 25->25, 26->26, 28->28, 30->30, 31->31, 33->33, 34->34, and 35->35 match source bibliography
-        content; all 50 item-bound findings reviewed.'
-      - 'Source inventory verified: 16 pages; Sections I-VII; 2 footnotes; Figures 1-7; no formal source tables, formulas,
-        algorithms, or listings; acknowledgments; references 1-35; author biography and portrait.'
+      - 'Figure 3: the complete Venn diagram and match table remain once as one image; the duplicate Markdown table was removed
+        without losing content.'
+      - 'authorial-voice: 53 effective we/our/us source items were individually verified; 53 pass and three We/our pairs use
+        one explicit shared Chinese subject.'
+      - 'resources-waiver: all 50 fresh findings were checked against journal page 135: content recovery 1-35 and marker mappings
+        l->1, 2->2, lo->10, 12->12, 13->13, 14->14, is->15, 25->25, 26->26, 28->28, 30->30, 31->31, 33->33, 34->34, 35->35.'
+      - 'resources: source physical pages 4 and 13 confirm repaired Figures 1 and 7 retain every label and line with safe
+        white margins and no edge contact.'
+      - 'semantic-fidelity: all seven manual defect classes passed, including conditions, technical identifiers, explicit
+        numbers, figure claims, two-column reading order, and section transitions.'
+      - 'source-inventory: all 16 pages, front matter, Sections I-VII, two footnotes, Figures 1-7, acknowledgments, references
+        1-35, author biography, and portrait are complete and ordered; no formal tables, formulas, algorithms, or listings
+        occur.'
+      - 'source-native-anomaly: journal page 133 prints our join where the operator list means outer join, normalized contextually;
+        reference 30 visibly ends Mar. 199. and is preserved exactly.'
+    authorial_voice:
+      source_valid_items: 53
+      verified_items: 53
+      shared_subject_merges: 3
     waivers:
       resources:
-        evidence_version: 3
-        fingerprint: 8a544d41e63d0beb5cd3f8f88e785a7a3aa6856eb7fe2ca18422b62227abe107
+        evidence_version: 4
+        fingerprint: 5cde5a7759d962247c99bdd5df9e6cfbf04fd2ac06b93315d5425eda87bef9c1
         findings:
           - source-reference-content-recovery:1
           - source-reference-content-recovery:10
@@ -3945,8 +3964,7 @@ entries:
           - 'RISK: source numeric references 1-35 were recovered by complete ordered two-column bibliography-content evidence;
             parsed markers: l->1, 2->2, lo->10, 12->12, 13->13, 14->14, is->15, 25->25, 26->26, 28->28, 30->30, 31->31, 33->33,
             34->34, 35->35'
-    fingerprint: 22521de00124f673a8266ea78572ff097e2d56ff2cd6b2208e01d308f336b5cc
-    review_snapshot: b10c8126a663c86774072a6a6744c0b7403523c18fe63f4dc7868f5cd24efd37
+    fingerprint: e22c40beffc26cbaae2b78cd86b32512525e93f3c42cbd12cdaf6e7c0032cbbc
   advanced-join-strategies-large-scale-distributed-computation:
     schema_version: 1
     paper_id: advanced-join-strategies-large-scale-distributed-computation
@@ -4001,31 +4019,39 @@ entries:
     fingerprint: b21e7245fc55e16c0bec5d00b6ae153a1143650642c9a0abf8e90ec40067e9c1
     review_snapshot: 23269efaadd2c0843daf4cf099fd804023199fd95215b62dadb838c85a5eada2
   improving-hash-join-performance-prefetching:
-    schema_version: 1
+    schema_version: 2
     paper_id: improving-hash-join-performance-prefetching
     source_sha256: 17afad8350aa3d8aa196042325cd1bdaca799ea1addd9e4cb0496246a033c3be
-    translation_sha256: 5c388e86483c8bcdf30e97356833d3469081f37e72ea7189ffce37a7166616f8
-    assets_manifest_sha256: de6c2b52de022aed4e29edbc8f96e37f8b312f9f65c64de8bfbe50779e7e85b5
+    translation_sha256: cad59f794a112c5651e70da7764a3ff1e76efbd9f21fa3e6674f044bb9db62fa
+    assets_manifest_sha256: a11bf4aa10031698e105c19a74c82422a7ded41f847a2a58a938e557c20ff444
     review_metadata_sha256: bda9d53ea1032d177b9a80d9a841bd9c4b5f65f60a5b43afeeb61037d410dec7
-    review_action: full-translation-review
-    translator: codex-agent:translator-hash-prefetch
-    reviewer: codex-agent:reviewer-hash-prefetch
+    review_action: repair-review
+    translator: codex:repair-hashjoin-20260726
+    reviewer: codex:review-hashjoin-20260726
+    review_base_sha: 7dc3d6477672f0ffbaa5af75d85f755aec24a63b
+    review_head_sha: 7dc3d6477672f0ffbaa5af75d85f755aec24a63b
     findings:
-      - 'Author voice: 259 layout-scan candidates; excluded the page 6 us-/ing line-break false positive; all 258 valid items
-        (we=176, our=79, us=3) are explicitly preserved as 258/258 instances of 我们 with zero same-subject merges.'
-      - 'Experimental review: Itanium 2 and simulation configurations, disk-I/O setup, every reported numeric range and comparison
-        direction, group-versus-pipeline tradeoffs, and implementation limitations were checked against the PDF.'
-      - 'Source inventory: independently reviewed all 32 PDF pages; front matter, sections 1-10, 10 footnotes, 25 figures,
-        3 tables, 2 theorem proofs, acknowledgments, and 35 references are all mapped.'
-      - 'Technical and formula review: Figure 3 group-prefetching and Figure 8 software-pipelined transformations, dependency
-        conditions, collision handling, waiting queues, both numbered conditions, and both theorem proofs were checked against
-        the source.'
-      - 'Visual and end-matter review: all 25 figure assets were inspected individually; Figures 20, 24, and 25 have complete
-        boundaries and legends with no page separator residue, Figures 1-19 did not drift, and all 3 tables, 10 footnotes,
-        35 references, and 117 GitHub formula nodes passed review.'
+      - 'Authorial voice: after restoring PDF line-break hyphenation and excluding the us-/ing, I/O, Table I, and loop-variable
+        false positives, all 258 valid items (we=176, our=79, us=3) are preserved explicitly as 258/258 instances of 我们 with
+        zero shared-subject merges.'
+      - 'Figure 17 repair: physical PDF page 25 and the current asset were visually compared; all three subplots, axes, ticks,
+        (a)-(c) titles, three legend entries, plot boundaries, and safe margins are complete, with no caption or adjacent
+        prose in the image.'
+      - 'Reference URL repair: physical PDF page 31 confirms http://www-03.ibm.com/servers/aix/whitepapers/multiple_page.pdf,
+        and translation.md preserves the hyphen, underscore, and full path exactly.'
+      - 'Semantic fidelity: checked group and software-pipelined prefetching, dependencies and collision handling, G/D critical-path
+        conditions, experimental configurations, all explicit numeric contexts and comparison directions, caveats, and conclusions
+        against the PDF; no residual defect found.'
+      - 'Source inventory: reviewed all 32 PDF pages; front matter, Sections 1-10, 10 footnotes, 25 figures, 3 tables, 2 theorems
+        with proofs, 3 pseudocode blocks, acknowledgments, and 35 references are mapped in reading order.'
+      - 'Source-native anomaly: Figure 16 y-axis title and top tick overlap in physical PDF page 24 and are faithfully preserved
+        in the unchanged asset; this is not a translation defect.'
+    authorial_voice:
+      source_valid_items: 258
+      verified_items: 258
+      shared_subject_merges: 0
     waivers: {}
-    fingerprint: e055583da5350b71fba034f655721bb82cd810040d9883fd0da49e637c5d388d
-    review_snapshot: 23269efaadd2c0843daf4cf099fd804023199fd95215b62dadb838c85a5eada2
+    fingerprint: b05e851fda3a248a01e6adf668f71cc65bb1397b8048dadd187cbb186cb34e82
   data-prefetch-mechanisms:
     schema_version: 2
     paper_id: data-prefetch-mechanisms
