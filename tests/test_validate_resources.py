@@ -1574,6 +1574,40 @@ class ResourceValidationTests(unittest.TestCase):
             any("missing numbered references" in issue for issue in errors)
         )
 
+    def test_translation_references_allow_leading_footnote_definitions(self) -> None:
+        source = (
+            "REFERENCES\n"
+            "[1] A. Author. A complete database systems citation, 2020.\n"
+            "[2] B. Author. Another complete database citation, 2021.\n"
+        )
+        translation = (
+            "## 参考文献\n\n"
+            "[^1]: Source project homepage.\n"
+            "[^2]: Source documentation.\n\n"
+            "- [1] A. Author. A complete database systems citation, 2020.\n"
+            "- [2] B. Author. Another complete database citation, 2021.\n"
+        )
+
+        heading = validate_resources.TRANSLATION_REFERENCE_HEADING_RE.search(
+            translation
+        )
+        self.assertIsNotNone(heading)
+        section = translation[heading.end() :]
+        self.assertEqual(
+            [
+                identifier
+                for identifier, _body in (
+                    validate_resources._translation_reference_entries(section)
+                )
+            ],
+            ["1", "2"],
+        )
+
+        errors, _risks = source_coverage_findings(source, translation, True)
+        self.assertFalse(
+            any("missing numbered references" in issue for issue in errors)
+        )
+
     def test_short_reference_content_is_a_review_candidate(self) -> None:
         source = (
             "REFERENCES\n"
@@ -1834,6 +1868,33 @@ class ResourceValidationTests(unittest.TestCase):
         self.assertFalse(errors)
         self.assertFalse(
             any("body citation identifiers" in issue for issue in risks)
+        )
+
+    def test_leading_footnote_does_not_make_bibliography_a_citation_body(self) -> None:
+        source = (
+            "INTRODUCTION\nPrior systems [1] and [2] matter.\n"
+            "REFERENCES\n"
+            "[1] Alpha, A. First paper, 2020.\n"
+            "[2] Beta, B. Second paper, 2021.\n"
+        )
+        translation = (
+            "## 引言\n已有系统 [1] 与此相关。\n"
+            "## 参考文献\n"
+            "[^home]: 项目主页。\n"
+            "- [1] Alpha, A. First paper, 2020.\n"
+            "- [2] Beta, B. Second paper, 2021.\n"
+        )
+
+        errors, risks = source_coverage_findings(
+            source,
+            translation,
+            require_references=True,
+            require_inline_citations=True,
+        )
+        self.assertFalse(errors)
+        self.assertIn(
+            "source body citation identifiers have no translation-side candidate: 2",
+            risks,
         )
 
     def test_two_column_same_line_reference_cannot_escape_both_gates(self) -> None:

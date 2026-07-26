@@ -1257,6 +1257,46 @@ def _reference_token_sequence(text: str) -> list[str]:
     return tokens
 
 
+def _translation_post_reference_boundary(translation_section: str) -> int:
+    """Bound a translated bibliography without dropping leading footnotes.
+
+    A following Markdown heading always starts end matter.  Footnote
+    definitions do so only after at least one bibliography entry; some
+    reviewed translations place source-link footnotes immediately below the
+    references heading and before the numbered entries.
+    """
+
+    search_start = 0
+    while True:
+        post_reference = TRANSLATION_POST_REFERENCE_CONTENT_RE.search(
+            translation_section,
+            search_start,
+        )
+        if post_reference is None:
+            return len(translation_section)
+        if post_reference.group(0).lstrip().startswith("#"):
+            return post_reference.start()
+        if _reference_entries(translation_section[:post_reference.start()]):
+            return post_reference.start()
+        search_start = post_reference.end()
+
+
+def _translation_reference_span(translation_section: str) -> tuple[int, int]:
+    """Return the bibliography span inside a post-heading translation suffix."""
+
+    reference_end = _translation_post_reference_boundary(translation_section)
+    clean_section = translation_section[:reference_end]
+    if not _reference_entries(clean_section):
+        return reference_end, reference_end
+
+    line_start = 0
+    for line in clean_section.splitlines(keepends=True):
+        if _reference_line_starts(line):
+            return line_start, reference_end
+        line_start += len(line)
+    return reference_end, reference_end
+
+
 def _complete_numeric_translation_entries(
     translation_section: str,
 ) -> list[tuple[str, str]] | None:
@@ -1267,14 +1307,9 @@ def _complete_numeric_translation_entries(
     so a following author biography or footnote cannot manufacture matches.
     """
 
-    post_reference = TRANSLATION_POST_REFERENCE_CONTENT_RE.search(
-        translation_section
-    )
-    clean_section = (
-        translation_section[: post_reference.start()]
-        if post_reference is not None
-        else translation_section
-    )
+    clean_section = translation_section[
+        :_translation_post_reference_boundary(translation_section)
+    ]
     entries = _reference_entries(clean_section)
     if len(entries) < NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ENTRIES:
         return None
@@ -1291,14 +1326,9 @@ def _translation_reference_entries(
 ) -> list[tuple[str, str]]:
     """Parse bibliography entries without absorbing translated end matter."""
 
-    post_reference = TRANSLATION_POST_REFERENCE_CONTENT_RE.search(
-        translation_section
-    )
-    clean_section = (
-        translation_section[:post_reference.start()]
-        if post_reference is not None
-        else translation_section
-    )
+    clean_section = translation_section[
+        :_translation_post_reference_boundary(translation_section)
+    ]
     return _reference_entries(clean_section)
 
 
@@ -2246,10 +2276,16 @@ def _translation_citation_body(
 
     prefix = translation_text[: reference_heading.start()]
     suffix = translation_text[reference_heading.end() :]
-    post_reference = TRANSLATION_POST_REFERENCE_CONTENT_RE.search(suffix)
-    if post_reference is None:
-        return prefix
-    return prefix + "\n" + suffix[post_reference.start() :]
+    reference_start, reference_end = _translation_reference_span(suffix)
+    if reference_start == reference_end:
+        return prefix + "\n" + suffix
+    return (
+        prefix
+        + "\n"
+        + suffix[:reference_start]
+        + "\n"
+        + suffix[reference_end:]
+    )
 
 
 def _inline_citation_findings(
