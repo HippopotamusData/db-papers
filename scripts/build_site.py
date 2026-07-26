@@ -30,7 +30,7 @@ SITE_CONFIG = ROOT / "site.generated.toml"
 SITE_BASE_PATH = "/db-papers/"
 MAX_SITE_BYTES = 512 * 1024 * 1024
 PAPER_STATUS_LABELS = {
-    "translated": "已验收译文",
+    "translated": "已审阅译文",
     "draft": "译文草稿",
     "source_only": "仅有原文",
     "skipped": "暂不翻译",
@@ -38,7 +38,6 @@ PAPER_STATUS_LABELS = {
 }
 FORBIDDEN_PUBLISHED_NAMES = {
     "paper.yaml",
-    "acceptance.yaml",
 }
 
 
@@ -86,16 +85,9 @@ def load_papers(root: Path) -> tuple[dict[str, Any], list[Paper]]:
     """Load site records from canonical metadata without inventing values."""
 
     taxonomy = load_taxonomy(root / "config/taxonomy.yaml")
-    acceptance = _mapping(
-        load_yaml(root / "config/acceptance.yaml"),
-        "config/acceptance.yaml",
-    )
     topic_order = {
         topic: index for index, topic in enumerate(taxonomy["topics"].keys())
     }
-    accepted_ids = set(
-        _mapping(acceptance.get("entries"), "config/acceptance.yaml: entries")
-    )
     papers: list[Paper] = []
     seen_ids: set[str] = set()
 
@@ -123,10 +115,9 @@ def load_papers(root: Path) -> tuple[dict[str, Any], list[Paper]]:
         if status == "translated":
             translation = paper_dir / "translation.md"
             if not translation.is_file() or translation.is_symlink():
-                raise fail(f"{translation}: accepted translation must be a regular file")
-            if paper_id not in accepted_ids:
                 raise fail(
-                    f"{metadata_path}: translated paper has no acceptance entry"
+                    f"{translation}: translated paper must have a regular "
+                    "translation file"
                 )
 
         rating_data = data.get("rating")
@@ -391,7 +382,7 @@ description: 数据库系统论文中文全文翻译集
 
 <section class="stat-grid" aria-label="收录统计">
   <div><strong>{len(papers)}</strong><span>论文记录</span></div>
-  <div><strong>{statuses["translated"]}</strong><span>已验收译文</span></div>
+  <div><strong>{statuses["translated"]}</strong><span>已审阅译文</span></div>
   <div><strong>{len(taxonomy["areas"])}</strong><span>研究领域</span></div>
 </section>
 
@@ -527,7 +518,7 @@ description: {details["description"]}
 
 {details["description"]}
 
-<p class="area-summary"><strong>{len(area_papers)}</strong> 篇论文 · <strong>{translated}</strong> 篇已验收译文</p>
+<p class="area-summary"><strong>{len(area_papers)}</strong> 篇论文 · <strong>{translated}</strong> 篇已审阅译文</p>
 
 <div class="paper-grid">
 {cards}
@@ -716,7 +707,7 @@ def validate_site_source(
         for path in source.glob("papers/*/*/index.md")
     }
     if actual_paper_pages != expected_paper_pages:
-        raise fail("generated paper pages do not match accepted translations")
+        raise fail("generated paper pages do not match translated papers")
     for path in source.rglob("*"):
         if path.is_symlink():
             raise fail(f"{path}: generated site source contains a symlink")

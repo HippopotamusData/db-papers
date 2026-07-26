@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 import subprocess
 import sys
 import tomllib
@@ -16,9 +15,6 @@ from typing import Any
 import yaml
 
 
-ACCEPTANCE_PATH = "config/acceptance.yaml"
-ACCEPTANCE_SCHEMA_VERSION = 5
-SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 READER_ONLY_METADATA_FIELDS = frozenset({"rating", "title_zh", "topics"})
 MATH_PROFILE_PATHS = frozenset(
     {
@@ -33,7 +29,6 @@ MATH_PROFILE_PATHS = frozenset(
 SITE_EXACT_PATHS = frozenset(
     {
         "Makefile",
-        ACCEPTANCE_PATH,
         "config/taxonomy.yaml",
         "scripts/build_site.py",
         "scripts/project_config.py",
@@ -78,7 +73,7 @@ def changed_paper_id(path: str) -> str | None:
 
 
 def paper_metadata_requires_scoped_gate(base: Any, head: Any) -> bool:
-    """Return whether a metadata change can affect paper/acceptance semantics."""
+    """Return whether a metadata change can affect paper publication semantics."""
 
     if not isinstance(base, dict) or not isinstance(head, dict):
         return True
@@ -86,111 +81,6 @@ def paper_metadata_requires_scoped_gate(base: Any, head: Any) -> bool:
         key for key in set(base) | set(head) if base.get(key) != head.get(key)
     }
     return bool(changed_fields - READER_ONLY_METADATA_FIELDS)
-
-
-def changed_acceptance_paper_ids(base: Any, head: Any) -> list[str]:
-    """Return changed acceptance entry IDs or reject an ambiguous ledger."""
-
-    if not isinstance(base, dict) or not isinstance(head, dict):
-        raise ValueError("base and head acceptance ledgers must be mappings")
-    expected_keys = {"schema_version", "review_snapshots", "entries"}
-    if set(base) != expected_keys or set(head) != expected_keys:
-        raise ValueError("acceptance ledger has unexpected top-level keys")
-    if (
-        type(base["schema_version"]) is not int
-        or type(head["schema_version"]) is not int
-        or base["schema_version"] != ACCEPTANCE_SCHEMA_VERSION
-        or head["schema_version"] != ACCEPTANCE_SCHEMA_VERSION
-    ):
-        raise ValueError(
-            f"acceptance ledger schema_version must be {ACCEPTANCE_SCHEMA_VERSION}"
-        )
-    base_snapshots = base["review_snapshots"]
-    head_snapshots = head["review_snapshots"]
-    if not isinstance(base_snapshots, dict) or not isinstance(
-        head_snapshots, dict
-    ):
-        raise ValueError("acceptance review_snapshots must be mappings")
-    base_entries = base["entries"]
-    head_entries = head["entries"]
-    if not isinstance(base_entries, dict) or not isinstance(head_entries, dict):
-        raise ValueError("acceptance entries must be mappings")
-    all_ids = set(base_entries) | set(head_entries)
-    if any(
-        not isinstance(paper_id, str) or not SLUG_RE.fullmatch(paper_id)
-        for paper_id in all_ids
-    ):
-        raise ValueError("acceptance entry IDs must be canonical paper slugs")
-    if any(
-        not isinstance(entry, dict)
-        for entry in list(base_entries.values()) + list(head_entries.values())
-    ):
-        raise ValueError("acceptance entries must be mappings")
-    changed_ids = sorted(
-        paper_id
-        for paper_id in all_ids
-        if base_entries.get(paper_id) != head_entries.get(paper_id)
-    )
-    added_snapshots = set(head_snapshots) - set(base_snapshots)
-    changed_snapshots = {
-        snapshot_id
-        for snapshot_id in set(base_snapshots) & set(head_snapshots)
-        if base_snapshots[snapshot_id] != head_snapshots[snapshot_id]
-    }
-    if added_snapshots or changed_snapshots:
-        raise ValueError(
-            "acceptance review_snapshots may only remove newly unreferenced "
-            "snapshots"
-        )
-
-    removed_snapshots = set(base_snapshots) - set(head_snapshots)
-    if removed_snapshots:
-        base_references: dict[Any, set[str]] = {}
-        head_references: set[Any] = set()
-        for paper_id, entry in base_entries.items():
-            if "review_snapshot" in entry:
-                snapshot_id = entry["review_snapshot"]
-                if not isinstance(snapshot_id, str):
-                    raise ValueError(
-                        "acceptance entry review_snapshot must be a string"
-                    )
-                base_references.setdefault(snapshot_id, set()).add(paper_id)
-        for entry in head_entries.values():
-            if "review_snapshot" in entry:
-                snapshot_id = entry["review_snapshot"]
-                if not isinstance(snapshot_id, str):
-                    raise ValueError(
-                        "acceptance entry review_snapshot must be a string"
-                    )
-                head_references.add(snapshot_id)
-
-        safely_pruned = True
-        for snapshot_id in removed_snapshots:
-            referencing_ids = base_references.get(snapshot_id, set())
-            if not referencing_ids or snapshot_id in head_references:
-                safely_pruned = False
-                break
-            for paper_id in referencing_ids:
-                base_entry = base_entries[paper_id]
-                head_entry = head_entries.get(paper_id)
-                if (
-                    type(base_entry.get("schema_version")) is not int
-                    or base_entry["schema_version"] != 1
-                    or head_entry is None
-                    or type(head_entry.get("schema_version")) is not int
-                    or head_entry["schema_version"] != 2
-                    or "review_snapshot" in head_entry
-                ):
-                    safely_pruned = False
-                    break
-            if not safely_pruned:
-                break
-        if not safely_pruned:
-            raise ValueError(
-                "acceptance review_snapshots may only remove newly "
-                "unreferenced snapshots"
-            )
-    return changed_ids
 
 
 def file_at_revision(
@@ -237,17 +127,6 @@ def yaml_at_revision(
         return INVALID
 
 
-def acceptance_at_revision(root: Path, revision: str) -> dict[str, Any]:
-    value = yaml_at_revision(root, revision, ACCEPTANCE_PATH)
-    if value is INVALID:
-        raise ValueError(f"cannot parse {ACCEPTANCE_PATH} at {revision}")
-    if not isinstance(value, dict):
-        raise ValueError(
-            f"{ACCEPTANCE_PATH} at {revision} must be a mapping"
-        )
-    return value
-
-
 def pyproject_groups_at_revision(
     root: Path,
     revision: str,
@@ -272,9 +151,6 @@ def pyproject_groups_at_revision(
 
 def select_paper_ids(
     changed_paths: list[str],
-    *,
-    acceptance_base: dict[str, Any] | None = None,
-    acceptance_head: dict[str, Any] | None = None,
 ) -> list[str]:
     normalized = sorted(
         {
@@ -283,20 +159,13 @@ def select_paper_ids(
             if (path := normalize_path(value))
         }
     )
-    paper_ids = sorted(
+    return sorted(
         {
             paper_id
             for path in normalized
             if (paper_id := changed_paper_id(path)) is not None
         }
     )
-    if ACCEPTANCE_PATH in normalized:
-        acceptance_ids = changed_acceptance_paper_ids(
-            acceptance_base,
-            acceptance_head,
-        )
-        paper_ids = sorted(set(paper_ids) | set(acceptance_ids))
-    return paper_ids
 
 
 def is_site_path(path: str) -> bool:
@@ -313,8 +182,6 @@ def select_validation_plan(
     root: Path,
     base_sha: str | None = None,
     head_sha: str = "HEAD",
-    acceptance_base: dict[str, Any] | None = None,
-    acceptance_head: dict[str, Any] | None = None,
 ) -> ValidationPlan:
     """Map changed paths and field-level diffs to independent validation gates."""
 
@@ -364,21 +231,6 @@ def select_validation_plan(
         if path.endswith("/translation.md"):
             math_files.add(path)
 
-    if ACCEPTANCE_PATH in normalized:
-        if acceptance_base is None or acceptance_head is None:
-            if not base_sha:
-                raise ValueError(
-                    "acceptance changes require a trusted --base-sha"
-                )
-            acceptance_base = acceptance_at_revision(root, base_sha)
-            acceptance_head = acceptance_at_revision(root, head_sha)
-        paper_ids.update(
-            changed_acceptance_paper_ids(
-                acceptance_base,
-                acceptance_head,
-            )
-        )
-
     if "pyproject.toml" in normalized:
         if not base_sha:
             raise ValueError(
@@ -416,12 +268,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--base-sha",
-        help="trusted Git diff base used to compare acceptance entries",
+        help="trusted Git diff base used for field-level comparisons",
     )
     parser.add_argument(
         "--head-sha",
         default="HEAD",
-        help="Git revision containing the proposed acceptance ledger",
+        help="Git revision containing the proposed changes",
     )
     parser.add_argument(
         "--root",
@@ -432,34 +284,16 @@ def main() -> int:
     args = parser.parse_args()
 
     changed_paths = decode_changed_paths(sys.stdin.buffer.read())
-    normalized = {normalize_path(path) for path in changed_paths}
-    acceptance_base = None
-    acceptance_head = None
-    if ACCEPTANCE_PATH in normalized:
-        if not args.base_sha:
-            print(
-                "ERROR: acceptance changes require a trusted --base-sha",
-                file=sys.stderr,
-            )
-            return 1
-        try:
-            acceptance_base = acceptance_at_revision(args.root, args.base_sha)
-            acceptance_head = acceptance_at_revision(args.root, args.head_sha)
-        except ValueError as exc:
-            print(f"ERROR: {exc}", file=sys.stderr)
-            return 1
     try:
         plan = select_validation_plan(
             changed_paths,
             root=args.root,
             base_sha=args.base_sha,
             head_sha=args.head_sha,
-            acceptance_base=acceptance_base,
-            acceptance_head=acceptance_head,
         )
     except ValueError as exc:
         print(
-            f"ERROR: cannot safely locate changed acceptance entries: {exc}",
+            f"ERROR: cannot safely determine validation scope: {exc}",
             file=sys.stderr,
         )
         return 1

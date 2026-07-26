@@ -582,52 +582,6 @@ class ResourceValidationTests(unittest.TestCase):
                         any(f"{label} {number}" in issue for issue in risks)
                     )
 
-    def test_receiptless_legacy_mode_replays_frozen_payload_pairing(
-        self,
-    ) -> None:
-        source = "Figure 1: First\nFigure 2: Second\n"
-        translation = (
-            "**图 1：第一幅。**\n\n"
-            "![plain](assets/shared.png)\n\n"
-            "**图 2：第二幅。**\n"
-        )
-        _current_errors, current_risks = source_coverage_findings(
-            source,
-            translation,
-            require_references=False,
-        )
-        self.assertTrue(any("Figure 1" in issue for issue in current_risks))
-        self.assertTrue(any("Figure 2" in issue for issue in current_risks))
-
-        legacy_errors, legacy_risks = source_coverage_findings(
-            source,
-            translation,
-            require_references=False,
-            legacy_resource_structure=True,
-        )
-        self.assertFalse(legacy_errors)
-        self.assertFalse(
-            any(
-                "formal translation-side payload" in issue
-                for issue in legacy_risks
-            )
-        )
-
-    def test_legacy_resource_replay_cannot_disable_review_grade_citation_gate(
-        self,
-    ) -> None:
-        with self.assertRaisesRegex(
-            ValueError,
-            "cannot be combined with review-grade",
-        ):
-            source_coverage_findings(
-                "REFERENCES\n[1] A. Smith, Paper, 2020.\n",
-                "## 参考文献\n- [1] A. Smith, Paper, 2020.\n",
-                require_references=True,
-                require_inline_citations=True,
-                legacy_resource_structure=True,
-            )
-
     def test_code_backed_figure_is_a_formal_representation(self) -> None:
         source = "Figure 2: Email program"
         translation = "**图 2：邮件程序。**\n\n```python\nprint('mail')\n```\n"
@@ -875,19 +829,23 @@ class ResourceValidationTests(unittest.TestCase):
         self.assertFalse(any("formal translation-side payload" in issue for issue in risks))
 
     def test_missing_numbered_reference_is_an_error(self) -> None:
-        source = "REFERENCES\n[1] First paper.\n[2] Second paper.\n"
-        translation = "## 参考文献\n\n- [1] First paper.\n"
+        source = (
+            "REFERENCES\n"
+            "[1] Alpha, A. First paper, 2020.\n"
+            "[2] Beta, B. Second paper, 2021.\n"
+        )
+        translation = "## 参考文献\n\n- [1] Alpha, A. First paper, 2020.\n"
         errors, _risks = source_coverage_findings(source, translation, True)
         self.assertIn("missing numbered references: 2", errors)
 
     def test_truncated_reference_page_range_is_an_error(self) -> None:
         source = (
             "REFERENCES\n"
-            "[58] Sharov et al. Take me to your leader. 2015. 1490-1501.\n"
+            "[58] Sharov, A. Take me to your leader. 2015. 1490-1501.\n"
         )
         translation = (
             "## 参考文献\n\n"
-            "- [58] Sharov et al. Take me to your leader. 2015. 1490-.\n"
+            "- [58] Sharov, A. Take me to your leader. 2015. 1490-.\n"
         )
         errors, _risks = source_coverage_findings(source, translation, True)
         self.assertIn(
@@ -898,16 +856,16 @@ class ResourceValidationTests(unittest.TestCase):
     def test_whitespace_split_reference_url_is_an_error(self) -> None:
         source = (
             "REFERENCES\n"
-            "[1] Example. https://example.com/product/widget.\n"
-            "[2] Example. https://example.com/about-aws/new-release.\n"
+            "[1] Example, A. Widget. https://example.com/product/widget.\n"
+            "[2] Example, B. Release. https://example.com/about-aws/new-release.\n"
         )
         translations = (
             "## 参考文献\n\n"
-            "- [1] Example. https://example.com/product/ widget.\n"
-            "- [2] Example. https://example.com/about- aws/new-release.\n",
+            "- [1] Example, A. Widget. https://example.com/product/ widget.\n"
+            "- [2] Example, B. Release. https://example.com/about- aws/new-release.\n",
             "## 参考文献\n\n"
-            "- [1] Example. http://example. com/product/widget.\n"
-            "- [2] Example. https://example.com/about-aws/new-release.\n",
+            "- [1] Example, A. Widget. http://example. com/product/widget.\n"
+            "- [2] Example, B. Release. https://example.com/about-aws/new-release.\n",
         )
         for translation in translations:
             with self.subTest(translation=translation):
@@ -921,15 +879,15 @@ class ResourceValidationTests(unittest.TestCase):
     def test_complete_or_citation_terminated_reference_url_is_allowed(self) -> None:
         source = (
             "REFERENCES\n"
-            "[1] Example. https://example.com/. 2020.\n"
-            "[2] Example. https://example.com/deep/path/ accessed 2021.\n"
-            "[3] Example. https://example.com/deep/path.\n"
+            "[1] Example, A. Home. https://example.com/. 2020.\n"
+            "[2] Example, B. Path. https://example.com/deep/path/ accessed 2021.\n"
+            "[3] Example, C. Deep path. https://example.com/deep/path.\n"
         )
         translation = (
             "## 参考文献\n\n"
-            "- [1] Example. https://example.com/ 2020.\n"
-            "- [2] Example. https://example.com/deep/path/ accessed 2021.\n"
-            "- [3] Example. <https://example.com/deep/path>. 2022.\n"
+            "- [1] Example, A. Home. https://example.com/ 2020.\n"
+            "- [2] Example, B. Path. https://example.com/deep/path/ accessed 2021.\n"
+            "- [3] Example, C. Deep path. <https://example.com/deep/path>. 2022.\n"
         )
         errors, _risks = source_coverage_findings(source, translation, True)
         self.assertFalse(
@@ -945,7 +903,7 @@ class ResourceValidationTests(unittest.TestCase):
             "1 INTRODUCTION\n"
             "2 CONCLUSION\n"
             "REFERENCES\n"
-            "[1] First paper, 2020.\n"
+            "[1] Alpha, A. First paper, 2020.\n"
         )
         translation = (
             "<!--\n"
@@ -954,7 +912,7 @@ class ResourceValidationTests(unittest.TestCase):
             "表 2：结果\n| A | B |\n| --- | --- |\n| 1 | 2 |\n"
             "算法 3：探测\n```text\nprobe row\n```\n"
             "## 1 引言\n## 2 结论\n"
-            "## 参考文献\n- [1] First paper, 2020.\n"
+            "## 参考文献\n- [1] Alpha, A. First paper, 2020.\n"
             "-->\n"
         )
         errors, risks = source_coverage_findings(source, translation, True)
@@ -1011,15 +969,15 @@ class ResourceValidationTests(unittest.TestCase):
     def test_contiguous_numeric_reference_series_normalizes_one_ocr_i(self) -> None:
         source = (
             "REFERENCES\n"
-            "[i] Alice Author. First database paper. Journal 1.\n"
-            "[2] Bob Author. Second database paper. Journal 2.\n"
-            "[3] Carol Author. Third database paper. Journal 3.\n"
+            "[i] Author, A. First database paper. Journal 1, 2020.\n"
+            "[2] Author, B. Second database paper. Journal 2, 2021.\n"
+            "[3] Author, C. Third database paper. Journal 3, 2022.\n"
         )
         translation = (
             "## 参考文献\n\n"
-            "- [1] Alice Author. First database paper. Journal 1.\n"
-            "- [2] Bob Author. Second database paper. Journal 2.\n"
-            "- [3] Carol Author. Third database paper. Journal 3.\n"
+            "- [1] Author, A. First database paper. Journal 1, 2020.\n"
+            "- [2] Author, B. Second database paper. Journal 2, 2021.\n"
+            "- [3] Author, C. Third database paper. Journal 3, 2022.\n"
         )
         errors, risks = source_coverage_findings(source, translation, True)
         self.assertFalse(errors)
@@ -1078,13 +1036,13 @@ class ResourceValidationTests(unittest.TestCase):
     def test_mixed_author_keys_do_not_trigger_reference_ocr_normalization(self) -> None:
         source = (
             "REFERENCES\n"
-            "[i] Alice Author. Indexed database paper. Journal 1.\n"
-            "[BMG93] Bob Author. Named-key database paper. Journal 2.\n"
+            "[i] Author, A. Indexed database paper. Journal 1, 2020.\n"
+            "[BMG93] Author, B. Named-key database paper. Journal 2, 2021.\n"
         )
         translation = (
             "## 参考文献\n\n"
-            "- [1] Alice Author. Indexed database paper. Journal 1.\n"
-            "- [BMG93] Bob Author. Named-key database paper. Journal 2.\n"
+            "- [1] Author, A. Indexed database paper. Journal 1, 2020.\n"
+            "- [BMG93] Author, B. Named-key database paper. Journal 2, 2021.\n"
         )
         errors, risks = source_coverage_findings(source, translation, True)
         self.assertIn("missing numbered references: i", errors)
@@ -1596,7 +1554,7 @@ class ResourceValidationTests(unittest.TestCase):
     def test_short_reference_content_is_a_review_candidate(self) -> None:
         source = (
             "REFERENCES\n"
-            "[1] Alice Example and Bob Example. A long database systems paper title. "
+            "[1] Example, A. A long database systems paper title. "
             "Proceedings of the Database Conference, 2020.\n"
         )
         translation = "## 参考文献\n\n- [1] Alice.\n"
@@ -1826,7 +1784,7 @@ class ResourceValidationTests(unittest.TestCase):
             risks,
         )
 
-    def test_review_grade_parser_does_not_rebind_legacy_reference_evidence(self) -> None:
+    def test_reference_parser_uses_current_evidence_without_inline_gate(self) -> None:
         source = (
             "INTRODUCTION\nPrior systems [1] and [2] are relevant.\n"
             "REFERENCES\n"
@@ -1838,29 +1796,15 @@ class ResourceValidationTests(unittest.TestCase):
             "## 参考文献\n"
             "- [1] Alpha, A. First paper, 2020.\n"
         )
-        legacy_errors, legacy_risks = source_coverage_findings(
+        errors, risks = source_coverage_findings(
             source,
             translation,
             require_references=True,
             require_inline_citations=False,
         )
+        self.assertIn("missing numbered references: 2", errors)
         self.assertFalse(
-            any("missing numbered references: 2" in issue for issue in legacy_errors)
-        )
-        self.assertFalse(
-            any("body citation identifiers" in issue for issue in legacy_risks)
-        )
-
-        review_errors, review_risks = source_coverage_findings(
-            source,
-            translation,
-            require_references=True,
-            require_inline_citations=True,
-        )
-        self.assertIn("missing numbered references: 2", review_errors)
-        self.assertIn(
-            "source body citation identifiers have no translation-side candidate: 2",
-            review_risks,
+            any("body citation identifiers" in issue for issue in risks)
         )
 
     def test_crowded_second_column_reference_is_parsed_without_spacing(self) -> None:
@@ -2632,12 +2576,12 @@ class ResourceValidationTests(unittest.TestCase):
         source = (
             "INTRODUCTION\nPrior systems [1] are relevant.\n"
             "REFERENCES\n"
-            "[1] Alpha, A. First paper.\n"
+            "[1] Alpha, A. First paper, 2020.\n"
         )
         translation = (
             "## 引言\n已有系统与此相关。\n"
             "## 参考文献\n"
-            "- [1] Alpha, A. First paper.\n"
+            "- [1] Alpha, A. First paper, 2020.\n"
         )
         _errors, risks = source_coverage_findings(source, translation, True)
         self.assertFalse(

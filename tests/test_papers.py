@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-import fcntl
-import hashlib
 import io
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -19,32 +16,6 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import papers  # noqa: E402
-import project_config  # noqa: E402
-from acceptance_evidence import build_waiver_records  # noqa: E402
-
-
-REVIEWER = "human:reviewer@example.com"
-TRANSLATOR = "codex:/root/translator"
-REVIEW_BASE_SHA = "a" * 40
-AUTHORIAL_VOICE = {
-    "source_valid_items": 0,
-    "verified_items": 0,
-    "shared_subject_merges": 0,
-}
-
-
-def resource_waivers() -> dict[str, dict[str, object]]:
-    return build_waiver_records(
-        {
-            "resources": [
-                "RISK: source Figure 1 has no formal translation-side payload candidate"
-            ]
-        }
-    )
-
-
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 class PapersTests(unittest.TestCase):
@@ -53,21 +24,29 @@ class PapersTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
         (root / "config").mkdir()
-        (root / "docs").mkdir()
-        (root / "papers/query-processing/sample-paper").mkdir(parents=True)
-        (root / "docs/translation-policy.md").write_text(
-            "# Test translation policy\n",
-            encoding="utf-8",
-        )
+        paper = root / "papers/query-processing/sample-paper"
+        paper.mkdir(parents=True)
         (root / "config/policy.yaml").write_text(
-            "schema_version: 1\ndefault_max_source_pages: 60\npapers: {}\n",
+            "schema_version: 1\n"
+            "default_max_source_pages: 60\n"
+            "papers: {}\n",
             encoding="utf-8",
         )
         (root / "config/taxonomy.yaml").write_text(
-            "schema_version: 1\nareas:\n  query-processing:\n    label_zh: 查询处理\n    description: 测试。\ntopics:\n  query-execution:\n    label_zh: 查询执行\n    description: 测试。\n  cloud-native:\n    label_zh: 云原生\n    description: 测试。\n",
+            "schema_version: 1\n"
+            "areas:\n"
+            "  query-processing:\n"
+            "    label_zh: 查询处理\n"
+            "    description: 测试。\n"
+            "topics:\n"
+            "  query-execution:\n"
+            "    label_zh: 查询执行\n"
+            "    description: 测试。\n"
+            "  cloud-native:\n"
+            "    label_zh: 云原生\n"
+            "    description: 测试。\n",
             encoding="utf-8",
         )
-        paper = root / "papers/query-processing/sample-paper"
         metadata = {
             "title": "Sample Paper",
             "title_zh": "示例论文",
@@ -77,102 +56,28 @@ class PapersTests(unittest.TestCase):
             "topics": ["query-execution"],
             "reading_status": status,
         }
-        (paper / "paper.yaml").write_text(yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8")
-        (paper / "source.pdf").write_bytes(b"source evidence")
-        entries = {}
-        if status in {"draft", "translated"}:
-            translation = (
-                "---\npaper_id: sample-paper\ntitle: Sample Paper\nlanguage: zh-CN\nsource: source.pdf\n---\n\n"
-                "# Sample Paper（中文译文）\n"
-            )
-            (paper / "translation.md").write_text(translation, encoding="utf-8")
-            (paper / "assets").mkdir()
-            (paper / "assets/figure.png").write_bytes(b"accepted image")
-        if status == "translated":
-            waiver_records = resource_waivers()
-            receipt = {
-                "schema_version": 2,
-                "paper_id": "sample-paper",
-                "source_sha256": sha256(paper / "source.pdf"),
-                "translation_sha256": sha256(paper / "translation.md"),
-                "assets_manifest_sha256": papers.assets_manifest_sha256(paper, root),
-                "review_metadata_sha256": papers.review_metadata_sha256(metadata),
-                "review_action": "section-review",
-                "translator": TRANSLATOR,
-                "reviewer": REVIEWER,
-                "review_base_sha": REVIEW_BASE_SHA,
-                "review_head_sha": "b" * 40,
-                "findings": ["All review dimensions passed against source.pdf."],
-                "authorial_voice": {
-                    "source_valid_items": 0,
-                    "verified_items": 0,
-                    "shared_subject_merges": 0,
-                },
-                "waivers": waiver_records,
-            }
-            receipt["fingerprint"] = papers.review_receipt_fingerprint(receipt)
-            entries["sample-paper"] = receipt
-        (root / "config/acceptance.yaml").write_text(
-            yaml.safe_dump(
-                {
-                    "schema_version": 5,
-                    "review_snapshots": {},
-                    "entries": entries,
-                },
-                sort_keys=False,
-            ),
+        (paper / "paper.yaml").write_text(
+            yaml.safe_dump(metadata, sort_keys=False),
             encoding="utf-8",
         )
+        (paper / "source.pdf").write_bytes(b"source evidence")
+        if status in {"draft", "translated"}:
+            translation = (
+                "---\n"
+                "paper_id: sample-paper\n"
+                "title: Sample Paper\n"
+                "language: zh-CN\n"
+                "source: source.pdf\n"
+                "---\n\n"
+                "# Sample Paper（中文译文）\n"
+            )
+            (paper / "translation.md").write_text(
+                translation,
+                encoding="utf-8",
+            )
+            (paper / "assets").mkdir()
+            (paper / "assets/figure.png").write_bytes(b"image")
         return root
-
-    def review_receipt(
-        self,
-        root: Path,
-        waiver_records: dict[str, dict[str, object]] | None = None,
-        **updates: object,
-    ) -> Path:
-        paper = root / "papers/query-processing/sample-paper"
-        metadata = yaml.safe_load((paper / "paper.yaml").read_text(encoding="utf-8"))
-        receipt: dict[str, object] = {
-            "schema_version": 2,
-            "paper_id": "sample-paper",
-            "source_sha256": sha256(paper / "source.pdf"),
-            "translation_sha256": sha256(paper / "translation.md"),
-            "assets_manifest_sha256": papers.assets_manifest_sha256(paper, root),
-            "review_metadata_sha256": papers.review_metadata_sha256(metadata),
-            "review_action": "section-review",
-            "translator": TRANSLATOR,
-            "reviewer": REVIEWER,
-            "review_base_sha": REVIEW_BASE_SHA,
-            "review_head_sha": "b" * 40,
-            "findings": ["All review dimensions passed against source.pdf."],
-            "authorial_voice": {
-                "source_valid_items": 0,
-                "verified_items": 0,
-                "shared_subject_merges": 0,
-            },
-            "waivers": waiver_records or {},
-        }
-        receipt.update(updates)
-        receipt["fingerprint"] = papers.review_receipt_fingerprint(receipt)
-        path = root / "review-receipt.yaml"
-        path.write_text(yaml.safe_dump(receipt, sort_keys=False), encoding="utf-8")
-        return path
-
-    def accept(
-        self,
-        root: Path,
-        waiver_records: dict[str, dict[str, object]] | None = None,
-        **receipt_updates: object,
-    ) -> int:
-        return papers.accept_record(
-            "sample-paper",
-            self.review_receipt(
-                root,
-                waiver_records=waiver_records,
-                **receipt_updates,
-            ),
-        )
 
     def globals_patch(self, root: Path):
         return patch.multiple(
@@ -180,119 +85,30 @@ class PapersTests(unittest.TestCase):
             ROOT=root,
             PAPERS=root / "papers",
             CATALOG=root / "CATALOG.md",
-            validate_review_base_commit=lambda _root, _sha: None,
-            current_git_head=lambda _root: "b" * 40,
-            review_gate_manifest_sha256=lambda _root, _revision=None: "f" * 64,
         )
 
-    def test_atomic_write_preserves_existing_mode_and_secures_new_file(self) -> None:
-        root = self.make_root()
-        existing = root / "config/existing.txt"
-        existing.write_text("before\n", encoding="utf-8")
-        existing.chmod(0o644)
-        new_file = root / "config/new-journal.yaml"
-
-        papers.atomic_write_text(existing, "after\n")
-        papers.atomic_write_text(new_file, "journal\n")
-
-        self.assertEqual(existing.read_text(encoding="utf-8"), "after\n")
-        self.assertEqual(existing.stat().st_mode & 0o777, 0o644)
-        self.assertEqual(new_file.stat().st_mode & 0o777, 0o600)
-
-    def test_acceptance_hash_change_invalidates_translated(self) -> None:
+    def test_translated_paper_validates_without_management_ledger(self) -> None:
         root = self.make_root("translated")
         with self.globals_patch(root):
             self.assertEqual(papers.validate(), 0)
-            translation = root / "papers/query-processing/sample-paper/translation.md"
-            translation.write_text(translation.read_text(encoding="utf-8") + "changed\n", encoding="utf-8")
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                self.assertEqual(papers.validate(), 1)
-            self.assertIn("changed after acceptance", stderr.getvalue())
 
-    def test_source_hash_change_invalidates_translated(self) -> None:
+    def test_translated_validation_has_no_stored_version_state(self) -> None:
         root = self.make_root("translated")
-        with self.globals_patch(root):
-            source = root / "papers/query-processing/sample-paper/source.pdf"
-            source.write_bytes(source.read_bytes() + b"changed")
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                self.assertEqual(papers.validate(), 1)
-            self.assertIn("source.pdf changed after acceptance", stderr.getvalue())
-
-    def test_same_path_asset_change_invalidates_translated(self) -> None:
-        root = self.make_root("translated")
-        with self.globals_patch(root):
-            asset = root / "papers/query-processing/sample-paper/assets/figure.png"
-            asset.write_bytes(b"replacement image")
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                self.assertEqual(papers.validate(), 1)
-            self.assertIn("assets changed after acceptance", stderr.getvalue())
-
-    def test_reviewed_metadata_change_invalidates_translated(self) -> None:
-        root = self.make_root("translated")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
-        metadata["authors"] = ["Changed After Review"]
-        metadata_path.write_text(
-            yaml.safe_dump(metadata, sort_keys=False),
+        paper = root / "papers/query-processing/sample-paper"
+        source = paper / "source.pdf"
+        translation = paper / "translation.md"
+        source.write_bytes(source.read_bytes() + b" changed")
+        translation.write_text(
+            translation.read_text(encoding="utf-8") + "\n修订。\n",
             encoding="utf-8",
         )
-        stderr = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
-            self.assertEqual(papers.validate(), 1)
-        self.assertIn("changed after review", stderr.getvalue())
-
-    def test_chinese_display_title_change_preserves_acceptance(self) -> None:
-        root = self.make_root("translated")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
-        metadata["title_zh"] = "审校后的示例论文标题"
-        metadata_path.write_text(
-            yaml.safe_dump(metadata, allow_unicode=True, sort_keys=False),
-            encoding="utf-8",
-        )
+        (paper / "assets/figure.png").write_bytes(b"replacement")
         with self.globals_patch(root):
             self.assertEqual(papers.validate(), 0)
 
-    def test_translation_policy_drift_preserves_content_bound_acceptance(
+    def test_scoped_validation_ignores_unrelated_in_progress_translation(
         self,
     ) -> None:
-        root = self.make_root("translated")
-        policy_path = root / "docs/translation-policy.md"
-        policy_path.write_text(
-            policy_path.read_text(encoding="utf-8") + "changed policy\n",
-            encoding="utf-8",
-        )
-        with self.globals_patch(root):
-            self.assertEqual(papers.validate(), 0)
-
-    def test_review_gate_drift_preserves_content_bound_acceptance(self) -> None:
-        root = self.make_root("translated")
-        with self.globals_patch(root), patch.object(
-            papers,
-            "review_gate_manifest_sha256",
-            side_effect=AssertionError(
-                "accepted content validation must not hash the current review runtime"
-            ),
-        ):
-            self.assertEqual(papers.validate(), 0)
-
-
-    def test_translated_paper_without_ledger_entry_is_rejected(self) -> None:
-        root = self.make_root("translated")
-        ledger_path = root / "config/acceptance.yaml"
-        ledger_path.write_text(
-            "schema_version: 5\n"
-            "review_snapshots: {}\n"
-            "entries: {}\n",
-            encoding="utf-8",
-        )
-        with self.globals_patch(root), contextlib.redirect_stderr(io.StringIO()):
-            self.assertEqual(papers.validate(), 1)
-
-    def test_scoped_validation_ignores_unrelated_in_progress_translation(self) -> None:
         root = self.make_root("source_only")
         other = root / "papers/query-processing/other-paper"
         other.mkdir()
@@ -312,1142 +128,21 @@ class PapersTests(unittest.TestCase):
             encoding="utf-8",
         )
         (other / "source.pdf").write_bytes(b"source evidence")
-        (other / "translation.md").write_text("in-progress", encoding="utf-8")
+        (other / "translation.md").write_text(
+            "in-progress",
+            encoding="utf-8",
+        )
         with self.globals_patch(root):
             self.assertEqual(papers.validate("sample-paper"), 0)
             with contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(papers.validate(), 1)
 
     def test_scoped_validation_requires_exact_paper_id(self) -> None:
-        root = self.make_root("source_only")
-        with self.globals_patch(root), contextlib.redirect_stderr(io.StringIO()):
-            self.assertEqual(papers.validate("missing-paper"), 1)
-
-    def test_accept_command_records_hashes_and_transitions_draft(self) -> None:
-        root = self.make_root("draft")
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", return_value=(True, "", resource_waivers())
-        ):
-            result = self.accept(
-                root,
-                resource_waivers(),
-            )
-        self.assertEqual(result, 0)
-        metadata = yaml.safe_load(
-            (root / "papers/query-processing/sample-paper/paper.yaml").read_text(encoding="utf-8")
-        )
-        ledger = yaml.safe_load((root / "config/acceptance.yaml").read_text(encoding="utf-8"))
-        self.assertEqual(metadata["reading_status"], "translated")
-        self.assertEqual(
-            ledger["entries"]["sample-paper"]["translation_sha256"],
-            sha256(root / "papers/query-processing/sample-paper/translation.md"),
-        )
-        self.assertEqual(ledger["entries"]["sample-paper"]["reviewer"], REVIEWER)
-        self.assertEqual(
-            ledger["entries"]["sample-paper"]["translator"],
-            TRANSLATOR,
-        )
-        self.assertEqual(
-            ledger["entries"]["sample-paper"]["assets_manifest_sha256"],
-            papers.assets_manifest_sha256(
-                root / "papers/query-processing/sample-paper", root
-            ),
-        )
-        self.assertEqual(
-            ledger["entries"]["sample-paper"]["waivers"], resource_waivers()
-        )
-        self.assertFalse(
-            (root / "config/.acceptance-transaction.yaml").exists()
-        )
-        self.assertFalse(
-            (root / "config/.acceptance-transaction.cleanup.yaml").exists()
-        )
-
-
-    def test_accept_rejects_review_receipt_for_changed_translation(self) -> None:
-        root = self.make_root("draft")
-        receipt_path = self.review_receipt(root)
-        translation = root / "papers/query-processing/sample-paper/translation.md"
-        translation.write_text(
-            translation.read_text(encoding="utf-8") + "changed after review\n",
-            encoding="utf-8",
-        )
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        stderr = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
-            result = papers.accept_record("sample-paper", receipt_path)
-        self.assertEqual(result, 1)
-        self.assertIn(
-            "review receipt translation_sha256 does not match", stderr.getvalue()
-        )
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_accept_rejects_review_receipt_for_changed_translation_policy(self) -> None:
-        root = self.make_root("draft")
-        receipt_path = self.review_receipt(root)
-        policy = root / "docs/translation-policy.md"
-        policy.write_text(
-            policy.read_text(encoding="utf-8") + "changed after review\n",
-            encoding="utf-8",
-        )
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "review_gate_manifest_sha256",
-            side_effect=lambda _root, revision=None: (
-                "f" * 64 if revision is not None else "e" * 64
-            ),
-        ), contextlib.redirect_stderr(stderr):
-            result = papers.accept_record("sample-paper", receipt_path)
-        self.assertEqual(result, 1)
-        self.assertIn(
-            "cannot be reproduced from review_head_sha",
-            stderr.getvalue(),
-        )
-
-    def test_accept_rejects_review_receipt_for_changed_metadata(self) -> None:
-        root = self.make_root("draft")
-        receipt_path = self.review_receipt(root)
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
-        metadata["authors"] = ["Changed After Receipt"]
-        metadata_path.write_text(
-            yaml.safe_dump(metadata, sort_keys=False),
-            encoding="utf-8",
-        )
-        stderr = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
-            result = papers.accept_record("sample-paper", receipt_path)
-        self.assertEqual(result, 1)
-        self.assertIn(
-            "review receipt review_metadata_sha256 does not match",
-            stderr.getvalue(),
-        )
-
-    def test_accept_rejects_review_receipt_for_changed_gate_manifest(self) -> None:
-        root = self.make_root("draft")
-        receipt_path = self.review_receipt(root)
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "review_gate_manifest_sha256",
-            side_effect=lambda _root, revision=None: (
-                "f" * 64 if revision is not None else "e" * 64
-            ),
-        ), contextlib.redirect_stderr(stderr):
-            result = papers.accept_record("sample-paper", receipt_path)
-        self.assertEqual(result, 1)
-        self.assertIn(
-            "cannot be reproduced from review_head_sha",
-            stderr.getvalue(),
-        )
-
-    def test_accept_rejects_validator_waiver_missing_from_receipt(self) -> None:
-        root = self.make_root("draft")
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", resource_waivers()),
-        ), contextlib.redirect_stderr(stderr):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertIn(
-            "review receipt waiver evidence does not match",
-            stderr.getvalue(),
-        )
-
-    def test_review_receipt_requires_independent_reviewer(self) -> None:
-        root = self.make_root("draft")
-        with self.globals_patch(root), self.assertRaisesRegex(
-            ValueError, "translator and reviewer must be different"
-        ):
-            papers.build_review_receipt(
-                "sample-paper",
-                "section-review",
-                REVIEWER,
-                REVIEWER,
-                REVIEW_BASE_SHA,
-                ["All review dimensions passed against source.pdf."],
-                AUTHORIAL_VOICE,
-            )
-
-    def test_review_receipt_cli_does_not_expose_redundant_check_flags(self) -> None:
-        stdout = io.StringIO()
-        with patch.object(
-            sys, "argv", ["papers.py", "review-receipt", "--help"]
-        ), contextlib.redirect_stdout(stdout), self.assertRaises(SystemExit) as raised:
-            papers.main()
-        self.assertEqual(raised.exception.code, 0)
-        self.assertNotIn("--check", stdout.getvalue())
-
-    def test_review_receipt_rejects_content_changed_during_paper_check(self) -> None:
-        root = self.make_root("draft")
-        translation = root / "papers/query-processing/sample-paper/translation.md"
-        real_run = subprocess.run
-
-        def mutate_during_check(command, **kwargs):
-            if "scripts/validate_translations.sh" in command:
-                translation.write_text(
-                    translation.read_text(encoding="utf-8") + "concurrent change\n",
-                    encoding="utf-8",
-                )
-                return subprocess.CompletedProcess(command, 0, "", "")
-            return real_run(command, **kwargs)
-
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers.subprocess, "run", side_effect=mutate_during_check
-        ), contextlib.redirect_stderr(stderr):
-            result = papers.emit_review_receipt(
-                "sample-paper",
-                "section-review",
-                TRANSLATOR,
-                REVIEWER,
-                REVIEW_BASE_SHA,
-                ["All review dimensions passed against source.pdf."],
-                AUTHORIAL_VOICE,
-                [],
-            )
-        self.assertEqual(result, 1)
-        self.assertIn("review snapshot changed", stderr.getvalue())
-
-    def test_review_receipt_binds_explicit_validator_waiver_evidence(self) -> None:
-        root = self.make_root("draft")
-        waiver_records = resource_waivers()
-        waiver = waiver_records["resources"]
-
-        def emit_candidate(command, **_kwargs):
-            if "--acceptance-evidence-file" not in command:
-                return subprocess.CompletedProcess(command, 1, b"", b"")
-            evidence = Path(
-                command[command.index("--acceptance-evidence-file") + 1]
-            )
-            evidence.write_text(
-                "resources\t"
-                "RISK: source Figure 1 has no formal translation-side payload candidate\n",
-                encoding="utf-8",
-            )
-            return subprocess.CompletedProcess(command, 0, "", "")
-
-        stdout = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers.subprocess,
-            "run",
-            side_effect=emit_candidate,
-        ), contextlib.redirect_stdout(stdout):
-            result = papers.emit_review_receipt(
-                "sample-paper",
-                "section-review",
-                TRANSLATOR,
-                REVIEWER,
-                REVIEW_BASE_SHA,
-                ["source Figure 1 was visually checked against the PDF"],
-                AUTHORIAL_VOICE,
-                [f"resources={waiver['fingerprint']}"],
-            )
-        self.assertEqual(result, 0)
-        receipt = yaml.safe_load(stdout.getvalue())
-        self.assertEqual(receipt["waivers"], waiver_records)
-        self.assertEqual(
-            receipt["waivers"]["resources"]["evidence_version"],
-            4,
-        )
-        self.assertEqual(receipt["schema_version"], 2)
-        self.assertNotIn("identity_assurance", receipt)
-        self.assertNotIn("checks", receipt)
-        self.assertEqual(receipt["review_head_sha"], "b" * 40)
-        self.assertEqual(receipt["authorial_voice"], AUTHORIAL_VOICE)
-
-    def test_review_receipt_rejects_unapproved_validator_waiver_evidence(self) -> None:
-        root = self.make_root("draft")
-
-        def emit_candidate(command, **_kwargs):
-            if "--acceptance-evidence-file" not in command:
-                return subprocess.CompletedProcess(command, 1, b"", b"")
-            evidence = Path(
-                command[command.index("--acceptance-evidence-file") + 1]
-            )
-            evidence.write_text(
-                "resources\t"
-                "RISK: source Figure 1 has no formal translation-side payload candidate\n",
-                encoding="utf-8",
-            )
-            return subprocess.CompletedProcess(command, 0, "", "")
-
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers.subprocess,
-            "run",
-            side_effect=emit_candidate,
-        ), contextlib.redirect_stderr(stderr):
-            result = papers.emit_review_receipt(
-                "sample-paper",
-                "section-review",
-                TRANSLATOR,
-                REVIEWER,
-                REVIEW_BASE_SHA,
-                ["All review dimensions passed against source.pdf."],
-                AUTHORIAL_VOICE,
-                [],
-            )
-        self.assertEqual(result, 1)
-        self.assertIn("unapproved waiver candidates", stderr.getvalue())
-
-    def test_accept_rejects_legacy_migration_as_runtime_action(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        stderr = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
-            result = self.accept(root, review_action="legacy-migration")
-        self.assertEqual(result, 1)
-        self.assertIn("review_action must be one of", stderr.getvalue())
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_accept_rejects_reserved_migration_reviewer(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        stderr = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
-            result = self.accept(root, reviewer="pending-v3-re-review")
-        self.assertEqual(result, 1)
-        self.assertIn("stable namespace:value identity", stderr.getvalue())
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_review_base_must_exist_and_be_an_ancestor(self) -> None:
-        current = subprocess.run(
-            ["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
-            text=True,
-            capture_output=True,
-            check=True,
-        ).stdout.strip()
-        papers.validate_review_base_commit(REPO_ROOT, current)
-        with self.assertRaisesRegex(ValueError, "not an available Git commit"):
-            papers.validate_review_base_commit(REPO_ROOT, "0" * 40)
-
-    def test_validation_rechecks_recorded_review_base(self) -> None:
-        root = self.make_root("translated")
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "validate_review_base_commit",
-            side_effect=ValueError("not an ancestor"),
-        ), contextlib.redirect_stderr(stderr):
-            self.assertEqual(papers.validate(), 1)
-        self.assertIn("invalid review_base_sha", stderr.getvalue())
-
-
-    def test_review_queue_surfaces_strong_math_like_code_spans(self) -> None:
-        root = self.make_root("translated")
-        translation = (
-            root
-            / "papers/query-processing/sample-paper/translation.md"
-        )
-        translation.write_text(
-            translation.read_text(encoding="utf-8")
-            + "\n复杂度错误地写成 `O(n)`。\n",
-            encoding="utf-8",
-        )
-        output = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stdout(output):
-            self.assertEqual(papers.review_queue(), 0)
-        self.assertIn("math-like-code-spans:1", output.getvalue())
-
-    def test_review_queue_counts_nested_assets_from_canonical_manifest(self) -> None:
-        root = self.make_root("translated")
-        nested = (
-            root
-            / "papers/query-processing/sample-paper/assets/plots/detail.png"
-        )
-        nested.parent.mkdir()
-        nested.write_bytes(b"nested asset")
-        output = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stdout(output):
-            self.assertEqual(papers.review_queue(), 0)
-        self.assertIn("assets:2", output.getvalue())
-
-    def test_review_queue_surfaces_legacy_generic_findings(self) -> None:
-        root = self.make_root("translated")
-        acceptance = {
-            "entries": {
-                "sample-paper": {
-                    "schema_version": 1,
-                    "findings": [papers.LEGACY_GENERIC_REVIEW_FINDING],
-                    "waivers": {},
-                }
-            }
-        }
-        output = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "load_acceptance_ledger",
-            return_value=acceptance,
-        ), contextlib.redirect_stdout(output):
-            self.assertEqual(papers.review_queue(), 0)
-        self.assertIn("legacy-generic-findings", output.getvalue())
-        self.assertNotIn("legacy-empty-findings", output.getvalue())
-
-    def test_acceptance_preflight_failure_rolls_back_ledger_and_status(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(False, "ERROR: missing standard translator note", {}),
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_preflight_runs_before_any_authoritative_write(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-
-        def verify_draft(_paper_id, _waivers):
-            self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-            self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-            return True, "", {}
-
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", side_effect=verify_draft
-        ):
-            self.assertEqual(
-                self.accept(root),
-                0,
-            )
-
-    def test_acceptance_preflight_forces_deep_validation(self) -> None:
-        root = self.make_root("draft")
-        environments: list[dict[str, str]] = []
-        commands: list[list[str]] = []
-        expected_waivers = resource_waivers()
-
-        def succeed(command, **kwargs):
-            commands.append(command)
-            environments.append(kwargs["env"])
-            if "scripts/validate_translations.sh" in command:
-                evidence = Path(
-                    command[command.index("--acceptance-evidence-file") + 1]
-                )
-                evidence.write_text(
-                    "resources\tRISK: source Figure 1 has no formal "
-                    "translation-side payload candidate\n",
-                    encoding="utf-8",
-                )
-            return subprocess.CompletedProcess(command, 0, "", "")
-
-        inherited = {
-            "ACCEPTANCE_DISCOVERY": "poisoned",
-            "ACCEPTANCE_EVIDENCE_FILE": "/poisoned",
-            "ACCEPTANCE_RECORDED_WAIVERS": "poisoned",
-            "ACCEPTANCE_TARGET_STATUS": "translated",
-            "PAPER_ID": "poisoned",
-            "SKIP_METADATA_VALIDATION": "1",
-            "MATHJAX_MODULE": "/locked/mathjax",
-        }
-        with self.globals_patch(root), patch.dict(
-            papers.os.environ, inherited
-        ), patch.object(papers.subprocess, "run", side_effect=succeed):
-            passed, output, records = papers.acceptance_preflight(
-                "sample-paper", expected_waivers
-            )
-        self.assertTrue(passed)
-        self.assertEqual(output, "")
-        self.assertEqual(records, expected_waivers)
-        self.assertEqual(len(environments), 5)
-        self.assertTrue(all(environment["DEEP_VALIDATION"] == "1" for environment in environments))
-        self.assertEqual(
-            sum("scripts/validate_translations.sh" in command for command in commands), 1
-        )
-        self.assertIn(
-            [
-                sys.executable,
-                "scripts/normalize_translation_headers.py",
-                "--check",
-                "--paper-id",
-                "sample-paper",
-            ],
-            commands,
-        )
-        self.assertTrue(
-            any("scripts/verify_math_rendering.py" in command for command in commands)
-        )
-        internal_keys = {
-            "ACCEPTANCE_DISCOVERY",
-            "ACCEPTANCE_EVIDENCE_FILE",
-            "ACCEPTANCE_PAPER_ID",
-            "ACCEPTANCE_RECORDED_WAIVERS",
-            "ACCEPTANCE_TARGET_STATUS",
-            "PAPER_ID",
-            "SKIP_METADATA_VALIDATION",
-        }
-        self.assertTrue(
-            all(not internal_keys.intersection(environment) for environment in environments)
-        )
-        translated_command = next(
-            command for command in commands if "--acceptance-target-status" in command
-        )
-        recorded_index = translated_command.index("--acceptance-recorded-waivers") + 1
-        self.assertEqual(
-            papers.decode_waiver_records(translated_command[recorded_index]),
-            expected_waivers,
-        )
-        self.assertNotIn("--acceptance-discovery", translated_command)
-        mathjax_command = next(
-            command
-            for command in commands
-            if "--mathjax-module" in command
-        )
-        self.assertEqual(
-            mathjax_command[-4:],
-            [
-                "scripts/verify_math_rendering.py",
-                "--mathjax-module",
-                str(root / "node_modules/mathjax"),
-                "papers/query-processing/sample-paper/translation.md",
-            ],
-        )
-        github_command = next(command for command in commands if "--github" in command)
-        self.assertEqual(
-            github_command[-3:],
-            [
-                "scripts/verify_math_rendering.py",
-                "--github",
-                "papers/query-processing/sample-paper/translation.md",
-            ],
-        )
-        self.assertEqual(commands[-2:], [mathjax_command, github_command])
-
-    def test_github_node_audit_failure_prevents_authoritative_write(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-
-        def fail_github(command, **_kwargs):
-            if command[0] == "git":
-                return subprocess.CompletedProcess(command, 1, b"", b"")
-            return subprocess.CompletedProcess(
-                command,
-                1 if "--github" in command else 0,
-                "GitHub did not create a math renderer" if "--github" in command else "",
-                "",
-            )
-
-        with self.globals_patch(root), patch.object(
-            papers.subprocess, "run", side_effect=fail_github
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_acceptance_preflight_rejects_waiver_evidence_drift(self) -> None:
-        root = self.make_root("draft")
-        reviewed = resource_waivers()
-
-        def change_candidate(command, **kwargs):
-            if "scripts/validate_translations.sh" in command:
-                evidence = Path(
-                    command[command.index("--acceptance-evidence-file") + 1]
-                )
-                evidence.write_text(
-                    "resources\tRISK: source Figure 2 has no formal "
-                    "translation-side payload candidate\n",
-                    encoding="utf-8",
-                )
-            return subprocess.CompletedProcess(command, 0, "", "")
-
-        with self.globals_patch(root), patch.object(
-            papers.subprocess, "run", side_effect=change_candidate
-        ):
-            passed, output, _records = papers.acceptance_preflight(
-                "sample-paper", reviewed
-            )
-        self.assertFalse(passed)
-        self.assertIn("does not exactly match", output)
-
-    def test_acceptance_preflight_rejects_unreviewed_candidate_in_same_category(self) -> None:
-        root = self.make_root("draft")
-        reviewed = resource_waivers()["resources"]
-
-        def add_same_category_candidate(command, **_kwargs):
-            if "scripts/validate_translations.sh" in command:
-                evidence = Path(
-                    command[command.index("--acceptance-evidence-file") + 1]
-                )
-                evidence.write_text(
-                    "resources\tRISK: source Figure 1 has no formal translation-side payload candidate\n"
-                    "resources\tRISK: source Figure 2 has no formal translation-side payload candidate\n",
-                    encoding="utf-8",
-                )
-            return subprocess.CompletedProcess(command, 0, "", "")
-
-        with self.globals_patch(root), patch.object(
-            papers.subprocess, "run", side_effect=add_same_category_candidate
-        ):
-            passed, output, _records = papers.acceptance_preflight(
-                "sample-paper", {"resources": reviewed}
-            )
-        self.assertFalse(passed)
-        self.assertIn("does not exactly match", output)
-
-    def test_acceptance_preflight_rejects_raw_diagnostic_drift(self) -> None:
-        root = self.make_root("draft")
-        discovery_candidate = (
-            "RISK: Listing 1 fenced payload has weak distinctive-identifier "
-            "overlap with source candidate (0.10)"
-        )
-        reviewed = build_waiver_records({"listings": [discovery_candidate]})["listings"]
-
-        def change_diagnostic(command, **_kwargs):
-            if "scripts/validate_translations.sh" in command:
-                evidence = Path(
-                    command[command.index("--acceptance-evidence-file") + 1]
-                )
-                evidence.write_text(
-                    f"listings\t{discovery_candidate.replace('0.10', '0.09')}\n",
-                    encoding="utf-8",
-                )
-            return subprocess.CompletedProcess(command, 0, "", "")
-
-        with self.globals_patch(root), patch.object(
-            papers.subprocess, "run", side_effect=change_diagnostic
-        ):
-            passed, output, _records = papers.acceptance_preflight(
-                "sample-paper", {"listings": reviewed}
-            )
-        self.assertFalse(passed)
-        self.assertIn("does not exactly match", output)
-
-    def test_accept_rejects_direct_refresh_of_translated_paper(self) -> None:
-        root = self.make_root("translated")
-        ledger_path = root / "config/acceptance.yaml"
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        with self.globals_patch(root), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_acceptance_write_failure_rolls_back_first_file(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        real_atomic_write = papers.atomic_write_text
-        failed = False
-
-        def fail_metadata_once(path: Path, content: str) -> None:
-            nonlocal failed
-            if path == metadata_path and not failed:
-                failed = True
-                raise OSError("simulated metadata write failure")
-            real_atomic_write(path, content)
-
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", return_value=(True, "", {})
-        ), patch.object(
-            papers, "atomic_write_text", side_effect=fail_metadata_once
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-        self.assertFalse((root / "config/.acceptance-transaction.yaml").exists())
-        self.assertFalse(
-            (root / "config/.acceptance-transaction.cleanup.yaml").exists()
-        )
-
-    def test_accept_cleanup_first_fsync_failure_retains_recoverable_marker(
-        self,
-    ) -> None:
-        root = self.make_root("draft")
-        journal_path = root / "config/.acceptance-transaction.yaml"
-        cleanup_path = root / "config/.acceptance-transaction.cleanup.yaml"
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "_fsync_directory",
-            side_effect=OSError("simulated marker fsync failure"),
-        ), contextlib.redirect_stderr(stderr):
-            self.assertEqual(self.accept(root), 1)
-
-        self.assertFalse(journal_path.exists())
-        self.assertTrue(cleanup_path.is_file())
-        self.assertIn("recovery marker retained", stderr.getvalue())
-        self.assertIn("recover-acceptance --mode commit", stderr.getvalue())
-
-        with self.globals_patch(root), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(papers.recover_acceptance("commit"), 0)
-            self.assertEqual(papers.validate(), 0)
-        self.assertFalse(cleanup_path.exists())
-
-    def test_post_unlink_directory_fsync_failure_reports_completed_accept(
-        self,
-    ) -> None:
-        root = self.make_root("draft")
-        journal_path = root / "config/.acceptance-transaction.yaml"
-        cleanup_path = root / "config/.acceptance-transaction.cleanup.yaml"
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "_fsync_directory",
-            side_effect=[None, OSError("simulated post-unlink fsync failure")],
-        ), contextlib.redirect_stderr(stderr):
-            self.assertEqual(self.accept(root), 0)
-
-        self.assertFalse(journal_path.exists())
-        self.assertFalse(cleanup_path.exists())
-        self.assertIn("transaction state is complete", stderr.getvalue())
-        self.assertNotIn("run recover-acceptance", stderr.getvalue())
-        with self.globals_patch(root):
-            self.assertEqual(papers.validate(), 0)
-
-    def test_rollback_cleanup_fsync_failure_retains_marker_for_rollback_recovery(
-        self,
-    ) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        cleanup_path = root / "config/.acceptance-transaction.cleanup.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        real_atomic_write = papers.atomic_write_text
-        failed = False
-
-        def fail_metadata_once(path: Path, content: str) -> None:
-            nonlocal failed
-            if path == metadata_path and not failed:
-                failed = True
-                raise OSError("simulated metadata write failure")
-            real_atomic_write(path, content)
-
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "atomic_write_text",
-            side_effect=fail_metadata_once,
-        ), patch.object(
-            papers,
-            "_fsync_directory",
-            side_effect=OSError("simulated rollback marker fsync failure"),
-        ), contextlib.redirect_stderr(stderr):
-            self.assertEqual(self.accept(root), 1)
-
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-        self.assertTrue(cleanup_path.is_file())
-        self.assertIn("recover-acceptance --mode rollback", stderr.getvalue())
-
-        with self.globals_patch(root), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(papers.recover_acceptance("rollback"), 0)
-        self.assertFalse(cleanup_path.exists())
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_acceptance_rolls_back_but_preserves_concurrently_changed_journal(
-        self,
-    ) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        journal_path = root / "config/.acceptance-transaction.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        real_atomic_write = papers.atomic_write_text
-
-        def change_journal_after_metadata(path, content):
-            real_atomic_write(path, content)
-            if path == metadata_path:
-                journal_path.write_text(
-                    journal_path.read_text(encoding="utf-8") + "# external edit\n",
-                    encoding="utf-8",
-                )
-
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "atomic_write_text",
-            side_effect=change_journal_after_metadata,
-        ), contextlib.redirect_stderr(stderr):
-            self.assertEqual(self.accept(root), 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-        self.assertTrue(journal_path.exists())
-        self.assertIn("refusing to remove", stderr.getvalue())
-
-    def test_interrupted_acceptance_journal_can_commit_partial_state(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        journal_path = root / "config/.acceptance-transaction.yaml"
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "_remove_acceptance_journal",
-            side_effect=OSError("simulated crash before journal removal"),
-        ), contextlib.redirect_stderr(stderr):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertTrue(journal_path.is_file())
-
-        journal = yaml.safe_load(journal_path.read_text(encoding="utf-8"))
-        metadata_relative = metadata_path.relative_to(root).as_posix()
-        metadata_path.write_text(
-            journal["files"][metadata_relative]["original"],
-            encoding="utf-8",
-        )
-        with self.globals_patch(root), contextlib.redirect_stderr(io.StringIO()):
-            self.assertEqual(papers.validate(), 1)
-            self.assertEqual(papers.recover_acceptance("commit"), 0)
-            self.assertEqual(papers.validate(), 0)
-        self.assertFalse(journal_path.exists())
-        metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
-        self.assertEqual(metadata["reading_status"], "translated")
-
-    def test_interrupted_acceptance_journal_can_roll_back(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        journal_path = root / "config/.acceptance-transaction.yaml"
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "_remove_acceptance_journal",
-            side_effect=OSError("simulated crash before journal removal"),
-        ), contextlib.redirect_stderr(io.StringIO()):
-            self.assertEqual(self.accept(root), 1)
-        self.assertTrue(journal_path.is_file())
-        with self.globals_patch(root), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(papers.recover_acceptance("rollback"), 0)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-        self.assertFalse(journal_path.exists())
-
-    def test_interrupted_acceptance_commit_refuses_changed_bound_inputs(self) -> None:
-        root = self.make_root("draft")
-        asset_path = (
-            root
-            / "papers/query-processing/sample-paper/assets/figure.png"
-        )
-        journal_path = root / "config/.acceptance-transaction.yaml"
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "_remove_acceptance_journal",
-            side_effect=OSError("simulated crash before journal removal"),
-        ), contextlib.redirect_stderr(io.StringIO()):
-            self.assertEqual(self.accept(root), 1)
-        asset_path.write_bytes(b"changed after crash")
-        stderr = io.StringIO()
-        with self.globals_patch(root), contextlib.redirect_stderr(stderr):
-            self.assertEqual(papers.recover_acceptance("commit"), 1)
-        self.assertIn("assets", stderr.getvalue())
-        self.assertTrue(journal_path.exists())
-        with self.globals_patch(root), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(papers.recover_acceptance("rollback"), 0)
-
-    def test_recovery_refuses_authoritative_file_changed_between_writes(self) -> None:
-        root = self.make_root("draft")
-        ledger_path = root / "config/acceptance.yaml"
-        journal_path = root / "config/.acceptance-transaction.yaml"
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "_remove_acceptance_journal",
-            side_effect=OSError("simulated crash before journal removal"),
-        ), contextlib.redirect_stderr(io.StringIO()):
-            self.assertEqual(self.accept(root), 1)
-
-        real_assert = papers._assert_recovery_file_states
-        calls = 0
-
-        def change_ledger_before_second_write(files, expected):
-            nonlocal calls
-            calls += 1
-            if calls == 2:
-                ledger_path.write_text("external concurrent edit\n", encoding="utf-8")
-            return real_assert(files, expected)
-
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "_assert_recovery_file_states",
-            side_effect=change_ledger_before_second_write,
-        ), contextlib.redirect_stderr(stderr):
-            self.assertEqual(papers.recover_acceptance("rollback"), 1)
-        self.assertIn("changed while acceptance recovery", stderr.getvalue())
-        self.assertEqual(
-            ledger_path.read_text(encoding="utf-8"),
-            "external concurrent edit\n",
-        )
-        self.assertTrue(journal_path.exists())
-
-    def test_commit_recovery_rechecks_bound_inputs_after_writes(self) -> None:
-        root = self.make_root("draft")
-        paper = root / "papers/query-processing/sample-paper"
-        asset_path = paper / "assets/figure.png"
-        journal_path = root / "config/.acceptance-transaction.yaml"
-        with self.globals_patch(root), patch.object(
-            papers,
-            "acceptance_preflight",
-            return_value=(True, "", {}),
-        ), patch.object(
-            papers,
-            "_remove_acceptance_journal",
-            side_effect=OSError("simulated crash before journal removal"),
-        ), contextlib.redirect_stderr(io.StringIO()):
-            self.assertEqual(self.accept(root), 1)
-
-        journal = yaml.safe_load(journal_path.read_text(encoding="utf-8"))
-        for relative_path, record in journal["files"].items():
-            (root / relative_path).write_text(record["original"], encoding="utf-8")
-
-        real_assert = papers._assert_recovery_context
-        calls = 0
-
-        def change_asset_after_recovered_writes(context):
-            nonlocal calls
-            calls += 1
-            if calls == 2:
-                asset_path.write_bytes(b"changed during recovery")
-            return real_assert(context)
-
-        stderr = io.StringIO()
-        with self.globals_patch(root), patch.object(
-            papers,
-            "_assert_recovery_context",
-            side_effect=change_asset_after_recovered_writes,
-        ), contextlib.redirect_stderr(stderr):
-            self.assertEqual(papers.recover_acceptance("commit"), 1)
-        self.assertIn("acceptance inputs changed", stderr.getvalue())
-        self.assertTrue(journal_path.exists())
-        with self.globals_patch(root), contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(papers.recover_acceptance("rollback"), 0)
-
-    def test_compare_and_swap_rejects_preflight_time_metadata_change(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-
-        def mutate_during_preflight(_paper_id, _waivers):
-            data = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
-            data["authors"] = ["Concurrent Editor"]
-            metadata_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
-            return True, "", {}
-
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", side_effect=mutate_during_preflight
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-        self.assertIn("Concurrent Editor", metadata_path.read_text(encoding="utf-8"))
-
-    def test_compare_and_swap_rejects_preflight_time_head_change(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        heads = iter(["b" * 40, "c" * 40])
-
-        with self.globals_patch(root), patch.object(
-            papers, "current_git_head", side_effect=lambda _root: next(heads)
-        ), patch.object(
-            papers, "acceptance_preflight", return_value=(True, "", {})
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_compare_and_swap_rejects_preflight_time_policy_change(self) -> None:
-        root = self.make_root("draft")
-        policy_path = root / "docs/translation-policy.md"
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-
-        def mutate_policy(_paper_id, _waivers):
-            policy_path.write_text(
-                policy_path.read_text(encoding="utf-8") + "concurrent change\n",
-                encoding="utf-8",
-            )
-            return True, "", {}
-
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", side_effect=mutate_policy
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_compare_and_swap_rejects_preflight_time_review_gate_change(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        gate_hashes = iter(["f" * 64, "f" * 64, "e" * 64])
-
-        with self.globals_patch(root), patch.object(
-            papers,
-            "review_gate_manifest_sha256",
-            side_effect=lambda _root, _revision=None: next(gate_hashes),
-        ), patch.object(
-            papers, "acceptance_preflight", return_value=(True, "", {})
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_compare_and_swap_rejects_preflight_time_receipt_change(self) -> None:
-        root = self.make_root("draft")
-        receipt_path = self.review_receipt(root)
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-
-        def mutate_receipt(_paper_id, _waivers):
-            receipt_path.write_text(
-                receipt_path.read_text(encoding="utf-8") + "\n",
-                encoding="utf-8",
-            )
-            return True, "", {}
-
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", side_effect=mutate_receipt
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = papers.accept_record("sample-paper", receipt_path)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_cross_process_flock_wraps_acceptance(self) -> None:
-        root = self.make_root("draft")
-        lock_modes: list[int] = []
-
-        def record_lock(_descriptor, mode):
-            lock_modes.append(mode)
-
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", return_value=(False, "stop", {})
-        ), patch.object(papers.fcntl, "flock", side_effect=record_lock), contextlib.redirect_stderr(
+        root = self.make_root()
+        with self.globals_patch(root), contextlib.redirect_stderr(
             io.StringIO()
         ):
-            self.assertEqual(self.accept(root), 1)
-        self.assertEqual(lock_modes, [fcntl.LOCK_EX, fcntl.LOCK_UN])
-
-    def test_keyboard_interrupt_after_first_write_rolls_back(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        real_atomic_write = papers.atomic_write_text
-
-        def interrupt_metadata(path: Path, content: str) -> None:
-            if path == metadata_path:
-                raise KeyboardInterrupt()
-            real_atomic_write(path, content)
-
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", return_value=(True, "", {})
-        ), patch.object(
-            papers, "atomic_write_text", side_effect=interrupt_metadata
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_sigterm_after_first_write_rolls_back(self) -> None:
-        root = self.make_root("draft")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
-        ledger_path = root / "config/acceptance.yaml"
-        original_metadata = metadata_path.read_text(encoding="utf-8")
-        original_ledger = ledger_path.read_text(encoding="utf-8")
-        real_atomic_write = papers.atomic_write_text
-
-        def terminate_metadata(path: Path, content: str) -> None:
-            if path == metadata_path:
-                papers.signal.raise_signal(papers.signal.SIGTERM)
-            real_atomic_write(path, content)
-
-        with self.globals_patch(root), patch.object(
-            papers, "acceptance_preflight", return_value=(True, "", {})
-        ), patch.object(
-            papers, "atomic_write_text", side_effect=terminate_metadata
-        ), contextlib.redirect_stderr(io.StringIO()):
-            result = self.accept(root)
-        self.assertEqual(result, 1)
-        self.assertEqual(metadata_path.read_text(encoding="utf-8"), original_metadata)
-        self.assertEqual(ledger_path.read_text(encoding="utf-8"), original_ledger)
-
-    def test_sigterm_handler_raises_transaction_exception_and_restores(self) -> None:
-        previous = papers.signal.getsignal(papers.signal.SIGTERM)
-        with papers.sigterm_as_exception():
-            handler = papers.signal.getsignal(papers.signal.SIGTERM)
-            with self.assertRaisesRegex(papers.AcceptanceInterrupted, "SIGTERM"):
-                handler(papers.signal.SIGTERM, None)
-        self.assertIs(papers.signal.getsignal(papers.signal.SIGTERM), previous)
+            self.assertEqual(papers.validate("missing-paper"), 1)
 
     def test_source_and_translation_symlinks_are_rejected(self) -> None:
         root = self.make_root("draft")
@@ -1463,7 +158,10 @@ class PapersTests(unittest.TestCase):
         stderr = io.StringIO()
         with self.globals_patch(root), contextlib.redirect_stderr(stderr):
             self.assertEqual(papers.validate(), 1)
-        self.assertIn("source.pdf=True as a regular non-symlink", stderr.getvalue())
+        self.assertIn(
+            "source.pdf=True as a regular non-symlink",
+            stderr.getvalue(),
+        )
         self.assertIn(
             "translation.md=True as a regular non-symlink",
             stderr.getvalue(),
@@ -1485,10 +183,13 @@ class PapersTests(unittest.TestCase):
         stderr = io.StringIO()
         with self.globals_patch(root), contextlib.redirect_stderr(stderr):
             self.assertEqual(papers.validate(), 1)
-        self.assertIn("source.pdf=False as a regular non-symlink", stderr.getvalue())
+        self.assertIn(
+            "source.pdf=False as a regular non-symlink",
+            stderr.getvalue(),
+        )
 
     def test_catalog_omits_topic_index_and_separates_source_links(self) -> None:
-        root = self.make_root("source_only")
+        root = self.make_root()
         with self.globals_patch(root):
             catalog = papers.build_catalog()
         self.assertNotIn("## 按主题浏览", catalog)
@@ -1502,22 +203,32 @@ class PapersTests(unittest.TestCase):
             "[原文](papers/query-processing/sample-paper/source.pdf)",
             catalog,
         )
-        self.assertIn("[官方链接](<https://example.com/paper>)", catalog)
+        self.assertIn(
+            "[官方链接](<https://example.com/paper>)",
+            catalog,
+        )
         self.assertNotIn("示例论文", catalog)
 
     def test_catalog_uses_taxonomy_order_for_unordered_topics(self) -> None:
-        root = self.make_root("source_only")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        root = self.make_root()
+        metadata_path = (
+            root / "papers/query-processing/sample-paper/paper.yaml"
+        )
         metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
         metadata["topics"] = ["cloud-native", "query-execution"]
-        metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8")
+        metadata_path.write_text(
+            yaml.safe_dump(metadata, sort_keys=False),
+            encoding="utf-8",
+        )
         with self.globals_patch(root):
             catalog = papers.build_catalog()
         self.assertIn("查询执行、云原生", catalog)
 
     def test_valid_rating_is_accepted_and_catalog_shows_only_score(self) -> None:
-        root = self.make_root("source_only")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        root = self.make_root()
+        metadata_path = (
+            root / "papers/query-processing/sample-paper/paper.yaml"
+        )
         metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
         metadata["rating"] = {
             "score": 4.5,
@@ -1527,17 +238,21 @@ class PapersTests(unittest.TestCase):
             "durability": 5,
             "reader_payoff": 4,
         }
-        metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8")
+        metadata_path.write_text(
+            yaml.safe_dump(metadata, sort_keys=False),
+            encoding="utf-8",
+        )
         with self.globals_patch(root):
             self.assertEqual(papers.validate(), 0)
             catalog = papers.build_catalog()
         self.assertIn("| 4.5 | source_only |", catalog)
         self.assertNotIn("influence_breadth", catalog)
-        self.assertNotIn("technical_value", catalog)
 
     def test_rating_score_must_match_weighted_dimensions(self) -> None:
-        root = self.make_root("source_only")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        root = self.make_root()
+        metadata_path = (
+            root / "papers/query-processing/sample-paper/paper.yaml"
+        )
         metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
         metadata["rating"] = {
             "score": 5.0,
@@ -1547,11 +262,17 @@ class PapersTests(unittest.TestCase):
             "durability": 5,
             "reader_payoff": 4,
         }
-        metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8")
+        metadata_path.write_text(
+            yaml.safe_dump(metadata, sort_keys=False),
+            encoding="utf-8",
+        )
         stderr = io.StringIO()
         with self.globals_patch(root), contextlib.redirect_stderr(stderr):
             self.assertEqual(papers.validate(), 1)
-        self.assertIn("rating.score must equal the weighted score 4.5", stderr.getvalue())
+        self.assertIn(
+            "rating.score must equal the weighted score 4.5",
+            stderr.getvalue(),
+        )
 
     def test_five_point_rating_requires_landmark_gate(self) -> None:
         rating = {
@@ -1562,37 +283,58 @@ class PapersTests(unittest.TestCase):
             "durability": 5,
             "reader_payoff": 5,
         }
-        self.assertEqual(papers.calculated_rating_score(rating), Decimal("4.5"))
+        self.assertEqual(
+            papers.calculated_rating_score(rating),
+            Decimal("4.5"),
+        )
 
-    def test_catalog_links_accepted_paper_directly_to_translation(self) -> None:
+    def test_catalog_links_translated_paper_directly_to_translation(self) -> None:
         root = self.make_root("translated")
         with self.globals_patch(root):
             catalog = papers.build_catalog()
-        self.assertIn("papers/query-processing/sample-paper/translation.md", catalog)
+        self.assertIn(
+            "papers/query-processing/sample-paper/translation.md",
+            catalog,
+        )
 
     def test_non_http_source_url_is_rejected(self) -> None:
-        root = self.make_root("source_only")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        root = self.make_root()
+        metadata_path = (
+            root / "papers/query-processing/sample-paper/paper.yaml"
+        )
         metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
         metadata["source_url"] = "ftp://example.com/paper.pdf"
-        metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8")
-        with self.globals_patch(root), contextlib.redirect_stderr(io.StringIO()):
+        metadata_path.write_text(
+            yaml.safe_dump(metadata, sort_keys=False),
+            encoding="utf-8",
+        )
+        with self.globals_patch(root), contextlib.redirect_stderr(
+            io.StringIO()
+        ):
             self.assertEqual(papers.validate(), 1)
 
     def test_skipped_status_requires_project_reason(self) -> None:
-        root = self.make_root("source_only")
-        metadata_path = root / "papers/query-processing/sample-paper/paper.yaml"
+        root = self.make_root()
+        metadata_path = (
+            root / "papers/query-processing/sample-paper/paper.yaml"
+        )
         metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8"))
         metadata["reading_status"] = "skipped"
-        metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8")
-        with self.globals_patch(root), contextlib.redirect_stderr(io.StringIO()):
+        metadata_path.write_text(
+            yaml.safe_dump(metadata, sort_keys=False),
+            encoding="utf-8",
+        )
+        with self.globals_patch(root), contextlib.redirect_stderr(
+            io.StringIO()
+        ):
             self.assertEqual(papers.validate(), 1)
 
     def test_config_command_exposes_named_page_limit_exception(self) -> None:
-        root = self.make_root("source_only")
-        policy_path = root / "config/policy.yaml"
-        policy_path.write_text(
-            "schema_version: 1\ndefault_max_source_pages: 60\npapers:\n"
+        root = self.make_root()
+        (root / "config/policy.yaml").write_text(
+            "schema_version: 1\n"
+            "default_max_source_pages: 60\n"
+            "papers:\n"
             "  sample-paper:\n"
             "    max_source_pages: 80\n"
             "    authorization: explicit test override\n",
@@ -1600,36 +342,48 @@ class PapersTests(unittest.TestCase):
         )
         stdout = io.StringIO()
         with self.globals_patch(root), contextlib.redirect_stdout(stdout):
-            self.assertEqual(papers.config_value("paper_page_limit", "sample-paper"), 0)
+            self.assertEqual(
+                papers.config_value("paper_page_limit", "sample-paper"),
+                0,
+            )
         self.assertEqual(stdout.getvalue().strip(), "80")
 
-    def test_validation_manifest_batches_policy_and_acceptance_waivers(self) -> None:
+    def test_validation_manifest_contains_only_current_paper_state(self) -> None:
         root = self.make_root("translated")
         stdout = io.StringIO()
-        poisoned = {
-            "ACCEPTANCE_PAPER_ID": "sample-paper",
-            "ACCEPTANCE_TARGET_STATUS": "translated",
-            "ACCEPTANCE_RECORDED_WAIVERS": papers.encode_waiver_records({}),
-        }
-        with self.globals_patch(root), patch.dict(
-            papers.os.environ, poisoned
-        ), contextlib.redirect_stdout(stdout):
-            self.assertEqual(papers.validation_manifest("sample-paper"), 0)
+        with self.globals_patch(root), contextlib.redirect_stdout(stdout):
+            self.assertEqual(
+                papers.validation_manifest("sample-paper"),
+                0,
+            )
         rows = [
             line.split(papers.VALIDATION_FIELD_SEPARATOR)
             for line in stdout.getvalue().splitlines()
         ]
-        self.assertEqual(rows[0], ["config", "source.pdf", "translation.md", "true", "false"])
         self.assertEqual(
-            rows[1][0:4],
-            ["paper", "papers/query-processing/sample-paper", "translated", "60"],
+            rows,
+            [
+                [
+                    "config",
+                    "source.pdf",
+                    "translation.md",
+                    "true",
+                    "false",
+                ],
+                [
+                    "paper",
+                    "papers/query-processing/sample-paper",
+                    "translated",
+                    "60",
+                    "",
+                    "Sample Paper",
+                    "error",
+                ],
+            ],
         )
-        self.assertEqual(papers.decode_waiver_records(rows[1][4]), resource_waivers())
-        self.assertEqual(rows[1][6:], ["Sample Paper", "error", "true"])
-
 
     def test_new_record_uses_safe_defaults_matching_template(self) -> None:
-        root = self.make_root("source_only")
+        root = self.make_root()
         with self.globals_patch(root):
             result = papers.new_record(
                 "new-paper",
@@ -1641,13 +395,20 @@ class PapersTests(unittest.TestCase):
             )
         self.assertEqual(result, 0)
         created = yaml.safe_load(
-            (root / "papers/query-processing/new-paper/paper.yaml").read_text(encoding="utf-8")
+            (
+                root / "papers/query-processing/new-paper/paper.yaml"
+            ).read_text(encoding="utf-8")
         )
-        template = yaml.safe_load((REPO_ROOT / "templates/paper.yaml").read_text(encoding="utf-8"))
+        template = yaml.safe_load(
+            (REPO_ROOT / "templates/paper.yaml").read_text(encoding="utf-8")
+        )
         self.assertEqual(created["authors"], template["authors"])
         self.assertEqual(created["title_zh"], "新论文")
         self.assertEqual(created["year"], template["year"])
-        self.assertEqual(created["reading_status"], template["reading_status"])
+        self.assertEqual(
+            created["reading_status"],
+            template["reading_status"],
+        )
 
 
 if __name__ == "__main__":

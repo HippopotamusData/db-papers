@@ -8,7 +8,6 @@ from unittest import mock
 
 from scripts.ci_validation_scope import (
     ValidationPlan,
-    changed_acceptance_paper_ids,
     decode_changed_paths,
     emit_github_output,
     paper_metadata_requires_scoped_gate,
@@ -30,12 +29,13 @@ class CiValidationScopeTests(unittest.TestCase):
         paper_ids = select_paper_ids(
             [
                 "papers/storage/paper-b/translation.md",
+                "papers/storage/paper-c/source.pdf",
                 "papers/query-processing/paper-a/assets/figure-1.png",
                 "./papers/query-processing/paper-a/paper.yaml",
                 "papers/query-processing/paper-a/notes.txt",
             ]
         )
-        self.assertEqual(paper_ids, ["paper-a", "paper-b"])
+        self.assertEqual(paper_ids, ["paper-a", "paper-b", "paper-c"])
 
     def test_nul_delimited_paths_preserve_unicode_and_newlines(self) -> None:
         changed_paths = decode_changed_paths(
@@ -77,7 +77,7 @@ class CiValidationScopeTests(unittest.TestCase):
                     paper_metadata_requires_scoped_gate(base, head)
                 )
 
-    def test_acceptance_bound_metadata_requires_scoped_gate(self) -> None:
+    def test_publication_bound_metadata_requires_scoped_gate(self) -> None:
         base = {
             "title": "Original",
             "title_zh": "中文标题",
@@ -106,16 +106,34 @@ class CiValidationScopeTests(unittest.TestCase):
         with mock.patch(
             "scripts.ci_validation_scope.yaml_at_revision",
             side_effect=[base, head],
-        ):
+        ) as load_yaml:
             plan = select_validation_plan(
                 [path],
                 root=ROOT,
                 base_sha="base",
+                head_sha="proposed",
             )
+        self.assertEqual(
+            load_yaml.call_args_list,
+            [
+                mock.call(ROOT, "base", path, missing_ok=True),
+                mock.call(ROOT, "proposed", path, missing_ok=True),
+            ],
+        )
         self.assertEqual(plan.paper_ids, ())
         self.assertEqual(plan.math_files, ())
         self.assertFalse(plan.math_all)
         self.assertTrue(plan.site_changed)
+
+    def test_paper_metadata_change_requires_trusted_base(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "paper metadata changes require a trusted --base-sha",
+        ):
+            select_validation_plan(
+                ["papers/storage/paper-a/paper.yaml"],
+                root=ROOT,
+            )
 
     def test_translation_plan_selects_paper_math_and_site(self) -> None:
         path = "papers/storage/paper-a/translation.md"
@@ -141,247 +159,6 @@ class CiValidationScopeTests(unittest.TestCase):
             root=ROOT,
         )
         self.assertEqual(plan, ValidationPlan())
-
-    def test_acceptance_only_change_selects_exact_paper_ids(self) -> None:
-        base = {
-            "schema_version": 5,
-            "review_snapshots": {},
-            "entries": {
-                "paper-a": {"fingerprint": "a"},
-                "paper-b": {"fingerprint": "b"},
-            },
-        }
-        head = {
-            "schema_version": 5,
-            "review_snapshots": {},
-            "entries": {
-                "paper-a": {"fingerprint": "changed"},
-                "paper-b": {"fingerprint": "b"},
-                "paper-c": {"fingerprint": "c"},
-            },
-        }
-        paper_ids = select_paper_ids(
-            ["config/acceptance.yaml"],
-            acceptance_base=base,
-            acceptance_head=head,
-        )
-        self.assertEqual(paper_ids, ["paper-a", "paper-c"])
-
-    def test_review_snapshot_additions_are_rejected(self) -> None:
-        base = {
-            "schema_version": 5,
-            "review_snapshots": {"old": {}},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 1,
-                    "review_snapshot": "old",
-                }
-            },
-        }
-        head = {
-            "schema_version": 5,
-            "review_snapshots": {"old": {}, "new": {}},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 2,
-                    "fingerprint": "changed",
-                }
-            },
-        }
-        with self.assertRaises(ValueError):
-            changed_acceptance_paper_ids(base, head)
-
-    def test_newly_unreferenced_review_snapshot_removal_is_allowed(self) -> None:
-        base = {
-            "schema_version": 5,
-            "review_snapshots": {"old": {"policy": "frozen"}},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 1,
-                    "review_snapshot": "old",
-                },
-                "paper-b": {"schema_version": 2, "fingerprint": "stable"},
-            },
-        }
-        head = {
-            "schema_version": 5,
-            "review_snapshots": {},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 2,
-                    "fingerprint": "changed",
-                },
-                "paper-b": {"schema_version": 2, "fingerprint": "stable"},
-            },
-        }
-        self.assertEqual(
-            changed_acceptance_paper_ids(base, head),
-            ["paper-a"],
-        )
-
-    def test_modified_review_snapshot_is_rejected(self) -> None:
-        base = {
-            "schema_version": 5,
-            "review_snapshots": {"old": {"policy": "frozen"}},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 1,
-                    "review_snapshot": "old",
-                }
-            },
-        }
-        head = {
-            "schema_version": 5,
-            "review_snapshots": {"old": {"policy": "changed"}},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 2,
-                    "fingerprint": "changed",
-                }
-            },
-        }
-        with self.assertRaises(ValueError):
-            changed_acceptance_paper_ids(base, head)
-
-    def test_still_referenced_review_snapshot_removal_is_rejected(self) -> None:
-        base = {
-            "schema_version": 5,
-            "review_snapshots": {"shared": {"policy": "frozen"}},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 1,
-                    "review_snapshot": "shared",
-                },
-                "paper-b": {
-                    "schema_version": 1,
-                    "review_snapshot": "shared",
-                },
-            },
-        }
-        head = {
-            "schema_version": 5,
-            "review_snapshots": {},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 2,
-                    "fingerprint": "changed",
-                },
-                "paper-b": {
-                    "schema_version": 1,
-                    "review_snapshot": "shared",
-                },
-            },
-        }
-        with self.assertRaises(ValueError):
-            changed_acceptance_paper_ids(base, head)
-
-    def test_shared_review_snapshot_removal_after_all_migrations_is_allowed(
-        self,
-    ) -> None:
-        base = {
-            "schema_version": 5,
-            "review_snapshots": {"shared": {"policy": "frozen"}},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 1,
-                    "review_snapshot": "shared",
-                },
-                "paper-b": {
-                    "schema_version": 1,
-                    "review_snapshot": "shared",
-                },
-            },
-        }
-        head = {
-            "schema_version": 5,
-            "review_snapshots": {},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 2,
-                    "fingerprint": "changed-a",
-                },
-                "paper-b": {
-                    "schema_version": 2,
-                    "fingerprint": "changed-b",
-                },
-            },
-        }
-        self.assertEqual(
-            changed_acceptance_paper_ids(base, head),
-            ["paper-a", "paper-b"],
-        )
-
-    def test_review_snapshot_removal_with_entry_deletion_is_rejected(
-        self,
-    ) -> None:
-        base = {
-            "schema_version": 5,
-            "review_snapshots": {"old": {"policy": "frozen"}},
-            "entries": {
-                "paper-a": {
-                    "schema_version": 1,
-                    "review_snapshot": "old",
-                }
-            },
-        }
-        head = {
-            "schema_version": 5,
-            "review_snapshots": {},
-            "entries": {},
-        }
-        with self.assertRaises(ValueError):
-            changed_acceptance_paper_ids(base, head)
-
-    def test_unreferenced_base_review_snapshot_removal_is_rejected(self) -> None:
-        base = {
-            "schema_version": 5,
-            "review_snapshots": {"orphan": {"policy": "frozen"}},
-            "entries": {"paper-a": {"schema_version": 2}},
-        }
-        head = {
-            "schema_version": 5,
-            "review_snapshots": {},
-            "entries": {"paper-a": {"schema_version": 2}},
-        }
-        with self.assertRaises(ValueError):
-            changed_acceptance_paper_ids(base, head)
-
-    def test_acceptance_schema_or_top_level_change_is_rejected(self) -> None:
-        valid = {"schema_version": 5, "review_snapshots": {}, "entries": {}}
-        unsafe_heads = (
-            {"schema_version": 6, "review_snapshots": {}, "entries": {}},
-            {
-                "schema_version": 5,
-                "review_snapshots": {},
-                "entries": {},
-                "unexpected": {},
-            },
-            {"schema_version": 5, "review_snapshots": {}, "entries": []},
-            {"schema_version": 5, "review_snapshots": [], "entries": {}},
-        )
-        for head in unsafe_heads:
-            with self.subTest(head=head):
-                with self.assertRaises(ValueError):
-                    select_paper_ids(
-                        ["config/acceptance.yaml"],
-                        acceptance_base=valid,
-                        acceptance_head=head,
-                    )
-
-    def test_acceptance_change_without_trusted_ledgers_is_rejected(self) -> None:
-        with self.assertRaises(ValueError):
-            select_paper_ids(["config/acceptance.yaml"])
-
-    def test_acceptance_diff_rejects_invalid_entry_shapes(self) -> None:
-        with self.assertRaises(ValueError):
-            changed_acceptance_paper_ids(
-                {"schema_version": 5, "review_snapshots": {}, "entries": {}},
-                {
-                    "schema_version": 5,
-                    "review_snapshots": {},
-                    "entries": {"paper-a": "not-a-receipt"},
-                },
-            )
 
     def test_github_output_is_deterministic(self) -> None:
         output = io.StringIO()

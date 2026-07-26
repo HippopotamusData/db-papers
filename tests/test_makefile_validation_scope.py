@@ -78,7 +78,7 @@ class MakefileValidationScopeTests(unittest.TestCase):
                 )
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn(
-                    f"{variable} is an internal preflight option",
+                    f"{variable} is an internal option",
                     result.stderr,
                 )
 
@@ -105,20 +105,25 @@ class MakefileValidationScopeTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("unknown validation option", result.stderr)
 
-    def test_resource_legacy_replay_is_selected_only_by_manifest_review_grade(
-        self,
-    ) -> None:
+    def test_resource_validation_always_uses_current_strict_structure(self) -> None:
         script = (ROOT / "scripts/validate_translations.sh").read_text(
             encoding="utf-8"
         )
-        routing = (
-            'if [[ "$review_grade" == "true" ]]; then\n'
-            "      resource_args+=(--require-inline-citations)\n"
-            "    else\n"
-            "      resource_args+=(--legacy-accepted-resource-structure)\n"
-            "    fi"
+        self.assertIn("resource_args+=(--require-inline-citations)", script)
+        self.assertNotIn("--legacy-accepted-resource-structure", script)
+
+    def test_review_candidates_are_advisory_without_persistent_waivers(self) -> None:
+        script = (ROOT / "scripts/validate_translations.sh").read_text(
+            encoding="utf-8"
         )
-        self.assertIn(routing, script)
+        for warning in (
+            'warn "$translation has suspiciously low source/translation coverage',
+            'warn "$translation has Listing review candidates',
+            'warn "$translation has resource review candidates',
+        ):
+            self.assertIn(warning, script)
+        self.assertNotIn("acceptance_evidence", script)
+        self.assertNotIn("record_observed_waiver", script)
 
     def test_source_identity_scan_is_reserved_for_deep_or_scoped_validation(
         self,

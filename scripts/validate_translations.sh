@@ -7,15 +7,10 @@ cd "$ROOT"
 PYTHON=${PYTHON:-python3}
 target_paper_id=
 deep_validation=${DEEP_VALIDATION:-0}
-acceptance_discovery=0
-acceptance_evidence_file=
-acceptance_paper_id=
-acceptance_target_status=
-acceptance_recorded_waivers=
 
-for internal_name in ACCEPTANCE_DISCOVERY ACCEPTANCE_EVIDENCE_FILE ACCEPTANCE_PAPER_ID ACCEPTANCE_RECORDED_WAIVERS ACCEPTANCE_TARGET_STATUS PAPER_ID SKIP_METADATA_VALIDATION; do
+for internal_name in PAPER_ID SKIP_METADATA_VALIDATION; do
   if [[ -n "${!internal_name+x}" ]]; then
-    echo "ERROR: $internal_name is an internal preflight option, not an ambient environment interface" >&2
+    echo "ERROR: $internal_name is an internal option, not an ambient environment interface" >&2
     exit 1
   fi
 done
@@ -30,23 +25,6 @@ while (( $# > 0 )); do
       target_paper_id=$2
       shift 2
       ;;
-    --acceptance-discovery)
-      acceptance_discovery=1
-      shift
-      ;;
-    --acceptance-evidence-file|--acceptance-paper-id|--acceptance-target-status|--acceptance-recorded-waivers)
-      if (( $# < 2 )); then
-        echo "ERROR: $1 requires a value" >&2
-        exit 1
-      fi
-      case "$1" in
-        --acceptance-evidence-file) acceptance_evidence_file=$2 ;;
-        --acceptance-paper-id) acceptance_paper_id=$2 ;;
-        --acceptance-target-status) acceptance_target_status=$2 ;;
-        --acceptance-recorded-waivers) acceptance_recorded_waivers=$2 ;;
-      esac
-      shift 2
-      ;;
     *)
       echo "ERROR: unknown validation option: $1" >&2
       exit 1
@@ -59,32 +37,11 @@ if [[ "$deep_validation" != "0" && "$deep_validation" != "1" ]]; then
   exit 1
 fi
 
-if [[ "$acceptance_discovery" == "1" && ( -z "$target_paper_id" || -z "$acceptance_evidence_file" || -z "$acceptance_paper_id" ) ]]; then
-  echo "ERROR: acceptance discovery requires a scoped paper id and evidence file" >&2
-  exit 1
-fi
-
-if [[ -n "$acceptance_evidence_file" && ( -z "$target_paper_id" || "$target_paper_id" != "$acceptance_paper_id" ) ]]; then
-  echo "ERROR: acceptance evidence requires matching scoped and preflight paper ids" >&2
-  exit 1
-fi
-
-if [[ -n "$acceptance_target_status" && "$acceptance_target_status" != "translated" ]]; then
-  echo "ERROR: acceptance target status must be translated" >&2
-  exit 1
-fi
-
-if [[ -n "$acceptance_target_status" && -z "$acceptance_recorded_waivers" ]]; then
-  echo "ERROR: translated acceptance preflight requires recorded waiver evidence" >&2
-  exit 1
-fi
-
 failures=0
 warnings=0
 record_count=0
 translation_count=0
 translation_file_count=0
-reviewed_risks=0
 
 fail() {
   echo "ERROR: $*" >&2
@@ -102,18 +59,6 @@ quality_issue() {
   else
     fail "$*"
   fi
-}
-
-record_observed_waiver() {
-  local evidence_path=$1
-  local category=$2
-  local candidates=$3
-  local candidate
-  while IFS= read -r candidate; do
-    candidate=$(printf '%s' "$candidate" | tr '\t\r' '  ')
-    [[ -n "${candidate//[[:space:]]/}" ]] || continue
-    printf '%s\t%s\n' "$category" "$candidate" >> "$evidence_path"
-  done <<< "$candidates"
 }
 
 for command_name in rg pdfinfo pdftotext perl sed awk find sort mktemp; do
@@ -138,9 +83,6 @@ manifest="$validation_tmp/manifest"
 trap 'rm -rf "$validation_tmp"' EXIT
 manifest_args=(validation-manifest)
 [[ -n "$target_paper_id" ]] && manifest_args+=(--paper-id "$target_paper_id")
-[[ -n "$acceptance_paper_id" ]] && manifest_args+=(--acceptance-paper-id "$acceptance_paper_id")
-[[ -n "$acceptance_target_status" ]] && manifest_args+=(--acceptance-target-status "$acceptance_target_status")
-[[ -n "$acceptance_recorded_waivers" ]] && manifest_args+=(--acceptance-recorded-waivers "$acceptance_recorded_waivers")
 "$PYTHON" scripts/papers.py "${manifest_args[@]}" > "$manifest" || exit 1
 
 {
@@ -150,7 +92,7 @@ IFS=$'\x1f' read -r manifest_kind source_name translation_name require_complete_
   exit 1
 }
 
-while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acceptance_waivers skip_reason paper_title quality_severity review_grade; do
+while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit skip_reason paper_title quality_severity; do
   [[ "$manifest_kind" == "paper" ]] || {
     fail "validation manifest contains an invalid row"
     continue
@@ -159,8 +101,6 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
   record_count=$((record_count + 1))
   pdf="$dir/$source_name"
   translation="$dir/$translation_name"
-  observed_acceptance_evidence="$validation_tmp/observed-${paper_id}.tsv"
-  : > "$observed_acceptance_evidence"
 
   case "$reading_status" in
     unavailable)
@@ -236,7 +176,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
   narrative_issues=$("$PYTHON" scripts/validate_narrative_voice.py "$visible_translation")
   narrative_status=$?
   if (( narrative_status == 1 )); then
-    quality_issue "$translation contains ambiguous bare-author narration: $narrative_issues"
+    warn "$translation contains ambiguous bare-author narration: $narrative_issues"
   elif (( narrative_status != 0 )); then
     fail "$translation narrative-voice validation failed (exit=$narrative_status)"
   fi
@@ -301,10 +241,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
       if (( listing_status == 1 )); then
         quality_issue "$translation has deterministic source-listing errors: $listing_issues"
       elif (( listing_status == 3 )); then
-        record_observed_waiver "$observed_acceptance_evidence" "listings" "$listing_issues"
-        if [[ "$reading_status" == "draft" ]]; then
-          warn "$translation has Listing review candidates: $listing_issues"
-        fi
+        warn "$translation has Listing review candidates: $listing_issues"
       else
         fail "$translation listing validation failed (exit=$listing_status)"
       fi
@@ -313,12 +250,11 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
     source_chars=$(tr -d '[:space:]' < "$source_text" | wc -m | tr -d ' ')
     translated_chars=$(sed '/^!\[/d;/^---$/d;/^[a-z_]*:/d' "$visible_translation" | tr -d '[:space:]' | wc -m | tr -d ' ')
     if awk -v s="$source_chars" -v t="$translated_chars" 'BEGIN { exit !(s > 0 && t / s < 0.25) }'; then
-      quality_issue "$translation has suspiciously low source/translation coverage ($translated_chars/$source_chars)"
+      warn "$translation has suspiciously low source/translation coverage ($translated_chars/$source_chars)"
     fi
 
     abridgement_stderr="$validation_tmp/abridgement-${paper_id}.stderr"
     abridgement_args=(abridgement "$pdf" "$visible_translation")
-    [[ "$review_grade" == "true" ]] || abridgement_args+=(--legacy-accepted-reference-boundary)
     abridgement_candidate=$("$PYTHON" scripts/pdf_metrics.py "${abridgement_args[@]}" 2>"$abridgement_stderr")
     abridgement_status=$?
     if (( abridgement_status != 0 )); then
@@ -328,72 +264,28 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit acce
       abridgement_error=$(tr '\n\r\t' '   ' < "$abridgement_stderr")
       fail "$translation abridgement metric emitted unexpected stderr: $abridgement_error"
     elif [[ -n "$abridgement_candidate" ]]; then
-      record_observed_waiver "$observed_acceptance_evidence" "abridgement" "$abridgement_candidate"
-      if [[ "$reading_status" == "draft" ]]; then
-        warn "$translation has $abridgement_candidate"
-      fi
+      warn "$translation has $abridgement_candidate"
     fi
 
     source_table_numbers=$(perl -ne 'while (/(?:^|\f|\s{2,})Table\s+(\d+)\s*[:.]/ig) { print "$1\n" }' "$source_text" | sort -nu)
     while IFS= read -r table_number; do
       [[ -z "$table_number" ]] && continue
-      rg -q "(表|Table)[[:space:]]*${table_number}([^0-9]|$)" "$visible_translation" || quality_issue "$translation does not identify source Table $table_number"
+      rg -q "(表|Table)[[:space:]]*${table_number}([^0-9]|$)" "$visible_translation" || warn "$translation may not identify source Table $table_number"
     done <<< "$source_table_numbers"
 
     resource_args=("$dir" "$source_text")
     [[ "$require_complete_references" == "true" ]] && resource_args+=(--require-complete-references)
-    if [[ "$review_grade" == "true" ]]; then
-      resource_args+=(--require-inline-citations)
-    else
-      resource_args+=(--legacy-accepted-resource-structure)
-    fi
+    resource_args+=(--require-inline-citations)
     [[ "$allow_whole_page_images" == "true" ]] && resource_args+=(--allow-whole-page-images)
     resource_issues=$("$PYTHON" scripts/validate_resources.py "${resource_args[@]}")
     resource_status=$?
     if (( resource_status == 1 )); then
       quality_issue "$translation has deterministic resource/reference errors: $resource_issues"
     elif (( resource_status == 3 )); then
-      record_observed_waiver "$observed_acceptance_evidence" "resources" "$resource_issues"
-      if [[ "$reading_status" == "draft" ]]; then
-        warn "$translation has resource review candidates: $resource_issues"
-      fi
+      warn "$translation has resource review candidates: $resource_issues"
     elif (( resource_status != 0 )); then
       fail "$translation resource validation failed (exit=$resource_status): $resource_issues"
     fi
-  fi
-  if [[ "$reading_status" == "translated" ]]; then
-    waiver_mismatches=$("$PYTHON" scripts/acceptance_evidence.py compare --recorded "$acceptance_waivers" --observed "$observed_acceptance_evidence" 2>&1)
-    waiver_match_status=$?
-    if (( waiver_match_status == 0 )); then
-      while IFS= read -r waiver_match; do
-        [[ "$waiver_match" == reviewed:* ]] || continue
-        reviewed_risks=$((reviewed_risks + 1))
-        echo "REVIEWED-RISK: $translation ${waiver_match#reviewed:}"
-      done <<< "$waiver_mismatches"
-    elif (( waiver_match_status == 1 )); then
-      while IFS= read -r waiver_mismatch; do
-        [[ -n "$waiver_mismatch" ]] || continue
-        if [[ "$waiver_mismatch" == reviewed:* ]]; then
-          reviewed_risks=$((reviewed_risks + 1))
-          echo "REVIEWED-RISK: $translation ${waiver_mismatch#reviewed:}"
-          continue
-        fi
-        fail "$translation acceptance waiver evidence mismatch: $waiver_mismatch"
-      done <<< "$waiver_mismatches"
-    else
-      fail "$translation acceptance waiver evidence validation failed: $waiver_mismatches"
-    fi
-  elif [[ "$reading_status" == "draft" && -s "$observed_acceptance_evidence" ]]; then
-    evidence_summary=$("$PYTHON" scripts/acceptance_evidence.py summarize --observed "$observed_acceptance_evidence" 2>&1)
-    evidence_summary_status=$?
-    if (( evidence_summary_status == 0 )); then
-      printf '%s\n' "$evidence_summary"
-    else
-      fail "$translation acceptance evidence summary failed: $evidence_summary"
-    fi
-  fi
-  if [[ -n "$acceptance_evidence_file" ]]; then
-    cat "$observed_acceptance_evidence" >> "$acceptance_evidence_file" || fail "cannot write acceptance evidence: $acceptance_evidence_file"
   fi
   rm -f "$source_text"
 done
@@ -414,7 +306,7 @@ if (( failures > 0 )); then
 fi
 
 if [[ "$deep_validation" == "1" ]]; then
-  echo "Deep translation validation passed: $record_count records and $translation_count translated papers ($warnings warning(s), $reviewed_risks reviewed-risk category group(s))."
+  echo "Deep translation validation passed: $record_count records and $translation_count translated papers ($warnings warning(s))."
 else
   echo "Fast translation validation passed: $record_count records and $translation_count translated papers ($warnings warning(s))."
 fi

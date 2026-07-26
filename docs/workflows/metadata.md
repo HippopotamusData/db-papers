@@ -18,9 +18,9 @@
 | `topics` | string list | 一个或多个 `config/taxonomy.yaml` 受控主题；顺序无语义 |
 | `reading_status` | enum | `unavailable`、`source_only`、`draft`、`translated` 或 `skipped` |
 
-论文 ID 和一级领域由目录表达；原文、译文和资源可用性由 `source.pdf`、`translation.md`、`assets/` 表达。文件名、中文目标语言和质量底线是代码不变量；默认页数上限、单篇例外与 skipped 原因属于 `config/policy.yaml`，验收内容快照、内容绑定 review receipt、固定基线和必要 waivers 属于 `config/acceptance.yaml`。这些信息不得在 `paper.yaml` 中重复。
+论文 ID 和一级领域由目录表达；原文、译文和资源可用性由 `source.pdf`、`translation.md`、`assets/` 表达。文件名、中文目标语言和质量底线是代码不变量；默认页数上限、单篇例外与 skipped 原因属于 `config/policy.yaml`。Git commit 保存内容版本，PR、提交和任务报告保存审阅过程；这些信息不得在 `paper.yaml` 或额外验收账本中重复。
 
-`title_zh` 保留原文产品名、系统名和通行缩写，准确表达原题限定关系，不能用逐词拼接或未经审校的机器直译代替。它只进入 GitHub Pages 的论文卡片、论文阅读页和中文关键词索引；仓库根目录 `CATALOG.md`、译文 H1 与验收元数据哈希仍以正式原文标题 `title` 为准。润色 `title_zh` 不改变译文验收状态。
+`title_zh` 保留原文产品名、系统名和通行缩写，准确表达原题限定关系，不能用逐词拼接或未经审校的机器直译代替。它只进入 GitHub Pages 的论文卡片、论文阅读页和中文关键词索引；仓库根目录 `CATALOG.md` 与译文 H1 仍以正式原文标题 `title` 为准。润色 `title_zh` 不改变译文阅读状态。
 
 `rating` 的字段、证据和计算规则只由 `docs/workflows/rating.md` 定义。本工作流不得创建、删除或修改 `rating`。
 
@@ -31,10 +31,10 @@
 | `unavailable` | 无 | 无 | 当前没有可读原文 |
 | `source_only` | 有 | 无 | 已通过 ingest 的原文身份与可读性闭环，尚无译文 |
 | `draft` | 有 | 有 | 译文尚未逐节验收 |
-| `translated` | 有 | 有 | 验收快照与当前文件匹配；新的或重新验收的条目还必须有独立 review receipt，且受审 title/authors/year/source_url 未漂移 |
+| `translated` | 有 | 有 | 当前 Git revision 中的译文已经人工审阅，并通过当前确定性门禁 |
 | `skipped` | 有 | 无 | 项目策略已有对应 reason code |
 
-状态与文件不一致、`translated` 缺少匹配的验收条目或 `skipped` 缺少项目级原因时，`make check` 必须失败。`draft` 允许存在显式工作缺口，不表示译文接近验收完成。
+状态与文件不一致或 `skipped` 缺少项目级原因时，`make check` 必须失败。`draft` 允许存在显式工作缺口，不表示译文接近审阅完成。
 
 ## 决策规则
 
@@ -42,7 +42,7 @@
 
 不要添加 venue、DOI/arXiv 独立字段、文档类型、PDF 页数、摘要、版权、下载记录、审校说明、评分证据或自由备注。确有跨论文的新需求时转入 `docs/workflows/maintain.md`，不要只为一篇论文增加字段。
 
-状态迁移由对应工作流拥有：ingest 在 `source-check` 与人工来源身份核对都通过后负责 `unavailable -> source_only`，translate 负责 `source_only -> draft`，review/accept 负责 `draft -> translated`；源文或译文实质变化及复审失败时先 `translated -> draft`。translate 只检测页数超限并停止；页数或范围策略变化时，由 maintain 在同一变更中同步 `source_only <-> skipped` 与项目级 reason code，单篇译者不得单独修改共享策略。
+状态迁移由对应工作流拥有：ingest 在 `source-check` 与人工来源身份核对都通过后负责 `unavailable -> source_only`，translate 负责 `source_only -> draft`，review 负责 `draft -> translated`。修改已发布译文时，未完成或复审失败就保持 `draft`；同一变更中已完成修复和复审时，最终可保持 `translated`，CI 仍会按内容路径重新运行单篇门禁。translate 只检测页数超限并停止；页数或范围策略变化时，由 maintain 在同一变更中同步 `source_only <-> skipped` 与项目级 reason code，单篇译者不得单独修改共享策略。
 
 ## 验证
 

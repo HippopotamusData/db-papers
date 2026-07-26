@@ -23,9 +23,6 @@ from markdown_visibility import reader_visible_markdown
 from reference_sections import select_reference_heading
 
 
-LEGACY_IMAGE_RE = re.compile(
-    r"!\[([^]]*)\]\((<[^>]+>|[^)\s]+)(?:\s+['\"][^'\"]*['\"])?\)"
-)
 SOURCE_RESOURCE_PATTERNS = {
     "figure": re.compile(
         r"(?:^[ \t\f]*|[ \t]{2,})(?:Figure|Fig\.)\s*([1-9]\d*)\s*[:.]",
@@ -657,265 +654,11 @@ def formal_resource_representations(translation_text: str) -> dict[str, dict[int
     return representations
 
 
-def _legacy_image_links(translation_text: str) -> list[tuple[str, str]]:
-    """Parse exactly the image syntax used by the frozen receiptless ledger."""
-
-    return [
-        (alt, target[1:-1] if target.startswith("<") else target)
-        for alt, target in LEGACY_IMAGE_RE.findall(translation_text)
-    ]
-
-
-def _legacy_image_marker(line: str) -> str | None:
-    match = LEGACY_IMAGE_RE.search(line)
-    if not match:
-        return None
-    target = match.group(2)
-    if target.startswith("<"):
-        target = target[1:-1]
-    return f"image:{target}"
-
-
-def _legacy_preceding_payload_marker(
-    lines: list[str],
-    caption_index: int,
-    kind: str,
-) -> str | None:
-    payload_index = caption_index - 1
-    while payload_index >= 0 and not lines[payload_index].strip():
-        payload_index -= 1
-    if payload_index < 0:
-        return None
-
-    marker = _legacy_image_marker(lines[payload_index].lstrip())
-    if marker is not None:
-        return marker
-
-    if kind == "table" and lines[payload_index].lstrip().startswith("|"):
-        table_start = payload_index
-        while (
-            table_start > 0
-            and lines[table_start - 1].lstrip().startswith("|")
-        ):
-            table_start -= 1
-        table_lines = lines[table_start : payload_index + 1]
-        if len(table_lines) >= 2 and re.match(
-            r"^\s*\|?\s*:?-{3,}",
-            table_lines[1],
-        ):
-            return f"table-line:{table_start + 1}"
-
-    if (
-        kind in {"figure", "algorithm"}
-        and lines[payload_index].lstrip().startswith("```")
-    ):
-        opening_index = payload_index - 1
-        while opening_index >= 0:
-            if lines[opening_index].lstrip().startswith("```"):
-                if any(
-                    line.strip()
-                    for line in lines[opening_index + 1 : payload_index]
-                ):
-                    return f"fence-line:{opening_index + 1}"
-                return None
-            opening_index -= 1
-    return None
-
-
-def _legacy_formal_resource_representations(
-    translation_text: str,
-) -> dict[str, dict[int, set[str]]]:
-    """Replay the exact formal-resource mapping used by receiptless records."""
-
-    representations: dict[str, dict[int, set[str]]] = {
-        kind: {} for kind in SOURCE_RESOURCE_PATTERNS
-    }
-
-    for alt, target in _legacy_image_links(translation_text):
-        for kind, pattern in IMAGE_ALT_NUMBER_PATTERNS.items():
-            match = pattern.match(alt)
-            if match:
-                number = int(match.group(1))
-                representations[kind].setdefault(number, set()).add(
-                    f"image:{target}"
-                )
-
-    lines = translation_text.splitlines()
-    for kind, caption_pattern in TRANSLATION_CAPTION_PATTERNS.items():
-        for index, line in enumerate(lines):
-            caption = caption_pattern.match(line)
-            if not caption:
-                continue
-            payload_index = index + 1
-            while (
-                payload_index < len(lines)
-                and not lines[payload_index].strip()
-            ):
-                payload_index += 1
-            marker: str | None = None
-            if payload_index < len(lines):
-                payload = lines[payload_index].lstrip()
-                if kind in {"figure", "table", "algorithm"}:
-                    marker = _legacy_image_marker(payload)
-                if (
-                    marker is None
-                    and kind == "table"
-                    and payload.startswith("|")
-                ):
-                    delimiter_index = payload_index + 1
-                    if delimiter_index < len(lines) and re.match(
-                        r"^\s*\|?\s*:?-{3,}",
-                        lines[delimiter_index],
-                    ):
-                        marker = f"table-line:{payload_index + 1}"
-                if (
-                    marker is None
-                    and kind in {"figure", "algorithm"}
-                    and payload.startswith("```")
-                ):
-                    marker = f"fence-line:{payload_index + 1}"
-            if marker is None:
-                marker = _legacy_preceding_payload_marker(
-                    lines,
-                    index,
-                    kind,
-                )
-            if marker is not None:
-                number = int(caption.group(1))
-                representations[kind].setdefault(number, set()).add(marker)
-
-    for markers in representations["figure"].values():
-        if any(marker.startswith("image:") for marker in markers):
-            markers.difference_update(
-                {
-                    marker
-                    for marker in markers
-                    if marker.startswith("fence-line:")
-                }
-            )
-    return representations
-
-
-def _legacy_validate_images(
-    paper_dir: Path,
-    translation_text: str,
-    allow_whole_page: bool,
-) -> tuple[list[str], list[str]]:
-    """Replay the exact image checks used by receiptless accepted records."""
-
-    errors: list[str] = []
-    risks: list[str] = []
-    links = _legacy_image_links(translation_text)
-    targets = [target for _alt, target in links]
-    duplicates = sorted(
-        target for target, count in Counter(targets).items() if count > 1
-    )
-    if duplicates:
-        errors.append(f"duplicate image references: {', '.join(duplicates)}")
-
-    paper_root = paper_dir.resolve()
-    assets = paper_dir / "assets"
-    assets_root = assets.resolve()
-    asset_paths = (
-        sorted(
-            (
-                path
-                for path in assets.rglob("*")
-                if path.is_file() or path.is_symlink()
-            ),
-            key=os.fspath,
-        )
-        if assets.is_dir()
-        else []
-    )
-    linked_paths = [
-        paper_dir.joinpath(*PurePosixPath(target).parts)
-        for _alt, target in links
-        if PurePosixPath(target).parts
-        and PurePosixPath(target).parts[0] == "assets"
-        and ".." not in PurePosixPath(target).parts
-    ]
-    ignored_paths = _git_ignored_paths(
-        [*asset_paths, *linked_paths],
-        paper_dir,
-    )
-
-    referenced: set[Path] = set()
-    for _alt, target in links:
-        posix = PurePosixPath(target)
-        if target.startswith(("http://", "https://", "data:")):
-            errors.append(
-                f"image link must stay inside this paper's assets/: {target}"
-            )
-            continue
-        if (
-            posix.is_absolute()
-            or not posix.parts
-            or posix.parts[0] != "assets"
-            or ".." in posix.parts
-        ):
-            errors.append(
-                f"image link must use a safe assets/ relative path: {target}"
-            )
-            continue
-        lexical = paper_dir.joinpath(*posix.parts)
-        lexical_absolute = _lexical_absolute(lexical)
-        referenced.add(lexical_absolute)
-        if lexical_absolute in ignored_paths:
-            errors.append(
-                f"translation references git-ignored asset: {target}"
-            )
-        resolved = lexical.resolve()
-        if (
-            not assets_root.is_relative_to(paper_root)
-            or not resolved.is_relative_to(assets_root)
-        ):
-            errors.append(
-                f"image link resolves outside this paper's assets/: {target}"
-            )
-            continue
-        if not lexical.is_file():
-            errors.append(f"broken image reference: {target}")
-            continue
-        if not allow_whole_page and re.search(
-            r"(?:^|[-_.])(?:source\.pdf|original[-_]?page|page[-_]?\d+)",
-            lexical.name,
-            re.IGNORECASE,
-        ):
-            errors.append(
-                f"whole-page or extraction-residue image is not allowed: {target}"
-            )
-        try:
-            with Image.open(lexical) as image:
-                image.verify()
-        except (OSError, UnidentifiedImageError) as exc:
-            errors.append(f"image is not decodable: {target} ({exc})")
-
-    for asset in asset_paths:
-        asset_absolute = _lexical_absolute(asset)
-        if asset_absolute in ignored_paths:
-            continue
-        if asset_absolute not in referenced:
-            risks.append(
-                "orphan asset is not referenced by translation.md: "
-                f"{asset.relative_to(paper_dir)}"
-            )
-    return errors, risks
-
-
 def validate_images(
     paper_dir: Path,
     translation_text: str,
     allow_whole_page: bool,
-    *,
-    legacy_resource_structure: bool = False,
 ) -> tuple[list[str], list[str]]:
-    if legacy_resource_structure:
-        return _legacy_validate_images(
-            paper_dir,
-            translation_text,
-            allow_whole_page,
-        )
     errors: list[str] = []
     risks: list[str] = []
     links = image_links(translation_text)
@@ -1054,16 +797,6 @@ def _reference_section(
     return (bool(heading), text[heading.end() :] if heading else "")
 
 
-def _legacy_reference_section(
-    text: str,
-    heading_pattern: re.Pattern[str],
-) -> tuple[bool, str]:
-    """Preserve the frozen boundary used by receiptless accepted records."""
-
-    heading = heading_pattern.search(text)
-    return (bool(heading), text[heading.end() :] if heading else "")
-
-
 def _reference_id(bracketed: str | None, decimal: str | None) -> str:
     return (bracketed or decimal or "").casefold()
 
@@ -1077,7 +810,7 @@ def _is_author_initials(identifier: str) -> bool:
 def _delimited_reference_marker(
     match: re.Match[str],
 ) -> tuple[str | None, str | None]:
-    """Return one paired/legacy delimiter identifier and decimal identifier."""
+    """Return one paired or one-sided delimiter identifier and decimal identifier."""
 
     delimited = next(
         (
@@ -1316,50 +1049,6 @@ def _reference_entries(section: str) -> list[tuple[str, str]]:
         if (
             not valid_starts
             and current_id is not None
-            and line.strip()
-            and not line.lstrip().startswith("#")
-        ):
-            current_lines.append(line.strip())
-    if current_id is not None:
-        entries.append((current_id, " ".join(current_lines).strip()))
-    return entries
-
-
-def _legacy_reference_entries(section: str) -> list[tuple[str, str]]:
-    """Parse exactly the single-column entry shape used by the legacy ledger."""
-
-    lines = section.splitlines()
-    raw_matches = [REFERENCE_ENTRY_RE.match(line) for line in lines]
-    has_bracketed_numeric_style = any(
-        match and match.group(1) and match.group(1).isdigit()
-        for match in raw_matches
-    )
-    decimal_candidates = [
-        int(match.group(2))
-        for match in raw_matches
-        if match and match.group(2) and len(match.group(2)) <= 3
-    ]
-    decimal_limit = max(5, len(decimal_candidates) * 2)
-
-    entries: list[tuple[str, str]] = []
-    current_id: str | None = None
-    current_lines: list[str] = []
-    for line, match in zip(lines, raw_matches, strict=True):
-        if match and match.group(2):
-            decimal_value = int(match.group(2))
-            if (
-                has_bracketed_numeric_style
-                or len(match.group(2)) > 3
-                or decimal_value > decimal_limit
-            ):
-                match = None
-        if match:
-            if current_id is not None:
-                entries.append((current_id, " ".join(current_lines).strip()))
-            current_id = _reference_id(match.group(1), match.group(2))
-            current_lines = [match.group(3).strip()]
-        elif (
-            current_id is not None
             and line.strip()
             and not line.lstrip().startswith("#")
         ):
@@ -2614,72 +2303,53 @@ def _has_whitespace_split_url(body: str) -> bool:
 def _reference_findings(
     source_text: str,
     translation_text: str,
-    *,
-    broaden_source_heading: bool = False,
 ) -> tuple[list[str], list[str]]:
     translation_text = reader_visible_markdown(translation_text)
     errors: list[str] = []
     risks: list[str] = []
-    if broaden_source_heading:
-        source_heading, source_section, _source_body = (
-            _review_source_reference_parts(source_text)
-        )
-        has_source_heading = source_heading is not None
-        source_entry_parser = _reference_entries
-    else:
-        has_source_heading, source_section = _legacy_reference_section(
-            source_text,
-            SOURCE_REFERENCE_HEADING_RE,
-        )
-        source_entry_parser = _legacy_reference_entries
+    source_heading, source_section, _source_body = (
+        _review_source_reference_parts(source_text)
+    )
+    has_source_heading = source_heading is not None
     if not has_source_heading:
         return errors, risks
 
-    if broaden_source_heading:
-        has_translation_heading, translation_section = _reference_section(
-            translation_text,
-            TRANSLATION_REFERENCE_HEADING_RE,
-            require_single_evidence=False,
-        )
-        translation_entry_parser = _reference_entries
-    else:
-        has_translation_heading, translation_section = _legacy_reference_section(
-            translation_text,
-            TRANSLATION_REFERENCE_HEADING_RE,
-        )
-        translation_entry_parser = _legacy_reference_entries
+    has_translation_heading, translation_section = _reference_section(
+        translation_text,
+        TRANSLATION_REFERENCE_HEADING_RE,
+        require_single_evidence=False,
+    )
     if not has_translation_heading:
         errors.append("source has a References section but translation has no reference heading")
         translation_section = ""
 
-    parsed_source_entries = source_entry_parser(source_section)
+    parsed_source_entries = _reference_entries(source_section)
     source_entries = parsed_source_entries
     source_entries, source_ocr_risks = _normalize_source_reference_ocr(source_entries)
     risks.extend(source_ocr_risks)
-    translation_entries = translation_entry_parser(translation_section)
-    if broaden_source_heading:
-        source_entries, source_author_key_ocr_risks = (
-            _normalize_source_author_key_ocr(
-                source_entries,
-                translation_entries,
-            )
+    translation_entries = _reference_entries(translation_section)
+    source_entries, source_author_key_ocr_risks = (
+        _normalize_source_author_key_ocr(
+            source_entries,
+            translation_entries,
         )
-        risks.extend(source_author_key_ocr_risks)
-        complete_translation_entries = _complete_numeric_translation_entries(
-            translation_section
+    )
+    risks.extend(source_author_key_ocr_risks)
+    complete_translation_entries = _complete_numeric_translation_entries(
+        translation_section
+    )
+    if complete_translation_entries is not None:
+        numeric_recovery = _recover_complete_numeric_bibliography(
+            source_text,
+            source_heading,
+            parsed_source_entries,
+            complete_translation_entries,
         )
-        if complete_translation_entries is not None:
-            numeric_recovery = _recover_complete_numeric_bibliography(
-                source_text,
-                source_heading,
-                parsed_source_entries,
-                complete_translation_entries,
+        if numeric_recovery is not None:
+            source_entries, numeric_recovery_risks, _numeric_mappings = (
+                numeric_recovery
             )
-            if numeric_recovery is not None:
-                source_entries, numeric_recovery_risks, _numeric_mappings = (
-                    numeric_recovery
-                )
-                risks.extend(numeric_recovery_risks)
+            risks.extend(numeric_recovery_risks)
     source_counts = Counter(identifier for identifier, _text in source_entries)
     translation_counts = Counter(identifier for identifier, _text in translation_entries)
 
@@ -2859,23 +2529,11 @@ def source_coverage_findings(
     translation_text: str,
     require_references: bool,
     require_inline_citations: bool = False,
-    *,
-    legacy_resource_structure: bool = False,
 ) -> tuple[list[str], list[str]]:
-    if legacy_resource_structure and require_inline_citations:
-        raise ValueError(
-            "legacy accepted resource structure cannot be combined with "
-            "review-grade inline-citation checks"
-        )
-    if legacy_resource_structure:
-        formal_representations = _legacy_formal_resource_representations(
-            translation_text
-        )
-    else:
-        translation_text = reader_visible_markdown(translation_text)
-        formal_representations = formal_resource_representations(
-            translation_text
-        )
+    translation_text = reader_visible_markdown(translation_text)
+    formal_representations = formal_resource_representations(
+        translation_text
+    )
     errors: list[str] = []
     risks: list[str] = []
     risks.extend(_section_heading_findings(source_text, translation_text))
@@ -2904,7 +2562,6 @@ def source_coverage_findings(
         reference_errors, reference_risks = _reference_findings(
             source_text,
             translation_text,
-            broaden_source_heading=require_inline_citations,
         )
         errors.extend(reference_errors)
         risks.extend(reference_risks)
@@ -2961,20 +2618,17 @@ def validate_paper(
     require_references: bool,
     require_inline_citations: bool,
     allow_whole_page: bool,
-    legacy_resource_structure: bool = False,
 ) -> tuple[list[str], list[str]]:
     image_errors, image_risks = validate_images(
         paper_dir,
         translation_text,
         allow_whole_page,
-        legacy_resource_structure=legacy_resource_structure,
     )
     coverage_errors, coverage_risks = source_coverage_findings(
         source_text,
         translation_text,
         require_references,
         require_inline_citations,
-        legacy_resource_structure=legacy_resource_structure,
     )
     return image_errors + coverage_errors, image_risks + coverage_risks
 
@@ -2986,11 +2640,6 @@ def main() -> int:
     parser.add_argument("--require-complete-references", action="store_true")
     parser.add_argument("--require-inline-citations", action="store_true")
     parser.add_argument("--allow-whole-page-images", action="store_true")
-    parser.add_argument(
-        "--legacy-accepted-resource-structure",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
     args = parser.parse_args()
     try:
         translation_text = (args.paper_dir / "translation.md").read_text(encoding="utf-8")
@@ -3006,7 +2655,6 @@ def main() -> int:
             require_references=args.require_complete_references,
             require_inline_citations=args.require_inline_citations,
             allow_whole_page=args.allow_whole_page_images,
-            legacy_resource_structure=args.legacy_accepted_resource_structure,
         )
     except ValueError as exc:
         print(f"ERROR: reference-section evidence is ambiguous: {exc}")

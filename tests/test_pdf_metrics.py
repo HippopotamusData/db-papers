@@ -127,20 +127,6 @@ class PdfMetricsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "lacks enough nearby entry evidence"):
             pdf_metrics.source_word_count_from_text(text)
 
-    def test_frozen_legacy_boundary_remains_available_for_receiptless_records(self) -> None:
-        text = (
-            "CONTENTS\n"
-            "REFERENCES\n"
-            "Introduction and body database words follow.\n"
-        )
-        self.assertEqual(
-            pdf_metrics.source_word_count_from_text(
-                text,
-                evidence_backed_boundary=False,
-            ),
-            1,
-        )
-
     def test_toc_heading_followed_by_numbered_body_sections_is_not_evidence(
         self,
     ) -> None:

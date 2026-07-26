@@ -40,17 +40,9 @@ def _require_pinned_pypdf() -> None:
         )
 
 
-def source_word_count_from_text(
-    text: str,
-    *,
-    evidence_backed_boundary: bool = True,
-) -> int:
+def source_word_count_from_text(text: str) -> int:
     lines = text.splitlines()
-    heading = (
-        select_reference_heading(text, SOURCE_REFERENCE_HEADING_RE)
-        if evidence_backed_boundary
-        else SOURCE_REFERENCE_HEADING_RE.search(text)
-    )
+    heading = select_reference_heading(text, SOURCE_REFERENCE_HEADING_RE)
     if heading is None:
         return sum(len(WORD_RE.findall(line)) for line in lines)
     return sum(
@@ -60,19 +52,12 @@ def source_word_count_from_text(
     )
 
 
-def source_word_count(
-    source_pdf: Path,
-    *,
-    evidence_backed_boundary: bool = True,
-) -> int:
+def source_word_count(source_pdf: Path) -> int:
     _require_pinned_pypdf()
     logging.getLogger("pypdf").setLevel(logging.ERROR)
     reader = PdfReader(source_pdf, strict=False)
     text = "\n".join((page.extract_text() or "") for page in reader.pages)
-    count = source_word_count_from_text(
-        text,
-        evidence_backed_boundary=evidence_backed_boundary,
-    )
+    count = source_word_count_from_text(text)
     if count < 1:
         raise ValueError(f"{source_pdf} produced no source words")
     return count
@@ -119,15 +104,10 @@ def abridgement_candidate_from_counts(
 def abridgement_candidate(
     source_pdf: Path,
     translation: Path,
-    *,
-    evidence_backed_boundary: bool = True,
 ) -> str | None:
     return abridgement_candidate_from_counts(
         translation_cjk_count(translation),
-        source_word_count(
-            source_pdf,
-            evidence_backed_boundary=evidence_backed_boundary,
-        ),
+        source_word_count(source_pdf),
     )
 
 
@@ -137,19 +117,10 @@ def main() -> int:
     abridgement_parser = subparsers.add_parser("abridgement")
     abridgement_parser.add_argument("source_pdf", type=Path)
     abridgement_parser.add_argument("translation", type=Path)
-    abridgement_parser.add_argument(
-        "--legacy-accepted-reference-boundary",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
     args = parser.parse_args()
 
     try:
-        candidate = abridgement_candidate(
-            args.source_pdf,
-            args.translation,
-            evidence_backed_boundary=not args.legacy_accepted_reference_boundary,
-        )
+        candidate = abridgement_candidate(args.source_pdf, args.translation)
     except (OSError, PdfReadError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2

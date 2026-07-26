@@ -15,13 +15,13 @@ import yaml
 from project_config import load_yaml
 
 
-MODES = {"draft-only", "review-and-repair/accept"}
+MODES = {"draft-only", "review-and-repair"}
 STATES = {
     "queued",
     "translating",
     "draft-ready",
     "reviewing",
-    "accepted",
+    "reviewed",
     "rated",
     "blocked",
 }
@@ -29,17 +29,16 @@ TRANSITIONS = {
     "queued": {"translating", "reviewing", "blocked"},
     "translating": {"draft-ready", "blocked"},
     "draft-ready": {"translating", "reviewing", "blocked"},
-    "reviewing": {"draft-ready", "accepted", "blocked"},
-    "accepted": {"rated", "blocked"},
+    "reviewing": {"draft-ready", "reviewed", "blocked"},
+    "reviewed": {"rated", "blocked"},
     "rated": set(),
-    "blocked": {"queued", "translating", "reviewing", "accepted"},
+    "blocked": {"queued", "translating", "reviewing", "reviewed"},
 }
 KEYS = {
-    "schema_version",
     "mode",
     "branch",
     "worktree",
-    "review_base_sha",
+    "base_sha",
     "targets",
 }
 ID_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
@@ -91,13 +90,6 @@ def batch_context(require_clean: bool) -> tuple[Path, str, str]:
             raise ValueError(
                 f"batch must start clean (first change: {dirty.splitlines()[0]})"
             )
-    for name in (
-        ".acceptance-transaction.yaml",
-        ".acceptance-transaction.cleanup.yaml",
-    ):
-        marker = root / "config" / name
-        if marker.exists():
-            raise ValueError(f"recover acceptance transaction first: {marker}")
     return root, branch, head
 
 
@@ -113,7 +105,7 @@ def manifest_path(root: Path, value: str) -> Path:
 def full_sha(value: str) -> str:
     result = git_text("rev-parse", "--verify", f"{value}^{{commit}}")
     if not SHA_RE.fullmatch(result):
-        raise ValueError(f"BASE did not resolve to a full commit SHA: {value}")
+        raise ValueError(f"base_sha did not resolve to a full commit SHA: {value}")
     return result
 
 
@@ -138,16 +130,14 @@ def read_manifest(path: Path) -> dict:
         raise ValueError(f"manifest must contain exactly: {sorted(KEYS)}")
     targets = data["targets"]
     if (
-        type(data["schema_version"]) is not int
-        or data["schema_version"] != 1
-        or not isinstance(data["mode"], str)
+        not isinstance(data["mode"], str)
         or data["mode"] not in MODES
         or not isinstance(data["branch"], str)
         or not data["branch"].startswith("codex/")
         or not isinstance(data["worktree"], str)
         or not Path(data["worktree"]).is_absolute()
-        or not isinstance(data["review_base_sha"], str)
-        or not SHA_RE.fullmatch(data["review_base_sha"])
+        or not isinstance(data["base_sha"], str)
+        or not SHA_RE.fullmatch(data["base_sha"])
         or not isinstance(targets, dict)
         or not targets
     ):
@@ -157,7 +147,7 @@ def read_manifest(path: Path) -> dict:
             raise ValueError(f"invalid target paper ID: {paper_id!r}")
         if not isinstance(state, str) or state not in STATES:
             raise ValueError(f"invalid target state: {paper_id}={state!r}")
-        if data["mode"] == "draft-only" and state in {"accepted", "rated"}:
+        if data["mode"] == "draft-only" and state in {"reviewed", "rated"}:
             raise ValueError(f"draft-only batch cannot record {state}")
     return data
 
@@ -183,16 +173,16 @@ def check_manifest(
 ) -> None:
     if Path(data["worktree"]).resolve() != root or data["branch"] != branch:
         raise ValueError("manifest belongs to another branch or worktree")
-    base = full_sha(data["review_base_sha"])
+    base = full_sha(data["base_sha"])
     if expected_base_sha is not None:
         expected_base = full_sha(expected_base_sha)
         if base != expected_base:
             raise ValueError(
-                "manifest review_base_sha does not match the expected batch "
+                "manifest base_sha does not match the expected batch "
                 f"base: manifest={base}, expected={expected_base}"
             )
     if git("merge-base", "--is-ancestor", base, "HEAD", check=False).returncode:
-        raise ValueError(f"review_base_sha is not an ancestor of HEAD: {base}")
+        raise ValueError(f"base_sha is not an ancestor of HEAD: {base}")
     paper_ids(root, list(data["targets"]))
     if paper_id is not None:
         if paper_id not in data["targets"]:
@@ -211,21 +201,22 @@ def command_init(args: argparse.Namespace) -> None:
         raise ValueError(f"manifest already exists: {path}")
     base = full_sha(args.base_sha)
     if base != head:
-        raise ValueError(f"batch must start at BASE: HEAD={head}, BASE={base}")
+        raise ValueError(
+            f"batch must start at base_sha: HEAD={head}, base_sha={base}"
+        )
     targets = {paper_id: "queued" for paper_id in paper_ids(root, args.paper_id)}
     write_manifest(
         path,
         {
-            "schema_version": 1,
             "mode": args.mode,
             "branch": branch,
             "worktree": str(root),
-            "review_base_sha": base,
+            "base_sha": base,
             "targets": targets,
         },
     )
     print(f"Batch manifest initialized: {path}")
-    print(f"review_base_sha: {base}")
+    print(f"base_sha: {base}")
 
 
 def command_check(args: argparse.Namespace) -> None:
@@ -254,7 +245,7 @@ def command_set_state(args: argparse.Namespace) -> None:
         return
     if args.state not in TRANSITIONS[old]:
         raise ValueError(f"invalid state transition: {old} -> {args.state}")
-    if data["mode"] == "draft-only" and args.state in {"accepted", "rated"}:
+    if data["mode"] == "draft-only" and args.state in {"reviewed", "rated"}:
         raise ValueError(f"draft-only batch cannot enter {args.state}")
     data["targets"][args.paper_id] = args.state
     write_manifest(path, data)

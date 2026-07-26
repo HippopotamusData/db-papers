@@ -12,8 +12,8 @@
 - `translation.md` 以 `templates/translation.md` 的 YAML frontmatter 开头；`paper_id` 与目录名一致，`title` 与 `paper.yaml` 一致，`language` 固定为 `zh-CN`，`source` 固定为 `source.pdf`。
 - `translation.md` 覆盖原文全部实质章节、公式、图表、算法、代码、附录和完整参考文献。
 - 图表资源精确裁剪、链接有效、位置正确，主阅读路径无整页截图和工作残留。
-- 逐节对照通过后由 review/accept 绑定源文、译文、非忽略资源、审阅者、固定基线和精确机械候选，再把 `reading_status` 改为 `translated`。
-- 新论文的完整处理在 accept 后继续执行 `docs/workflows/rating.md`；评分写入并重新生成目录后才进入最终提交。
+- 逐节对照通过后按 review workflow 记录当前审阅结论，把 `reading_status` 改为 `translated`，并对当前论文重新运行单篇门禁。
+- 新论文的完整处理在审阅通过后继续执行 `docs/workflows/rating.md`；评分写入并重新生成目录后才进入最终提交。
 - `make check` 通过。
 
 ## 约束
@@ -22,13 +22,13 @@
 
 单篇新论文若被要求“完整处理”，本工作流只拥有
 `source_only -> draft` 和论文目录内的译文资产；随后必须按 review workflow
-独立审阅并 accept，再按 rating workflow 评分并重建目录。未获 accept 权限
+独立审阅并标记为 `translated`，再按 rating workflow 评分并重建目录。未获状态修改权限
 时交付 `draft`，不得把“翻译完成”误报为 `translated`。
 
 完整质量要求见 `docs/translation-policy.md`。可以选择高效的提取、分栏、裁图和校对路径，但合并前必须检查编号、引用和顺序。
 
-`draft` 是允许不完整的工作状态：TODO、低覆盖、Listing/表格/资源缺口会由校验器报告为 warning，便于继续工作；同样的问题在 `translated` 中必须失败。不要为了让草稿通过而隐藏标记或调低阈值。
+`draft` 是允许不完整的工作状态：过程残留和内容缺口会由校验器报告为 warning，便于继续工作。进入 `translated` 前必须消除确定性错误；低覆盖、数量差等启发式 warning 必须人工回到 PDF 处置，但不会转成永久例外记录。不要为了让草稿通过而隐藏标记或调低阈值。
 
 ## 停止条件
 
-译文达到 `translated` 标准，或出现无法可靠读取的内容、缺失原文、页数超限或范围外依赖。未通过验收时保留 `draft`，不猜测完成。
+译文达到 `translated` 标准，或出现无法可靠读取的内容、缺失原文、页数超限或范围外依赖。未通过审阅时保留 `draft`，不猜测完成。

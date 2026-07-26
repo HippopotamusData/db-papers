@@ -16,7 +16,7 @@ import build_site  # noqa: E402
 
 
 class BuildSiteTests(unittest.TestCase):
-    def make_repo(self, root: Path, *, accepted: bool = True) -> None:
+    def make_repo(self, root: Path) -> None:
         (root / "config").mkdir()
         (root / "papers/query-processing/accepted-paper/assets").mkdir(
             parents=True
@@ -47,15 +47,6 @@ class BuildSiteTests(unittest.TestCase):
                 },
                 allow_unicode=True,
                 sort_keys=False,
-            ),
-            encoding="utf-8",
-        )
-        (root / "config/acceptance.yaml").write_text(
-            yaml.safe_dump(
-                {
-                    "schema_version": 1,
-                    "entries": {"accepted-paper": {}} if accepted else {},
-                }
             ),
             encoding="utf-8",
         )
@@ -125,7 +116,7 @@ source: source.pdf
             encoding="utf-8",
         )
 
-    def test_prepare_publishes_only_accepted_translations(self) -> None:
+    def test_prepare_publishes_only_translated_records(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.make_repo(root)
@@ -242,12 +233,17 @@ source: source.pdf
             self.assertNotIn("阅读中文译文", catalog)
             self.assertNotIn("访问权威原文", catalog)
 
-    def test_translated_record_requires_acceptance_entry(self) -> None:
+    def test_translated_record_requires_translation_file(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            self.make_repo(root, accepted=False)
+            self.make_repo(root)
+            (
+                root
+                / "papers/query-processing/accepted-paper/translation.md"
+            ).unlink()
             with self.assertRaisesRegex(
-                ValueError, "translated paper has no acceptance entry"
+                ValueError,
+                "translated paper must have a regular translation file",
             ):
                 build_site.prepare_site(root, root / "site_src")
 

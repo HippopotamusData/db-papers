@@ -5,9 +5,9 @@ MATHJAX_MODULE ?= node_modules/mathjax
 	catalog catalog-check metadata-check normalize-headers normalize-headers-check \
 	fix-math math-check math-check-files math-audit-github math-audit-github-changed \
 	math-audit-github-worktree math-audit-katex validate deep-validate paper-check \
-	review-queue batch-start batch-check batch-state accept-preflight diff-check \
+	batch-start batch-check batch-state diff-check \
 	site-prepare site-build site-check site-serve \
-	test doctor doctor-accept check deep-check _deep-check
+	test doctor check deep-check _deep-check
 
 python-path:
 	@printf '%s\n' "$(PYTHON)"
@@ -120,9 +120,6 @@ paper-check:
 	@test -n "$(PAPER_ID)" || { echo "ERROR: PAPER_ID is required" >&2; exit 1; }
 	env -u PAPER_ID -u SKIP_METADATA_VALIDATION DEEP_VALIDATION=1 PYTHON=$(PYTHON) bash scripts/validate_translations.sh --paper-id "$(PAPER_ID)"
 
-review-queue:
-	$(PYTHON) scripts/papers.py review-queue
-
 batch-start:
 	@test -n "$(BATCH_MANIFEST)" || { echo "ERROR: BATCH_MANIFEST is required" >&2; exit 1; }
 	@test -n "$(MODE)" || { echo "ERROR: MODE is required" >&2; exit 1; }
@@ -151,42 +148,6 @@ batch-state:
 		--paper-id "$(PAPER_ID)" \
 		--state "$(STATE)"
 
-accept-preflight:
-	@test -n "$(PAPER_ID)" || { echo "ERROR: PAPER_ID is required" >&2; exit 1; }
-	@test -n "$(BASE)" || { echo "ERROR: BASE is required" >&2; exit 1; }
-	@case "$(PAPER_ID)" in *[!a-z0-9-]*|-) \
-		echo "ERROR: PAPER_ID must be a kebab-case identifier" >&2; exit 1;; esac
-	@base=$$(git rev-parse --verify "$(BASE)^{commit}") || exit 1; \
-	git merge-base --is-ancestor "$$base" HEAD || { \
-		echo "ERROR: BASE is not an ancestor of HEAD: $$base" >&2; exit 1; \
-	}; \
-	for marker in config/.acceptance-transaction.yaml \
-		config/.acceptance-transaction.cleanup.yaml; do \
-		test ! -e "$$marker" || { \
-			echo "ERROR: recover acceptance transaction first: $$marker" >&2; \
-			exit 1; \
-		}; \
-	done; \
-	statuses=$$($(PYTHON) scripts/papers.py status | \
-		awk -F '\t' -v id="$(PAPER_ID)" '$$1 ~ ("/" id "$$") { print $$2 }'); \
-	count=$$(printf '%s\n' "$$statuses" | sed '/^$$/d' | wc -l | tr -d ' '); \
-	test "$$count" = 1 || { \
-		echo "ERROR: PAPER_ID must resolve to exactly one status row (found $$count)" >&2; \
-		exit 1; \
-	}; \
-	test "$$statuses" = draft || { \
-		echo "ERROR: accept requires reading_status=draft (found $$statuses)" >&2; \
-		exit 1; \
-	}
-	@if [ -n "$(BATCH_MANIFEST)" ]; then \
-		$(PYTHON) scripts/batch_manifest.py check \
-			--manifest "$(BATCH_MANIFEST)" \
-			--paper-id "$(PAPER_ID)" \
-			--expected-state reviewing \
-			--expected-base-sha "$(BASE)"; \
-	fi
-	$(MAKE) doctor-accept
-
 diff-check:
 	bash scripts/check_diff.sh
 
@@ -208,17 +169,14 @@ test:
 doctor:
 	PYTHON=$(PYTHON) bash scripts/doctor.sh
 
-doctor-accept:
-	REQUIRE_GITHUB=1 PYTHON=$(PYTHON) bash scripts/doctor.sh
-
 check: test validate catalog-check normalize-headers-check
 
 deep-check:
 	@case "$(DEEP_REASON)" in \
-		content-semantics|acceptance-semantics|validator-semantics|full-audit) ;; \
+		content-semantics|publication-semantics|validator-semantics|full-audit) ;; \
 		*) \
 			echo "ERROR: deep-check requires DEEP_REASON=" \
-				"{content-semantics,acceptance-semantics,validator-semantics,full-audit}" >&2; \
+				"{content-semantics,publication-semantics,validator-semantics,full-audit}" >&2; \
 			exit 1;; \
 	esac
 	@$(MAKE) --no-print-directory _deep-check

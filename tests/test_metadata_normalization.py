@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import subprocess
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -86,20 +84,6 @@ class MetadataNormalizationTests(unittest.TestCase):
         errors = []
         papers.validate_rating(errors, path, rating, 2021, current_year=2026)
         self.assertEqual(errors, [])
-
-    def test_acceptance_lock_is_shared_by_linked_worktrees(self) -> None:
-        common_dir = subprocess.CompletedProcess(
-            args=[],
-            returncode=0,
-            stdout="/repository/.git\n",
-            stderr="",
-        )
-        with patch.object(papers.subprocess, "run", return_value=common_dir):
-            self.assertEqual(
-                papers._acceptance_lock_path(Path("/repository")),
-                papers._acceptance_lock_path(Path("/repository-worktree")),
-            )
-
 
 if __name__ == "__main__":
     unittest.main()
