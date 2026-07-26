@@ -1,0 +1,21 @@
+title: 'Naiad: A Timely Dataflow System'
+title_zh: Naiad：及时数据流系统
+authors:
+  - Derek G. Murray
+  - Frank McSherry
+  - Rebecca Isaacs
+  - Michael Isard
+  - Paul Barham
+  - Martín Abadi
+year: 2013
+source_url: https://www.microsoft.com/en-us/research/publication/naiad-a-timely-dataflow-system-2/
+topics:
+  - stream-processing
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5

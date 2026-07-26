@@ -1,0 +1,23 @@
+title: 'Gorilla: A Fast, Scalable, In-Memory Time Series Database'
+title_zh: Gorilla：快速、可扩展的内存时序数据库
+authors:
+  - Tuomas Pelkonen
+  - Scott Franklin
+  - Justin Teller
+  - Paul Cavallaro
+  - Qi Huang
+  - Justin Meza
+  - Kaushik Veeraraghavan
+year: 2015
+source_url: https://www.vldb.org/pvldb/vol8/p1816-teller.pdf
+topics:
+  - database-system-design
+  - storage-engine
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 4

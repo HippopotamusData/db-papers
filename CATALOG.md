@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：150
-- 已审阅译文：144
+- 论文记录：153
+- 已审阅译文：147
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -19,13 +19,13 @@
 | 算法与实现基础 (`implementation-foundations`) | 6 |
 | 系统架构 (`system-architecture`) | 26 |
 | 查询处理 (`query-processing`) | 52 |
-| 存储 (`storage`) | 19 |
+| 存储 (`storage`) | 20 |
 | 事务与并发控制 (`transactions`) | 8 |
 | 分布式数据库 (`distributed-databases`) | 8 |
 | 数据集成 (`data-integration`) | 2 |
-| 流处理 (`streaming`) | 7 |
+| 流处理 (`streaming`) | 8 |
 | 可靠性与测试 (`reliability-and-testing`) | 5 |
-| 专用数据库 (`specialized-databases`) | 9 |
+| 专用数据库 (`specialized-databases`) | 10 |
 | AI 与数据系统 (`ai-and-data`) | 6 |
 
 ## 按领域浏览
@@ -136,7 +136,7 @@
 | [Volcano—An Extensible and Parallel Query Evaluation System](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/translation.md) | 查询执行 | 1994 | 5.0 | translated | [原文](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/source.pdf) | [官方链接](<https://doi.org/10.1109/69.273032>) |
 | [WinMagic: Subquery Elimination Using Window Aggregation](papers/query-processing/winmagic-subquery-elimination-window-aggregation/translation.md) | 查询优化 | 2003 | 3.0 | translated | [原文](papers/query-processing/winmagic-subquery-elimination-window-aggregation/source.pdf) | [官方链接](<https://doi.org/10.1145/872757.872840>) |
 
-### 存储 (`storage`，19 篇)
+### 存储 (`storage`，20 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -147,6 +147,7 @@
 | [Data Blocks: Hybrid OLTP and OLAP on Compressed Storage using both Vectorization and Compilation](papers/storage/data-blocks-hybrid-oltp-olap-compressed-storage-vectorization-compilation/translation.md) | 存储引擎 | 2016 | 3.5 | translated | [原文](papers/storage/data-blocks-hybrid-oltp-olap-compressed-storage-vectorization-compilation/source.pdf) | [官方链接](<https://db.in.tum.de/downloads/publications/datablocks.pdf>) |
 | [Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores](papers/storage/delta-lake-high-performance-acid-table-storage-cloud-object-stores/translation.md) | 云原生、存储引擎、湖仓一体 | 2020 | 4.5 | translated | [原文](papers/storage/delta-lake-high-performance-acid-table-storage-cloud-object-stores/source.pdf) | [官方链接](<https://doi.org/10.14778/3415478.3415560>) |
 | [Facebook's Tectonic Filesystem: Efficiency from Exascale](papers/storage/facebook-tectonic-filesystem-efficiency-from-exascale/translation.md) | 存储引擎 | 2021 | 3.5 | translated | [原文](papers/storage/facebook-tectonic-filesystem-efficiency-from-exascale/source.pdf) | [官方链接](<https://www.usenix.org/system/files/fast21-pan.pdf>) |
+| [Generalized Search Trees for Database Systems](papers/storage/generalized-search-trees-database-systems/translation.md) | 索引 | 1995 | 5.0 | translated | [原文](papers/storage/generalized-search-trees-database-systems/source.pdf) | [官方链接](<https://www.vldb.org/conf/1995/P562.PDF>) |
 | [Kudu: Storage for Fast Analytics on Fast Data](papers/storage/kudu-storage-for-fast-analytics-on-fast-data/translation.md) | 存储引擎、分布式存储 | 2015 | 3.5 | translated | [原文](papers/storage/kudu-storage-for-fast-analytics-on-fast-data/source.pdf) | [官方链接](<https://kudu.apache.org/kudu.pdf>) |
 | [Main Memory Database Systems](papers/storage/main-memory-database-systems/source.pdf) | 存储引擎 | 2016 | 3.5 | skipped | [原文](papers/storage/main-memory-database-systems/source.pdf) | [官方链接](<https://justinlevandoski.io/papers/fnt-mmdb.pdf>) |
 | [Mainlining Databases: Supporting Fast Transactional Workloads on Universal Columnar Data File Formats](papers/storage/mainlining-databases-fast-transactional-workloads-universal-columnar-data-file-formats/translation.md) | 存储引擎 | 2021 | 2.5 | translated | [原文](papers/storage/mainlining-databases-fast-transactional-workloads-universal-columnar-data-file-formats/source.pdf) | [官方链接](<https://db.cs.cmu.edu/papers/2020/p534-li.pdf>) |
@@ -193,7 +194,7 @@
 | [Instant Loading for Main Memory Databases](papers/data-integration/instant-loading-main-memory-databases/translation.md) | 数据导入 | 2013 | 3.5 | translated | [原文](papers/data-integration/instant-loading-main-memory-databases/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol6/p1702-muehlbauer.pdf>) |
 | [Speculative Distributed CSV Data Parsing for Big Data Analytics](papers/data-integration/speculative-distributed-csv-data-parsing-big-data-analytics/translation.md) | 数据导入 | 2019 | 3.5 | translated | [原文](papers/data-integration/speculative-distributed-csv-data-parsing-big-data-analytics/source.pdf) | [官方链接](<https://www.microsoft.com/en-us/research/publication/speculative-distributed-csv-data-parsing-for-big-data-analytics/>) |
 
-### 流处理 (`streaming`，7 篇)
+### 流处理 (`streaming`，8 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -201,6 +202,7 @@
 | [Aurora: A New Model and Architecture for Data Stream Management](papers/streaming/aurora-new-model-architecture-data-stream-management/translation.md) | 流处理 | 2003 | 4.5 | translated | [原文](papers/streaming/aurora-new-model-architecture-data-stream-management/source.pdf) | [官方链接](<https://cs.brown.edu/research/aurora/publications.html>) |
 | [DBToaster: Higher-order Delta Processing for Dynamic, Frequently Fresh Views](papers/streaming/dbtoaster-higher-order-delta-processing/translation.md) | 流处理 | 2012 | 4.0 | translated | [原文](papers/streaming/dbtoaster-higher-order-delta-processing/source.pdf) | [官方链接](<https://doi.org/10.14778/2336664.2336670>) |
 | [MillWheel: Fault-Tolerant Stream Processing at Internet Scale](papers/streaming/millwheel-fault-tolerant-stream-processing-internet-scale/translation.md) | 流处理 | 2013 | 4.5 | translated | [原文](papers/streaming/millwheel-fault-tolerant-stream-processing-internet-scale/source.pdf) | [官方链接](<https://doi.org/10.14778/2536222.2536229>) |
+| [Naiad: A Timely Dataflow System](papers/streaming/naiad-timely-dataflow-system/translation.md) | 流处理 | 2013 | 4.5 | translated | [原文](papers/streaming/naiad-timely-dataflow-system/source.pdf) | [官方链接](<https://www.microsoft.com/en-us/research/publication/naiad-a-timely-dataflow-system-2/>) |
 | [SnappyData: A Unified Cluster for Streaming, Transactions, and Interactive Analytics](papers/streaming/snappydata-unified-cluster-for-streaming-transactions-and-interactive-analytics/translation.md) | 流处理、事务处理 | 2017 | 3.5 | translated | [原文](papers/streaming/snappydata-unified-cluster-for-streaming-transactions-and-interactive-analytics/source.pdf) | [官方链接](<https://web.eecs.umich.edu/~mozafari/php/data/uploads/cidr_2017.pdf>) |
 | [The CQL Continuous Query Language: Semantic Foundations and Query Execution](papers/streaming/cql-continuous-query-language/translation.md) | 流处理 | 2006 | 4.5 | translated | [原文](papers/streaming/cql-continuous-query-language/source.pdf) | [官方链接](<https://cs.stanford.edu/people/widom/pubs.html>) |
 | [The Dataflow Model: A Practical Approach to Balancing Correctness, Latency, and Cost in Massive-Scale, Unbounded, Out-of-Order Data Processing](papers/streaming/dataflow-model-balancing-correctness-latency-cost/translation.md) | 流处理 | 2015 | 5.0 | translated | [原文](papers/streaming/dataflow-model-balancing-correctness-latency-cost/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf>) |
@@ -215,7 +217,7 @@
 | [Quantifying TPC-H Choke Points and Their Optimizations](papers/reliability-and-testing/quantifying-tpch-choke-points/translation.md) | 数据库测试 | 2020 | 3.5 | translated | [原文](papers/reliability-and-testing/quantifying-tpch-choke-points/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol13/p1206-dreseler.pdf>) |
 | [Testing Database Engines via Pivoted Query Synthesis](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/translation.md) | 数据库测试 | 2020 | 4.0 | translated | [原文](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/source.pdf) | [官方链接](<https://www.usenix.org/conference/osdi20/presentation/rigger>) |
 
-### 专用数据库 (`specialized-databases`，9 篇)
+### 专用数据库 (`specialized-databases`，10 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -223,6 +225,7 @@
 | [DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node](papers/specialized-databases/diskann-fast-accurate-billion-point-nearest-neighbor-search/translation.md) | 索引、面向 AI 的数据系统、向量检索 | 2019 | 4.5 | translated | [原文](papers/specialized-databases/diskann-fast-accurate-billion-point-nearest-neighbor-search/source.pdf) | [官方链接](<https://papers.nips.cc/paper_files/paper/2019/hash/09853c7fb1d3f8ee67a61b6bf4a7f8e6-Abstract.html>) |
 | [Druid: A Real-time Analytical Data Store](papers/specialized-databases/druid-a-real-time-analytical-data-store/translation.md) | 分析型数据库 | 2014 | 4.5 | translated | [原文](papers/specialized-databases/druid-a-real-time-analytical-data-store/source.pdf) | [官方链接](<http://static.druid.io/docs/druid.pdf>) |
 | [Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs](papers/specialized-databases/hnsw-efficient-and-robust-approximate-nearest-neighbor-search/translation.md) | 索引、面向 AI 的数据系统、向量检索 | 2020 | 5.0 | translated | [原文](papers/specialized-databases/hnsw-efficient-and-robust-approximate-nearest-neighbor-search/source.pdf) | [官方链接](<https://doi.org/10.1109/TPAMI.2018.2889473>) |
+| [Gorilla: A Fast, Scalable, In-Memory Time Series Database](papers/specialized-databases/gorilla-fast-scalable-in-memory-time-series-database/translation.md) | 数据库系统设计、存储引擎 | 2015 | 5.0 | translated | [原文](papers/specialized-databases/gorilla-fast-scalable-in-memory-time-series-database/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol8/p1816-teller.pdf>) |
 | [Milvus: A Purpose-Built Vector Data Management System](papers/specialized-databases/milvus-purpose-built-vector-data-management-system/translation.md) | 数据库系统设计、面向 AI 的数据系统、向量检索 | 2021 | 4.0 | translated | [原文](papers/specialized-databases/milvus-purpose-built-vector-data-management-system/source.pdf) | [官方链接](<https://doi.org/10.1145/3448016.3457550>) |
 | [Pinot: Realtime OLAP for 530 Million Users](papers/specialized-databases/pinot-realtime-olap-for-530-million-users/translation.md) | 分析型数据库 | 2018 | 4.5 | translated | [原文](papers/specialized-databases/pinot-realtime-olap-for-530-million-users/source.pdf) | [官方链接](<https://cwiki.apache.org/confluence/download/attachments/103092375/Pinot.pdf?version=1&modificationDate=1571428741000&api=v2>) |
 | [Pregel: A System for Large-Scale Graph Processing](papers/specialized-databases/pregel-large-scale-graph-processing/translation.md) | 数据库系统设计 | 2010 | 5.0 | translated | [原文](papers/specialized-databases/pregel-large-scale-graph-processing/source.pdf) | [官方链接](<https://research.google/pubs/pregel-a-system-for-large-scale-graph-processing/>) |
@@ -244,5 +247,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 150 | 0 |
-| 发表年份 | 150 | 0 |
+| 作者 | 153 | 0 |
+| 发表年份 | 153 | 0 |
