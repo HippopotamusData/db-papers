@@ -167,16 +167,181 @@ class CiValidationScopeTests(unittest.TestCase):
         )
         self.assertEqual(paper_ids, ["paper-a", "paper-c"])
 
-    def test_review_snapshot_changes_are_rejected(self) -> None:
+    def test_review_snapshot_additions_are_rejected(self) -> None:
         base = {
             "schema_version": 5,
             "review_snapshots": {"old": {}},
-            "entries": {"paper-a": {"fingerprint": "a"}},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 1,
+                    "review_snapshot": "old",
+                }
+            },
         }
         head = {
             "schema_version": 5,
             "review_snapshots": {"old": {}, "new": {}},
-            "entries": {"paper-a": {"fingerprint": "changed"}},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 2,
+                    "fingerprint": "changed",
+                }
+            },
+        }
+        with self.assertRaises(ValueError):
+            changed_acceptance_paper_ids(base, head)
+
+    def test_newly_unreferenced_review_snapshot_removal_is_allowed(self) -> None:
+        base = {
+            "schema_version": 5,
+            "review_snapshots": {"old": {"policy": "frozen"}},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 1,
+                    "review_snapshot": "old",
+                },
+                "paper-b": {"schema_version": 2, "fingerprint": "stable"},
+            },
+        }
+        head = {
+            "schema_version": 5,
+            "review_snapshots": {},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 2,
+                    "fingerprint": "changed",
+                },
+                "paper-b": {"schema_version": 2, "fingerprint": "stable"},
+            },
+        }
+        self.assertEqual(
+            changed_acceptance_paper_ids(base, head),
+            ["paper-a"],
+        )
+
+    def test_modified_review_snapshot_is_rejected(self) -> None:
+        base = {
+            "schema_version": 5,
+            "review_snapshots": {"old": {"policy": "frozen"}},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 1,
+                    "review_snapshot": "old",
+                }
+            },
+        }
+        head = {
+            "schema_version": 5,
+            "review_snapshots": {"old": {"policy": "changed"}},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 2,
+                    "fingerprint": "changed",
+                }
+            },
+        }
+        with self.assertRaises(ValueError):
+            changed_acceptance_paper_ids(base, head)
+
+    def test_still_referenced_review_snapshot_removal_is_rejected(self) -> None:
+        base = {
+            "schema_version": 5,
+            "review_snapshots": {"shared": {"policy": "frozen"}},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 1,
+                    "review_snapshot": "shared",
+                },
+                "paper-b": {
+                    "schema_version": 1,
+                    "review_snapshot": "shared",
+                },
+            },
+        }
+        head = {
+            "schema_version": 5,
+            "review_snapshots": {},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 2,
+                    "fingerprint": "changed",
+                },
+                "paper-b": {
+                    "schema_version": 1,
+                    "review_snapshot": "shared",
+                },
+            },
+        }
+        with self.assertRaises(ValueError):
+            changed_acceptance_paper_ids(base, head)
+
+    def test_shared_review_snapshot_removal_after_all_migrations_is_allowed(
+        self,
+    ) -> None:
+        base = {
+            "schema_version": 5,
+            "review_snapshots": {"shared": {"policy": "frozen"}},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 1,
+                    "review_snapshot": "shared",
+                },
+                "paper-b": {
+                    "schema_version": 1,
+                    "review_snapshot": "shared",
+                },
+            },
+        }
+        head = {
+            "schema_version": 5,
+            "review_snapshots": {},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 2,
+                    "fingerprint": "changed-a",
+                },
+                "paper-b": {
+                    "schema_version": 2,
+                    "fingerprint": "changed-b",
+                },
+            },
+        }
+        self.assertEqual(
+            changed_acceptance_paper_ids(base, head),
+            ["paper-a", "paper-b"],
+        )
+
+    def test_review_snapshot_removal_with_entry_deletion_is_rejected(
+        self,
+    ) -> None:
+        base = {
+            "schema_version": 5,
+            "review_snapshots": {"old": {"policy": "frozen"}},
+            "entries": {
+                "paper-a": {
+                    "schema_version": 1,
+                    "review_snapshot": "old",
+                }
+            },
+        }
+        head = {
+            "schema_version": 5,
+            "review_snapshots": {},
+            "entries": {},
+        }
+        with self.assertRaises(ValueError):
+            changed_acceptance_paper_ids(base, head)
+
+    def test_unreferenced_base_review_snapshot_removal_is_rejected(self) -> None:
+        base = {
+            "schema_version": 5,
+            "review_snapshots": {"orphan": {"policy": "frozen"}},
+            "entries": {"paper-a": {"schema_version": 2}},
+        }
+        head = {
+            "schema_version": 5,
+            "review_snapshots": {},
+            "entries": {"paper-a": {"schema_version": 2}},
         }
         with self.assertRaises(ValueError):
             changed_acceptance_paper_ids(base, head)
