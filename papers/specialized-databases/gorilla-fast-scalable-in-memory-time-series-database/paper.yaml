@@ -13,4 +13,11 @@ source_url: https://www.vldb.org/pvldb/vol8/p1816-teller.pdf
 topics:
   - database-system-design
   - storage-engine
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 4

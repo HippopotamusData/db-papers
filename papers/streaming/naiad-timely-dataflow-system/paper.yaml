@@ -11,4 +11,11 @@ year: 2013
 source_url: https://www.microsoft.com/en-us/research/publication/naiad-a-timely-dataflow-system-2/
 topics:
   - stream-processing
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5

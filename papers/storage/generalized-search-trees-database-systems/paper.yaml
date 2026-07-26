@@ -8,4 +8,11 @@ year: 1995
 source_url: https://www.vldb.org/conf/1995/P562.PDF
 topics:
   - indexing
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5
