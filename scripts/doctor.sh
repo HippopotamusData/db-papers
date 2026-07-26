@@ -54,7 +54,7 @@ if command -v node >/dev/null 2>&1; then
 const fs = require("fs");
 const path = require("path").join(process.env.MATHJAX_MODULE, "package.json");
 if (!fs.existsSync(path)) {
-  throw new Error(`ERROR: MathJax is missing at ${path}; run npm ci or set MATHJAX_MODULE`);
+  throw new Error(`ERROR: MathJax is missing at ${path}; run make bootstrap or set MATHJAX_MODULE`);
 }
 const version = JSON.parse(fs.readFileSync(path, "utf8")).version;
 if (version !== "4.1.3") {

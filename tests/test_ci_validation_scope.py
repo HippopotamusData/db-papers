@@ -259,6 +259,17 @@ class CiValidationScopeTests(unittest.TestCase):
             "AUDIT_ALL: ${{ steps.scope.outputs.math_all }}",
             workflow,
         )
+        self.assertIn("run: make bootstrap", workflow)
+        self.assertIn(
+            ".venv/bin/python scripts/ci_validation_scope.py",
+            workflow,
+        )
+        self.assertIn(
+            "PYTHON=.venv/bin/python scripts/audit_changed_math.sh",
+            workflow,
+        )
+        self.assertNotIn("name: Install Python dependencies", workflow)
+        self.assertNotIn("name: Install MathJax", workflow)
         self.assertNotIn("make deep-check", workflow)
         self.assertNotIn("workflow_dispatch", workflow)
 
@@ -283,6 +294,9 @@ class CiValidationScopeTests(unittest.TestCase):
         )
         self.assertIn("format('ignored-{0}', github.run_id)", workflow)
         self.assertIn("branches: [main]", workflow)
+        self.assertIn("run: make bootstrap-site", workflow)
+        self.assertIn("run: make site-check", workflow)
+        self.assertNotIn("run: make site-check PYTHON=python", workflow)
         self.assertNotIn('git rev-parse "$CURRENT_SHA^"', workflow)
         self.assertNotIn("workflow_dispatch", workflow)
 

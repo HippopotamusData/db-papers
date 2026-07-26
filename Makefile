@@ -8,8 +8,8 @@ TEST_VERBOSE ?= 0
 	catalog normalize-headers \
 	fix-math math-check math-check-files math-audit-github math-audit-github-changed \
 	math-audit-github-worktree math-audit-katex validate deep-validate paper-check \
-	batch-start batch-check batch-state diff-check \
-	site-check site-serve test doctor check deep-check \
+	batch-start batch-check batch-state batch-close-check diff-check \
+	bootstrap bootstrap-site site-check site-serve test doctor check deep-check \
 	_catalog-check _normalize-headers-check _site-prepare _site-build _deep-check
 
 help:
@@ -29,6 +29,9 @@ help:
 		'  make math-check-files FILES="..."  scoped portable-math gate' \
 		'  make paper-new ...                 create one minimal paper record' \
 		'  make batch-start|batch-check|batch-state ...  temporary batch coordination' \
+		'  make batch-close-check BATCH_MANIFEST=...  close a clean committed batch' \
+		'  make bootstrap                     prepare this worktree for maintenance' \
+		'  make bootstrap-site                prepare this worktree for site builds' \
 		'  make doctor                        verify the maintainer environment' \
 		'' \
 		'Use TEST_VERBOSE=1 with make test/check for verbose unittest output.'
@@ -166,8 +169,18 @@ batch-state:
 		--paper-id "$(PAPER_ID)" \
 		--state "$(STATE)"
 
+batch-close-check:
+	@test -n "$(BATCH_MANIFEST)" || { echo "ERROR: BATCH_MANIFEST is required" >&2; exit 1; }
+	@$(PYTHON) scripts/batch_close.py --manifest "$(BATCH_MANIFEST)"
+
 diff-check:
 	bash scripts/check_diff.sh
+
+bootstrap:
+	bash scripts/bootstrap.sh
+
+bootstrap-site:
+	bash scripts/bootstrap.sh --site
 
 _site-prepare:
 	$(PYTHON) scripts/build_site.py prepare

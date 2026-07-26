@@ -71,12 +71,10 @@ jobs:
             < "$RUNNER_TEMP/pages-changed-paths" >> "$GITHUB_OUTPUT"
       - name: Install site dependencies
         if: steps.scope.outputs.site_changed == 'true'
-        run: |
-          python -m pip install --upgrade "pip==26.1.2"
-          python -m pip install --group site
+        run: make bootstrap-site
       - name: Build and verify reader site
         if: steps.scope.outputs.site_changed == 'true'
-        run: make site-check PYTHON=python
+        run: make site-check
       - name: Upload GitHub Pages artifact
         if: >-
           github.event_name == 'workflow_run' &&

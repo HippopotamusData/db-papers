@@ -46,6 +46,10 @@ schema reader。旧规则和旧证据需要时从 Git 历史读取，不作为�
 不保存永久 waiver。某条规则需要逐篇例外才能工作时，应降为 warning；确定性
 规则出现误报时，应修正规则本身。
 
+修改全局解析器、章节边界或确定性启发式时，回归测试至少覆盖正例、负例和空
+内容边界，并对当前论文全集运行只读影响扫描。不能只围绕触发修复的单篇样例
+设计规则。
+
 ## Git 与发布模型
 
 `reading_status: translated` 表示当前 Git revision 中的译文已经人工审阅并通过
@@ -68,21 +72,22 @@ Pages 部署。不得在同一 PR 中放宽保护来让自身通过。
 ## 环境准备
 
 `make doctor` 检查 Python 3.11+、pip 26.1.2、锁定的 dev dependency group、
-Node.js/npm、MathJax、GNU Make、ripgrep、Poppler 和 Perl。依赖只安装到项目
-虚拟环境：
+Node.js/npm、MathJax、GNU Make、ripgrep、Poppler 和 Perl，但不安装依赖。
+每个 worktree 独立拥有普通目录 `.venv/` 和 `node_modules/`，不得用符号链接
+共享可写安装目录。新 worktree 或锁文件变化后显式运行：
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install --upgrade "pip==26.1.2"
-.venv/bin/python -m pip install --group dev
-npm ci
+make bootstrap
 ```
 
-维护 GitHub Pages 时另安装 site dependency group：
+只构建 GitHub Pages 时使用精简的 site 环境：
 
 ```bash
-.venv/bin/python -m pip install --group site
+make bootstrap-site
 ```
+
+两个命令都可幂等重跑；`make check`、`make site-check` 和其他门禁不会隐式联网
+安装依赖。
 
 ## GitHub Pages
 

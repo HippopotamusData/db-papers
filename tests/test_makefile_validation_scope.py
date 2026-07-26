@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -200,6 +201,63 @@ class MakefileValidationScopeTests(unittest.TestCase):
         )
         self.assertIn("DEEP_VALIDATION=1", output)
         self.assertIn("scripts/verify_math_rendering.py", output)
+
+    def test_bootstrap_is_explicit_and_check_never_installs(self) -> None:
+        check_output = self.dry_run("check")
+        for fragment in ("bootstrap.sh", "pip install", "npm ci"):
+            self.assertNotIn(fragment, check_output)
+
+        self.assertIn(
+            "bash scripts/bootstrap.sh",
+            self.dry_run("bootstrap"),
+        )
+        self.assertIn(
+            "bash scripts/bootstrap.sh --site",
+            self.dry_run("bootstrap-site"),
+        )
+        syntax = subprocess.run(
+            ["bash", "-n", "scripts/bootstrap.sh"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(syntax.returncode, 0, syntax.stderr)
+
+    def test_bootstrap_rejects_invalid_arguments_before_installing(self) -> None:
+        result = subprocess.run(
+            ["bash", "scripts/bootstrap.sh", "--unknown"],
+            cwd=ROOT,
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Usage:", result.stderr)
+
+    def test_bootstrap_rejects_a_shared_venv_symlink(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="db papers bootstrap ") as temp:
+            root = Path(temp)
+            scripts = root / "scripts"
+            scripts.mkdir()
+            shutil.copyfile(
+                ROOT / "scripts/bootstrap.sh",
+                scripts / "bootstrap.sh",
+            )
+            (root / "shared-environment").mkdir()
+            (root / ".venv").symlink_to(root / "shared-environment")
+            result = subprocess.run(
+                ["bash", str(scripts / "bootstrap.sh")],
+                cwd=Path("/"),
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(".venv must not be a symlink", result.stderr)
 
     def test_translation_validator_reserves_math_profile_for_deep_or_draft_scope(
         self,

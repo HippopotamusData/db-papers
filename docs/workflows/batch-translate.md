@@ -18,7 +18,7 @@
 工作树后运行：
 
 ```bash
-make doctor
+make bootstrap  # 新 worktree 或锁文件变化时；已有环境可只运行 make doctor
 make diff-check
 make check
 
@@ -69,7 +69,9 @@ make batch-state \
    分派子代理并迁移到 `translating`。
 2. 翻译/修复完成后运行
    `make paper-check PAPER_ID=<paper-id>`。报告全部 warning，不隐藏候选或降低
-   阈值。
+   阈值。交审摘要固定为六项：叙述者口径、正文/附录/参考文献覆盖、原文异常、
+   裁图清单、warning/blocker、最终 `paper-check` 命令及退出码；没有的项目写
+   “无”。详细判断仍引用 review workflow 和 translation policy，不另建台账。
 3. 根代理等待本轮全部子代理结束，确认没有越界、同篇并发写入或基线漂移。
 4. `review-and-repair` 模式下，由审阅者按 review workflow 完成源文清单轮和
    逐项对照轮。缺陷退回修复者；未通过项保持 `draft`。
@@ -88,14 +90,23 @@ make batch-state \
 ## 关闭与集成
 
 1. 等待全部子代理停止，核对清单、最终状态、检查点和分支。
-2. 运行 `make catalog`、`make check`、`make diff-check`。若本批修改校验器或
-   影响全局内容解释，用带原因的 `make deep-check` 替代 `make check`。
-3. 公式规则、profile 或全库迁移按公式维护工作流完成；普通论文变更使用 scoped
+2. 运行 `make catalog`，创建最终 checkpoint commit，确认工作树干净；未提交
+   内容不能进入最终门禁。
+3. 运行
+   `make batch-close-check BATCH_MANIFEST="$BATCH_MANIFEST"`。该同步命令核对
+   manifest 最终状态，根据 `base_sha..HEAD` 选择 `make check` 或
+   `make deep-check`，再运行 `make diff-check`；只有全部子命令真实结束且前后
+   保持同一 clean `HEAD` 时，最后一行才会输出
+   `BATCH_CLOSE_RESULT status=passed head=<sha> ...`。任何后续提交或工作树变化
+   都使该结果失效，必须重跑。
+4. 公式规则、profile 或全库迁移按公式维护工作流完成；普通论文变更使用 scoped
    公式门禁和 CI。
-4. 已授权本地集成且 `main` 干净时，执行
+5. 已授权本地集成且 `main` 干净时，执行
    `git merge --ff-only <batch-branch>`；不能 fast-forward 或存在未归属改动时
    停止。
-5. 推送需要独立授权；本地门禁未通过时不得推送。
+6. 推送需要独立授权；本地门禁未通过时不得推送。若交付目标是发布，依次等待
+   PR head 检查、合并、默认分支 merge SHA 的 `check`、同一 SHA 的 Pages 部署，
+   并验证生产页面；完成最后一步后才能报告“已发布”。
 
 普通批次不运行全库 deep-check。全库机械扫描不授权扩大历史复审范围。
 

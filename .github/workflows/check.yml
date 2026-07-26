@@ -32,14 +32,8 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y make perl poppler-utils ripgrep
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade "pip==26.1.2"
-          python -m pip install --group dev
-      - name: Install MathJax
-        run: npm ci
-      - name: Check maintainer environment
-        run: make doctor
+      - name: Bootstrap maintainer environment
+        run: make bootstrap
 
       - name: Determine changed paths
         id: changes
@@ -93,7 +87,7 @@ jobs:
           if [ -n "$DIFF_BASE" ]; then
             args+=(--base-sha "$DIFF_BASE")
           fi
-          python scripts/ci_validation_scope.py "${args[@]}" \
+          .venv/bin/python scripts/ci_validation_scope.py "${args[@]}" \
             < "$RUNNER_TEMP/changed-paths.txt" >> "$GITHUB_OUTPUT"
 
       - name: Run archive gate
@@ -151,7 +145,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           DIFF_BASE: ${{ steps.changes.outputs.diff_base }}
           AUDIT_ALL: ${{ steps.scope.outputs.math_all }}
-        run: PYTHON=python scripts/audit_changed_math.sh "$DIFF_BASE"
+        run: PYTHON=.venv/bin/python scripts/audit_changed_math.sh "$DIFF_BASE"
 
       - name: Check whitespace
         env:

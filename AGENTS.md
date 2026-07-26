@@ -85,12 +85,17 @@ make check          # fast submission gate and generated-file check
 make deep-check DEEP_REASON=<reason>  # check superset with full repository audit
 make math-check-files FILES='papers/<area>/<paper-id>/translation.md'  # scoped math gate
 make diff-check     # whitespace gate including untracked translation files
+make bootstrap      # prepare an independent maintainer environment in this worktree
+make bootstrap-site # prepare an independent site-build environment in this worktree
+make batch-close-check BATCH_MANIFEST=tmp/batches/<id>.yaml  # final clean-HEAD batch gate
 ```
 
 Before finishing an ordinary integrated change, run `make check` and `make diff-check`. Run `make deep-check DEEP_REASON=<reason>` **instead of** `make check` only when a dependency, policy, or workflow change affects paper-content interpretation, publication semantics, or global-validator behavior, or when the user explicitly requests a full audit. Allowed reasons are `content-semantics`, `publication-semantics`, `validator-semantics`, and `full-audit`. Pages, documentation, packaging, and release-flow changes that do not affect those semantics use `make check`. Then run `make diff-check`.
 Changes to the site generator, theme, or Pages workflow also run `make site-check`.
 
 In a Codex translation batch, the translator runs `make paper-check`. An independent reviewer performs the PDF review; after the final review, the root agent sets `reading_status: translated` and reruns the single-paper gate. Review evidence belongs in the PR, commit, or task report, not in a repository ledger. The root agent owns shared state, checkpoints, and integration. Ordinary translation batches do not run `make deep-check`.
+
+For a requested publication, do not report success at push or merge. Wait for the default-branch check on the merge SHA, the Pages deployment for that same SHA, and a production-page verification.
 
 A full mechanical check does not authorize a repository-wide content review or rewrite. Report the affected paper IDs and keep repairs within the authorized scope. If a required tool or source is unavailable, state exactly which check was not run and why.
 

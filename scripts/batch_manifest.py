@@ -88,7 +88,8 @@ def batch_context(require_clean: bool) -> tuple[Path, str, str]:
         dirty = git_text("status", "--porcelain=v1", "--untracked-files=all")
         if dirty:
             raise ValueError(
-                f"batch must start clean (first change: {dirty.splitlines()[0]})"
+                "batch worktree must be clean "
+                f"(first change: {dirty.splitlines()[0]})"
             )
     return root, branch, head
 
