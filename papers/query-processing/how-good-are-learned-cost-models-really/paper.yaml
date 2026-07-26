@@ -11,4 +11,11 @@ source_url: https://doi.org/10.1145/3725309
 topics:
   - query-optimization
   - ai-for-databases
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 1
+  durability: 3
+  reader_payoff: 5

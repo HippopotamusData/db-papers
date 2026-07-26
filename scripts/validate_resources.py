@@ -1157,6 +1157,51 @@ def _same_page_preheading_reference_column(
     return recovered_section, masked_body
 
 
+def _source_post_reference_appendix_boundary(section: str) -> int:
+    """Return the first page boundary that starts a clear appendix.
+
+    Some papers place an unnumbered bibliography before numbered appendix
+    instructions.  Without a boundary, those instructions (and angle-bracket
+    labels inside appendix figures) can be misclassified as bibliography
+    identifiers.  Only stop at a new PDF page with an explicit ``APPENDIX``
+    heading or a layout-style section letter followed by an uppercase title.
+    """
+
+    page_start = 0
+    while True:
+        page_boundary = section.find("\f", page_start)
+        if page_boundary < 0:
+            return len(section)
+        next_page_start = page_boundary + 1
+        next_page_end = section.find("\f", next_page_start)
+        if next_page_end < 0:
+            next_page_end = len(section)
+        nonblank_lines = [
+            line.strip()
+            for line in section[next_page_start:next_page_end].splitlines()
+            if line.strip()
+        ]
+        for line in nonblank_lines[:12]:
+            if re.match(r"(?i)^APPENDIX(?:\s|$)", line):
+                return page_boundary
+            layout_heading = re.match(
+                r"^[A-Z][ \t]{2,}(?P<title>\S.*)$",
+                line,
+            )
+            if layout_heading is None:
+                continue
+            title = layout_heading.group("title")
+            title_letters = [
+                character for character in title if character.isalpha()
+            ]
+            if (
+                len(title_letters) >= 6
+                and all(character.isupper() for character in title_letters)
+            ):
+                return page_boundary
+        page_start = next_page_start
+
+
 def _review_source_reference_parts(
     source_text: str,
 ) -> tuple[re.Match[str] | None, str, str]:
@@ -1177,6 +1222,7 @@ def _review_source_reference_parts(
     section = source_text[heading_end:]
     if recovered:
         section = recovered + "\n" + section
+    section = section[:_source_post_reference_appendix_boundary(section)]
     return heading, section, masked_body
 
 
@@ -1238,6 +1284,22 @@ def _complete_numeric_translation_entries(
     if any(not body.strip() for _identifier, body in entries):
         return None
     return entries
+
+
+def _translation_reference_entries(
+    translation_section: str,
+) -> list[tuple[str, str]]:
+    """Parse bibliography entries without absorbing translated end matter."""
+
+    post_reference = TRANSLATION_POST_REFERENCE_CONTENT_RE.search(
+        translation_section
+    )
+    clean_section = (
+        translation_section[:post_reference.start()]
+        if post_reference is not None
+        else translation_section
+    )
+    return _reference_entries(clean_section)
 
 
 def _two_column_bibliography_tokens(
@@ -2211,7 +2273,7 @@ def _inline_citation_findings(
     source_entries = parsed_source_entries
     source_entries, _ocr_risks = _normalize_source_reference_ocr(source_entries)
     translation_section = translation_text[translation_heading.end() :]
-    translation_entries = _reference_entries(translation_section)
+    translation_entries = _translation_reference_entries(translation_section)
     source_entries, _author_key_ocr_risks, author_key_mappings = (
         _source_author_key_ocr_normalization(
             source_entries,
@@ -2327,7 +2389,7 @@ def _reference_findings(
     source_entries = parsed_source_entries
     source_entries, source_ocr_risks = _normalize_source_reference_ocr(source_entries)
     risks.extend(source_ocr_risks)
-    translation_entries = _reference_entries(translation_section)
+    translation_entries = _translation_reference_entries(translation_section)
     source_entries, source_author_key_ocr_risks = (
         _normalize_source_author_key_ocr(
             source_entries,

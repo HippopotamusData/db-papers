@@ -22,4 +22,11 @@ source_url: https://proceedings.iclr.cc/paper_files/paper/2025/hash/46c10f6c8ea5
 topics:
   - databases-for-ai
   - language-models-for-data
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 3
+  reader_payoff: 4

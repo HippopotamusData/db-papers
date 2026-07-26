@@ -1551,6 +1551,29 @@ class ResourceValidationTests(unittest.TestCase):
         errors, _risks = source_coverage_findings(source, translation, True)
         self.assertTrue(any("duplicate translation reference" in issue for issue in errors))
 
+    def test_translation_references_stop_before_numbered_appendix(self) -> None:
+        source = (
+            "REFERENCES\n"
+            "[1] A. Author. A complete database systems citation, 2020.\n"
+            "[2] B. Author. Another complete database citation, 2021.\n"
+        )
+        translation = (
+            "## 参考文献\n\n"
+            "1. A. Author. A complete database systems citation, 2020.\n"
+            "2. B. Author. Another complete database citation, 2021.\n\n"
+            "## 附录 A\n\n"
+            "1. 检查数据库模式。\n"
+            "2. 执行并验证查询。\n"
+        )
+
+        errors, _risks = source_coverage_findings(source, translation, True)
+        self.assertFalse(
+            any("duplicate translation reference" in issue for issue in errors)
+        )
+        self.assertFalse(
+            any("missing numbered references" in issue for issue in errors)
+        )
+
     def test_short_reference_content_is_a_review_candidate(self) -> None:
         source = (
             "REFERENCES\n"
@@ -1583,6 +1606,59 @@ class ResourceValidationTests(unittest.TestCase):
         self.assertFalse(errors)
         self.assertFalse(
             any("suspiciously short" in issue for issue in risks)
+        )
+
+    def test_unnumbered_references_stop_before_numbered_appendix(self) -> None:
+        source = (
+            "REFERENCES\n"
+            "Anthropic. A complete model family report. Technical Report, 2024.\n\n"
+            "Jacob Austin and Alice Author. Program synthesis. Journal, 2021.\n"
+            "\fPublished as a conference paper\n\n"
+            "A    E VALUATION S CRIPTS\n\n"
+            "1. First, inspect the database schema and all project files.\n"
+            "2. Then execute the query and validate the result.\n"
+            "<parameters...>    <values...>\n"
+        )
+        translation = (
+            "## 参考文献\n\n"
+            "1. Anthropic. A complete model family report. Technical Report, 2024.\n"
+            "2. Jacob Austin and Alice Author. Program synthesis. Journal, 2021.\n"
+        )
+
+        heading, section, _body = (
+            validate_resources._review_source_reference_parts(source)
+        )
+        self.assertIsNotNone(heading)
+        self.assertNotIn("E VALUATION S CRIPTS", section)
+        self.assertNotIn("parameters...", section)
+        self.assertEqual(validate_resources._reference_entries(section), [])
+
+        errors, _risks = source_coverage_findings(source, translation, True)
+        self.assertFalse(
+            any("missing numbered references" in issue for issue in errors)
+        )
+
+    def test_source_references_continue_across_ordinary_page_boundary(self) -> None:
+        source = (
+            "REFERENCES\n"
+            "[1] A. Author. A complete database systems citation, 2020.\n"
+            "\fPublished as a conference paper\n\n"
+            "[2] B. Author. Another complete database citation, 2021.\n"
+        )
+        translation = (
+            "## 参考文献\n\n"
+            "1. A. Author. A complete database systems citation, 2020.\n"
+            "2. B. Author. Another complete database citation, 2021.\n"
+        )
+
+        _heading, section, _body = (
+            validate_resources._review_source_reference_parts(source)
+        )
+        self.assertIn("[2] B. Author", section)
+
+        errors, _risks = source_coverage_findings(source, translation, True)
+        self.assertFalse(
+            any("missing numbered references" in issue for issue in errors)
         )
 
     def test_low_coverage_unnumbered_bibliography_is_a_risk(self) -> None:
