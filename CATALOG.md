@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：157
-- 已审阅译文：151
+- 论文记录：158
+- 已审阅译文：152
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -18,7 +18,7 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 6 |
 | 系统架构 (`system-architecture`) | 26 |
-| 查询处理 (`query-processing`) | 53 |
+| 查询处理 (`query-processing`) | 54 |
 | 存储 (`storage`) | 20 |
 | 事务与并发控制 (`transactions`) | 8 |
 | 分布式数据库 (`distributed-databases`) | 8 |
@@ -79,7 +79,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，53 篇)
+### 查询处理 (`query-processing`，54 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -90,6 +90,7 @@
 | [An Overview of Query Optimization in Relational Systems](papers/query-processing/overview-query-optimization-relational-systems/translation.md) | 查询优化 | 1998 | 4.0 | translated | [原文](papers/query-processing/overview-query-optimization-relational-systems/source.pdf) | [官方链接](<https://www.microsoft.com/en-us/research/publication/an-overview-of-query-optimization-in-relational-systems-paper/>) |
 | [Apache Calcite: A Foundational Framework for Optimized Query Processing Over Heterogeneous Data Sources](papers/query-processing/apache-calcite-a-foundational-framework-for-optimized-query-processing-over-heterogeneous-data-sources/translation.md) | 查询优化、数据联邦 | 2018 | 5.0 | translated | [原文](papers/query-processing/apache-calcite-a-foundational-framework-for-optimized-query-processing-over-heterogeneous-data-sources/source.pdf) | [官方链接](<https://arxiv.org/pdf/1802.10233.pdf>) |
 | [Are We Ready For Learned Cardinality Estimation?](papers/query-processing/are-we-ready-for-learned-cardinality-estimation/translation.md) | 基数估计、AI 优化数据库 | 2021 | 3.5 | translated | [原文](papers/query-processing/are-we-ready-for-learned-cardinality-estimation/source.pdf) | [官方链接](<https://doi.org/10.14778/3461535.3461552>) |
+| [Automated Generation of Materialized Views in Oracle](papers/query-processing/automated-generation-materialized-views-oracle/translation.md) | 查询优化 | 2020 | 3.5 | translated | [原文](papers/query-processing/automated-generation-materialized-views-oracle/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol13/p3046-ahmed.pdf>) |
 | [Balancing vectorized query execution with bandwidth-optimized storage](papers/query-processing/balancing-vectorized-query-execution-bandwidth-optimized-storage/source.pdf) | 向量化执行 | 2009 | 4.0 | skipped | [原文](papers/query-processing/balancing-vectorized-query-execution-bandwidth-optimized-storage/source.pdf) | [官方链接](<https://dare.uva.nl/search?identifier=5ccbb60a-38b8-4eeb-858a-e7735dd37487>) |
 | [Balsa: Learning a Query Optimizer Without Expert Demonstrations](papers/query-processing/balsa-learning-a-query-optimizer-without-expert-demonstrations/translation.md) | 查询优化、AI 优化数据库 | 2022 | 3.5 | translated | [原文](papers/query-processing/balsa-learning-a-query-optimizer-without-expert-demonstrations/source.pdf) | [官方链接](<https://doi.org/10.1145/3514221.3517885>) |
 | [Bao: Making Learned Query Optimization Practical](papers/query-processing/bao-making-learned-query-optimization-practical/translation.md) | 查询优化、AI 优化数据库 | 2021 | 4.0 | translated | [原文](papers/query-processing/bao-making-learned-query-optimization-practical/source.pdf) | [官方链接](<https://doi.org/10.1145/3448016.3452838>) |
@@ -251,5 +252,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 157 | 0 |
-| 发表年份 | 157 | 0 |
+| 作者 | 158 | 0 |
+| 发表年份 | 158 | 0 |

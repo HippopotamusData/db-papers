@@ -1,0 +1,19 @@
+title: Automated Generation of Materialized Views in Oracle
+title_zh: Oracle 中物化视图的自动生成
+authors:
+  - Rafi Ahmed
+  - Randall Bello
+  - Andrew Witkowski
+  - Praveen Kumar
+year: 2020
+source_url: https://www.vldb.org/pvldb/vol13/p3046-ahmed.pdf
+topics:
+  - query-optimization
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 4
+  reader_payoff: 4
