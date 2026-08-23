@@ -1,0 +1,21 @@
+title: 'DS-Agent: Automated Data Science by Empowering Large Language Models with Case-Based Reasoning'
+title_zh: DS-Agent：借助基于案例的推理赋能大语言模型自动化数据科学
+authors:
+  - Siyuan Guo
+  - Cheng Deng
+  - Ying Wen
+  - Hechang Chen
+  - Yi Chang
+  - Jun Wang
+year: 2024
+source_url: https://proceedings.mlr.press/v235/guo24b.html
+topics:
+  - language-models-for-data
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 3
+  reader_payoff: 4

@@ -49,6 +49,12 @@ def windowed_token_coverage(expected: list[str], observed: list[str]) -> float:
     """Return the best ordered title coverage within one local window."""
     if not expected or not observed:
         return 0.0
+    # Styled PDF titles can lose or gain word boundaries during text extraction
+    # (for example, ``re-imagining text`` becoming ``re imaginingtext``).  A
+    # complete contiguous character match remains strict identity evidence while
+    # avoiding a false mismatch caused only by those token-boundary changes.
+    if "".join(expected) in "".join(observed):
+        return 1.0
     for start in range(len(observed) - len(expected) + 1):
         if observed[start : start + len(expected)] == expected:
             return 1.0

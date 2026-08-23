@@ -80,6 +80,38 @@ class SourcePdfValidationTests(unittest.TestCase):
                 [],
             )
 
+    def test_title_with_changed_pdf_word_boundaries_passes(self) -> None:
+        metadata, pdf, temporary = self.fixture()
+        self.addCleanup(temporary.cleanup)
+        first = " ".join(
+            [
+                "A ReliableQuery Process ingEngine",
+                "Ada Lovelace Grace Hopper",
+                "abstract database systems query processing execution",
+                "one two three four five six seven eight nine ten eleven twelve",
+            ]
+        )
+        last = "references one two three four five six seven eight nine ten"
+        with patch.object(
+            validate_source_pdf,
+            "PdfReader",
+            return_value=FakeReader([FakePage(first), FakePage(last)]),
+        ):
+            self.assertEqual(
+                validate_source_pdf.validate_source_pdf(metadata, pdf),
+                [],
+            )
+
+    def test_empty_title_token_sequences_have_zero_coverage(self) -> None:
+        self.assertEqual(
+            validate_source_pdf.windowed_token_coverage([], ["observed"]),
+            0.0,
+        )
+        self.assertEqual(
+            validate_source_pdf.windowed_token_coverage(["expected"], []),
+            0.0,
+        )
+
     def test_wrong_paper_is_rejected(self) -> None:
         metadata, pdf, temporary = self.fixture()
         self.addCleanup(temporary.cleanup)

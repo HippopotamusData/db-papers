@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：161
-- 已审阅译文：155
+- 论文记录：164
+- 已审阅译文：158
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -26,7 +26,7 @@
 | 流处理 (`streaming`) | 8 |
 | 可靠性与测试 (`reliability-and-testing`) | 5 |
 | 专用数据库 (`specialized-databases`) | 12 |
-| AI 与数据系统 (`ai-and-data`) | 8 |
+| AI 与数据系统 (`ai-and-data`) | 11 |
 
 ## 按领域浏览
 
@@ -238,14 +238,17 @@
 | [SPANN: Highly-efficient Billion-scale Approximate Nearest Neighbor Search](papers/specialized-databases/spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search/translation.md) | 索引、面向 AI 的数据系统、向量检索 | 2021 | 4.0 | translated | [原文](papers/specialized-databases/spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search/source.pdf) | [官方链接](<https://proceedings.neurips.cc/paper/2021/hash/299dc35e747eb77177d9cea10a802da2-Abstract.html>) |
 | [VBASE: Unifying Online Vector Similarity Search and Relational Queries via Relaxed Monotonicity](papers/specialized-databases/vbase-unifying-vector-search-relational-queries/translation.md) | 查询优化、面向 AI 的数据系统、向量检索 | 2023 | 3.5 | translated | [原文](papers/specialized-databases/vbase-unifying-vector-search-relational-queries/source.pdf) | [官方链接](<https://www.usenix.org/conference/osdi23/presentation/zhang-qianxi>) |
 
-### AI 与数据系统 (`ai-and-data`，8 篇)
+### AI 与数据系统 (`ai-and-data`，11 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
+| [BIRD-INTERACT: Re-imagining Text-to-SQL Evaluation via Lens of Dynamic Interactions](papers/ai-and-data/bird-interact-dynamic-text-to-sql-interactions/translation.md) | 面向 AI 的数据系统、语言模型与数据 | 2026 | 3.5 | translated | [原文](papers/ai-and-data/bird-interact-dynamic-text-to-sql-interactions/source.pdf) | [官方链接](<https://proceedings.iclr.cc/paper_files/paper/2026/hash/496b549556509bbb9770bf9d335c5800-Abstract-Conference.html>) |
 | [Can Foundation Models Wrangle Your Data?](papers/ai-and-data/can-foundation-models-wrangle-your-data/translation.md) | AI 优化数据库、语言模型与数据 | 2022 | 3.5 | translated | [原文](papers/ai-and-data/can-foundation-models-wrangle-your-data/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol16/p738-narayan.pdf>) |
 | [Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs](papers/ai-and-data/bird-can-llm-already-serve-as-a-database-interface/translation.md) | 面向 AI 的数据系统、语言模型与数据 | 2023 | 4.0 | translated | [原文](papers/ai-and-data/bird-can-llm-already-serve-as-a-database-interface/source.pdf) | [官方链接](<https://proceedings.neurips.cc/paper_files/paper/2023/hash/83fc8fab1710363050bbd1d4b8cc0021-Abstract-Datasets_and_Benchmarks.html>) |
+| [DAComp: Benchmarking Data Agents across the Full Data Intelligence Lifecycle](papers/ai-and-data/dacomp-data-agents-full-data-intelligence-lifecycle/translation.md) | 语言模型与数据 | 2026 | 2.5 | translated | [原文](papers/ai-and-data/dacomp-data-agents-full-data-intelligence-lifecycle/source.pdf) | [官方链接](<https://proceedings.iclr.cc/paper_files/paper/2026/hash/aad9770292214981177c694368fae6e2-Abstract-Conference.html>) |
 | [DBAIOps: A Reasoning LLM-Enhanced Database Operation and Maintenance System using Knowledge Graphs](papers/ai-and-data/dbaiops-reasoning-llm-database-operation-maintenance-knowledge-graphs/translation.md) | AI 优化数据库、语言模型与数据 | 2026 | 3.0 | translated | [原文](papers/ai-and-data/dbaiops-reasoning-llm-database-operation-maintenance-knowledge-graphs/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol19/p1319-zhou.pdf>) |
 | [DocETL: Agentic Query Rewriting and Evaluation for Complex Document Processing](papers/ai-and-data/docetl-agentic-query-rewriting-complex-document-processing/translation.md) | 查询优化、面向 AI 的数据系统、语言模型与数据 | 2025 | 3.5 | translated | [原文](papers/ai-and-data/docetl-agentic-query-rewriting-complex-document-processing/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol18/p3035-shankar.pdf>) |
+| [DS-Agent: Automated Data Science by Empowering Large Language Models with Case-Based Reasoning](papers/ai-and-data/ds-agent-automated-data-science-case-based-reasoning/translation.md) | 语言模型与数据 | 2024 | 3.5 | translated | [原文](papers/ai-and-data/ds-agent-automated-data-science-case-based-reasoning/source.pdf) | [官方链接](<https://proceedings.mlr.press/v235/guo24b.html>) |
 | [Language Models Enable Simple Systems for Generating Structured Views of Heterogeneous Data Lakes](papers/ai-and-data/language-models-enable-structured-views-heterogeneous-data-lakes/translation.md) | 面向 AI 的数据系统、语言模型与数据 | 2023 | 3.5 | translated | [原文](papers/ai-and-data/language-models-enable-structured-views-heterogeneous-data-lakes/source.pdf) | [官方链接](<https://doi.org/10.14778/3626292.3626294>) |
 | [Palimpzest: Optimizing AI-Powered Analytics with Declarative Query Processing](papers/ai-and-data/palimpzest-optimizing-ai-powered-analytics-declarative-query-processing/translation.md) | 查询优化、面向 AI 的数据系统、语言模型与数据 | 2025 | 2.5 | translated | [原文](papers/ai-and-data/palimpzest-optimizing-ai-powered-analytics-declarative-query-processing/source.pdf) | [官方链接](<https://www.vldb.org/cidrdb/2025/palimpzest-optimizing-ai-powered-analytics-with-declarative-query-processing.html>) |
 | [Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows](papers/ai-and-data/spider-2-0-enterprise-text-to-sql-workflows/translation.md) | 面向 AI 的数据系统、语言模型与数据 | 2025 | 3.5 | translated | [原文](papers/ai-and-data/spider-2-0-enterprise-text-to-sql-workflows/source.pdf) | [官方链接](<https://proceedings.iclr.cc/paper_files/paper/2025/hash/46c10f6c8ea5aa6f267bcdabcb123f97-Abstract-Conference.html>) |
@@ -255,5 +258,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 161 | 0 |
-| 发表年份 | 161 | 0 |
+| 作者 | 164 | 0 |
+| 发表年份 | 164 | 0 |
