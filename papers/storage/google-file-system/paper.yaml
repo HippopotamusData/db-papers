@@ -9,4 +9,11 @@ source_url: https://research.google/pubs/the-google-file-system/
 topics:
   - distributed-storage
   - file-system
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5

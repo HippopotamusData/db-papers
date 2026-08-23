@@ -5,9 +5,9 @@
 ## 总览
 
 - 论文记录：161
-- 已审阅译文：152
+- 已审阅译文：155
 - 译文草稿：0
-- 仅有原文：3
+- 仅有原文：0
 - 已跳过：6
 - 原文不可用：0
 
@@ -156,7 +156,7 @@
 | [The Bw-Tree: A B-tree for New Hardware Platforms](papers/storage/bw-tree-new-hardware-platforms/translation.md) | 存储引擎、索引 | 2013 | 4.5 | translated | [原文](papers/storage/bw-tree-new-hardware-platforms/source.pdf) | [官方链接](<https://www.microsoft.com/en-us/research/publication/the-bw-tree-a-b-tree-for-new-hardware/>) |
 | [The Case for Learned Index Structures](papers/storage/case-for-learned-index-structures/translation.md) | 索引、AI 优化数据库 | 2018 | 4.0 | translated | [原文](papers/storage/case-for-learned-index-structures/source.pdf) | [官方链接](<https://research.google/pubs/the-case-for-learned-index-structures/>) |
 | [The Design and Implementation of Modern Column-Oriented Database Systems](papers/storage/design-implementation-modern-column-oriented-database-systems/source.pdf) | 存储引擎 | 2012 | 4.0 | skipped | [原文](papers/storage/design-implementation-modern-column-oriented-database-systems/source.pdf) | [官方链接](<https://stratos.seas.harvard.edu/files/stratos/files/columnstoresfntdbs.pdf>) |
-| [The Google File System](papers/storage/google-file-system/source.pdf) | 分布式存储、文件系统 | 2003 | — | source_only | [原文](papers/storage/google-file-system/source.pdf) | [官方链接](<https://research.google/pubs/the-google-file-system/>) |
+| [The Google File System](papers/storage/google-file-system/translation.md) | 分布式存储、文件系统 | 2003 | 5.0 | translated | [原文](papers/storage/google-file-system/source.pdf) | [官方链接](<https://research.google/pubs/the-google-file-system/>) |
 | [The Log-Structured Merge-Tree (LSM-Tree)](papers/storage/log-structured-merge-tree/translation.md) | 存储引擎、索引 | 1996 | 5.0 | translated | [原文](papers/storage/log-structured-merge-tree/source.pdf) | [官方链接](<https://doi.org/10.1007/s002360050048>) |
 | [The Ubiquitous B-Tree](papers/storage/ubiquitous-b-tree/translation.md) | 存储引擎、索引 | 1979 | 4.5 | translated | [原文](papers/storage/ubiquitous-b-tree/source.pdf) | [官方链接](<https://doi.org/10.1145/356770.356776>) |
 | [Tutorial: Column oriented Database Systems](papers/storage/vldb-2009-tutorial-column-stores/translation.md) | 存储引擎 | 2009 | 3.0 | translated | [原文](papers/storage/vldb-2009-tutorial-column-stores/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol2/vldb09-tutorial6.pdf>) |
@@ -173,7 +173,7 @@
 | [Calvin: Fast Distributed Transactions for Partitioned Database Systems](papers/transactions/calvin-fast-distributed-transactions-partitioned-database-systems/translation.md) | 事务处理、并发控制 | 2012 | 4.5 | translated | [原文](papers/transactions/calvin-fast-distributed-transactions-partitioned-database-systems/source.pdf) | [官方链接](<https://doi.org/10.1145/2213836.2213838>) |
 | [Granularity of Locks and Degrees of Consistency in a Shared Data Base](papers/transactions/granularity-locks-degrees-consistency-shared-database/translation.md) | 事务处理、并发控制 | 1976 | 5.0 | translated | [原文](papers/transactions/granularity-locks-degrees-consistency-shared-database/source.pdf) | [官方链接](<https://www.seas.upenn.edu/~zives/05s/cis650/papers/granularity-locks.pdf>) |
 | [On Optimistic Methods for Concurrency Control](papers/transactions/optimistic-methods-concurrency-control/translation.md) | 事务处理、并发控制 | 1981 | 5.0 | translated | [原文](papers/transactions/optimistic-methods-concurrency-control/source.pdf) | [官方链接](<https://doi.org/10.1145/319566.319567>) |
-| [Sagas](papers/transactions/sagas/source.pdf) | 事务处理 | 1987 | — | source_only | [原文](papers/transactions/sagas/source.pdf) | [官方链接](<https://sigmodrecord.org/1987/12/09/sagas/>) |
+| [Sagas](papers/transactions/sagas/translation.md) | 事务处理 | 1987 | 5.0 | translated | [原文](papers/transactions/sagas/source.pdf) | [官方链接](<https://sigmodrecord.org/1987/12/09/sagas/>) |
 | [Serializable Isolation for Snapshot Databases](papers/transactions/serializable-isolation-for-snapshot-databases/translation.md) | 事务处理、并发控制 | 2008 | 4.5 | translated | [原文](papers/transactions/serializable-isolation-for-snapshot-databases/source.pdf) | [官方链接](<https://doi.org/10.1145/1376616.1376690>) |
 | [Speedy Transactions in Multicore In-Memory Databases](papers/transactions/speedy-transactions-multicore-in-memory-databases/translation.md) | 事务处理、并发控制 | 2013 | 4.5 | translated | [原文](papers/transactions/speedy-transactions-multicore-in-memory-databases/source.pdf) | [官方链接](<https://people.csail.mit.edu/stephentu/papers/silo.pdf>) |
 | [The Notions of Consistency and Predicate Locks in a Database System](papers/transactions/notions-consistency-predicate-locks-database-system/translation.md) | 事务处理、并发控制 | 1976 | 4.5 | translated | [原文](papers/transactions/notions-consistency-predicate-locks-database-system/source.pdf) | [官方链接](<https://research.ibm.com/publications/the-notions-of-consistency-and-predicate-locks-in-a-database-system>) |
@@ -234,7 +234,7 @@
 | [Milvus: A Purpose-Built Vector Data Management System](papers/specialized-databases/milvus-purpose-built-vector-data-management-system/translation.md) | 数据库系统设计、面向 AI 的数据系统、向量检索 | 2021 | 4.0 | translated | [原文](papers/specialized-databases/milvus-purpose-built-vector-data-management-system/source.pdf) | [官方链接](<https://doi.org/10.1145/3448016.3457550>) |
 | [Pinot: Realtime OLAP for 530 Million Users](papers/specialized-databases/pinot-realtime-olap-for-530-million-users/translation.md) | 分析型数据库 | 2018 | 4.5 | translated | [原文](papers/specialized-databases/pinot-realtime-olap-for-530-million-users/source.pdf) | [官方链接](<https://cwiki.apache.org/confluence/download/attachments/103092375/Pinot.pdf?version=1&modificationDate=1571428741000&api=v2>) |
 | [Pregel: A System for Large-Scale Graph Processing](papers/specialized-databases/pregel-large-scale-graph-processing/translation.md) | 数据库系统设计 | 2010 | 5.0 | translated | [原文](papers/specialized-databases/pregel-large-scale-graph-processing/source.pdf) | [官方链接](<https://research.google/pubs/pregel-a-system-for-large-scale-graph-processing/>) |
-| [R-trees: A Dynamic Index Structure for Spatial Searching](papers/specialized-databases/r-trees-dynamic-index-structure-spatial-searching/source.pdf) | 索引 | 1984 | — | source_only | [原文](papers/specialized-databases/r-trees-dynamic-index-structure-spatial-searching/source.pdf) | [官方链接](<https://sigmodrecord.org/1984/06/01/r-trees-a-dynamic-index-structure-for-spatial-searching/>) |
+| [R-trees: A Dynamic Index Structure for Spatial Searching](papers/specialized-databases/r-trees-dynamic-index-structure-spatial-searching/translation.md) | 索引 | 1984 | 5.0 | translated | [原文](papers/specialized-databases/r-trees-dynamic-index-structure-spatial-searching/source.pdf) | [官方链接](<https://sigmodrecord.org/1984/06/01/r-trees-a-dynamic-index-structure-for-spatial-searching/>) |
 | [SPANN: Highly-efficient Billion-scale Approximate Nearest Neighbor Search](papers/specialized-databases/spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search/translation.md) | 索引、面向 AI 的数据系统、向量检索 | 2021 | 4.0 | translated | [原文](papers/specialized-databases/spann-highly-efficient-billion-scale-approximate-nearest-neighbor-search/source.pdf) | [官方链接](<https://proceedings.neurips.cc/paper/2021/hash/299dc35e747eb77177d9cea10a802da2-Abstract.html>) |
 | [VBASE: Unifying Online Vector Similarity Search and Relational Queries via Relaxed Monotonicity](papers/specialized-databases/vbase-unifying-vector-search-relational-queries/translation.md) | 查询优化、面向 AI 的数据系统、向量检索 | 2023 | 3.5 | translated | [原文](papers/specialized-databases/vbase-unifying-vector-search-relational-queries/source.pdf) | [官方链接](<https://www.usenix.org/conference/osdi23/presentation/zhang-qianxi>) |
 
