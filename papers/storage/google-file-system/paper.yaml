@@ -1,0 +1,12 @@
+title: The Google File System
+title_zh: Google 文件系统
+authors:
+  - Sanjay Ghemawat
+  - Howard Gobioff
+  - Shun-Tak Leung
+year: 2003
+source_url: https://research.google/pubs/the-google-file-system/
+topics:
+  - distributed-storage
+  - file-system
+reading_status: source_only

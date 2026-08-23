@@ -1,0 +1,9 @@
+title: 'R-trees: A Dynamic Index Structure for Spatial Searching'
+title_zh: R 树：用于空间检索的动态索引结构
+authors:
+  - Antonin Guttman
+year: 1984
+source_url: https://sigmodrecord.org/1984/06/01/r-trees-a-dynamic-index-structure-for-spatial-searching/
+topics:
+  - indexing
+reading_status: source_only
