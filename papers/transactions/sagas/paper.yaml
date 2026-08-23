@@ -1,0 +1,17 @@
+title: Sagas
+title_zh: Saga 事务
+authors:
+  - Hector Garcia-Molina
+  - Kenneth Salem
+year: 1987
+source_url: https://sigmodrecord.org/1987/12/09/sagas/
+topics:
+  - transaction-processing
+reading_status: translated
+rating:
+  score: 5.0
+  influence_breadth: 5
+  technical_value: 5
+  practical_diffusion: 5
+  durability: 5
+  reader_payoff: 5
