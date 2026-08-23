@@ -1,0 +1,25 @@
+title: 'DAComp: Benchmarking Data Agents across the Full Data Intelligence Lifecycle'
+title_zh: DAComp：面向完整数据智能生命周期的数据智能体基准
+authors:
+  - Fangyu Lei
+  - Jinxiang Meng
+  - Yiming Huang
+  - Junjie Zhao
+  - Yitong Zhang
+  - Jianwen Luo
+  - Xin Zou
+  - Ruiyi Yang
+  - Wenbo Shi
+  - Yan Gao
+  - Shizhu He
+  - Zuo Wang
+  - Qian Liu
+  - Yang Wang
+  - Ke Wang
+  - Jun Zhao
+  - Kang Liu
+year: 2026
+source_url: https://proceedings.iclr.cc/paper_files/paper/2026/hash/aad9770292214981177c694368fae6e2-Abstract-Conference.html
+topics:
+  - language-models-for-data
+reading_status: source_only

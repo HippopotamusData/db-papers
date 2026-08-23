@@ -1,0 +1,33 @@
+title: 'BIRD-INTERACT: Re-imagining Text-to-SQL Evaluation via Lens of Dynamic Interactions'
+title_zh: BIRD-INTERACT：从动态交互视角重新审视 Text-to-SQL 评测
+authors:
+  - Nan Huo
+  - Xiaohan Xu
+  - Jinyang Li
+  - Per Jacobsson
+  - Shipei Lin
+  - Bowen Qin
+  - Binyuan Hui
+  - Xiaolong Li
+  - Ge Qu
+  - Shuzheng Si
+  - Linheng Han
+  - Edward Alexander
+  - Xintong Zhu
+  - Rui Qin
+  - Ruihan Yu
+  - Yiyao Jin
+  - Feige Zhou
+  - Weihao Zhong
+  - Yun Chen
+  - Hongyu Liu
+  - Chenhao Ma
+  - Fatma Ozcan
+  - Yannis Papakonstantinou
+  - Reynold Cheng
+year: 2026
+source_url: https://proceedings.iclr.cc/paper_files/paper/2026/hash/496b549556509bbb9770bf9d335c5800-Abstract-Conference.html
+topics:
+  - databases-for-ai
+  - language-models-for-data
+reading_status: source_only
