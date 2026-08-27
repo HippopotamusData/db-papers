@@ -40,7 +40,9 @@ CONFIG_COMMANDS = frozenset(
         "xdef",
     }
 )
-KNOWN_UNSUPPORTED_COMMANDS = frozenset({"fullouterjoin", "leftouterjoin"})
+KNOWN_UNSUPPORTED_COMMANDS = frozenset(
+    {"fullouterjoin", "leftouterjoin", "thickspace"}
+)
 PORTABLE_COMMANDS = frozenset(
     """
     Big Delta Gamma Join Leftrightarrow Longleftrightarrow Omega Phi Pi Pr
@@ -53,7 +55,7 @@ PORTABLE_COMMANDS = frozenset(
     mid min models mu ne neg negthinspace neq nexists not notin odot phi pi pm
     pmod prod propto qquad quad rVert rangle rbrace rceil rfloor rho right
     rightarrow rtimes rvert setminus sigma sim simeq sqrt subset subseteq sum
-    tau text texttt therefore theta thickspace thinspace tilde times to
+    tau text texttt therefore theta thinspace tilde times to
     triangleq underbrace varnothing vdots vec vee wedge widehat widetilde
     xrightarrow
     """.split()
@@ -1334,11 +1336,16 @@ def _tex_issues(
                     )
                 )
             elif command in KNOWN_UNSUPPORTED_COMMANDS:
+                message = (
+                    r"GitHub renders \thickspace as red literal text; use \thinspace{} for portable spacing"
+                    if command == "thickspace"
+                    else f"unsupported custom TeX command: \\{command}; use a self-contained standard expression"
+                )
                 issues.append(
                     MathIssue(
                         fragment.offset + cursor,
                         "GHM013",
-                        f"unsupported custom TeX command: \\{command}; use a self-contained standard expression",
+                        message,
                     )
                 )
             elif command == "char":

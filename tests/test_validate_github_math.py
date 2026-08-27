@@ -38,7 +38,7 @@ $$
         text = r"""费用为 \$5；公式 $\lbrace x \lt y \rbrace$。
 
 $$
-a\thickspace b \\ [2pt]
+a\thinspace{} b \\ [2pt]
 c\Vert d
 $$
 """
@@ -135,6 +135,11 @@ y &= 2
     def test_rejects_known_undefined_custom_join_commands(self) -> None:
         text = r"正文 $A\fullouterjoin B$ 与 $A\leftouterjoin B$。"
         self.assertEqual(self.codes(text), ["GHM013", "GHM013"])
+
+    def test_rejects_github_red_literal_spacing_command(self) -> None:
+        issues = validate_text(r"正文 $a\thickspace{}b$。")
+        self.assertEqual([issue.code for issue in issues], ["GHM013"])
+        self.assertIn(r"use \thinspace{}", issues[0].message)
 
     def test_rejects_commands_outside_verified_profile(self) -> None:
         self.assertEqual(self.codes(r"正文 $\notARealCommand{x}$。"), ["GHM013"])

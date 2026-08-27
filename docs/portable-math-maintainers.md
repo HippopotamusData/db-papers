@@ -54,6 +54,7 @@ GitHub 正确解析和渲染是唯一硬平台要求。仓库仍采用 `$...$`�
 - 任何公式中的 `\tag`：`GHM020` 无条件拒绝该命令。GitHub 文件页的 MathJax 会为它生成带 `mtable`/`mlabeledtr` 的 MathML 标签表，浏览器可能把公式内容挤进窄列并逐项纵向堆叠；本地 MathJax 和 GitHub Markdown 公式节点审计都可能通过，因此必须改用 `\qquad \text{(编号)}`，并在真实文件页检查最终布局；
 - GitHub Markdown 会当作强调语法的裸 `*`，以及可与同段其他下划线配对的 `_`；ASCII 字母数字两侧的 intraword `_` 可保留，其他下标运算符写成 ` _ `，使其既不能打开也不能关闭 emphasis；
 - GitHub 会优先识别的 URL 和邮箱 autolink；这类内容应移出公式；
+- GitHub 会把 `\thickspace` 输出为红色字面命令；确需显式公式间距时使用已验证的 `\thinspace{}`；
 - GitHub 会先于公式节点处理的脚注引用、实际成立的 Markdown 链接或图片，以及 HTML entity；
 - GitHub 会抑制公式节点的已知 token。
 

@@ -137,7 +137,7 @@ $COST _ \pi/COST _ P$ 由多页块与随机单页 I/O 的相对效率决定，�
 考虑一个应用引用的数据集，它占 `S` MB；我们假设不做数据缓冲，并且该应用产生每秒 `H` 个随机页 I/O。磁盘臂租用成本是 `H COST_P`，介质成本是 `S COST_d`；限制因素所需的配置会同时带来另一种资源，所以无缓冲的磁盘成本为：
 
 $$
-COST_D = \max(S\thinspace{}COST_d,\thickspace{} H\thinspace{}COST_P).
+COST_D = \max(S\thinspace{}COST_d,\thinspace{} H\thinspace{}COST_P).
 $$
 
 在 `S` 不变时，该成本会随随机 I/O 率 `H` 线性增长。内存缓冲的作用，是在 `H` 增加到某个点时用内存取代磁盘 I/O。如果我们假定缓冲页能预先驻留内存，磁盘成本便只剩介质成本；数据仍须在磁盘保留一份，因而缓冲驻留数据的成本为：
@@ -149,7 +149,7 @@ $$
 因此，支持该应用数据访问的总成本取两种方案中的较小者：
 
 $$
-COST _ {TOT}=\min\left(\max(S\thinspace{}COST_d,H\thinspace{}COST_P),\thickspace{}S\thinspace{}COST_m+S\thinspace{}COST_d\right).
+COST _ {TOT}=\min\left(\max(S\thinspace{}COST_d,H\thinspace{}COST_P),\thinspace{}S\thinspace{}COST_m+S\thinspace{}COST_d\right).
 $$
 
 对固定数据量 `S`，`H` 增加时会经过三个成本区间。访问率低时，总成本由磁盘介质 `S COST_d` 限制，这是**冷数据**；访问率增大后，磁盘臂 `H COST_P` 成为限制，这是**温数据**；最后，五分钟法则表明数据应常驻内存，总成本由 `S COST_m+S COST_d` 限制，对当时的价格而言主要是内存项，这是**热数据**。沿用 Copeland 等人 [6] 的定义，我们把单位数据访问率 `H/S` 称为数据的**温度**，并把三个成本区间称为冷、温与热。冷、温与热三个区间的冻结点和沸点分别为：

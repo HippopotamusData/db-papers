@@ -71,21 +71,21 @@ ANSI SQL 以英文描述了下列三种现象：
 ANSI 对 P1 的文字可以有两种解释。严格解释要求实际发生一次脏读异常：
 
 $$
-w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}(a_1\text{ 与 }c_2\text{ 以任一顺序出现}) \qquad \text{(2.1)}
+w_1[x]\thinspace{}\ldots\thinspace{}r_2[x]\thinspace{}\ldots\thinspace{}(a_1\text{ 与 }c_2\text{ 以任一顺序出现}) \qquad \text{(2.1)}
 $$
 
 较宽松的解释则禁止一旦发生脏读就继续形成的所有历史，不论两个事务最终提交还是中止：
 
 $$
-w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}) \qquad \text{(2.2)}
+w_1[x]\thinspace{}\ldots\thinspace{}r_2[x]\thinspace{}\ldots\thinspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}) \qquad \text{(2.2)}
 $$
 
 式 (2.2) 禁止四种提交-中止组合，而式 (2.1) 只禁止其中两种。宽松定义指出一种可能导致异常的交错，严格定义则要求异常实际发生。为避免混淆，我们把宽松形式继续记作 P1，把严格异常记作 A1：
 
 $$
 \begin{aligned}
-P1:&\quad w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现})\\
-A1:&\quad w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}(a_1\text{ 与 }c_2\text{ 以任一顺序出现})
+P1:&\quad w_1[x]\thinspace{}\ldots\thinspace{}r_2[x]\thinspace{}\ldots\thinspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现})\\
+A1:&\quad w_1[x]\thinspace{}\ldots\thinspace{}r_2[x]\thinspace{}\ldots\thinspace{}(a_1\text{ 与 }c_2\text{ 以任一顺序出现})
 \end{aligned}
 $$
 
@@ -93,10 +93,10 @@ $$
 
 $$
 \begin{aligned}
-P2:&\quad r_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现})\\
-A2:&\quad r_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}c_2\thickspace{}\ldots\thickspace{}r_1[x]\thickspace{}\ldots\thickspace{}c_1\\
-P3:&\quad r_1[P]\thickspace{}\ldots\thickspace{}w_2[y\in P]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现})\\
-A3:&\quad r_1[P]\thickspace{}\ldots\thickspace{}w_2[y\in P]\thickspace{}\ldots\thickspace{}c_2\thickspace{}\ldots\thickspace{}r_1[P]\thickspace{}\ldots\thickspace{}c_1
+P2:&\quad r_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现})\\
+A2:&\quad r_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}c_2\thinspace{}\ldots\thinspace{}r_1[x]\thinspace{}\ldots\thinspace{}c_1\\
+P3:&\quad r_1[P]\thinspace{}\ldots\thinspace{}w_2[y\in P]\thinspace{}\ldots\thinspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现})\\
+A3:&\quad r_1[P]\thinspace{}\ldots\thinspace{}w_2[y\in P]\thinspace{}\ldots\thinspace{}c_2\thinspace{}\ldots\thinspace{}r_1[P]\thinspace{}\ldots\thinspace{}c_1
 \end{aligned}
 $$
 
@@ -168,16 +168,16 @@ $$
 **P0：脏写（Dirty Write）。** 事务 $T_1$ 修改一个数据项；在 $T_1$ 提交或回滚之前，事务 $T_2$ 又修改同一数据项。如果 $T_1$ 或 $T_2$ 随后回滚，就无法明确判断正确的数据值应当是什么。其宽松形式是：
 
 $$
-P0:\quad w_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}).
+P0:\quad w_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}).
 $$
 
 脏写会破坏数据库约束。例如，设约束为 $x=y$，考虑历史：
 
 $$
-w_1[x]\thickspace{}w_2[x]\thickspace{}w_2[y]\thickspace{}c_2\thickspace{}w_1[y]\thickspace{}c_1.
+w_1[x]\thinspace{}w_2[x]\thinspace{}w_2[y]\thinspace{}c_2\thinspace{}w_1[y]\thinspace{}c_1.
 $$
 
-若 $T_1$ 把两个值都改为 1，而 $T_2$ 把两个值都改为 2，最后可能得到 $x=2,y=1$，从而违反约束。脏写还会破坏自动事务回滚。在 $w_1[x]\thickspace{}w_2[x]\thickspace{}a_1$ 中，若 $T_1$ 中止时恢复自己写入前的旧值，它会错误地抹掉 $T_2$ 的更新；但若不恢复，而 $T_2$ 随后也中止，系统又无法用 $T_2$ 的旧映像正确撤销它。因此，即便最弱的锁系统也持有长时写锁，否则恢复系统会失效 [GLPT, BHG]。
+若 $T_1$ 把两个值都改为 1，而 $T_2$ 把两个值都改为 2，最后可能得到 $x=2,y=1$，从而违反约束。脏写还会破坏自动事务回滚。在 $w_1[x]\thinspace{}w_2[x]\thinspace{}a_1$ 中，若 $T_1$ 中止时恢复自己写入前的旧值，它会错误地抹掉 $T_2$ 的更新；但若不恢复，而 $T_2$ 随后也中止，系统又无法用 $T_2$ 的旧映像正确撤销它。因此，即便最弱的锁系统也持有长时写锁，否则恢复系统会失效 [GLPT, BHG]。
 
 **评注 3。** ANSI SQL 的全部隔离级别都应禁止 P0。
 
@@ -185,9 +185,9 @@ $$
 
 $$
 \begin{aligned}
-A1:&\quad w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}(a_1\text{ 与 }c_2\text{ 以任一顺序出现})\\
-A2:&\quad r_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}c_2\thickspace{}\ldots\thickspace{}r_1[x]\thickspace{}\ldots\thickspace{}c_1\\
-A3:&\quad r_1[P]\thickspace{}\ldots\thickspace{}w_2[y\in P]\thickspace{}\ldots\thickspace{}c_2\thickspace{}\ldots\thickspace{}r_1[P]\thickspace{}\ldots\thickspace{}c_1.
+A1:&\quad w_1[x]\thinspace{}\ldots\thinspace{}r_2[x]\thinspace{}\ldots\thinspace{}(a_1\text{ 与 }c_2\text{ 以任一顺序出现})\\
+A2:&\quad r_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}c_2\thinspace{}\ldots\thinspace{}r_1[x]\thinspace{}\ldots\thinspace{}c_1\\
+A3:&\quad r_1[P]\thinspace{}\ldots\thinspace{}w_2[y\in P]\thinspace{}\ldots\thinspace{}c_2\thinspace{}\ldots\thinspace{}r_1[P]\thinspace{}\ldots\thinspace{}c_1.
 \end{aligned}
 $$
 
@@ -195,15 +195,15 @@ $$
 
 $$
 \begin{aligned}
-H1:\quad &r_1[x=50]\thickspace{}w_1[x=10]\thickspace{}r_2[x=10]\thickspace{}r_2[y=50]\thickspace{}c_2\\
-&r_1[y=50]\thickspace{}w_1[y=90]\thickspace{}c_1.
+H1:\quad &r_1[x=50]\thinspace{}w_1[x=10]\thinspace{}r_2[x=10]\thinspace{}r_2[y=50]\thinspace{}c_2\\
+&r_1[y=50]\thinspace{}w_1[y=90]\thinspace{}c_1.
 \end{aligned}
 $$
 
 这里 $T_1$ 把 40 从 $x$ 转到 $y$，维持总额 100； $T_2$ 却读到转账中间状态 $x=10,y=50$，总额只有 60。这个历史不可串行化，但它不违反 A1，因为 $T_1$ 最终提交；也不违反 A2 或 A3。宽松的 P1 会禁止它，因为 $T_2$ 读到了 $T_1$ 尚未提交的写：
 
 $$
-P1:\quad w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}).
+P1:\quad w_1[x]\thinspace{}\ldots\thinspace{}r_2[x]\thinspace{}\ldots\thinspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}).
 $$
 
 H1 的确违反 P1。因此，我们应当把 P1 而不是 A1 视为 ANSI 的本意；宽松解释才是正确解释。
@@ -212,15 +212,15 @@ H1 的确违反 P1。因此，我们应当把 P1 而不是 A1 视为 ANSI 的本
 
 $$
 \begin{aligned}
-H2:\quad &r_1[x=50]\thickspace{}r_2[x=50]\thickspace{}w_2[x=10]\thickspace{}r_2[y=50]\thickspace{}w_2[y=90]\thickspace{}c_2\\
-&r_1[y=90]\thickspace{}c_1.
+H2:\quad &r_1[x=50]\thinspace{}r_2[x=50]\thinspace{}w_2[x=10]\thinspace{}r_2[y=50]\thinspace{}w_2[y=90]\thinspace{}c_2\\
+&r_1[y=90]\thinspace{}c_1.
 \end{aligned}
 $$
 
 原文紧随公式的说明称“ $T_2$ 看到总额 140”，后面又称“若 $T_2$ 再读 $x$”；但 H2 的可见操作序列是 $T_1$ 先读 $x=50$、后读 $y=90$，按 A2 公式也应由 $T_1$ 再读 $x$，因此原文两处事务编号都与公式内部矛盾。按公式， $T_1$ 读到 $x=50,y=90$，同样是一个不一致状态。该历史满足 P1，因为没有读取未提交数据，却违反宽松 P2： $T_1$ 读过的 $x$ 在其结束前被 $T_2$ 写过。严格 A2 要求 $T_1$ 再次读取同一项，因此抓不到 H2。采用宽松解释后：
 
 $$
-P2:\quad r_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}).
+P2:\quad r_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}).
 $$
 
 原文接着说，采用 P2 后， $w_2[x=20]$ 覆盖 $r_1[x=50]$ 时 H2 会被排除；其中 20 又与 H2 公式里的 $w_2[x=10]$ 不一致，但不影响 P2 对该操作次序的判定。
@@ -228,17 +228,17 @@ $$
 H3 展示严格幻读定义的类似缺陷：
 
 $$
-A3:\quad r_1[P]\thickspace{}\ldots\thickspace{}w_2[y\in P]\thickspace{}\ldots\thickspace{}c_2\thickspace{}\ldots\thickspace{}r_1[P]\thickspace{}\ldots\thickspace{}c_1.
+A3:\quad r_1[P]\thinspace{}\ldots\thinspace{}w_2[y\in P]\thinspace{}\ldots\thinspace{}c_2\thinspace{}\ldots\thinspace{}r_1[P]\thinspace{}\ldots\thinspace{}c_1.
 $$
 
 $$
-H3:\quad r_1[P]\thickspace{}w_2[\text{向 }P\text{ 插入 }y]\thickspace{}r_2[z]\thickspace{}w_2[z]\thickspace{}c_2\thickspace{}r_1[z]\thickspace{}c_1.
+H3:\quad r_1[P]\thinspace{}w_2[\text{向 }P\text{ 插入 }y]\thinspace{}r_2[z]\thinspace{}w_2[z]\thinspace{}c_2\thinspace{}r_1[z]\thinspace{}c_1.
 $$
 
 设 $P$ 选择全部在职员工，而 $z$ 是员工总数。 $T_1$ 先取得员工集合， $T_2$ 插入一名员工并更新 $z$ 后提交，随后 $T_1$ 读到新的 $z$。员工集合与计数不再一致。由于 $T_1$ 没有第二次求值谓词，严格 A3 允许这个历史；宽松 P3 会禁止它：
 
 $$
-P3:\quad r_1[P]\thickspace{}\ldots\thickspace{}w_2[y\in P]\thickspace{}\ldots\thickspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}).
+P3:\quad r_1[P]\thinspace{}\ldots\thinspace{}w_2[y\in P]\thinspace{}\ldots\thinspace{}((c_1\text{ 或 }a_1)\text{ 与 }(c_2\text{ 或 }a_2)\text{ 以任一顺序出现}).
 $$
 
 **评注 4。** 三种 ANSI 现象都应采用宽松解释 P1、P2 和 P3，而不是严格异常 A1、A2 和 A3。下文我们假定这就是 ANSI 的本意。
@@ -247,10 +247,10 @@ $$
 
 $$
 \begin{aligned}
-P0:&\quad w_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}(c_1\text{ 或 }a_1)\\
-P1:&\quad w_1[x]\thickspace{}\ldots\thickspace{}r_2[x]\thickspace{}\ldots\thickspace{}(c_1\text{ 或 }a_1)\\
-P2:&\quad r_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}(c_1\text{ 或 }a_1)\\
-P3:&\quad r_1[P]\thickspace{}\ldots\thickspace{}w_2[y\in P]\thickspace{}\ldots\thickspace{}(c_1\text{ 或 }a_1).
+P0:&\quad w_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}(c_1\text{ 或 }a_1)\\
+P1:&\quad w_1[x]\thinspace{}\ldots\thinspace{}r_2[x]\thinspace{}\ldots\thinspace{}(c_1\text{ 或 }a_1)\\
+P2:&\quad r_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}(c_1\text{ 或 }a_1)\\
+P3:&\quad r_1[P]\thinspace{}\ldots\thinspace{}w_2[y\in P]\thinspace{}\ldots\thinspace{}(c_1\text{ 或 }a_1).
 \end{aligned}
 $$
 
@@ -282,13 +282,13 @@ READ COMMITTED 允许一种常见的丢失更新异常。
 **P4：丢失更新（Lost Update）。** 事务 $T_1$ 读取数据项 $x$；另一个事务 $T_2$ 写 $x$（该写可能基于它先前的一次读取）；随后 $T_1$ 根据它先前读到的值写 $x$ 并提交：
 
 $$
-P4:\quad r_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}w_1[x]\thickspace{}\ldots\thickspace{}c_1.
+P4:\quad r_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}w_1[x]\thinspace{}\ldots\thinspace{}c_1.
 $$
 
 例如：
 
 $$
-H4:\quad r_1[x=100]\thickspace{}r_2[x=100]\thickspace{}w_2[x=120]\thickspace{}c_2\thickspace{}w_1[x=130]\thickspace{}c_1.
+H4:\quad r_1[x=100]\thinspace{}r_2[x=100]\thinspace{}w_2[x=120]\thinspace{}c_2\thinspace{}w_1[x=130]\thinspace{}c_1.
 $$
 
 两个事务都在原值 100 上增加金额； $T_2$ 的更新 120 被 $T_1$ 最后的 130 覆盖，最终值只保留了 $T_1$ 增加的 30。READ COMMITTED 允许 P4：禁止 P0 只要求先写事务在后续写之前提交，而 P1 只会排除先写后读的次序，这两者都不排除 H4；P2 则会阻止它。
@@ -298,7 +298,7 @@ Cursor Stability（游标稳定性）是许多系统为减少这种问题而提�
 游标稳定性因此禁止“游标丢失更新”：
 
 $$
-P4C:\quad r _ {c1}[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}w_1[x]\thickspace{}\ldots\thickspace{}c_1.
+P4C:\quad r _ {c1}[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}w_1[x]\thinspace{}\ldots\thinspace{}c_1.
 $$
 
 原文正文把游标定位更新记作 $w _ {c1}[x]$，并说明 $r _ {c1}[x]$ 后的 $w _ {c1}[x]$ 会排除中间的 $w_2[x]$；但紧随其后的 P4C 公式实际写作普通 $w_1[x]$。这里分别按原文保留两种记号。
@@ -325,15 +325,15 @@ Snapshot Isolation（快照隔离）是一种多版本并发控制。事务总�
 
 $$
 \begin{aligned}
-H1.SI:\quad &r_1[x_0=50]\thickspace{}w_1[x_1=10]\thickspace{}r_2[x_0=50]\thickspace{}r_2[y_0=50]\thickspace{}c_2\\
-&r_1[y_0=50]\thickspace{}w_1[y_1=90]\thickspace{}c_1.
+H1.SI:\quad &r_1[x_0=50]\thinspace{}w_1[x_1=10]\thinspace{}r_2[x_0=50]\thinspace{}r_2[y_0=50]\thinspace{}c_2\\
+&r_1[y_0=50]\thinspace{}w_1[y_1=90]\thinspace{}c_1.
 \end{aligned}
 $$
 
 这里 $T_2$ 读到一致的旧快照，而不是 $T_1$ 的未提交数据。H1.SI 的多版本数据流是可串行化的；它在视图上等价于单版本历史：
 
 $$
-H1.SI.SV:\quad r_1[x=50]\thickspace{}r_1[y=50]\thickspace{}r_2[x=50]\thickspace{}r_2[y=50]\thickspace{}c_2\thickspace{}w_1[x=10]\thickspace{}w_1[y=90]\thickspace{}c_1.
+H1.SI.SV:\quad r_1[x=50]\thinspace{}r_1[y=50]\thinspace{}r_2[x=50]\thinspace{}r_2[y=50]\thinspace{}c_2\thinspace{}w_1[x=10]\thinspace{}w_1[y=90]\thinspace{}c_1.
 $$
 
 我们在 [OOBBGM] 中证明，所有快照隔离历史都能在保持数据流依赖的前提下映射为单版本历史；多版本历史与相应单版本历史称为视图等价。这种映射是把快照隔离放入隔离强度层次所需的严格判据。
@@ -342,8 +342,8 @@ $$
 
 $$
 \begin{aligned}
-H5:\quad &r_1[x=50]\thickspace{}r_1[y=50]\thickspace{}r_2[x=50]\thickspace{}r_2[y=50]\\
-&w_1[y=-40]\thickspace{}w_2[x=-40]\thickspace{}c_1\thickspace{}c_2.
+H5:\quad &r_1[x=50]\thinspace{}r_1[y=50]\thinspace{}r_2[x=50]\thinspace{}r_2[y=50]\\
+&w_1[y=-40]\thinspace{}w_2[x=-40]\thinspace{}c_1\thinspace{}c_2.
 \end{aligned}
 $$
 
@@ -356,13 +356,13 @@ $$
 **A5A：读偏斜（Read Skew）。** $T_1$ 读 $x$； $T_2$ 更新相互关联的 $x$ 和 $y$ 并提交；随后 $T_1$ 读 $y$，于是看到一新一旧的两个值。用历史表示，我们得到如下异常：
 
 $$
-A5A:\quad r_1[x]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}w_2[y]\thickspace{}\ldots\thickspace{}c_2\thickspace{}\ldots\thickspace{}r_1[y]\thickspace{}\ldots\thickspace{}(c_1\text{ 或 }a_1).
+A5A:\quad r_1[x]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}w_2[y]\thinspace{}\ldots\thinspace{}c_2\thinspace{}\ldots\thinspace{}r_1[y]\thinspace{}\ldots\thinspace{}(c_1\text{ 或 }a_1).
 $$
 
 **A5B：写偏斜（Write Skew）。** 原文文字先描述 $T_1$ 读取满足 $C()$ 的 $x$ 和 $y$，随后 $T_2$ 读取 $x$ 和 $y$、写 $x$ 并提交，最后 $T_1$ 写 $y$；若 $x$ 和 $y$ 之间存在约束，结果可能违反它。紧随其后的公式却把 $w_1[y]$ 排在 $w_2[x]$ 之前，并只要求 $c_1$、 $c_2$ 最终都出现，与文字叙述的写入次序不一致。两种交错都体现事务基于共同旧状态、分别写不同数据项的写偏斜；下式按原文保留：
 
 $$
-A5B:\quad r_1[x]\thickspace{}\ldots\thickspace{}r_2[y]\thickspace{}\ldots\thickspace{}w_1[y]\thickspace{}\ldots\thickspace{}w_2[x]\thickspace{}\ldots\thickspace{}(c_1\text{ 与 }c_2\text{ 都出现}).
+A5B:\quad r_1[x]\thinspace{}\ldots\thinspace{}r_2[y]\thinspace{}\ldots\thinspace{}w_1[y]\thinspace{}\ldots\thinspace{}w_2[x]\thinspace{}\ldots\thinspace{}(c_1\text{ 与 }c_2\text{ 都出现}).
 $$
 
 P2 是 $x=y$ 时 A5A 的退化形式；更典型的 A5A 是事务读取两个不同但相关的数据项，例如受引用完整性约束的两个值。A5B 的一个典型银行场景允许单个账户余额为负，但要求共同持有的账户余额总和保持非负；H5 正是这种约束被并发写偏斜破坏的例子。A5 主要用于区分低于 REPEATABLE READ 的隔离类型，因为 P2 本身就会阻止 A5A 和 A5B。基于锁的 REPEATABLE READ 能保护涉及固定数据项的约束，而表 1 中仅由严格 A1、A2 定义的原始 ANSI REPEATABLE READ 未必能做到。

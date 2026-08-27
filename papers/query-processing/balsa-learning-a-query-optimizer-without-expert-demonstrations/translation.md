@@ -184,7 +184,7 @@ Balsa 使用最小化的纯逻辑计划代价模型，它只捕捉“元组越�
 $$
 C _ {\text{out}}(T)=
 \begin{cases}
-|T|, & T\text{ 是表或选择操作}\thickspace{}\\
+|T|, & T\text{ 是表或选择操作}\thinspace{}\\
 |T|+C _ {\text{out}}(T_1)+C _ {\text{out}}(T_2), & T=T_1\bowtie T_2
 \end{cases}
 $$
