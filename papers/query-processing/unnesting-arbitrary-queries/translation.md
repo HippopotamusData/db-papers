@@ -625,6 +625,8 @@ e _ 2.\mathit{curriculum}=d.\mathit{major}
 \end{aligned}
 $$
 
+> **原文一致性说明：** 查询 Q2 写作 $e.\mathit{grade}\geq{}\mathrm{avg}(\ldots)+1$，图 9 的优化计划写作 $e.\mathit{grade}\gt{}m+1$；译文分别按源 PDF 保留，不自行修改比较符。
+
 ### 3.5 反连接示例
 
 下面我们讨论一个依赖反连接的例子。它用于转换使用 SQL `ALL` 子句的查询，把某个值与由一个可能相关的子查询推导出的所有值比较。下面的查询基于两个抽象关系 $R:\lbrace{}[A,\ldots,X,\ldots]\rbrace{}$ 和 $S:\lbrace{}[B,\ldots,Y,\ldots]\rbrace{}$：

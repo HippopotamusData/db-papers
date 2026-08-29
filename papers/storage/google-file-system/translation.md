@@ -530,6 +530,8 @@ I/O 操作统计基于 GFS 服务器实际记录的 RPC 请求，以启发式方
 | FindMatchingFiles | 0.6 | 2.2 |
 | 其他全部类型合计 | 0.5 | 0.8 |
 
+> **原文一致性说明：** 本节正文把租约请求写作 `FindLeaseLocker`，表 6 写作 `FindLeaseHolder`；译文分别按源 PDF 保留。
+
 集群 X 与 Y 的 Delete 请求数量差异显著，因为集群 Y 存储的生产数据集会定期重新生成并替换为新版本。部分差异还隐藏在 Open 请求的差异中，因为从头以写入方式打开文件（Unix open 术语中的 “w” 模式）可能会隐式删除文件旧版本。
 
 FindMatchingFiles 是一种模式匹配请求，支持 “ls” 及类似文件系统操作。与发往主控节点的其他请求不同，它可能处理命名空间的很大一部分，因此成本可能很高。集群 Y 中该请求更常见，因为自动化数据处理任务往往会检查文件系统的某些部分，以了解应用程序的全局状态。相比之下，集群 X 的应用受到更明确的用户控制，通常预先知道所需全部文件的名称。
@@ -581,6 +583,8 @@ GFS 已成功满足我们的存储需求，并在 Google 内部广泛用作研�
 ## 致谢
 
 我们感谢以下人员对系统或本文所作的贡献。Brain Bershad（我们的论文指导人）和匿名审稿人向我们提供了宝贵意见和建议。Anurag Acharya、Jeff Dean 和 David desJardins 参与了早期设计。Fay Chang 完成了跨块服务器副本比较工作。Guy Edjlali 负责存储配额。Markus Gutschke 开发了测试框架和安全增强。David Kramer 负责性能增强。Fay Chang、Urs Hoelzle、Max Ibel、Sharon Perl、Rob Pike 和 Debby Wallach 对本文早期草稿提出了意见。我们在 Google 的许多同事勇敢地把数据托付给一个新文件系统，并向我们提供了有用反馈。Yoshka 协助了早期测试。
+
+> **原文一致性说明：** 源 PDF 将论文指导人姓名印作 `Brain Bershad`，并将参考文献 [11] 的题名印作 *The Gobal File System*；译文分别按可见原文保留。
 
 ## 参考文献
 

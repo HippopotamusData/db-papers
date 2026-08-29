@@ -747,6 +747,8 @@ BIRD-INTERACT 采用 PostgreSQL 作为底层评测数据库管理系统，主要
 
 综合而言，这些结果表明，在智能体式 c-Interact 设置中，性能较少取决于单纯的交互次数，更多取决于系统能否平衡环境探索与用户交互、能否在适当时机提交，以及能否避免浪费预算。
 
+> **原文一致性说明：** 本段写作“智能体式 c-Interact”，而附录 J 标题、图 13 与相邻内容讨论智能体式 a-Interact；译文按源 PDF 保留该标签。
+
 ![图 14：不同含糊类型上的 LLM 成功率](assets/figure-14-ambiguity-type-performance.png)
 
 **图 14：** LLM 在 c-Interact 和 a-Interact 两种模式的不同含糊类型上的成功率。
@@ -758,6 +760,8 @@ BIRD-INTERACT 采用 PostgreSQL 作为底层评测数据库管理系统，主要
 ![图 15：线性与高阶含糊性上的 LLM 成功率](assets/figure-15-linear-higher-order.png)
 
 **图 15：** LLM 在 c-Interact 和 a-Interact 模式的线性与高阶含糊性上的成功率。
+
+> **原文一致性说明：** 源图第四条图例写作 `Linear-c`，与图注中的 a-Interact 系列命名不一致；图像按源 PDF 保留。
 
 ## 附录 L BIRD-INTERACT-LITE 实验
 
@@ -829,6 +833,8 @@ BIRD-INTERACT 采用 PostgreSQL 作为底层评测数据库管理系统，主要
 ### O.2 实验设置
 
 **模型与基线。** 我们把自己提出的函数驱动用户模拟器与采用单遍 LLM 提示直接生成响应的基线模拟器进行比较。为保证公平，我们的方法和基线都使用两个最先进的大语言模型作为骨干：Gemini-2.0-Flash、GPT-4o 和 Claude-Haiku-4.5。
+
+> **原文一致性说明：** 原文称使用“两个”骨干模型，随后列出 Gemini-2.0-Flash、GPT-4o 和 Claude-Haiku-4.5 三个模型；译文分别按源 PDF 保留。
 
 **评测框架。** 为客观、全面观察不同用户模拟器机制，我们使用 LLM-as-Judge 设计了稳健评测框架，使响应质量评测能够超越简单字符串匹配。我们采用 Qwen3-235B-A22B-Instruct-2507 作为评测器。
 
