@@ -8,7 +8,7 @@
 
 - 元数据只使用 `paper.yaml` 已有字段和 `config/taxonomy.yaml` 的受控主题。
 - 不手工编辑 `CATALOG.md`；元数据变化后运行 `make catalog`。
-- `reading_status: translated` 论文的原文、译文或资源如需实质修改，先通过 Issue 确认修复范围，再遵循 `docs/workflows/review.md` 的独立审阅与修复流程。
+- `reading_status: translated` 论文的原文、译文或资源如需实质修改，先明确修复范围，再遵循 `docs/workflows/review.md` 的独立审阅与修复流程。Issue 或当前任务中的明确授权均可确定范围，不必重复确认。
 - 保留无关文件和其他贡献者的修改。
 
 提交前至少运行：
