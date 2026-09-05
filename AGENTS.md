@@ -70,7 +70,11 @@ For audit/review, explanation, diagnosis, rule design, or planning, inspect and 
 
 Only `review-and-repair`, `mark translated`, or another explicit change authorization may edit a reviewed paper or its status. Repository-wide non-destructive checks do not authorize repository-wide content review or edits. Repair only papers identified by concrete findings within the authorized scope, and ask before expanding to a historical re-review.
 
-For change, build, fix, translate, rate, or archive requests, make in-scope local edits and run non-destructive validation. Ask before external publication, destructive cleanup, paid acquisition, or material scope expansion.
+For change, build, fix, translate, rate, or archive requests, make in-scope local edits and run non-destructive validation. Infer the intended outcome from the current request and conversation, make reasonable implementation choices, and continue until the authorized outcome is complete or a concrete blocker prevents it. Do not stop at a plan or at an intermediate workflow handoff.
+
+Explicit authorization remains valid within its stated scope across workflow stages and turns. Do not request it again or require a separate Issue to repeat it. Ask before external publication, destructive cleanup, paid acquisition, or material scope expansion only when that action is not already authorized. Before requesting a missing approval, complete the independent work already authorized so the user can review a concrete result. Missing source evidence, page-limit exceptions, and repository or CI access restrictions remain real boundaries; do not infer permission or paper facts to bypass them.
+
+Apply the user's explicit scope and authorization before generic workflow or skill guidance. If a document would require a pause, first check whether its condition applies and whether authorization already exists. When a pause is still necessary, identify the exact file and instruction, explain the unresolved blocker, and continue independent in-scope work where possible.
 
 ## Commands
 
@@ -95,6 +99,8 @@ Changes to the site generator, theme, or Pages workflow also run `make site-chec
 
 In a Codex translation batch, the translator runs `make paper-check`. An independent reviewer performs the PDF review; after the final review, the root agent sets `reading_status: translated` and reruns the single-paper gate. Review evidence belongs in the PR, commit, or task report, not in a repository ledger. The root agent owns shared state, checkpoints, and integration. Ordinary translation batches do not run `make deep-check`.
 
+Complete the required gates for the active workflow and role. Once they pass, add or repeat checks only for new changes, failures, or unresolved concerns. Status-change checks, the final clean-HEAD batch gate, and required CI checks remain mandatory at their specified stages. Do not add tests that merely restate low-impact documentation or configuration edits.
+
 For a requested publication, do not report success at push or merge. Wait for the default-branch check on the merge SHA, the Pages deployment for that same SHA, and a production-page verification.
 
 A full mechanical check does not authorize a repository-wide content review or rewrite. Report the affected paper IDs and keep repairs within the authorized scope. If a required tool or source is unavailable, state exactly which check was not run and why.
@@ -102,3 +108,5 @@ A full mechanical check does not authorize a repository-wide content review or r
 ## Completion report
 
 Lead with the outcome. Include applicable changed paper IDs or project files, final ratings, validation results, and unresolved evidence gaps. Use `translated` only when the current revision has completed review and passes the required gates; choose every other status from the lifecycle table in `docs/workflows/metadata.md`.
+
+Keep progress updates, task reports, and maintenance explanations concise and concrete. Use lists or tables when they clarify parallel items; avoid stock phrases and repeated summaries. These communication preferences do not apply to paper translation: preserve the source's structure, voice, detail, and qualifications under `docs/translation-policy.md`.

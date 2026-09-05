@@ -12,18 +12,18 @@
 - `translation.md` 以 `templates/translation.md` 的 YAML frontmatter 开头；`paper_id` 与目录名一致，`title` 与 `paper.yaml` 一致，`language` 固定为 `zh-CN`，`source` 固定为 `source.pdf`。
 - `translation.md` 覆盖原文全部实质章节、公式、图表、算法、代码、附录和完整参考文献。
 - 图表资源精确裁剪、链接有效、位置正确，主阅读路径无整页截图和工作残留。
-- 逐节对照通过后按 review workflow 记录当前审阅结论，把 `reading_status` 改为 `translated`，并对当前论文重新运行单篇门禁。
-- 新论文的完整处理在审阅通过后继续执行 `docs/workflows/rating.md`；评分写入并重新生成目录后才进入最终提交。
-- `make check` 通过。
+- 翻译者完成草稿自检并交付审阅材料；批次中的翻译子代理运行 `make paper-check PAPER_ID=<paper-id>`，仓库级门禁由根代理负责。
+- 完整处理新论文时，根代理继续安排 review workflow；审阅通过后更新状态并重新运行单篇门禁，再执行 `docs/workflows/rating.md`、重建目录和最终仓库级门禁。
 
 ## 约束
 
 正文证据只来自当前目录的 `source.pdf`。不要用模型记忆补写模糊段落、实验数字、参考文献或图表内容。保留原文结构和主张，不添加论文未提出的解释性结论。
 
-单篇新论文若被要求“完整处理”，本工作流只拥有
-`source_only -> draft` 和论文目录内的译文资产；随后必须按 review workflow
-独立审阅并标记为 `translated`，再按 rating workflow 评分并重建目录。未获状态修改权限
-时交付 `draft`，不得把“翻译完成”误报为 `translated`。
+翻译阶段只拥有 `source_only -> draft` 和论文目录内的译文资产；翻译子代理
+交付 `draft` 不表示完整任务结束。用户要求完整处理新论文时，根代理已有继续
+安排独立审阅、按审阅结果更新为 `translated`、评分和重建目录的授权，无需在
+工作流切换时重新确认。用户只要求草稿时交付 `draft`；不得把草稿完成误报为
+`translated`。提交和发布仍遵循任务已有的授权范围。
 
 完整质量要求见 `docs/translation-policy.md`。可以选择高效的提取、分栏、裁图和校对路径，但合并前必须检查编号、引用和顺序。
 
@@ -31,4 +31,7 @@
 
 ## 停止条件
 
-译文达到 `translated` 标准，或出现无法可靠读取的内容、缺失原文、页数超限或范围外依赖。未通过审阅时保留 `draft`，不猜测完成。
+翻译阶段在草稿自检和交审材料完成时结束；根代理按用户要求继续后续流程。
+出现无法可靠读取的内容、缺失原文、页数超限或范围外依赖时，报告具体阻塞和
+受影响论文。未通过审阅时保留 `draft`，不猜测完成；批次中不受阻塞影响的论文
+可继续处理。
