@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：164
-- 已审阅译文：158
+- 论文记录：165
+- 已审阅译文：159
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -18,7 +18,7 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 6 |
 | 系统架构 (`system-architecture`) | 26 |
-| 查询处理 (`query-processing`) | 54 |
+| 查询处理 (`query-processing`) | 55 |
 | 存储 (`storage`) | 21 |
 | 事务与并发控制 (`transactions`) | 9 |
 | 分布式数据库 (`distributed-databases`) | 8 |
@@ -79,7 +79,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，54 篇)
+### 查询处理 (`query-processing`，55 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -98,6 +98,7 @@
 | [DeepDB: Learn from Data, not from Queries!](papers/query-processing/deepdb-learn-from-data-not-from-queries/translation.md) | 基数估计、AI 优化数据库 | 2020 | 3.5 | translated | [原文](papers/query-processing/deepdb-learn-from-data-not-from-queries/source.pdf) | [官方链接](<https://doi.org/10.14778/3384345.3384349>) |
 | [Efficiency in the Columbia Database Query Optimizer](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | 查询优化 | 1998 | 3.5 | skipped | [原文](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2018/papers/15-optimizer1/xu-columbia-thesis1998.pdf>) |
 | [Efficiently Compiling Efficient Query Plans for Modern Hardware](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/translation.md) | 查询编译 | 2011 | 4.5 | translated | [原文](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol4/p539-neumann.pdf>) |
+| [Enhanced Subquery Optimizations in Oracle](papers/query-processing/enhanced-subquery-optimizations-oracle/translation.md) | 查询优化、查询执行 | 2009 | 3.5 | translated | [原文](papers/query-processing/enhanced-subquery-optimizations-oracle/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol2/vldb09-423.pdf>) |
 | [Everything You Always Wanted to Know About Compiled and Vectorized Queries But Were Afraid to Ask](papers/query-processing/compiled-and-vectorized-queries-afraid-to-ask/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](papers/query-processing/compiled-and-vectorized-queries-afraid-to-ask/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol11/p2209-kersten.pdf>) |
 | [Exploiting Upper and Lower Bounds in Top-Down Query Optimization](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/translation.md) | 查询优化 | 2001 | 3.0 | translated | [原文](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/source.pdf) | [官方链接](<https://doi.org/10.1109/IDEAS.2001.938068>) |
 | [Generating code for holistic query evaluation](papers/query-processing/generating-code-holistic-query-evaluation/translation.md) | 查询编译 | 2010 | 3.5 | translated | [原文](papers/query-processing/generating-code-holistic-query-evaluation/source.pdf) | [官方链接](<https://doi.org/10.1109/ICDE.2010.5447892>) |
@@ -258,5 +259,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 164 | 0 |
-| 发表年份 | 164 | 0 |
+| 作者 | 165 | 0 |
+| 发表年份 | 165 | 0 |
