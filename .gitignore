@@ -25,3 +25,8 @@ papers/**/assets/*inspect*.png
 papers/**/assets/*manifest*
 papers/**/assets/*grid*.png
 papers/**/assets/__*.png
+
+# Isolated local preview and browser test output.
+.preview/
+playwright-report/
+test-results/

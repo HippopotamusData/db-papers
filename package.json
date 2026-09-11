@@ -2,6 +2,10 @@
   "name": "db-papers-maintainer-tools",
   "private": true,
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "mathjax": "4.1.3"
+  },
+  "scripts": {
+    "test:site": "playwright test"
   }
 }

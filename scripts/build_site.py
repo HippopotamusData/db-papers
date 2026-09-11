@@ -615,11 +615,14 @@ def write_generated_config(
     root: Path,
     taxonomy: dict[str, Any],
     papers: list[Paper],
+    *,
+    preview: bool = False,
 ) -> None:
     """Add taxonomy-derived navigation without duplicating it in source config."""
 
     base_path = root / "zensical.toml"
-    generated_path = root / SITE_CONFIG.name
+    generated_path = root / (".preview" if preview else ".") / SITE_CONFIG.name
+    generated_path.parent.mkdir(parents=True, exist_ok=True)
     if not base_path.is_file() or base_path.is_symlink():
         raise fail("zensical.toml must be a regular file")
     if generated_path.is_symlink():
@@ -655,10 +658,15 @@ def write_generated_config(
     )
 
 
-def prepare_site(root: Path, output: Path) -> dict[str, int]:
+def prepare_site(root: Path, output: Path, *, preview: bool = False) -> dict[str, int]:
     """Generate a disposable reader tree without changing canonical papers."""
 
     root = root.resolve()
+    if preview:
+        output = root / ".preview" / SITE_SOURCE.name
+        if output.parent.is_symlink():
+            raise fail("preview directory must not be a symlink")
+        output.parent.mkdir(parents=True, exist_ok=True)
     output = output.resolve()
     if not output.is_relative_to(root) or output == root:
         raise fail("site source output must be a dedicated directory inside the repo")
@@ -724,7 +732,7 @@ def prepare_site(root: Path, output: Path) -> dict[str, int]:
                 raise fail(f"{output}: generated site source is not a directory")
             shutil.rmtree(output)
         staging.replace(output)
-        write_generated_config(root, taxonomy, papers)
+        write_generated_config(root, taxonomy, papers, preview=preview)
     finally:
         if staging.exists():
             shutil.rmtree(staging)
@@ -910,13 +918,14 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     prepare_parser = subparsers.add_parser("prepare")
     prepare_parser.add_argument("--output", type=Path, default=SITE_SOURCE)
+    prepare_parser.add_argument("--preview", action="store_true", help="isolate preview source, config, cache and build under .preview/")
     check_parser = subparsers.add_parser("check")
     check_parser.add_argument("--source", type=Path, default=SITE_SOURCE)
     check_parser.add_argument("--site", type=Path, default=SITE_OUTPUT)
     args = parser.parse_args()
     try:
         if args.command == "prepare":
-            prepare_site(ROOT, args.output)
+            prepare_site(ROOT, args.output, preview=args.preview)
         else:
             check_site(ROOT, args.source, args.site)
     except (OSError, ValueError, yaml.YAMLError) as exc:

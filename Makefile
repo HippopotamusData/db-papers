@@ -2,6 +2,8 @@ PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
 MATHJAX_MODULE ?= node_modules/mathjax
 TEST_VERBOSE ?= 0
 
+.PHONY: _validate-check _deep-validate-check site-refresh site-test
+
 .DEFAULT_GOAL := help
 
 .PHONY: help python-compile paper-new source-check \
@@ -23,7 +25,9 @@ help:
 		'  make source-check PAPER_ID=<id>    source identity and readability gate' \
 		'  make catalog                       regenerate CATALOG.md' \
 		'  make site-check                    build and verify the reader site' \
-		'  make site-serve                    serve the reader site locally' \
+		'  make site-serve                    serve an isolated local preview' \
+		'  make site-refresh                  refresh preview source after edits' \
+		'  make site-test                     build, verify and test reader interactions' \
 		'  make deep-check DEEP_REASON=<reason>  full audit for semantic changes' \
 		'    reasons: content-semantics, publication-semantics, validator-semantics, full-audit' \
 		'  make math-check-files FILES="..."  scoped portable-math gate' \
@@ -191,8 +195,14 @@ _site-build: _site-prepare
 site-check: _site-build
 	$(PYTHON) scripts/build_site.py check
 
-site-serve: _site-prepare
-	$(PYTHON) -m zensical serve --config-file site.generated.toml
+site-test: site-check
+	npm run test:site
+
+site-refresh:
+	$(PYTHON) scripts/build_site.py prepare --preview
+
+site-serve: site-refresh
+	$(PYTHON) -m zensical serve --config-file .preview/site.generated.toml
 
 test:
 	$(PYTHON) -m unittest discover -s tests $(if $(filter 1 true yes,$(TEST_VERBOSE)),-v)
@@ -200,7 +210,13 @@ test:
 doctor:
 	PYTHON=$(PYTHON) bash scripts/doctor.sh
 
-check: test validate _catalog-check _normalize-headers-check
+_validate-check:
+	env -u PAPER_ID -u SKIP_METADATA_VALIDATION PYTHON=$(PYTHON) bash scripts/validate_translations.sh --check-headers
+
+_deep-validate-check:
+	env -u PAPER_ID -u SKIP_METADATA_VALIDATION DEEP_VALIDATION=1 PYTHON=$(PYTHON) bash scripts/validate_translations.sh --check-headers
+
+check: test _validate-check _catalog-check
 
 deep-check:
 	@case "$(DEEP_REASON)" in \
@@ -213,4 +229,4 @@ deep-check:
 	@printf '%s\n' "Deep validation reason: $(DEEP_REASON)"
 	@$(MAKE) --no-print-directory _deep-check
 
-_deep-check: test deep-validate _catalog-check _normalize-headers-check math-check
+_deep-check: test _deep-validate-check _catalog-check math-check

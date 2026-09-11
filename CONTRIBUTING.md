@@ -37,3 +37,8 @@ make site-check
 
 站点内容由权威元数据和 `reading_status: translated` 译文生成；不要提交 `site_src/`、`site/`
 或 `site.generated.toml`，也不要在生成产物中手工修补论文页面。
+
+站点日常迭代可用 `make site-serve` 启动 `.preview/` 中的独立预览，修改后运行
+`make site-refresh` 刷新生成内容。提交前仍运行上述验收；涉及读者交互时安装
+Chromium（`npm ci && npx playwright install chromium`），并用 `make site-test`
+完成构建与浏览器回归。预览和验收互不覆盖。
