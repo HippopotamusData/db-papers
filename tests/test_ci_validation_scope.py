@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import unittest
+import yaml
 from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
@@ -227,7 +228,8 @@ class CiValidationScopeTests(unittest.TestCase):
             "__DB_PAPERS__\n"
             "math_all=false\n"
             "deep_validate_all=false\n"
-            "site_changed=true\n",
+            "site_changed=true\n"
+            "browser_changed=false\n",
         )
 
     def test_workflow_uses_minimal_domains_and_conditional_deep_validation(
@@ -245,7 +247,7 @@ class CiValidationScopeTests(unittest.TestCase):
             "steps.scope.outputs.deep_validate_all == 'true'",
             workflow,
         )
-        self.assertIn("run: make deep-validate", workflow)
+        self.assertIn("run: make test _deep-validate-check _catalog-check", workflow)
         self.assertIn("Audit changed GitHub math", workflow)
         self.assertIn(
             'git merge-base --is-ancestor "$BEFORE_SHA" "$CURRENT_SHA"',
@@ -273,32 +275,40 @@ class CiValidationScopeTests(unittest.TestCase):
         self.assertNotIn("make deep-check", workflow)
         self.assertNotIn("workflow_dispatch", workflow)
 
-    def test_pages_workflow_separates_pr_and_full_production_builds(
-        self,
-    ) -> None:
-        workflow = (ROOT / ".github/workflows/pages.yml").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("Determine site impact", workflow)
-        self.assertIn(
-            "Successful main check: forcing a complete production build",
-            workflow,
-        )
-        self.assertIn(
-            "if: steps.scope.outputs.site_changed == 'true'",
-            workflow,
-        )
-        self.assertIn(
-            "needs.site-build.result == 'success'",
-            workflow,
-        )
-        self.assertIn("format('ignored-{0}', github.run_id)", workflow)
-        self.assertIn("branches: [main]", workflow)
-        self.assertIn("run: make bootstrap-site", workflow)
-        self.assertIn("run: make site-check", workflow)
-        self.assertNotIn("run: make site-check PYTHON=python", workflow)
-        self.assertNotIn('git rev-parse "$CURRENT_SHA^"', workflow)
-        self.assertNotIn("workflow_dispatch", workflow)
+    def test_parallel_build_and_deployment_gate(self) -> None:
+        workflow = yaml.safe_load((ROOT / '.github/workflows/check.yml').read_text())
+        jobs = workflow['jobs']
+        self.assertNotIn('needs', jobs['archive-check'])
+        self.assertNotIn('needs', jobs['site-build'])
+        deploy = jobs['deploy']
+        self.assertEqual(set(deploy['needs']), {'archive-check', 'site-build'})
+        for condition in ("github.event_name == 'push'", "github.ref == 'refs/heads/main'",
+                          "needs.archive-check.result == 'success'", "needs.site-build.result == 'success'"):
+            self.assertIn(condition, deploy['if'])
+        self.assertEqual(workflow['permissions'], {'contents': 'read'})
+        self.assertEqual(deploy['permissions'], {'contents': 'read', 'pages': 'write', 'id-token': 'write'})
+        archive = {step.get('name'): step for step in jobs['archive-check']['steps']}
+        self.assertIn("!= 'true'", archive['Run archive gate']['if'])
+        self.assertIn("== 'true'", archive['Run global deep validation']['if'])
+        self.assertNotIn('make check', archive['Run global deep validation']['run'])
+        site = {step.get('name'): step for step in jobs['site-build']['steps']}
+        self.assertIn('"$EVENT_NAME" = "push"', site['Determine site impact']['run'])
+        self.assertIn('site_changed=true', site['Determine site impact']['run'])
+        self.assertEqual(site['Upload GitHub Pages artifact']['if'].strip(),
+                         "github.event_name == 'push' && steps.scope.outputs.site_changed == 'true'")
+        self.assertIn('Verify deployed pages and assets', [step.get('name') for step in deploy['steps']])
+        self.assertFalse((ROOT / '.github/workflows/pages.yml').exists())
+
+    def test_browser_scope_is_selected_for_site_code_but_not_paper_content(self) -> None:
+        for path in ('site_assets/javascripts/catalog.js', 'tests/browser/reader.spec.cjs',
+                     'playwright.config.cjs', '.github/workflows/check.yml', 'package-lock.json'):
+            with self.subTest(path=path):
+                plan = select_validation_plan([path], root=ROOT)
+                self.assertTrue(plan.browser_changed)
+                self.assertTrue(plan.site_changed)
+        plan = select_validation_plan(['papers/storage/a/translation.md'], root=ROOT)
+        self.assertTrue(plan.site_changed)
+        self.assertFalse(plan.browser_changed)
 
 
 if __name__ == "__main__":

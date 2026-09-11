@@ -7,6 +7,7 @@ cd "$ROOT"
 PYTHON=${PYTHON:-python3}
 target_paper_id=
 deep_validation=${DEEP_VALIDATION:-0}
+check_headers=0
 
 for internal_name in PAPER_ID SKIP_METADATA_VALIDATION; do
   if [[ -n "${!internal_name+x}" ]]; then
@@ -17,6 +18,10 @@ done
 
 while (( $# > 0 )); do
   case "$1" in
+    --check-headers)
+      check_headers=1
+      shift
+      ;;
     --paper-id)
       if (( $# < 2 )); then
         echo "ERROR: --paper-id requires a value" >&2
@@ -84,6 +89,9 @@ trap 'rm -rf "$validation_tmp"' EXIT
 manifest_args=(validation-manifest)
 [[ -n "$target_paper_id" ]] && manifest_args+=(--paper-id "$target_paper_id")
 "$PYTHON" scripts/papers.py "${manifest_args[@]}" > "$manifest" || exit 1
+prepare_args=("$manifest" "$validation_tmp")
+[[ "$check_headers" == "1" ]] && prepare_args+=(--check-headers)
+"$PYTHON" scripts/prepare_translation_checks.py "${prepare_args[@]}" || exit 1
 
 {
 IFS=$'\x1f' read -r manifest_kind source_name translation_name require_complete_references allow_whole_page_images
@@ -135,9 +143,16 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit skip
   [[ -f "$translation" ]] || continue
 
   visible_translation="$validation_tmp/visible-${paper_id}.md"
-  if ! "$PYTHON" scripts/markdown_visibility.py "$translation" "$visible_translation"; then
-    fail "$translation reader-visible Markdown preparation failed"
+  if [[ -f "$validation_tmp/prepare-${paper_id}.error" ]]; then
+    fail "$translation reader-visible Markdown preparation failed: $(cat "$validation_tmp/prepare-${paper_id}.error")"
     continue
+  fi
+  if [[ ! -f "$visible_translation" ]]; then
+    fail "$translation reader-visible Markdown preparation missing"
+    continue
+  fi
+  if [[ -f "$validation_tmp/header-${paper_id}.error" ]]; then
+    fail "non-canonical translation header: $translation"
   fi
 
   fence_count=$(rg -c '^```' "$visible_translation" 2>/dev/null || true)
@@ -163,12 +178,9 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit skip
     quality_issue "$translation contains double-numbered references"
   fi
 
-  narrative_issues=$("$PYTHON" scripts/validate_narrative_voice.py --already-visible "$visible_translation")
-  narrative_status=$?
-  if (( narrative_status == 1 )); then
+  narrative_issues=$(cat "$validation_tmp/narrative-${paper_id}.txt")
+  if [[ -n "$narrative_issues" ]]; then
     warn "$translation contains ambiguous bare-author narration: $narrative_issues"
-  elif (( narrative_status != 0 )); then
-    fail "$translation narrative-voice validation failed (exit=$narrative_status)"
   fi
 
   if [[ "$deep_validation" == "1" || -n "$target_paper_id" || "$reading_status" == "draft" ]]; then

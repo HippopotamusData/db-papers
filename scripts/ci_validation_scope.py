@@ -32,6 +32,8 @@ DEEP_VALIDATION_PATHS = frozenset(
         "Makefile",
         "config/policy.yaml",
         "scripts/markdown_visibility.py",
+        "scripts/prepare_translation_checks.py",
+        "scripts/normalize_translation_headers.py",
         "scripts/papers.py",
         "scripts/pdf_metrics.py",
         "scripts/project_config.py",
@@ -52,7 +54,12 @@ SITE_EXACT_PATHS = frozenset(
         "scripts/build_site.py",
         "scripts/project_config.py",
         "zensical.toml",
-        ".github/workflows/pages.yml",
+        ".github/workflows/check.yml",
+        "scripts/site_smoke.py",
+        "scripts/serve_built_site.py",
+        "playwright.config.cjs",
+        "package.json",
+        "package-lock.json",
     }
 )
 MISSING = object()
@@ -68,6 +75,7 @@ class ValidationPlan:
     math_all: bool = False
     deep_validate_all: bool = False
     site_changed: bool = False
+    browser_changed: bool = False
 
 
 def normalize_path(value: str) -> str:
@@ -191,7 +199,7 @@ def select_paper_ids(
 def is_site_path(path: str) -> bool:
     if path in SITE_EXACT_PATHS:
         return True
-    if path.startswith("site_assets/"):
+    if path.startswith(("site_assets/", "tests/browser/")):
         return True
     return changed_paper_id(path) is not None
 
@@ -219,6 +227,11 @@ def select_validation_plan(
         path in DEEP_VALIDATION_PATHS for path in normalized
     )
     site_changed = any(is_site_path(path) for path in normalized)
+
+    browser_changed = any(
+        is_site_path(path) and changed_paper_id(path) is None
+        for path in normalized
+    )
 
     for path in normalized:
         paper_id = changed_paper_id(path)
@@ -264,6 +277,7 @@ def select_validation_plan(
         math_all = math_all or base_dev != head_dev
         deep_validate_all = deep_validate_all or base_dev != head_dev
         site_changed = site_changed or base_site != head_site
+        browser_changed = browser_changed or base_site != head_site
 
     return ValidationPlan(
         paper_ids=tuple(sorted(paper_ids)),
@@ -271,6 +285,7 @@ def select_validation_plan(
         math_all=math_all,
         deep_validate_all=deep_validate_all,
         site_changed=site_changed,
+        browser_changed=browser_changed,
     )
 
 
@@ -291,6 +306,7 @@ def emit_github_output(plan: ValidationPlan | list[str]) -> None:
         f"{'true' if plan.deep_validate_all else 'false'}"
     )
     print(f"site_changed={'true' if plan.site_changed else 'false'}")
+    print(f"browser_changed={'true' if plan.browser_changed else 'false'}")
 
 
 def main() -> int:

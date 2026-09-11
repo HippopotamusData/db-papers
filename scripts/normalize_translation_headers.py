@@ -50,10 +50,10 @@ def prose_line_indices(lines: list[str]) -> list[int]:
     return result
 
 
-def normalize_text(text: str, title: str) -> str:
+def normalize_text(text: str, title: str, *, visible: str | None = None) -> str:
     """Return a canonical H1 and translator-note block, preserving all other text."""
     lines = text.splitlines()
-    visible_lines = reader_visible_markdown(text).splitlines()
+    visible_lines = (reader_visible_markdown(text) if visible is None else visible).splitlines()
     prose_indices = prose_line_indices(visible_lines)
     h1_indices = [
         index for index in prose_indices if visible_lines[index].startswith("# ")
@@ -67,6 +67,7 @@ def normalize_text(text: str, title: str) -> str:
     if len(note_indices) > 1:
         raise ValueError(f"expected at most one translator-note heading, found {len(note_indices)}")
 
+    h1_index = h1_indices[0]
     if note_indices:
         note_start = note_indices[0]
         first_content = note_start + 1
@@ -99,14 +100,12 @@ def normalize_text(text: str, title: str) -> str:
                 ),
                 len(lines),
             )
+        if note_start <= h1_index < note_end:
+            raise ValueError("translator-note block must not contain the paper H1")
         del lines[note_start:note_end]
+        if note_end <= h1_index:
+            h1_index -= note_end - note_start
 
-    visible_lines = reader_visible_markdown("\n".join(lines)).splitlines()
-    h1_index = next(
-        index
-        for index in prose_line_indices(visible_lines)
-        if visible_lines[index].startswith("# ")
-    )
     lines[h1_index] = f"# {title}（中文译文）"
 
     remainder = lines[h1_index + 1 :]

@@ -277,11 +277,15 @@ class MakefileValidationScopeTests(unittest.TestCase):
         script = (ROOT / "scripts/validate_translations.sh").read_text(
             encoding="utf-8"
         )
-        self.assertIn(
-            'scripts/validate_narrative_voice.py --already-visible '
-            '"$visible_translation"',
-            script,
-        )
+        self.assertIn('scripts/prepare_translation_checks.py', script)
+        self.assertIn('narrative-${paper_id}.txt', script)
+        self.assertNotIn('scripts/validate_narrative_voice.py --already-visible', script)
+
+    def test_combined_gate_checks_headers_without_second_parser(self) -> None:
+        for target in ('check', 'deep-check'):
+            output = self.dry_run(target, DEEP_REASON='validator-semantics')
+            self.assertIn('--check-headers', output)
+            self.assertNotIn('normalize_translation_headers.py', output)
 
     def test_python_metadata_gate_owns_status_file_contract(self) -> None:
         script = (ROOT / "scripts/validate_translations.sh").read_text(

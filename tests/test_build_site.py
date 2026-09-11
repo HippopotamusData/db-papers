@@ -19,6 +19,23 @@ import build_site  # noqa: E402
 
 
 class BuildSiteTests(unittest.TestCase):
+    def test_preview_generation_does_not_touch_acceptance_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_repo(root)
+            config = root / 'zensical.toml'
+            config.write_text(config.read_text().replace('[project]\n', '[project]\ndocs_dir = "site_src"\nsite_dir = "site"\n'))
+            build_site.prepare_site(root, root / 'site_src')
+            config_before = (root / 'site.generated.toml').read_bytes()
+            source_before = (root / 'site_src/index.md').read_bytes()
+            build_site.prepare_site(root, root / 'site_src', preview=True)
+            self.assertEqual((root / 'site.generated.toml').read_bytes(), config_before)
+            self.assertEqual((root / 'site_src/index.md').read_bytes(), source_before)
+            self.assertTrue((root / '.preview/site_src/index.md').is_file())
+            config = tomllib.loads((root / '.preview/site.generated.toml').read_text())
+            self.assertEqual(config['project']['docs_dir'], 'site_src')
+            self.assertEqual(config['project']['site_dir'], 'site')
+
     def test_recent_ingest_uses_first_source_addition_not_later_edits(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

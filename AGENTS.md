@@ -85,6 +85,8 @@ make source-check PAPER_ID=<paper-id>  # source identity and readability gate
 make paper-check PAPER_ID=<paper-id>  # scoped deep gate for one paper during a parallel batch
 make catalog        # regenerate CATALOG.md from paper.yaml files
 make site-check     # build and verify the reader-facing Pages artifact
+make site-refresh   # regenerate the isolated local preview
+make site-test      # site-check plus Chromium reader interaction tests
 make check          # fast submission gate and generated-file check
 make deep-check DEEP_REASON=<reason>  # check superset with full repository audit
 make math-check-files FILES='papers/<area>/<paper-id>/translation.md'  # scoped math gate

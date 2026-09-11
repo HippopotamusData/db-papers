@@ -54,8 +54,8 @@ schema reader。旧规则和旧证据需要时从 Git 历史读取，不作为�
 
 `reading_status: translated` 表示当前 Git revision 中的译文已经人工审阅并通过
 当前确定性门禁。站点只按该状态选择译文；`main` 的 `check` 成功表示同一 SHA
-已经通过归档检查和 push-side GitHub 公式审计，Pages 随后对该 SHA 完整构建并
-部署。
+已经通过归档检查和 push-side GitHub 公式审计。站点构建与归档检查并行，
+部署等待两者成功，随后核验线上页面和静态资源与同 SHA 的构建产物一致。
 
 内容变化不依赖额外摘要锁来确认发布状态。PR 或 push 的 Git diff 直接定位受影响
 paper ID，并运行 `paper-check`；严格的独立身份要求应由 GitHub required reviewer
@@ -99,18 +99,40 @@ make bootstrap-site
 资源；未完成译文、维护配置、脚本和测试不进入 artifact。
 
 ```bash
-make site-serve
-make site-check
+make site-serve   # 启动独立预览
+make site-refresh # 修改源配置、样式或生成器后刷新预览源文件
+make site-check   # 最终构建与链接验收
+# 首次运行浏览器测试需显式准备环境：
+npm ci
+npx playwright install chromium
+make site-test    # site-check + 读者交互回归
 ```
 
-PR 只构建不部署。默认分支的 `check` workflow 在同一 SHA 完成归档检查和
-push-side GitHub 公式审计后，Pages workflow 检出该 SHA、完整运行
-`make site-check` 并部署。站点故障优先 revert 导致故障的仓库提交，不直接修改
-artifact。
+预览的源文件、生成配置、构建缓存和输出均位于 `.preview/`，与验收用的
+`site_src/`、`site.generated.toml`、`site/` 隔离。编辑迭代时使用预览刷新；
+提交前再按变更范围运行最终门禁。预览不替代验收，也不保存跨提交的验收结果。
+
+`check` workflow 的 `archive-check` 与 `site-build` 并行，PR 只构建不部署。
+主分支每次推送都重新完整构建本站，不复用 PR artifact。`deploy` 只在主分支
+且这两个 job 成功后运行。独立的 `pull_request_target` 公式审计保持受信任边界。
+站点实现、前端依赖或浏览器测试变化时，PR 和主分支运行 Chromium 回归，覆盖筛选后直接点击、返回保留条件、PDF 链接和窄屏布局。
+
+部署后，`scripts/site_smoke.py` 核验首页、目录、代表论文页及其本地 CSS/JS
+的 SHA-256 与本次 artifact 相同，最多重试六轮，每轮间隔十秒。预期值只通过
+当前运行的 job output 传递，不保存仓库版本账本。失败会使发布运行失败；成功
+后在 Actions summary 记录 SHA 和核验数量。外部 CDN 依赖不属于本站 artifact。
+站点故障优先 revert 导致故障的仓库提交，不直接修改 artifact。
+
+仓库可启用 auto-merge；仅对已获发布授权的具体 PR 设置，等待 required checks
+与分支规则满足后合并。合并后仍须等待该 SHA 的检查、部署和线上核验。
 
 ## CI 范围
 
-- 每次 PR 和默认分支推送都运行 `make check`。
+- 每次 PR 和默认分支推送运行完整单测、元数据、标题和目录门禁。
+  普通变更使用 `make check`；全库深检触发时以
+  `make test _deep-validate-check _catalog-check` 替代快速扫描，不重复运行两遍。
+- 同一次译文检查批量准备读者可见 Markdown、叙述提示和标题检查，减少重复解析；
+  临时结果只供当次调用使用，深检、单篇检查与公式渲染仍保留各自门禁。
 - `source.pdf`、`translation.md`、`assets/` 或影响发布语义的 `paper.yaml`
   变化时，对相应 paper ID 运行 `paper-check`。
 - 仅 `title_zh`、`topics` 或 `rating` 变化时，运行快速元数据、目录和站点检查。
