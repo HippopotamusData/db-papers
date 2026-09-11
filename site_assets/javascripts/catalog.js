@@ -71,7 +71,12 @@ function setupCatalogFilters() {
     } else if (sort.value === "rating-asc") {
       orderedCards.sort(compareNumeric("rating", 1));
     }
-    grid.append(...orderedCards);
+    // Moving a card during the search field's blur/change event cancels a
+    // pending click on its link. Only move cards when their order changes.
+    const currentOrder = Array.from(grid.querySelectorAll(".paper-card"));
+    if (orderedCards.some((card, index) => card !== currentOrder[index])) {
+      grid.append(...orderedCards);
+    }
 
     count.textContent = String(visible);
     empty.hidden = visible !== 0;
