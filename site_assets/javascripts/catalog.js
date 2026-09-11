@@ -1,3 +1,5 @@
+let cleanupCatalogState = () => {};
+
 function setupCatalogFilters() {
   const grid = document.querySelector("#paper-grid");
   const search = document.querySelector("#catalog-search");
@@ -22,12 +24,48 @@ function setupCatalogFilters() {
     !count ||
     !empty
   ) {
+    cleanupCatalogState();
+    cleanupCatalogState = () => {};
     return;
   }
   if (grid.dataset.filtersReady === "true") {
     return;
   }
+  cleanupCatalogState();
   grid.dataset.filtersReady = "true";
+
+  const controls = { search, area, topic, status, sort };
+  const storageKey = `dbp:catalog:${window.location.pathname}`;
+  let saved = null;
+  try {
+    saved = JSON.parse(sessionStorage.getItem(storageKey));
+  } catch {
+    // Filtering remains available when browser storage is disabled.
+  }
+  if (saved && typeof saved === "object") {
+    for (const [name, control] of Object.entries(controls)) {
+      const value = saved[name];
+      if (typeof value === "string" &&
+          (control === search || Array.from(control.options).some(
+            (option) => option.value === value))) {
+        control.value = value;
+      }
+    }
+    advancedToggle?.setAttribute("aria-expanded", String(saved.expanded === true));
+  }
+  const save = () => {
+    if (!grid.isConnected) return;
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify({
+        ...Object.fromEntries(Object.entries(controls).map(
+          ([name, control]) => [name, control.value])),
+        expanded: advancedToggle?.getAttribute("aria-expanded") === "true",
+        scroll: window.scrollY,
+      }));
+    } catch {
+      // Storage can be unavailable or full; do not interrupt navigation.
+    }
+  };
 
   const cards = Array.from(grid.querySelectorAll(".paper-card"));
   const originalOrder = new Map(cards.map((card, index) => [card, index]));
@@ -91,16 +129,37 @@ function setupCatalogFilters() {
     }
   };
 
-  for (const control of [search, area, topic, status, sort]) {
-    control.addEventListener("input", apply);
-    control.addEventListener("change", apply);
+  const update = () => {
+    apply();
+    save();
+  };
+  for (const control of Object.values(controls)) {
+    control.addEventListener("input", update);
+    control.addEventListener("change", update);
   }
   advancedToggle?.addEventListener("click", () => {
     const expanded =
       advancedToggle.getAttribute("aria-expanded") !== "true";
     advancedToggle.setAttribute("aria-expanded", String(expanded));
+    save();
   });
   apply();
+  // Capture before instant navigation detaches the current catalog.
+  document.addEventListener("click", save, true);
+  window.addEventListener("pagehide", save);
+  let frame = requestAnimationFrame(() => {
+    frame = requestAnimationFrame(() => {
+      if (grid.isConnected && !window.location.hash &&
+          Number.isFinite(saved?.scroll) && saved.scroll >= 0) {
+        window.scrollTo(0, saved.scroll);
+      }
+    });
+  });
+  cleanupCatalogState = () => {
+    cancelAnimationFrame(frame);
+    document.removeEventListener("click", save, true);
+    window.removeEventListener("pagehide", save);
+  };
 }
 
 if (typeof document$ !== "undefined") {
