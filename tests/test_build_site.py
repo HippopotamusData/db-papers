@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import sys
+import os
+import subprocess
 import tempfile
 import tomllib
 import unittest
 from pathlib import Path
 
 import yaml
+import markdown
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +19,46 @@ import build_site  # noqa: E402
 
 
 class BuildSiteTests(unittest.TestCase):
+    def test_recent_ingest_uses_first_source_addition_not_later_edits(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_repo(root)
+            def git(*args: str, date: str = "2026-01-01T12:00:00+00:00") -> None:
+                subprocess.run(
+                    ["git", *args], cwd=root, check=True, capture_output=True,
+                    env={**os.environ, "GIT_AUTHOR_NAME": "Test",
+                         "GIT_AUTHOR_EMAIL": "test@example.com",
+                         "GIT_COMMITTER_NAME": "Test",
+                         "GIT_COMMITTER_EMAIL": "test@example.com",
+                         "GIT_AUTHOR_DATE": date, "GIT_COMMITTER_DATE": date},
+                )
+            self.assertEqual(build_site.paper_ingest_dates(root), {})
+            git("init")
+            git("add", ".")
+            git("commit", "-m", "Initial sources")
+            source = root / "papers/query-processing/accepted-paper/source.pdf"
+            source.write_bytes(source.read_bytes() + b"updated")
+            git("add", ".")
+            git("commit", "-m", "Update source", date="2026-02-01T12:00:00+00:00")
+            dates = build_site.paper_ingest_dates(root)
+            self.assertEqual(dates["accepted-paper"], "2026-01-01")
+            taxonomy, papers = build_site.load_papers(root)
+            dates["draft-paper"] = "2026-01-02"
+            recent = build_site.render_recent(papers, taxonomy, dates)
+            self.assertLess(recent.index("草稿论文"), recent.index("已验收论文"))
+            self.assertIn('draft-paper/source.pdf', recent)
+            self.assertIn('accepted-paper/"', recent)
+            self.assertNotIn('translation.md', recent)
+            renderer = markdown.Markdown(extensions=["md_in_html", "toc", "attr_list"])
+            rendered = renderer.convert(build_site.render_home(taxonomy, papers, dates))
+            self.assertEqual(
+                [entry["name"] for entry in renderer.toc_tokens],
+                ["最近更新", "研究领域", "阅读说明"],
+            )
+            self.assertEqual(renderer.toc_tokens[0]["children"], [])
+            self.assertIn('class="recent-paper"', rendered)
+            self.assertIn("暂无可核实", build_site.render_recent(papers, taxonomy, {}))
+
     def make_repo(self, root: Path) -> None:
         (root / "config").mkdir()
         (root / "papers/query-processing/accepted-paper/assets").mkdir(
@@ -176,7 +219,7 @@ source: source.pdf
             home = (output / "index.md").read_text(encoding="utf-8")
             self.assertIn("title: 数据库系统论文档案馆", home)
             self.assertIn(
-                "提供论文原文和经过审校的中文译文。",
+                "按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文。",
                 home,
             )
             self.assertNotIn("便于查找、阅读和对照", home)
@@ -186,11 +229,11 @@ source: source.pdf
             self.assertNotIn("完整性与准确性检查", home)
             self.assertNotIn("发布边界", home)
             self.assertIn(
-                "综合考虑影响广度、技术价值、实际应用、长期生命力和阅读回报",
+                "评分依据论文的影响、技术价值、应用、长期生命力和阅读回报",
                 home,
             )
             self.assertIn("评分不评价译文质量", home)
-            self.assertIn("无法精确体现论文对不同读者的全部价值", home)
+            self.assertIn("具体价值仍取决于你的研究方向", home)
             catalog = (output / "catalog.md").read_text(encoding="utf-8")
             self.assertIn("Accepted Paper", catalog)
             self.assertIn(
@@ -287,21 +330,11 @@ class SiteAssetTests(unittest.TestCase):
         self.assertIn("text-decoration: none !important;", area_rule)
         self.assertIn(".area-card:focus-visible", stylesheet)
 
-    def test_mobile_full_width_stat_is_vertically_centered(self) -> None:
-        stylesheet = (
-            ROOT / "site_assets/stylesheets/extra.css"
-        ).read_text(encoding="utf-8")
-        stat_rule = stylesheet.split(
-            ".stat-grid > div:last-child {", 1
-        )[1].split("}", 1)[0]
-        self.assertIn("align-items: center;", stat_rule)
-        self.assertNotIn("align-items: baseline;", stat_rule)
-
     def test_browse_and_reader_content_use_centered_width_limits(self) -> None:
         stylesheet = (
             ROOT / "site_assets/stylesheets/extra.css"
         ).read_text(encoding="utf-8")
-        self.assertIn("--dbp-browse-width: 64rem;", stylesheet)
+        self.assertIn("--dbp-browse-width: 52rem;", stylesheet)
         self.assertIn("--dbp-reader-width: 44rem;", stylesheet)
         self.assertIn(
             ".md-content__inner:not(:has(> .paper-meta)) {",
