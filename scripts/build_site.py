@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import filecmp
 import html
 import json
 import posixpath
@@ -652,10 +653,29 @@ def write_generated_config(
         "  ] },\n"
         "]\n"
     )
-    generated_path.write_text(
-        base.replace(marker, nav + marker),
-        encoding="utf-8",
-    )
+    generated = base.replace(marker, nav + marker)
+    if preview and generated_path.is_file() and generated_path.read_text(encoding="utf-8") == generated:
+        return
+    generated_path.write_text(generated, encoding="utf-8")
+
+
+def sync_preview_source(staging: Path, output: Path) -> None:
+    """Keep the directory watched by the preview server alive across refreshes."""
+    output.mkdir(parents=True, exist_ok=True)
+    existing = list(output.rglob("*"))
+    if any(path.is_symlink() for path in existing):
+        raise fail("preview source must not contain symlinks")
+    desired = {path.relative_to(staging): path for path in staging.rglob("*")}
+    for path in sorted(existing, key=lambda item: len(item.parts), reverse=True):
+        source = desired.get(path.relative_to(output))
+        if source is None or source.is_dir() != path.is_dir():
+            path.rmdir() if path.is_dir() else path.unlink()
+    for relative, source in sorted(desired.items()):
+        target = output / relative
+        if source.is_dir():
+            target.mkdir(exist_ok=True)
+        elif not target.is_file() or not filecmp.cmp(source, target, shallow=False):
+            shutil.copy2(source, target)
 
 
 def prepare_site(root: Path, output: Path, *, preview: bool = False) -> dict[str, int]:
@@ -667,11 +687,11 @@ def prepare_site(root: Path, output: Path, *, preview: bool = False) -> dict[str
         if output.parent.is_symlink():
             raise fail("preview directory must not be a symlink")
         output.parent.mkdir(parents=True, exist_ok=True)
+    if output.is_symlink():
+        raise fail(f"{output}: refusing to replace a symlink")
     output = output.resolve()
     if not output.is_relative_to(root) or output == root:
         raise fail("site source output must be a dedicated directory inside the repo")
-    if output.is_symlink():
-        raise fail(f"{output}: refusing to replace a symlink")
     taxonomy, papers = load_papers(root)
     translated = [paper for paper in papers if paper.reading_status == "translated"]
     static_source = root / "site_assets"
@@ -727,11 +747,14 @@ def prepare_site(root: Path, output: Path, *, preview: bool = False) -> dict[str
                 copied_assets += _copy_regular_tree(assets, target / "assets")
 
         validate_site_source(staging, taxonomy, papers)
-        if output.exists():
-            if not output.is_dir():
-                raise fail(f"{output}: generated site source is not a directory")
-            shutil.rmtree(output)
-        staging.replace(output)
+        if output.exists() and not output.is_dir():
+            raise fail(f"{output}: generated site source is not a directory")
+        if preview:
+            sync_preview_source(staging, output)
+        else:
+            if output.exists():
+                shutil.rmtree(output)
+            staging.replace(output)
         write_generated_config(root, taxonomy, papers, preview=preview)
     finally:
         if staging.exists():
