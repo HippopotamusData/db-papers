@@ -8,6 +8,7 @@ import html
 import json
 import posixpath
 import shutil
+import subprocess
 import sys
 import tempfile
 from collections import Counter
@@ -349,7 +350,61 @@ def paper_card(
 """.strip()
 
 
-def render_home(taxonomy: dict[str, Any], papers: list[Paper]) -> str:
+def paper_ingest_dates(root: Path) -> dict[str, str]:
+    """Derive first source additions from Git, never filesystem modification time."""
+    if not (root / ".git").exists():
+        return {}
+    shallow = subprocess.run(
+        ["git", "rev-parse", "--is-shallow-repository"], cwd=root,
+        capture_output=True, text=True, check=True,
+    )
+    if shallow.stdout.strip() == "true":
+        return {}
+    result = subprocess.run(
+        ["git", "log", "--reverse", "--diff-filter=A", "--format=DATE:%cs",
+         "--name-only", "--", "papers/**/source.pdf"],
+        cwd=root, capture_output=True, text=True, check=True,
+    )
+    dates: dict[str, str] = {}
+    date = ""
+    for line in result.stdout.splitlines():
+        if line.startswith("DATE:"):
+            date = line[5:]
+        elif line.startswith("papers/") and line.endswith("/source.pdf"):
+            dates.setdefault(Path(line).parent.name, date)
+    return dates
+
+
+def render_recent(papers: list[Paper], taxonomy: dict[str, Any], dates: dict[str, str]) -> str:
+    recent = sorted(
+        (paper for paper in papers if paper.paper_id in dates),
+        key=lambda paper: (dates[paper.paper_id], paper.paper_id), reverse=True,
+    )[:6]
+    if not recent:
+        return '<p class="recent-empty">暂无可核实的入库记录。</p>'
+    rows = []
+    for paper in recent:
+        target = f"papers/{paper.area}/{paper.paper_id}/"
+        if paper.reading_status != "translated":
+            if not (paper.paper_dir / "source.pdf").is_file():
+                continue
+            target += "source.pdf"
+        date = dates[paper.paper_id]
+        area = taxonomy["areas"][paper.area]["label_zh"]
+        action = "阅读译文" if paper.reading_status == "translated" else "阅读原文"
+        rows.append(f"""<a class="recent-paper" href="{html.escape(target, quote=True)}">
+  <time datetime="{date}">{date}</time>
+  <div class="recent-paper__body"><strong>{html.escape(paper.title_zh)}</strong>
+    <p>{html.escape(paper.title)}</p>
+    <span>{html.escape(area)} · {PAPER_STATUS_LABELS[paper.reading_status]}</span></div>
+  <span class="recent-paper__action">{action} <span aria-hidden="true">↗</span></span>
+</a>""")
+    return '<div class="recent-list" markdown="0">' + "\n".join(rows) + '</div>'
+
+
+def render_home(
+    taxonomy: dict[str, Any], papers: list[Paper], dates: dict[str, str] | None = None,
+) -> str:
     statuses = Counter(paper.reading_status for paper in papers)
     areas = Counter(paper.area for paper in papers)
     area_cards = []
@@ -372,11 +427,11 @@ description: 数据库系统论文中文全文翻译集
 ---
 
 <section class="site-hero">
-  <p class="site-hero__kicker">DB PAPERS</p>
+  <p class="site-hero__kicker">DB PAPERS / DATABASE SYSTEMS</p>
   <h1>数据库系统论文档案馆</h1>
-  <p>本档案馆收录数据库系统领域具有代表性的论文，按研究领域和主题整理。提供论文原文和经过审校的中文译文。</p>
+  <p>按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文。</p>
   <div class="site-hero__actions">
-    <a class="md-button md-button--primary" href="catalog/">浏览全部论文</a>
+    <a class="md-button md-button--primary" href="catalog/">浏览论文目录 <span aria-hidden="true">→</span></a>
   </div>
 </section>
 
@@ -386,19 +441,32 @@ description: 数据库系统论文中文全文翻译集
   <div><strong>{len(taxonomy["areas"])}</strong><span>研究领域</span></div>
 </section>
 
-## 从领域开始
+<section class="home-recent" aria-labelledby="recent-papers" markdown="1">
+<div class="home-section-heading" markdown="1">
+<div markdown="1">
+<p class="home-eyebrow">LATEST ADDITIONS</p>
+
+## 最近更新 {{#recent-papers}}
+
+</div>
+</div>
+
+  {render_recent(papers, taxonomy, dates or {})}
+</section>
+
+## 研究领域
 
 <div class="area-grid">
 {chr(10).join(area_cards)}
 </div>
 
-## 如何使用本档案馆
+## 阅读说明
 
-你可以按领域浏览，也可以在论文目录中搜索标题、作者或主题。每篇已完成的译文都有独立阅读页；遇到公式、实验数据或引用等需要精确核对的内容，可以随时打开原文对照。
+- **查找论文**：按研究领域浏览，或在论文目录中搜索标题、作者和主题。
+- **对照原文**：已审阅译文可直接在线阅读；公式、实验数据和引用可打开原文核对。
+- **参考评分**：评分依据论文的影响、技术价值、应用、长期生命力和阅读回报，帮助安排阅读顺序。评分不评价译文质量，具体价值仍取决于你的研究方向。
+- **反馈问题**：发现错译、漏译或排版问题，可使用论文页的“反馈译文问题”。
 
-目录中的评分用于判断论文是否值得优先阅读，综合考虑影响广度、技术价值、实际应用、长期生命力和阅读回报。评分不评价译文质量，也不依据作者、机构或会议声望。它只是基于现有证据的阅读参考，无法精确体现论文对不同读者的全部价值。
-
-如果阅读时发现错译、漏译或排版问题，可以通过论文页的“反馈译文问题”告诉我们。
 """
 
 
@@ -606,7 +674,7 @@ def prepare_site(root: Path, output: Path) -> dict[str, int]:
     copied_assets = 0
     try:
         (staging / "index.md").write_text(
-            render_home(taxonomy, papers),
+            render_home(taxonomy, papers, paper_ingest_dates(root)),
             encoding="utf-8",
         )
         (staging / "catalog.md").write_text(
