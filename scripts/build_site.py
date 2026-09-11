@@ -394,8 +394,8 @@ def render_recent(papers: list[Paper], taxonomy: dict[str, Any], dates: dict[str
         action = "阅读译文" if paper.reading_status == "translated" else "阅读原文"
         rows.append(f"""<a class="recent-paper" href="{html.escape(target, quote=True)}">
   <time datetime="{date}">{date}</time>
-  <div class="recent-paper__body"><strong>{html.escape(paper.title_zh)}</strong>
-    <p>{html.escape(paper.title)}</p>
+  <div class="recent-paper__body"><strong>{html.escape(paper.title)}</strong>
+    <p>{html.escape(paper.title_zh)}</p>
     <span>{html.escape(area)} · {PAPER_STATUS_LABELS[paper.reading_status]}</span></div>
   <span class="recent-paper__action">{action} <span aria-hidden="true">↗</span></span>
 </a>""")
@@ -429,7 +429,7 @@ description: 数据库系统论文中文全文翻译集
 <section class="site-hero">
   <p class="site-hero__kicker">DB PAPERS / DATABASE SYSTEMS</p>
   <h1>数据库系统论文档案馆</h1>
-  <p>按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文。</p>
+  <p>按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文</p>
   <div class="site-hero__actions">
     <a class="md-button md-button--primary" href="catalog/">浏览论文目录</a>
   </div>

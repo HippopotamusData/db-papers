@@ -219,7 +219,7 @@ source: source.pdf
             home = (output / "index.md").read_text(encoding="utf-8")
             self.assertIn("title: 数据库系统论文档案馆", home)
             self.assertIn(
-                "按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文。",
+                "按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文",
                 home,
             )
             self.assertNotIn("便于查找、阅读和对照", home)
