@@ -812,6 +812,11 @@ mjx-mtd[extra] {
 }
 
 @media (min-width: 60em) {
+  /* Keep centered content clear of adjacent sidebar scrollbars. */
+  .md-content {
+    padding-inline: 1.2rem;
+  }
+
   .md-content__inner:not(:has(> .paper-meta)) {
     max-width: var(--dbp-browse-width);
     margin-inline: auto !important;

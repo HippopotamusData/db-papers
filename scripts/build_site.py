@@ -431,7 +431,7 @@ description: 数据库系统论文中文全文翻译集
   <h1>数据库系统论文档案馆</h1>
   <p>按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文。</p>
   <div class="site-hero__actions">
-    <a class="md-button md-button--primary" href="catalog/">浏览论文目录 <span aria-hidden="true">→</span></a>
+    <a class="md-button md-button--primary" href="catalog/">浏览论文目录</a>
   </div>
 </section>
 
