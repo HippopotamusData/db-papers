@@ -109,7 +109,8 @@ make site-test    # site-check + 读者交互回归
 ```
 
 预览的源文件、生成配置、构建缓存和输出均位于 `.preview/`，与验收用的
-`site_src/`、`site.generated.toml`、`site/` 隔离。编辑迭代时使用预览刷新；
+`site_src/`、`site.generated.toml`、`site/` 隔离。刷新保留被监听的源目录，只同步
+变化文件，避免删除目录导致持续预览停止响应。编辑迭代时使用预览刷新；
 提交前再按变更范围运行最终门禁。预览不替代验收，也不保存跨提交的验收结果。
 
 `check` workflow 的 `archive-check` 与 `site-build` 并行，PR 只构建不部署。

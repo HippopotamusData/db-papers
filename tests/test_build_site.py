@@ -36,6 +36,32 @@ class BuildSiteTests(unittest.TestCase):
             self.assertEqual(config['project']['docs_dir'], 'site_src')
             self.assertEqual(config['project']['site_dir'], 'site')
 
+    def test_preview_refresh_preserves_watched_directory_and_unchanged_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_repo(root)
+            build_site.prepare_site(root, root / 'site_src', preview=True)
+            output = root / '.preview/site_src'
+            config = root / '.preview/site.generated.toml'
+            index = output / 'index.md'
+            before = (output.stat().st_ino, config.stat().st_mtime_ns, index.stat().st_mtime_ns)
+            (output / 'obsolete.md').write_text('obsolete')
+            (root / 'site_assets/stylesheets/new.css').write_text('body {color: teal}')
+            build_site.prepare_site(root, root / 'site_src', preview=True)
+            self.assertEqual((output.stat().st_ino, config.stat().st_mtime_ns, index.stat().st_mtime_ns), before)
+            self.assertFalse((output / 'obsolete.md').exists())
+            self.assertEqual((output / 'stylesheets/new.css').read_text(), 'body {color: teal}')
+
+    def test_preview_rejects_source_directory_symlink_before_resolving(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_repo(root)
+            (root / '.preview').mkdir()
+            (root / '.preview/site_src').symlink_to(root / 'papers', target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, 'symlink'):
+                build_site.prepare_site(root, root / 'site_src', preview=True)
+            self.assertTrue((root / 'papers/query-processing/accepted-paper/paper.yaml').is_file())
+
     def test_recent_ingest_uses_first_source_addition_not_later_edits(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
