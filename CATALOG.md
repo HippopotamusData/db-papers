@@ -4,10 +4,10 @@
 
 ## 总览
 
-- 论文记录：165
+- 论文记录：168
 - 已审阅译文：159
 - 译文草稿：0
-- 仅有原文：0
+- 仅有原文：3
 - 已跳过：6
 - 原文不可用：0
 
@@ -18,13 +18,13 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 6 |
 | 系统架构 (`system-architecture`) | 26 |
-| 查询处理 (`query-processing`) | 55 |
+| 查询处理 (`query-processing`) | 57 |
 | 存储 (`storage`) | 21 |
 | 事务与并发控制 (`transactions`) | 9 |
 | 分布式数据库 (`distributed-databases`) | 8 |
 | 数据集成 (`data-integration`) | 2 |
 | 流处理 (`streaming`) | 8 |
-| 可靠性与测试 (`reliability-and-testing`) | 5 |
+| 可靠性与测试 (`reliability-and-testing`) | 6 |
 | 专用数据库 (`specialized-databases`) | 12 |
 | AI 与数据系统 (`ai-and-data`) | 11 |
 
@@ -79,7 +79,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，55 篇)
+### 查询处理 (`query-processing`，57 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -96,6 +96,8 @@
 | [Bao: Making Learned Query Optimization Practical](papers/query-processing/bao-making-learned-query-optimization-practical/translation.md) | 查询优化、AI 优化数据库 | 2021 | 4.0 | translated | [原文](papers/query-processing/bao-making-learned-query-optimization-practical/source.pdf) | [官方链接](<https://doi.org/10.1145/3448016.3452838>) |
 | [BIPie: Fast Selection and Aggregation on Encoded Data using Operator Specialization](papers/query-processing/bipie-fast-selection-aggregation-encoded-data-operator-specialization/translation.md) | 向量化执行 | 2018 | 2.5 | translated | [原文](papers/query-processing/bipie-fast-selection-aggregation-encoded-data-operator-specialization/source.pdf) | [官方链接](<https://doi.org/10.1145/3183713.3190658>) |
 | [DeepDB: Learn from Data, not from Queries!](papers/query-processing/deepdb-learn-from-data-not-from-queries/translation.md) | 基数估计、AI 优化数据库 | 2020 | 3.5 | translated | [原文](papers/query-processing/deepdb-learn-from-data-not-from-queries/source.pdf) | [官方链接](<https://doi.org/10.14778/3384345.3384349>) |
+| [Dynamic Programming Strikes Back](papers/query-processing/dynamic-programming-strikes-back/source.pdf) | 查询优化 | 2008 | — | source_only | [原文](papers/query-processing/dynamic-programming-strikes-back/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2017/papers/14-optimizer1/p539-moerkotte.pdf>) |
+| [Eager Aggregation and Lazy Aggregation](papers/query-processing/eager-aggregation-and-lazy-aggregation/source.pdf) | 查询优化 | 1995 | — | source_only | [原文](papers/query-processing/eager-aggregation-and-lazy-aggregation/source.pdf) | [官方链接](<https://www.vldb.org/conf/1995/P345.PDF>) |
 | [Efficiency in the Columbia Database Query Optimizer](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | 查询优化 | 1998 | 3.5 | skipped | [原文](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2018/papers/15-optimizer1/xu-columbia-thesis1998.pdf>) |
 | [Efficiently Compiling Efficient Query Plans for Modern Hardware](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/translation.md) | 查询编译 | 2011 | 4.5 | translated | [原文](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol4/p539-neumann.pdf>) |
 | [Enhanced Subquery Optimizations in Oracle](papers/query-processing/enhanced-subquery-optimizations-oracle/translation.md) | 查询优化、查询执行 | 2009 | 3.5 | translated | [原文](papers/query-processing/enhanced-subquery-optimizations-oracle/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol2/vldb09-423.pdf>) |
@@ -212,12 +214,13 @@
 | [The CQL Continuous Query Language: Semantic Foundations and Query Execution](papers/streaming/cql-continuous-query-language/translation.md) | 流处理 | 2006 | 4.5 | translated | [原文](papers/streaming/cql-continuous-query-language/source.pdf) | [官方链接](<https://cs.stanford.edu/people/widom/pubs.html>) |
 | [The Dataflow Model: A Practical Approach to Balancing Correctness, Latency, and Cost in Massive-Scale, Unbounded, Out-of-Order Data Processing](papers/streaming/dataflow-model-balancing-correctness-latency-cost/translation.md) | 流处理 | 2015 | 5.0 | translated | [原文](papers/streaming/dataflow-model-balancing-correctness-latency-cost/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf>) |
 
-### 可靠性与测试 (`reliability-and-testing`，5 篇)
+### 可靠性与测试 (`reliability-and-testing`，6 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
 | [Automated SQL Query Generation for Systematic Testing of Database Engines](papers/reliability-and-testing/automated-sql-query-generation-systematic-testing-database-engines/translation.md) | 数据库测试 | 2010 | 3.0 | translated | [原文](papers/reliability-and-testing/automated-sql-query-generation-systematic-testing-database-engines/source.pdf) | [官方链接](<https://doi.org/10.1145/1858996.1859063>) |
 | [Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction](papers/reliability-and-testing/detecting-optimization-bugs-non-optimizing-reference-engine/translation.md) | 数据库测试 | 2020 | 4.5 | translated | [原文](papers/reliability-and-testing/detecting-optimization-bugs-non-optimizing-reference-engine/source.pdf) | [官方链接](<https://arxiv.org/abs/2007.08292>) |
+| [Finding Bugs in Database Systems via Query Partitioning](papers/reliability-and-testing/finding-bugs-database-systems-query-partitioning/source.pdf) | 数据库测试 | 2020 | — | source_only | [原文](papers/reliability-and-testing/finding-bugs-database-systems-query-partitioning/source.pdf) | [官方链接](<https://manuelrigger.at/preprints/TLP.pdf>) |
 | [QAGen: Generating Query-Aware Test Databases](papers/reliability-and-testing/qagen-generating-query-aware-test-databases/translation.md) | 数据库测试 | 2007 | 3.0 | translated | [原文](papers/reliability-and-testing/qagen-generating-query-aware-test-databases/source.pdf) | [官方链接](<https://cs.uwaterloo.ca/~tozsu/publications/other/sigmod07-final.pdf>) |
 | [Quantifying TPC-H Choke Points and Their Optimizations](papers/reliability-and-testing/quantifying-tpch-choke-points/translation.md) | 数据库测试 | 2020 | 3.5 | translated | [原文](papers/reliability-and-testing/quantifying-tpch-choke-points/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol13/p1206-dreseler.pdf>) |
 | [Testing Database Engines via Pivoted Query Synthesis](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/translation.md) | 数据库测试 | 2020 | 4.0 | translated | [原文](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/source.pdf) | [官方链接](<https://www.usenix.org/conference/osdi20/presentation/rigger>) |
@@ -259,5 +262,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 165 | 0 |
-| 发表年份 | 165 | 0 |
+| 作者 | 168 | 0 |
+| 发表年份 | 168 | 0 |

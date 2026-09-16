@@ -1,0 +1,7 @@
+title: "Eager Aggregation and Lazy Aggregation"
+title_zh: "提前聚合与延迟聚合"
+authors: ["Weipeng P. Yan", "Per-Åke Larson"]
+year: 1995
+source_url: "https://www.vldb.org/conf/1995/P345.PDF"
+topics: ["query-optimization"]
+reading_status: "source_only"

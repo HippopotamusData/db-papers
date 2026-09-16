@@ -1,0 +1,7 @@
+title: "Finding Bugs in Database Systems via Query Partitioning"
+title_zh: "通过查询分区发现数据库系统缺陷"
+authors: ["Manuel Rigger", "Zhendong Su"]
+year: 2020
+source_url: "https://manuelrigger.at/preprints/TLP.pdf"
+topics: ["database-testing"]
+reading_status: "source_only"
