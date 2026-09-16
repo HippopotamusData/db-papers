@@ -27,6 +27,30 @@
 
 完整质量要求见 `docs/translation-policy.md`。可以选择高效的提取、分栏、裁图和校对路径，但合并前必须检查编号、引用和顺序。
 
+## 交审前自检
+
+按段确认作者观点与责任归属，允许自然省略“我们”；检查是否出现连续的第三人称
+改写或把作者观察变成普遍事实。将否定、必要/充分、上下界、公式标识符和表格
+数据作为优先核源项。疑似原文异常也要查证，不能留给审阅者默认接受。
+
+送独立审阅前，对本篇完成格式和公式检查，避免审阅后再返工：
+
+```bash
+.venv/bin/python scripts/normalize_translation_headers.py --check --paper-id <paper-id>
+paper_whitespace=$(git diff --no-index --check /dev/null papers/<area>/<paper-id>/translation.md 2>&1 || true)
+test -z "$paper_whitespace" || { printf '%s\n' "$paper_whitespace"; exit 1; }
+make paper-check PAPER_ID=<paper-id>
+make math-check-files FILES='papers/<area>/<paper-id>/translation.md'
+make math-audit-github FILES='papers/<area>/<paper-id>/translation.md'
+```
+
+首条检查也会检查 EOF 空行；目前报错可能统称 header 不规范，先查看实际差异。
+空白检查沿用 `scripts/check_diff.sh` 对未跟踪文件的处理：检查诊断输出，不把
+`git diff --no-index` 仅表示存在差异的退出码 1 当成空白错误。
+不要盲目运行全库规范化。显式换行可用 `<br>`，避免双空格行尾触发 whitespace
+门禁。单篇检查只处理本篇；根代理保留最终仓库级门禁，不让并行中的其他草稿
+阻塞本篇交审。已通过的检查只因后续改动影响其检查对象、失败或具体疑点而重跑。
+
 `draft` 是允许不完整的工作状态：过程残留和内容缺口会由校验器报告为 warning，便于继续工作。进入 `translated` 前必须消除确定性错误；低覆盖、数量差等启发式 warning 必须人工回到 PDF 处置，但不会转成永久例外记录。不要为了让草稿通过而隐藏标记或调低阈值。
 
 ## 停止条件
