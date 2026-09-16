@@ -27,6 +27,9 @@ it. Resolve conflicts only within the same information type:
 | Superseded policy and detailed review history | Prior committed states | Git history |
 
 User scope controls what may be changed; it does not override facts stated by the paper.
+Review findings are claims to verify, not source evidence. Before changing paper
+content, the editor must inspect the cited source passage directly; resolve
+conflicting readings and choose the review scope using `docs/workflows/review.md`.
 
 ## Task routing
 

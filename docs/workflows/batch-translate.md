@@ -73,14 +73,15 @@ make batch-state \
 
 1. 运行 `make batch-check BATCH_MANIFEST="$BATCH_MANIFEST"`，为互斥论文目录
    分派子代理并迁移到 `translating`。
-2. 翻译/修复完成后运行
-   `make paper-check PAPER_ID=<paper-id>`。报告全部 warning，不隐藏候选或降低
+2. 翻译/修复完成后按 `translate.md` 的“交审前自检”完成本篇格式、内容与公式
+   门禁。报告全部 warning，不隐藏候选或降低
    阈值。交审摘要固定为六项：叙述者口径、正文/附录/参考文献覆盖、原文异常、
    裁图清单、warning/blocker、最终 `paper-check` 命令及退出码；没有的项目写
    “无”。详细判断仍引用 review workflow 和 translation policy，不另建台账。
 3. 根代理等待本轮全部子代理结束，确认没有越界、同篇并发写入或基线漂移。
-4. `review-and-repair` 模式下，由审阅者按 review workflow 完成源文清单轮和
-   逐项对照轮。缺陷退回修复者；未通过项保持 `draft`。
+4. `review-and-repair` 模式下，按 review workflow 独立核对。新论文先完成全篇
+   两轮审阅；修复者直接核源后采纳或驳回发现，最后按改动风险复核。审阅意见
+   不直接等于修改指令；未通过项保持 `draft`。
 5. 审阅通过后将 `reading_status` 改为 `translated`，再次运行当前论文的
    `paper-check`，并把临时状态改为 `reviewed`。审阅范围和结论写入任务报告、
    PR 或提交，不生成额外 hash、waiver 或共享账本。
