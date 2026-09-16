@@ -29,7 +29,7 @@ Spanner 是 Google 设计、构建并部署的可扩展全球分布式数据库�
 
 应用可以把数据复制到同一洲内乃至跨洲的位置，以便即使发生广域自然灾害也保持高可用。Spanner 的首个客户是 Google 广告后端的重写项目 F1 [35]；F1 使用分布在美国各地的五个副本。多数其它应用很可能会在同一地理区域内、故障模式相对独立的 3 到 5 个数据中心复制数据。换言之，只要能够承受 1 或 2 个数据中心失效，多数应用会以较低延迟优先于更高可用性。
 
-Spanner 的主要关注点是管理跨数据中心复制的数据，但团队也花费了大量时间，在分布式系统基础设施之上设计和实现重要的数据库功能。虽然许多项目乐于使用 Bigtable [9]，用户也持续抱怨 Bigtable 对某些应用很难使用，特别是模式复杂且持续演化的应用，以及在广域复制下仍要求强一致性的应用；其他作者也提出过类似看法 [37]。至少 300 个 Google 内部应用选择了 Megastore [5]，因为它提供半关系数据模型和同步复制，尽管写吞吐相对较差。因此，Spanner 从类似 Bigtable 的版本化键值存储逐渐演化成时态多版本数据库：数据存放在有模式的半关系表中，每个版本都会以其提交时间自动打上时间戳；旧版本受可配置的垃圾回收策略控制；应用可以读取旧时间戳的数据。Spanner 还支持通用事务和基于 SQL 的查询语言。
+Spanner 的主要关注点是管理跨数据中心复制的数据，但我们也花费了大量时间，在分布式系统基础设施之上设计和实现重要的数据库功能。虽然许多项目乐于使用 Bigtable [9]，用户也持续抱怨 Bigtable 对某些应用很难使用，特别是模式复杂且持续演化的应用，以及在广域复制下仍要求强一致性的应用；其他作者也提出过类似看法 [37]。至少 300 个 Google 内部应用选择了 Megastore [5]，因为它提供半关系数据模型和同步复制，尽管写吞吐相对较差。因此，Spanner 从类似 Bigtable 的版本化键值存储逐渐演化成时态多版本数据库：数据存放在有模式的半关系表中，每个版本都会以其提交时间自动打上时间戳；旧版本受可配置的垃圾回收策略控制；应用可以读取旧时间戳的数据。Spanner 还支持通用事务和基于 SQL 的查询语言。
 
 作为全球分布式数据库，Spanner 提供了若干值得关注的功能。首先，应用能以细粒度动态控制数据的复制配置。应用可以指定约束，控制哪些数据中心保存哪些数据、数据与用户相距多远（以控制读延迟）、副本彼此相距多远（以控制写延迟），以及维护多少个副本（以控制持久性、可用性和读性能）。系统也能在数据中心之间动态、透明地迁移数据，从而均衡各数据中心的资源使用。
 
@@ -65,7 +65,7 @@ $$
 
 ![图 2：Spanserver 软件栈。每个副本由 Paxos、tablet 和 Colossus 组成；leader 额外维护 lock table 与 transaction manager。](assets/spanner-fig02-spanserver-stack.png)
 
-为支持复制，每个 spanserver 在每个 tablet 之上实现一台 Paxos 状态机。Spanner 的早期版本允许每个 tablet 有多台 Paxos 状态机，以提供更灵活的复制配置，但其复杂性促使团队放弃该设计。每台状态机把元数据和日志存入对应 tablet。Paxos 实现支持由基于时间的 leader lease 维持的长期 leader，lease 默认长度为 10 秒。当前实现会把每次 Paxos 写记录两遍：一次写 tablet 日志，一次写 Paxos 日志。这是为开发便利作出的选择，团队计划最终修正。Paxos 实现采用流水线，以提高存在广域网延迟时的吞吐；但 Paxos 仍按顺序应用写入，第 4 节会依赖这一性质。
+为支持复制，每个 spanserver 在每个 tablet 之上实现一台 Paxos 状态机。Spanner 的早期版本允许每个 tablet 有多台 Paxos 状态机，以提供更灵活的复制配置，但其复杂性促使我们放弃该设计。每台状态机把元数据和日志存入对应 tablet。Paxos 实现支持由基于时间的 leader lease 维持的长期 leader，lease 默认长度为 10 秒。当前实现会把每次 Paxos 写记录两遍：一次写 tablet 日志，一次写 Paxos 日志。这是为开发便利作出的选择，我们很可能最终会修正这一点。Paxos 实现采用流水线，以提高存在广域网延迟时的吞吐；但 Paxos 仍按顺序应用写入，第 4 节会依赖这一性质。
 
 Paxos 状态机用来实现一致复制的映射集合。每个副本的键值映射状态都存放在相应 tablet 中。写操作必须在 leader 上发起 Paxos 协议；只要副本足够新，读操作就可以直接访问任意副本的底层 tablet。副本集合合称一个 Paxos group。
 
@@ -344,7 +344,7 @@ Leader 默认每 8 秒推进一次 MinNextTS() 值。因此，在没有 prepared
 
 杀掉 $Z_2$ 对读吞吐没有影响。杀掉 $Z_1$ 前若给 leader 时间把 leadership 移交到另一个 zone，影响也很小：吞吐下降在图中不可见，约为 3%–4%。相反，无预警杀掉 $Z_1$ 会产生严重影响，完成速率几乎降到 0。随着重新选出 leader，系统吞吐升到约 100K reads/s；它高于稳态速率是实验的两个产物：系统中存在额外容量，而且 leader 不可用时操作会排队。因此吞吐会先上升，随后再回落并稳定于稳态速率。
 
-图中也能看出 Paxos leader lease 被设为 10 秒的影响。杀掉 zone 时，各 group 的 leader lease 到期时间应均匀分布在接下来的 10 秒内；死 leader 的 lease 到期后不久，新 leader 就会选出。故障约 10 秒后，所有 group 都重新拥有 leader，吞吐恢复。较短 lease 能减小 server 故障对可用性的影响，但会增加 lease 续约的网络流量。论文发表时，团队正在设计和实现一种机制，让 slave 在 leader 失败时主动释放 Paxos leader lease。
+图中也能看出 Paxos leader lease 被设为 10 秒的影响。杀掉 zone 时，各 group 的 leader lease 到期时间应均匀分布在接下来的 10 秒内；死 leader 的 lease 到期后不久，新 leader 就会选出。故障约 10 秒后，所有 group 都重新拥有 leader，吞吐恢复。较短 lease 能减小 server 故障对可用性的影响，但会增加 lease 续约的网络流量。论文发表时，我们正在设计和实现一种机制，让 slave 在 leader 失败时主动释放 Paxos leader lease。
 
 ### 5.3 TrueTime
 
@@ -354,7 +354,7 @@ Leader 默认每 8 秒推进一次 MinNextTS() 值。因此，在没有 prepared
 
 图 6 的 TrueTime 数据来自跨多个数据中心、彼此最远 2200km 的数千台 spanserver 机器。图中绘制 timeslave daemon 刚轮询完 time master 时采样的 $\epsilon$ 第 90、99 和 99.9 百分位。该采样排除了本地时钟不确定性造成的锯齿，因此衡量的是 time master 的不确定性（通常为 0）加上与 master 通信的延迟。
 
-数据表明，这两个决定 $\epsilon$ 基础值的因素通常不成问题。但显著的尾延迟会造成较高 $\epsilon$。3 月 30 日开始尾延迟下降，是因为网络改进减少了瞬态链路拥塞。4 月 13 日持续约一小时的 $\epsilon$ 上升，则源于某数据中心的两台 time master 因例行维护关机。团队仍在调查并消除 TrueTime 尖峰的成因。
+数据表明，这两个决定 $\epsilon$ 基础值的因素通常不成问题。但显著的尾延迟会造成较高 $\epsilon$。3 月 30 日开始尾延迟下降，是因为网络改进减少了瞬态链路拥塞。4 月 13 日持续约一小时的 $\epsilon$ 上升，则源于某数据中心的两台 time master 因例行维护关机。我们仍在调查并消除 TrueTime 尖峰的成因。
 
 ### 5.4 F1
 
@@ -409,9 +409,9 @@ Farsite 相对于可信时钟参考源推导时钟不确定性界，该界比 Tr
 
 ## 7. 未来工作
 
-论文发表前一年，Spanner 团队的大部分工作是与 F1 团队合作，把 Google 广告后端从 MySQL 迁移到 Spanner。团队持续改进监控和支持工具、调优性能，也在提升备份/恢复系统的功能与性能。论文发表时正在实现 Spanner schema 语言、二级索引自动维护和基于负载的自动重新分片。
+过去一年，我们花了大部分时间与 F1 团队合作，把 Google 广告后端从 MySQL 迁移到 Spanner。我们持续改进监控和支持工具、调优性能，也在提升备份/恢复系统的功能与性能。论文发表时正在实现 Spanner schema 语言、二级索引自动维护和基于负载的自动重新分片。
 
-长期来看，团队计划研究若干功能。乐观地并行执行读可能很有价值，但初步实验表明，正确实现并不简单。此外，团队计划最终支持直接修改 Paxos 配置 [22, 34]。
+长期来看，我们计划研究若干功能。乐观地并行执行读可能很有价值，但初步实验表明，正确实现并不简单。此外，我们计划最终支持直接修改 Paxos 配置 [22, 34]。
 
 许多应用预计会在相距较近的数据中心之间复制数据，因此 TrueTime 的 $\epsilon$ 可能显著影响性能。我们认为，把 $\epsilon$ 降到 1ms 以下并不存在不可逾越的障碍：可以缩短 time master 查询间隔，质量更好的时钟晶振也相对便宜；改进网络技术可以降低 time master 查询延迟，甚至可能借助其他时间分发技术完全避免查询延迟。
 
@@ -421,7 +421,7 @@ Farsite 相对于可信时钟参考源推导时钟不确定性界，该界比 Tr
 
 ## 8. 结论
 
-总而言之，Spanner 结合并扩展了两个研究社区的思想。数据库社区贡献了熟悉、易用的半关系接口、事务和基于 SQL 的查询语言；系统社区贡献了可扩展性、自动分片、容错、一致复制、外部一致性和广域分布。从 Spanner 项目开始到形成本文所述的设计与实现，团队经历了超过 5 年的迭代。这一过程漫长，部分原因是团队较晚才意识到：Spanner 不应只解决全球复制命名空间问题，还应着重提供 Bigtable 所缺失的数据库功能。
+总而言之，Spanner 结合并扩展了两个研究社区的思想。数据库社区贡献了熟悉、易用的半关系接口、事务和基于 SQL 的查询语言；系统社区贡献了可扩展性、自动分片、容错、一致复制、外部一致性和广域分布。从 Spanner 项目开始到形成本文所述的设计与实现，我们经历了超过 5 年的迭代。这一过程漫长，部分原因是我们较晚才意识到：Spanner 不应只解决全球复制命名空间问题，还应着重提供 Bigtable 所缺失的数据库功能。
 
 设计中最突出的方面是：TrueTime 是 Spanner 整套功能的关键支点。本文证明，把时钟不确定性实体化到时间 API 中，可以构建具有强得多的时间语义的分布式系统；随着底层系统收紧时钟不确定性界，强语义的开销也会下降。分布式系统研究不应再依赖松散同步的时钟和能力薄弱的时间 API 来设计算法。
 
@@ -433,7 +433,7 @@ Farsite 相对于可信时钟参考源推导时钟不确定性界，该界比 Tr
 
 Spanner 建立在 Bigtable 和 Megastore 团队的成果之上。F1 团队、特别是 Jeff Shute，与我们密切合作开发数据模型，并在追踪性能和正确性缺陷方面提供了巨大帮助。Platforms 团队、特别是 Luiz Barroso 和 Bob Felderman，帮助促成了 TrueTime。
 
-最后，许多 Googler 曾经属于该团队：Ken Ashcraft、Paul Cychosz、Krzysztof Ostrowski、Amir Voskoboynik、Matthew Weaver、Theo Vassilakis 和 Eric Veach；或在论文发表前不久加入：Nathan Bales、Adam Beberg、Vadim Borisov、Ken Chen、Brian Cooper、Cian Cullinan、Robert-Jan Huijsman、Milind Joshi、Andrey Khorlin、Dawid Kuroczko、Laramie Leavitt、Eric Li、Mike Mammarella、Sunil Mushran、Simon Nielsen、Ovidiu Platon、Ananth Shrinivas、Vadim Suvorov 和 Marcel van der Holst。
+最后，许多 Googler 曾经属于我们的团队：Ken Ashcraft、Paul Cychosz、Krzysztof Ostrowski、Amir Voskoboynik、Matthew Weaver、Theo Vassilakis 和 Eric Veach；或在论文发表前不久加入我们的团队：Nathan Bales、Adam Beberg、Vadim Borisov、Ken Chen、Brian Cooper、Cian Cullinan、Robert-Jan Huijsman、Milind Joshi、Andrey Khorlin、Dawid Kuroczko、Laramie Leavitt、Eric Li、Mike Mammarella、Sunil Mushran、Simon Nielsen、Ovidiu Platon、Ananth Shrinivas、Vadim Suvorov 和 Marcel van der Holst。
 
 ## 参考文献
 
