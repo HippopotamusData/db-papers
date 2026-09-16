@@ -4,4 +4,11 @@ authors: ["Manuel Rigger", "Zhendong Su"]
 year: 2020
 source_url: "https://manuelrigger.at/preprints/TLP.pdf"
 topics: ["database-testing"]
-reading_status: "source_only"
+reading_status: "translated"
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 4
+  reader_payoff: 5

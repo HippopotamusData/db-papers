@@ -4,4 +4,11 @@ authors: ["Guido Moerkotte", "Thomas Neumann"]
 year: 2008
 source_url: "https://15721.courses.cs.cmu.edu/spring2017/papers/14-optimizer1/p539-moerkotte.pdf"
 topics: ["query-optimization"]
-reading_status: "source_only"
+reading_status: "translated"
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4

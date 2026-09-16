@@ -5,9 +5,9 @@
 ## 总览
 
 - 论文记录：168
-- 已审阅译文：159
+- 已审阅译文：162
 - 译文草稿：0
-- 仅有原文：3
+- 仅有原文：0
 - 已跳过：6
 - 原文不可用：0
 
@@ -96,8 +96,8 @@
 | [Bao: Making Learned Query Optimization Practical](papers/query-processing/bao-making-learned-query-optimization-practical/translation.md) | 查询优化、AI 优化数据库 | 2021 | 4.0 | translated | [原文](papers/query-processing/bao-making-learned-query-optimization-practical/source.pdf) | [官方链接](<https://doi.org/10.1145/3448016.3452838>) |
 | [BIPie: Fast Selection and Aggregation on Encoded Data using Operator Specialization](papers/query-processing/bipie-fast-selection-aggregation-encoded-data-operator-specialization/translation.md) | 向量化执行 | 2018 | 2.5 | translated | [原文](papers/query-processing/bipie-fast-selection-aggregation-encoded-data-operator-specialization/source.pdf) | [官方链接](<https://doi.org/10.1145/3183713.3190658>) |
 | [DeepDB: Learn from Data, not from Queries!](papers/query-processing/deepdb-learn-from-data-not-from-queries/translation.md) | 基数估计、AI 优化数据库 | 2020 | 3.5 | translated | [原文](papers/query-processing/deepdb-learn-from-data-not-from-queries/source.pdf) | [官方链接](<https://doi.org/10.14778/3384345.3384349>) |
-| [Dynamic Programming Strikes Back](papers/query-processing/dynamic-programming-strikes-back/source.pdf) | 查询优化 | 2008 | — | source_only | [原文](papers/query-processing/dynamic-programming-strikes-back/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2017/papers/14-optimizer1/p539-moerkotte.pdf>) |
-| [Eager Aggregation and Lazy Aggregation](papers/query-processing/eager-aggregation-and-lazy-aggregation/source.pdf) | 查询优化 | 1995 | — | source_only | [原文](papers/query-processing/eager-aggregation-and-lazy-aggregation/source.pdf) | [官方链接](<https://www.vldb.org/conf/1995/P345.PDF>) |
+| [Dynamic Programming Strikes Back](papers/query-processing/dynamic-programming-strikes-back/translation.md) | 查询优化 | 2008 | 4.5 | translated | [原文](papers/query-processing/dynamic-programming-strikes-back/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2017/papers/14-optimizer1/p539-moerkotte.pdf>) |
+| [Eager Aggregation and Lazy Aggregation](papers/query-processing/eager-aggregation-and-lazy-aggregation/translation.md) | 查询优化 | 1995 | 4.0 | translated | [原文](papers/query-processing/eager-aggregation-and-lazy-aggregation/source.pdf) | [官方链接](<https://www.vldb.org/conf/1995/P345.PDF>) |
 | [Efficiency in the Columbia Database Query Optimizer](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | 查询优化 | 1998 | 3.5 | skipped | [原文](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2018/papers/15-optimizer1/xu-columbia-thesis1998.pdf>) |
 | [Efficiently Compiling Efficient Query Plans for Modern Hardware](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/translation.md) | 查询编译 | 2011 | 4.5 | translated | [原文](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol4/p539-neumann.pdf>) |
 | [Enhanced Subquery Optimizations in Oracle](papers/query-processing/enhanced-subquery-optimizations-oracle/translation.md) | 查询优化、查询执行 | 2009 | 3.5 | translated | [原文](papers/query-processing/enhanced-subquery-optimizations-oracle/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol2/vldb09-423.pdf>) |
@@ -220,7 +220,7 @@
 | --- | --- | ---: | ---: | --- | --- | --- |
 | [Automated SQL Query Generation for Systematic Testing of Database Engines](papers/reliability-and-testing/automated-sql-query-generation-systematic-testing-database-engines/translation.md) | 数据库测试 | 2010 | 3.0 | translated | [原文](papers/reliability-and-testing/automated-sql-query-generation-systematic-testing-database-engines/source.pdf) | [官方链接](<https://doi.org/10.1145/1858996.1859063>) |
 | [Detecting Optimization Bugs in Database Engines via Non-Optimizing Reference Engine Construction](papers/reliability-and-testing/detecting-optimization-bugs-non-optimizing-reference-engine/translation.md) | 数据库测试 | 2020 | 4.5 | translated | [原文](papers/reliability-and-testing/detecting-optimization-bugs-non-optimizing-reference-engine/source.pdf) | [官方链接](<https://arxiv.org/abs/2007.08292>) |
-| [Finding Bugs in Database Systems via Query Partitioning](papers/reliability-and-testing/finding-bugs-database-systems-query-partitioning/source.pdf) | 数据库测试 | 2020 | — | source_only | [原文](papers/reliability-and-testing/finding-bugs-database-systems-query-partitioning/source.pdf) | [官方链接](<https://manuelrigger.at/preprints/TLP.pdf>) |
+| [Finding Bugs in Database Systems via Query Partitioning](papers/reliability-and-testing/finding-bugs-database-systems-query-partitioning/translation.md) | 数据库测试 | 2020 | 4.0 | translated | [原文](papers/reliability-and-testing/finding-bugs-database-systems-query-partitioning/source.pdf) | [官方链接](<https://manuelrigger.at/preprints/TLP.pdf>) |
 | [QAGen: Generating Query-Aware Test Databases](papers/reliability-and-testing/qagen-generating-query-aware-test-databases/translation.md) | 数据库测试 | 2007 | 3.0 | translated | [原文](papers/reliability-and-testing/qagen-generating-query-aware-test-databases/source.pdf) | [官方链接](<https://cs.uwaterloo.ca/~tozsu/publications/other/sigmod07-final.pdf>) |
 | [Quantifying TPC-H Choke Points and Their Optimizations](papers/reliability-and-testing/quantifying-tpch-choke-points/translation.md) | 数据库测试 | 2020 | 3.5 | translated | [原文](papers/reliability-and-testing/quantifying-tpch-choke-points/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol13/p1206-dreseler.pdf>) |
 | [Testing Database Engines via Pivoted Query Synthesis](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/translation.md) | 数据库测试 | 2020 | 4.0 | translated | [原文](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/source.pdf) | [官方链接](<https://www.usenix.org/conference/osdi20/presentation/rigger>) |
