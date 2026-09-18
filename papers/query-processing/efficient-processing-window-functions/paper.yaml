@@ -1,0 +1,20 @@
+title: Efficient Processing of Window Functions in Analytical SQL Queries
+title_zh: 分析型 SQL 查询中窗口函数的高效处理
+authors:
+  - Viktor Leis
+  - Kan Kundhikanjana
+  - Alfons Kemper
+  - Thomas Neumann
+year: 2015
+source_url: https://www.vldb.org/pvldb/vol8/p1058-leis.pdf
+topics:
+  - query-execution
+  - analytical-database
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4
