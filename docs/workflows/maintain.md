@@ -60,9 +60,9 @@ schema reader。旧规则和旧证据需要时从 Git 历史读取，不作为�
 
 ## AI 工作文档维护
 
-本组提示词依据 OpenAI 官方 [GPT-6 Astra：Prompting best practices](https://developers.openai.com/api/docs/guides/latest-model/gpt-6-astra.md#prompting-best-practices)
+本组提示词依据 OpenAI 官方 [GPT-6 Astra：Prompting best practices](https://developers.openai.com/api/docs/guides/latest-model#prompting-best-practices)
 和 [Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra)
-（2026-09-16 核验）。官方建议审查指令冲突、按任务加载资料、明确分工与完成边界，
+（2026-09-19 核验）。官方建议审查指令冲突、按任务加载资料、明确分工与完成边界，
 并让验证规模匹配实际风险。下面的 PDF 核源和复核划分是本项目的工程决策，
 不是 OpenAI 对论文翻译的专门规定，也不保证模型不再误读。
 
@@ -87,6 +87,11 @@ schema reader。旧规则和旧证据需要时从 Git 历史读取，不作为�
 | 原文确有可确认的公式或数字矛盾 | 忠实保留，必要时用短注隔离，不擅自修正 |
 | 仅 EOF 空行或等价换行格式变化 | 交审前发现并修复；按格式变化验证，不重审全文 |
 | 只核对了一个证明分支 | 报告该范围，不能声称完成全篇审阅 |
+| 有可信完整审阅基线，本次仅修复一处限定条件 | 独立复核改动及关联论证；报告基线与本次范围，未重审类别不写“已核对” |
+| 完整处理新论文，当前刚开始入库 | 读取 ingest 和 metadata；进入翻译、审阅、评分时再加载对应文档，不在交接时重复请求授权 |
+| 批次中一篇已交稿，另一篇仍在翻译 | 已交稿篇停止写入后可交独立审阅；共享生成文件、仓库级检查和提交等待写入者全部停止 |
+| 最后一轮完成单篇及状态门禁，准备关闭批次 | 提交最终候选后运行 clean-HEAD 关闭门禁，不先重复一轮同样的仓库级检查；失败则修复并重跑 |
+| 发布 PR 将使用 squash 合并 | 先交付批次分支，合并与部署完成后再快进本地 main；不先把批次提交合入本地 main |
 | 图注全文在图片 alt 中，图片正常显示时看不到 | 移到相邻可见正文并核验渲染；已有独立图注则不重复添加 |
 | 原文 similar/with 被译成“相同／只有……才能” | 回源核对限定强度，不批量替换所有相同词语 |
 | 性能数字正确，但默认配置或调优条件遗漏 | 恢复实验条件，并核对关联性能结论 |

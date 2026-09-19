@@ -69,7 +69,11 @@ make batch-state \
   STATE=<queued|translating|draft-ready|reviewing|reviewed|rated|blocked>
 ```
 
-## 每轮执行
+## 分派与交接
+
+按单篇依赖推进，各篇进度不必相同。根代理在论文交接时确认原修改者已停止
+写入，再分派独立审阅者；其他互斥论文可以继续。只有共享文件更新、仓库级
+检查和 checkpoint commit 需要等待全部写入者停止。
 
 1. 运行 `make batch-check BATCH_MANIFEST="$BATCH_MANIFEST"`，为互斥论文目录
    分派子代理并迁移到 `translating`。
@@ -78,7 +82,9 @@ make batch-state \
    阈值。交审摘要固定为六项：叙述者口径、正文/附录/参考文献覆盖、原文异常、
    裁图清单、warning/blocker、最终 `paper-check` 命令及退出码；没有的项目写
    “无”。详细判断仍引用 review workflow 和 translation policy，不另建台账。
-3. 根代理等待本轮全部子代理结束，确认没有越界、同篇并发写入或基线漂移。
+3. 本篇交稿后，根代理核对范围和当前差异，确认没有越界、同篇并发写入或基线
+   漂移，迁移到 `draft-ready`。`review-and-repair` 模式有可用独立审阅者时即可
+   迁移到 `reviewing`，不必等其他论文交稿；返修和复核仍按本篇依赖顺序交接。
 4. `review-and-repair` 模式下，按 review workflow 独立核对。新论文先完成全篇
    两轮审阅；修复者直接核源后采纳或驳回发现，最后按改动风险复核。审阅意见
    不直接等于修改指令；未通过项保持 `draft`。
@@ -87,8 +93,10 @@ make batch-state \
    PR 或提交，不生成额外 hash、waiver 或共享账本。
 6. 只给本批新增论文执行 rating workflow。证据不足时不写 `rating`，标为
    `blocked`；历史修复保留原 rating，除非另有授权。
-7. 每轮运行 `make catalog`、`make check`、`make diff-check`。全绿且已授权时
-   创建 checkpoint commit。
+7. 需要中间 checkpoint 时，根代理先等待全部写入者停止，再运行 `make catalog`、
+   `make check`、`make diff-check`；全绿且已授权时提交。最后一轮直接执行下述
+   关闭流程，由 `batch-close-check` 完成本轮仓库级检查，无需在它之前再跑一遍
+   `check`/`diff-check`。单篇交审、状态变更和公式门禁仍须在各自阶段完成。
 
 不同论文没有共享发布状态文件，可以自然并行；同一论文禁止并发修改。发现范围
 重叠、基线外变化或未经分派的论文改动时停止，由根代理重新分派。批次运行期间
@@ -97,8 +105,8 @@ make batch-state \
 ## 关闭与集成
 
 1. 等待全部子代理停止，核对清单、最终状态、检查点和分支。
-2. 运行 `make catalog`，创建最终 checkpoint commit，确认工作树干净；未提交
-   内容不能进入最终门禁。
+2. 运行 `make catalog`，有未提交变更时创建最终 checkpoint commit，确认工作树
+   干净；未提交内容不能进入最终门禁。该本地提交在关闭门禁通过前不得集成或推送。
 3. 运行
    `make batch-close-check BATCH_MANIFEST="$BATCH_MANIFEST"`。该同步命令核对
    manifest 最终状态，根据 `base_sha..HEAD` 选择 `make check` 或
@@ -108,13 +116,16 @@ make batch-state \
    都使该结果失效，必须重跑。
 4. 公式规则、profile 或全库迁移按公式维护工作流完成；普通论文变更使用 scoped
    公式门禁和 CI。
-5. 已授权本地集成且 `main` 干净时，执行
-   `git merge --ff-only <batch-branch>`；不能 fast-forward 或存在未归属改动时
-   停止。
-6. 推送必须在用户已授权的交付范围内；已有发布或推送授权时不重复确认。
-   本地门禁未通过时不得推送。若交付目标是发布，依次等待
-   PR head 检查、合并、默认分支 merge SHA 的 `check`、同一 SHA 的 Pages 部署，
-   并验证生产页面；完成最后一步后才能报告“已发布”。
+5. 按已有授权选择交付路径；本地门禁未通过时不得集成或推送。
+   - **仅本地集成**：目标工作树中的 `main` 干净时，在该工作树执行
+     `git merge --ff-only <batch-branch>`。不能 fast-forward 或存在未归属改动时
+     停止并报告，不重置或强制覆盖。
+   - **PR 发布**：推送批次分支并创建 PR，不预先把批次分支合入本地 `main`。
+     等待 PR head 检查、按仓库规则合并、默认分支 merge SHA 的 `check`、同一
+     SHA 的 Pages 部署，并验证生产页面。全部成功后才能报告“已发布”；随后
+     fetch，在干净的本地 `main` 工作树执行 `git merge --ff-only origin/main`。
+     同步遇到分叉时保留现状并报告，不通过 reset 或强推解决。
+   仅获推送授权时交付远端批次分支，不据此合并 PR 或发布。已有对应授权不重复确认。
 
 普通批次不运行全库 deep-check。全库机械扫描不授权扩大历史复审范围。
 
