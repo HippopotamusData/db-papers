@@ -37,7 +37,9 @@ SIMD（Single Instruction Multiple Data）是现代处理器上的指令集。�
 
 如图 1 所示，随着哈希表增大，SIMD probe 的吞吐与朴素标量 probe 相近。二者吞吐先显著下降，直到哈希表大小接近缓存容量（约 12 MB）；超过该点后，随着数据继续增大，吞吐因大量缓存未命中而缓慢下降。在标量代码中，软件预取可有效减少这类未命中，即手工插入预取指令，提前把数据载入缓存。GP 和 SPP [6] 可以通过预取改善 hash join，但不能很好处理不规则数据访问，因此出现了 AMAC [20]。不规则访问在哈希表 probe、树或图遍历等 pointer-chasing 应用中十分常见。本文也用 AMAC 加速链式哈希表 probe；图 1 表明，在大型哈希表上，AMAC 可以把 probe 吞吐提高一倍。
 
-![图 1：链式哈希表 probe 在不同哈希表大小下的吞吐。](assets/figure-01-hash-probe-performance.png)
+![图 1](assets/figure-01-hash-probe-performance.png)
+
+图 1：链式哈希表 probe 在不同哈希表大小下的吞吐。
 
 此前工作没有研究缓存未命中对 SIMD 操作的影响。一部分工作重新安排数据布局，以提高数据局部性并利用硬件预取 [14, 32, 18]。另一些工作只初步采用软件预取：例如 SPP 在树遍历时预取数据，但这些路径深度一致 [18]，无法处理不规则访问；还有工作把软件预取用于顺序访问 [7, 15]，只能略微减少缓存未命中。ROF [26] 在完整查询计划中连接 SIMD 优化代码和预取优化代码，而不是在一个算子内部充分结合二者，因此只能在一定程度上改善性能，不能让算子同时获得 SIMD 与预取的收益。
 
@@ -65,9 +67,13 @@ SIMD（Single Instruction Multiple Data）是现代处理器上的指令集。�
 
 SIMD 还提供便于内存访问和数据重排的指令。`gather` 从非连续地址选择性读取数据到向量，`scatter` 执行反向操作。AVX512PF 支持 gather/scatter 的预取。`compress` 按 mask 把活跃元素连续打包到目标向量；`expand` 把连续元素存入另一个向量的指定位置。
 
-![图 2：SIMD compress 操作。](assets/figure-02-compress.png)
+![图 2](assets/figure-02-compress.png)
 
-![图 3：SIMD expand 操作。](assets/figure-03-expand.png)
+图 2：SIMD compress 操作。
+
+![图 3](assets/figure-03-expand.png)
+
+图 3：SIMD expand 操作。
 
 已有工作 [28] 给出完全向量化主存数据库操作的原则：只有当向量化版本执行 $O(f(n)/W)$ 条向量指令，而不是 $O(f(n))$ 条标量指令时，算法才算完全向量化，其中 $W$ 是向量长度。这个定义排除了随机内存访问，因为每周期执行 $W$ 个缓存访问是不现实的硬件设计。因此，对内存密集型操作实现完全向量化很困难。
 
@@ -89,7 +95,9 @@ GP、SPP 和 AMAC [6, 20] 都基于这一思想。它们共同启动 $G$ 个处�
 
 分析对象是 hash join probe，一个典型 pointer-chasing 应用。它与提出 AMAC 的论文 [20] 所用 probe 相似：probe 使用链式哈希表，每个桶可能因冲突包含多个节点，每个节点由元组和 next 指针组成。probe 过程有两步：计算外侧元组 join key 的哈希，找到对应桶；然后迭代比较桶链中节点的 join key。对桶链的多次匹配导致随机访问，是性能瓶颈。
 
-![图 4：链式哈希表 probe 及其 FSM。](assets/figure-04-hash-probe-fsm.png)
+![图 4](assets/figure-04-hash-probe-fsm.png)
+
+图 4：链式哈希表 probe 及其 FSM。
 
 ### 3.1 预取中的直接向量化
 
@@ -143,7 +151,9 @@ void dva_probe(tuple_t* tuple, hashtable_t* ht, table_t* out){
 
 图 5(a) 给出具体过程：group size 为 2、每个向量 4 个 lane，元组 $T _ a$ 至 $T _ h$ 对应桶链长度依次为 1、2、1、3、1、1、2、1。到 $M _ 6$ 时， $T _ a$、 $T _ b$、 $T _ c$ 已完成，左侧向量只有 $T _ d$ 的 lane 仍活跃，另外三个 lane 成为 bubble。最坏情况下一个向量只剩一个活跃 lane，向量执行退化为标量，同时 inactive lane 也不再发出有用内存访问，DLP 与 MLP 都受损。直接向量化 GP/SPP 更严重：若某个实例提前结束，对应整个向量不能立即装入新元组；例如图中 GP 必须把 $H _ 7$ 推迟到下一轮，并让一个空向量继续 matching。
 
-![图 5：三种交错方案在 hash join probe 上的执行模式。](assets/figure-05-execution-patterns.png)
+![图 5](assets/figure-05-execution-patterns.png)
+
+图 5：三种交错方案在 hash join probe 上的执行模式。
 
 GP 和 SPP 的直接向量化更糟，因为它们把多个阶段耦合成组或流水线。若某个运行实例提前结束，相应整个向量可能空闲，无法立即装载新元组继续。
 
@@ -235,9 +245,13 @@ if(DVS_active_lane_cnt + RVS_active_lane_cnt < vector_size) {
 
 这种机制把分歧局部化。一个状态的分歧不会传播到后续状态；后续状态看到的仍是满向量或空向量。Residual state 在同一组运行实例之间共享，因此不需要为每个实例维护大量独立向量。
 
-![图 6：加入 residual vectorized state 后更新的 FSM。](assets/figure-06-updated-fsms.png)
+![图 6](assets/figure-06-updated-fsms.png)
 
-![图 7：IMV probe 的 FSM。](assets/figure-07-imv-probe-fsm.png)
+图 6：加入 residual vectorized state 后更新的 FSM。
+
+![图 7](assets/figure-07-imv-probe-fsm.png)
+
+图 7：IMV probe 的 FSM。
 
 对于一般 `if`，条件求值后可能有多个分支需要执行；进入每个分支前用 RVS 更新分歧状态。满向量继续，空向量返回最近的数据源状态。若分支内部又有复杂 `if` 或循环，可把填满的状态放入任务队列，交给空闲实例执行。对于一般循环，每次迭代后产生的分歧状态也以同样方式和 RVS 合并。RVS 的时空开销很小：每个分歧状态只有一个 RVS，由一组 FSM 实例共享；所有权随当前运行实例切换，读写仍是串行的，不会冲突，且合并只涉及寄存器向量操作。
 
@@ -296,7 +310,9 @@ void imv_probe(tuple_t* tuple, hashtable_t* ht, table_t* out){
 
 IMV 也能覆盖整个查询流水线。图 8 的示例是 $\mathrm{Scan} \to \mathrm{Filter} \to \mathrm{Probe} \to \mathrm{Count}$：过滤后的向量因选择率产生分歧，因此附加一个 RVS；哈希后的 matching 循环既访问内存又在每轮分歧，因此在匹配前放置预取状态、匹配后放置另一 RVS。只有预取状态触发跨 FSM 实例的交错切换，两个 RVS 则在当前实例内部转移状态。
 
-![图 8：使用 IMV 的查询流水线示例。](assets/figure-08-pipeline-imv.png)
+![图 8](assets/figure-08-pipeline-imv.png)
+
+图 8：使用 IMV 的查询流水线示例。
 
 ## 5. 实验评测
 
@@ -330,7 +346,9 @@ Hash join probe（HJP）使用此前工作 [4] 优化过的链式哈希表。每
 
 二叉树搜索（BTS）使用由关系 $S$ 构造、key 无重复的普通二叉搜索树；每个节点含 16 字节元组和两个 8 字节子指针。节点 key 大于其左孩子的 key、小于其右孩子的 key。关系 $R$ 的元组在树中查找相等 key；匹配时，把查询元组与树节点的 payload 组成新元组写入缓冲，类似一次索引连接。二者都需要沿指针查找，但链式哈希的链长更受数据倾斜影响。
 
-![图 9：数据分布对 hash join probe 和二叉树搜索的影响。](assets/figure-09-data-distribution.png)
+![图 9](assets/figure-09-data-distribution.png)
+
+图 9：数据分布对 hash join probe 和二叉树搜索的影响。
 
 
 
@@ -353,7 +371,9 @@ Hash join probe（HJP）使用此前工作 [4] 优化过的链式哈希表。每
 
 单线程结果见图 9。IMV 在绝大多数配置中优于其他方法，相对 Naive（纯标量）、SIMD（纯 SIMD）、DVA、FVA 和 AMAC 的最高加速比分别为 4.23、3.17、2.39、1.27 和 2.34。
 
-![图 10：基于微架构分析的执行时间拆解。](assets/figure-10-time-breakdown.png)
+![图 10](assets/figure-10-time-breakdown.png)
+
+图 10：基于微架构分析的执行时间拆解。
 
 我们再用 Intel VTune 的 Top-down Microarchitecture Analysis Method（TMAM）[2] 解释 IMV 的优势。图 10 中，Front-End 是 CPU 因前端延迟而停顿的 slot 比例，例如指令缓存未命中、ITLB 未命中，或分支误预测后的取指停顿；Bad Speculation 是错误推测浪费的流水线 slot；Retiring 是用于有效工作的 slot 比例，不包括 Bad Speculation。
 
@@ -361,9 +381,13 @@ Hash join probe（HJP）使用此前工作 [4] 优化过的链式哈希表。每
 
 我们还用全部线程评测六种方法。数据通过 morsel-driven parallelism [24] 分发给线程；HJP 对 NUMA 敏感，因此把相关数据复制到各 socket，避免远程访问。表 2 也列出了全线程结果：IMV 相对 Naive、SIMD、DVA、FVA 和 AMAC 的最高加速比分别为 2.76、1.86、1.89、1.49 和 1.97。所有配置中，全线程下的相对加速几乎都低于单线程，因为更多线程会争用内存带宽、缓存、VPU 和 TLB entries 等共享资源。
 
-![图 11：数据规模影响。](assets/figure-11-data-size.png)
+![图 11](assets/figure-11-data-size.png)
 
-![图 12：group size 参数影响。](assets/figure-12-group-size.png)
+图 11：数据规模影响。
+
+![图 12](assets/figure-12-group-size.png)
+
+图 12：group size 参数影响。
 
 #### 5.2.1 工作负载与技术参数
 
@@ -379,9 +403,13 @@ BTS 与 HJP 不同，数据分布对它没有明显影响，因为所建树较�
 
 图 12 显示，交错方法的吞吐随 group size 增长，达到某个甜点后停止增长；甜点会随平台、数据分布和应用变化。达到甜点的 group size 或更大值都可作为该配置的最佳值。对 IMV、FVA 和 DVA，所有配置都可把最佳 group size 设为 5。按原文表述，这意味着一组运行实例最多发出 40 个内存访问请求，“一个向量一次处理 8 个 64-byte 元素”；这在多数运行时情形下足以占用 MSHR。更大的 group size 会增加中间向量状态的装载和保存开销，使性能略降。AMAC 的最佳 group size 可设为 20；SIMD 和 Naive 不受 group size 变化影响。
 
-![图 13：huge pages 对吞吐的影响。](assets/figure-13-huge-pages.png)
+![图 13](assets/figure-13-huge-pages.png)
 
-![图 14：各方法的扩展性。](assets/figure-14-scalability.png)
+图 13：huge pages 对吞吐的影响。
+
+![图 14](assets/figure-14-scalability.png)
+
+图 14：各方法的扩展性。
 
 #### 5.2.2 系统架构参数
 
@@ -395,9 +423,13 @@ SKX 使用 2 MB huge pages，L1 cache 中有 32 个对应的 TLB entries，但�
 
 ### 5.3 Hash join build 与哈希聚合
 
-![图 15：hash build 性能。](assets/figure-15-hash-build.png)
+![图 15](assets/figure-15-hash-build.png)
 
-![图 16：hash aggregation 性能。](assets/figure-16-hash-aggregation.png)
+图 15：hash build 性能。
+
+![图 16](assets/figure-16-hash-aggregation.png)
+
+图 16：hash aggregation 性能。
 
 本节评测大量写入下的 IMV。Hash build 是 hash join 的两个阶段之一，分三步向 hash bucket 插入新节点：先计算 key 的哈希并找到对应 bucket；再申请一块空间，把 key 和 payload 写入其中形成新节点；最后把新节点插入 bucket 头部。这些步骤对各 bucket head 的随机访问会产生大量 cache miss。
 
@@ -413,7 +445,9 @@ Intel Xeon Phi 的微架构称为 Knights Landing，与 Skylake 不同。芯片�
 
 为排除整体可扩展性影响，实验只使用一个核心并启用四个逻辑线程；AMAC 的 group size 降为 10，DVA、FVA、IMV 降为 2。结果见图 17；build 与 aggregation 结果相似，原文因篇幅没有展示。标量实现的 Naive 和 AMAC 明显慢于另外四种方法，因为后者受益于 SIMD。一个核心上更多线程会发出更多内存请求，因此 AMAC 略快于 Naive；但在 $[1,1]$ 下，AMAC 因交错和预取开销反而慢于 Naive。这类开销有时也会让 DVA 和 FVA 慢于 SIMD。IMV 以更好的向量利用方式抵消了开销，因此优于其他方法，最高比 Naive 快 2.1 倍、比 SIMD 快 1.2 倍。结果凸显了交错执行对每核逻辑线程更少的 CPU 的重要性。
 
-![图 17：KNL 上 hash join probe 与 binary tree search 的性能。](assets/figure-17-knl-performance.png)
+![图 17](assets/figure-17-knl-performance.png)
+
+图 17：KNL 上 hash join probe 与 binary tree search 的性能。
 
 ### 5.5 与其他执行模型比较
 
@@ -437,7 +471,9 @@ DCE 比 IMV 慢，因为它既不能减少 join 中的 cache miss，也不能避
 
 ROF 用 SIMD 优化 filter，并用 group prefetching（GP）实现 join。在这个均匀数据集上，即便使用链式哈希表，GP 仍优于 AMAC。ROF 因减少大量 cache miss 而快于 DCE 和 VE，但仍慢于 IMV；其 build pipeline 和 probe pipeline 分别比 IMV 慢 1.34 倍和 1.42 倍。IMV 同时减少 cache miss 与 branch miss，因此用 IMV 代替 GP 加速 ROF 中的 join 会表现更好。
 
-![图 18：不同查询执行模型的对比。](assets/figure-18-engine-comparison.png)
+![图 18](assets/figure-18-engine-comparison.png)
+
+图 18：不同查询执行模型的对比。
 
 ROF-IMV 与 IMV 几乎相同：二者都用 SIMD 加速 filter，并用 IMV 提升 join。区别是 ROF-IMV 把 filter 与 join 的 build 或 probe 分为两个阶段，以 buffer 连接，因而引入物化开销，尤其当 filter 没有滤掉元组时；IMV 则把 filter 与 build/probe 合并。后一方式也可能更慢，因为 filter 后凑成一个满 SIMD 向量的时间具有随机性，未必能理想地与内存访问重叠。两者差异取决于 filter selectivity，但性能差距几乎始终在 5% 内，因此把 IMV 用于 ROF 也是加速完整查询执行的良好选择。
 

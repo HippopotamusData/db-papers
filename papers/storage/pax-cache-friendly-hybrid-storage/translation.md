@@ -53,7 +53,9 @@ PAX 的其他优势包括：在使用 NSM 的 DBMS 中实现 PAX 只需要修改
 
 传统上，关系记录存放在遵循 NSM 的带槽磁盘页中 [27]。NSM 在数据页上顺序存储记录。每条记录有记录头（record header），其中包含 null bitmap、变长值偏移量以及其他实现相关信息 [20,29,32]。新记录通常插入从页首开始的第一个可用空闲空间。由于记录可以是变长的，系统会在页尾下一个可用 slot 中存储指向新记录开头的指针。访问页内第 n 条记录时，只需跟随页尾第 n 个指针。
 
-![图 1：NSM 的缓存行为。扫描 `age` 字段时，缓存行会连同相邻无关字段一起载入。](assets/figures/figure-01-nsm-cache-behavior.png)
+![图 1](assets/figures/figure-01-nsm-cache-behavior.png)
+
+图 1：NSM 的缓存行为。扫描 `age` 字段时，缓存行会连同相邻无关字段一起载入。
 
 但在谓词求值期间，NSM 的缓存性能较差。例如：
 
@@ -69,7 +71,9 @@ where age < 40;
 
 垂直分区把一个关系拆成若干子关系，每个子关系包含原关系一部分属性的值，以降低 I/O 成本 [24]。完全分解的垂直分区，即每个 stripe 只含一个属性，称为 DSM [10]。DSM 把 n 属性关系垂直划分为 n 个子关系；每个子关系包含逻辑记录 ID（surrogate）和一个属性值，本质上是属性上的聚簇索引。子关系作为常规关系存放在带槽页中，使每个属性可以独立扫描。
 
-![图 2：Decomposition Storage Model（DSM）的数据布局。每个属性被拆成独立子关系，并带有 surrogate 记录 ID。](assets/figures/figure-02-dsm-layout.png)
+![图 2](assets/figures/figure-02-dsm-layout.png)
+
+图 2：Decomposition Storage Model（DSM）的数据布局。每个属性被拆成独立子关系，并带有 surrogate 记录 ID。
 
 与 NSM 不同，DSM 在顺序访问单个属性值时具有很高的空间局部性。单属性扫描时，DSM 的 I/O 和缓存性能都很好。对于只使用关系中少量属性的 DSS 负载，DSM 表现良好；Sybase-IQ 就把垂直分区与 bitmap index 结合用于数据仓库应用 [25]。如果记录重构成本较低，DSM 也可改善主存数据库系统的缓存性能 [4]。
 
@@ -87,7 +91,9 @@ PAX 是一种新的页内记录放置策略。它的目标是：
 
 PAX 的动机是：像 NSM 一样把每条记录的属性值放在同一页上，但在页内使用缓存友好的放置算法。PAX 在每个页内对记录做垂直分区，把每个属性的值存放在对应的 minipage 中。使用 PAX 时，每条记录会落在与 NSM 相同的页上，但所有 SSN 值、name 值和 age 值分别聚集到各自 minipage。PAX 因此提升跨记录空间局部性，同时只轻微影响记录内部空间局部性。虽然 PAX 做页内垂直分区，但重构结果元组不需要跨页连接。
 
-![图 3：PAX 的缓存行为。同一属性在页内连续存放，使一次缓存载入包含多个目标属性值。](assets/figures/figure-03-pax-cache-behavior.png)
+![图 3](assets/figures/figure-03-pax-cache-behavior.png)
+
+图 3：PAX 的缓存行为。同一属性在页内连续存放，使一次缓存载入包含多个目标属性值。
 
 ### 3.2 设计
 
@@ -100,7 +106,9 @@ minipage 的结构如下：
 
 每个新分配页包含 page header 和与关系 degree 相同数量的 minipage。page header 记录属性数量、定长属性大小、各 minipage 起始偏移、当前页内记录数和页内总可用空间。记录可按顺序或随机访问。顺序访问某些属性时，算法访问相应 minipage 中的值；索引扫描可在给定 record id 时读取某属性值 [34]。
 
-![图 4：PAX page 示例。页头记录属性数量、记录数量、属性大小、空闲空间和 minipage 起点；定长属性放在 F-minipage，变长属性放在 V-minipage。](assets/figures/figure-04-pax-page.png)
+![图 4](assets/figures/figure-04-pax-page.png)
+
+图 4：PAX page 示例。页头记录属性数量、记录数量、属性大小、空闲空间和 minipage 起点；定长属性放在 F-minipage，变长属性放在 V-minipage。
 
 PAX 与 NSM 需要相同数量的空间。NSM 连续存放每条记录的属性，因此每条记录需要一个 offset，并且每条记录中每个变长属性还需要额外 offset。PAX 为每个变长值存一个 offset，并为 n 个 minipage 各存一个 offset。因此从模型上看，无论使用 NSM 还是 PAX，关系占用页数相同；实现细节可能造成轻微差异。
 
@@ -127,7 +135,9 @@ NSM 通过在 Shore file manager 上增加属性级功能实现。DSM 通过把�
 
 NSM 记录先存定长属性值，随后存偏移数组和包含变长属性值的 mini-heap。Shore 在每条记录前增加 12 字节 tag，包含 serial number、record type、header length、record length 等信息；页尾还使用 4 字节 slot，其中 2 字节记录偏移，另 2 字节记录分配空间。总计每条记录约 16 字节开销。
 
-![图 5：Shore 中 NSM 记录结构示例。记录由 Shore tag、定长值、变长值偏移数组和变长值区域组成。](assets/figures/figure-05-shore-nsm-record.png)
+![图 5](assets/figures/figure-05-shore-nsm-record.png)
+
+图 5：Shore 中 NSM 记录结构示例。记录由 Shore tag、定长值、变长值偏移数组和变长值区域组成。
 
 在当前实现中，TPC-H 表使用 PAX 比使用 NSM 少 8% 空间。最多一半节省来自消除页尾 slot table，其余来自避免 Shore 的 12 字节记录 tag。商业 DBMS 通常在每条记录前存记录头，包含 NULL bitmap、记录分配空间、真实记录大小、定长部分大小和其他 flag；其大小随表的列数和列类型变化。对于 TPC-H 的 `Lineitem` 表，记录头约 8 字节，因此 Shore tag 比常见 NSM 头多约 4 字节；这项额外开销令 NSM 比以普通记录头替换 Shore tag 时多占约 4% 空间。
 
@@ -171,7 +181,9 @@ PAX 的目标主要是优化数据缓存行为，并不改变 I/O 性能。在 I
 
 当查询涉及的属性数从 1 增加到 7 时，NSM 和 PAX 对变化相对不敏感，而 DSM 对查询属性数非常敏感。查询只涉及一两个属性时，DSM 因记录重构成本低而表现不错；属性数增加后，DSM 必须连接更多子关系，性能迅速恶化。NSM 和 PAX 因记录所有属性在同一页，避免了昂贵重构连接，性能保持稳定。
 
-![图 6：查询涉及属性数量变化时 NSM、PAX、DSM 的执行时间。DSM 随属性数量增加快速变慢，而 NSM 与 PAX 相对稳定。](assets/figures/figure-06-query-attributes-elapsed-time.png)
+![图 6](assets/figures/figure-06-query-attributes-elapsed-time.png)
+
+图 6：查询涉及属性数量变化时 NSM、PAX、DSM 的执行时间。DSM 随属性数量增加快速变慢，而 NSM 与 PAX 相对稳定。
 
 #### 5.2.1 NSM 与 PAX 的缓存行为影响
 
@@ -181,17 +193,23 @@ PAX 减少数据访问相关缓存延迟，从而更快执行查询。L1 数据�
 
 PAX 还降低 L2 指令 miss，因为统一 L2 同时保存数据和指令。NSM 会把未引用数据装入缓存，可能替换未来需要的指令；PAX 只带入有用数据，减少这种替换概率。PAX 与 NSM 指令 footprint 相近，但 PAX 的计算时间更少，主要是因为内存相关延迟降低后，处理器能更好利用超标量能力。现代处理器每周期可以 retire 多条指令[^3]，该 Xeon 最多为 3 条；存在内存延迟时便无法达到这一峰值。使用 NSM 时，只有 30% 的总周期 retire 3 条指令，60% 的周期只 retire 0 或 1 条。既有研究 [1,19] 同样报告数据库系统具有很高的数据依赖，大多数计算周期 retire 的指令数远低于处理器峰值。PAX 通过缩短停顿时间部分缓解了这一问题。
 
-![图 7：PAX 对内存停顿的影响。左、中两图比较 NSM 与 PAX 的 L1/L2 数据 miss 惩罚；右图分解 CPU time。](assets/figures/figure-07-memory-stalls.png)
+![图 7](assets/figures/figure-07-memory-stalls.png)
+
+图 7：PAX 对内存停顿的影响。左、中两图比较 NSM 与 PAX 的 L1/L2 数据 miss 惩罚；右图分解 CPU time。
 
 #### 5.2.2 敏感性分析
 
 随着查询涉及的属性数增加，NSM 与 PAX 的执行时间逐渐收敛。即使结果关系包含所有属性，在我们的实验中 PAX 仍更快，因为选择率为 50%，PAX 在谓词和投影属性上都利用了空间局部性，而 NSM 有一半时间会把无用信息带入缓存。改变选择谓词中的属性数也有类似效果 [34]。在这些实验中，DSM 比 NSM 和 PAX 慢约 9 倍，因为它必须连接相应数量的子关系。
 
-![图 8：投影度变化时 PAX 与 NSM 的执行时间敏感性。](assets/figures/figure-08-projectivity-sensitivity.png)
+![图 8](assets/figures/figure-08-projectivity-sensitivity.png)
+
+图 8：投影度变化时 PAX 与 NSM 的执行时间敏感性。
 
 关系中属性数增加时，每页记录数减少。为了保持关系驻留主存，记录大小翻倍意味着基数减半。按基数归一化后，PAX 仍比 NSM miss 更少，但执行时间逐渐受其他因素支配，例如扫描完当前页后 buffer manager 获取下一页的开销。因此随着关系 degree 增加，PAX 与 NSM 每条记录处理时间趋于接近。
 
-![图 9：关系属性数量变化时 PAX 与 NSM 的每记录处理时间。](assets/figures/figure-09-relation-attributes-sensitivity.png)
+![图 9](assets/figures/figure-09-relation-attributes-sensitivity.png)
+
+图 9：关系属性数量变化时 PAX 与 NSM 的每记录处理时间。
 
 ## 6. 使用 DSS 负载评估
 
@@ -220,7 +238,9 @@ DSM 加载时间远高于 NSM 和 PAX，因为 DSM 为每个属性创建一个�
 
 NSM 只是追加记录；PAX 在存在变长属性时可能需要额外页重组。PAX 在新页中基于平均属性大小为 V-minipage 分配空间，有时会高估或低估 minipage 大小。若一条记录能放入 NSM 页，却不能直接放入当前 PAX 页，就必须移动 minipage 边界。实验中，PAX 使用上一页平均属性大小作为新页初始 minipage 大小，可以在无需重组的情况下使用约 80% 页空间。继续填充余下 20%、强行把每页填满 100% 会导致平均每页 2.5 次重组，其中一半重组只为在分配下一页前容纳当前页的最后一条记录；相比 NSM，最坏情形有 2-10% 性能惩罚。若仅在空闲空间超过 5% 时才重组，平均重组次数减半；更保守的 10% 阈值把平均值降到约每页 0.8 次。随着重组次数下降，PAX 相对 NSM 的加载惩罚变得很小，且与数据库大小无关。
 
-![图 10：TPC-H 数据集批量加载耗时。DSM 加载成本明显高于 NSM 与 PAX。](assets/figures/figure-10-bulk-loading-times.png)
+![图 10](assets/figures/figure-10-bulk-loading-times.png)
+
+图 10：TPC-H 数据集批量加载耗时。DSM 加载成本明显高于 NSM 与 PAX。
 
 表 2：`reorganization-worthy` 阈值对 PAX 批量加载性能的影响。
 
@@ -244,7 +264,9 @@ $$
 
 Q12 和 Q14 更复杂，涉及两表连接和范围谓词。虽然 NSM 与 PAX 的 hash join 实现都只复制记录中有用部分，PAX 仍更快，因为有用属性值天然隔离，并且 PAX bucket 以 PAX 格式落盘，在连接第二阶段访问时继续保持局部性。PAX 执行 Q12 比 NSM 少 37-48% 时间；Q14 访问属性更少、计算更少，因此 PAX 优势为 6-32%。
 
-![图 11：只读查询中 PAX 相对 NSM 的 speedup。RS 表示范围选择，Q1、Q6、Q12、Q14 为 TPC-H 查询。](assets/figures/figure-11-read-only-query-speedup.png)
+![图 11](assets/figures/figure-11-read-only-query-speedup.png)
+
+图 11：只读查询中 PAX 相对 NSM 的 speedup。RS 表示范围选择，Q1、Q6、Q12、Q14 为 TPC-H 查询。
 
 ### 6.4 更新
 
@@ -252,7 +274,9 @@ NSM 和 PAX 的更新算法思想相同：尽量原地更新属性值，并在�
 
 执行更新时，PAX 始终比 NSM 快，提供 10-16% 加速。加速取决于访问记录的比例和选择率。
 
-![图 12：不同选择率下，更新属性数量变化时 PAX 相对 NSM 的 speedup。](assets/figures/figure-12-update-speedup.png)
+![图 12](assets/figures/figure-12-update-speedup.png)
+
+图 12：不同选择率下，更新属性数量变化时 PAX 相对 NSM 的 speedup。
 
 更新属性数增加时，PAX/NSM 加速下降。低选择率下 PAX 提供 10-16% 加速，执行主要由读请求支配。选择率升高后，更新属性更可能已在缓存中，但每次数据请求也更可能替换 dirty cache blocks，因此 20%-100% 选择率区间内，加速主要受写回请求支配，对更新属性数变化不敏感。
 

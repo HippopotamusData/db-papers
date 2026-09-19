@@ -97,7 +97,9 @@ System R [5] 已经使用过一种原始形式的代码生成，但迭代器模�
 
 图 2 展示查询经过系统的路径。第一个模块是 SQL parser。SQL grammar 支持带 equi-join 的合取查询，以及任意 grouping 和 sort order；它不支持聚合值中的统计函数和 nested query，但我们认为这两项都是直接扩展，不限制整体求值模型的一般性。
 
-![图 2：HIQUE 整体查询引擎概览](assets/precise-manual-figure-02-engine-overview.png)
+![图 2](assets/precise-manual-figure-02-engine-overview.png)
+
+图 2：HIQUE 整体查询引擎概览
 
 图 2 展示 HIQUE 的端到端路径：Parser 结合 DB catalog 产生内部查询表示，Optimizer 结合 DB statistics 输出 scheduled plan，Generator 根据 templates、data staging 和 holistic algorithms 生成 source code，再由 compiler 生成 shared-library file，Executor 动态加载并在 DB tables 上执行。
 
@@ -237,7 +239,9 @@ Output:
 
 图 4 的例子中， $R.a = 200$、 $R.b = C$、 $R.c = \mathrm{Asia}$ 对应的聚合数组偏移量为 $1 \cdot 3 \cdot 4 + 2 \cdot 4 + 1 = 21$。
 
-![图 4：聚合的 group directory 与 offset 计算](assets/precise-manual-figure-04-group-directories.png)
+![图 4](assets/precise-manual-figure-04-group-directories.png)
+
+图 4：聚合的 group directory 与 offset 计算
 
 一般地，假设 $M _ i$ 是属性 $i$ 的映射， $M _ i[v]$ 给出属性 $i$ 的取值 $v$ 的标识符，那么跨 $n$ 个属性分组时，可以把元组 $(v _ 1,\ldots,v _ n)$ 的多维映射化为下面的标量：
 
@@ -293,7 +297,9 @@ $$
 
 Join evaluation 使用两个查询：（a）两个各有 10,000 条、每条 72 bytes 的表执行 merge join，每个 outer tuple 匹配 1,000 个 inner tuple；（b）两个各有 1,000,000 条、每条 72 bytes 的表执行 hybrid join，每个 outer tuple 匹配 10 个 inner tuple。Aggregation 使用一个包含 1,000,000 条 72-byte tuple 的表和两个 sum function；grouping attribute 分别有 100,000 个和 10 个 distinct value，前者用 hybrid aggregation，后者用 map aggregation。全部 join attribute 和 grouping attribute 都是 integer。指标同时采用 response time 和 hardware performance event；join 结果见图 5，aggregation 结果见图 6。
 
-![图 5：Join 查询的执行时间分解和硬件指标](assets/precise-manual-figure-05-join-profiling.png)
+![图 5](assets/precise-manual-figure-05-join-profiling.png)
+
+图 5：Join 查询的执行时间分解和硬件指标
 
 图 5 对两类 join 查询分解 execution time，并给出 CPI、retired instructions、function calls、D1-cache accesses 和 prefetch efficiency 等硬件指标。HIQUE 在 Join Query #1 上通过减少函数调用和指令数获得明显优势；Join Query #2 中 staging 成本占比更高，收益相对缩小。
 
@@ -301,7 +307,9 @@ Join Q1 是 inflationary query：两张各 10,000 条的表产生 10,000,000 条
 
 Join Q2 的输入更大、selectivity 更低，大部分时间用于 hash partition 和 partition sorting。所有版本使用相同算法、相同 type-specific quicksort 和近似访问模式，因此差距缩小，但 HIQUE 仍比 iterator 版本快近 2 倍。Retired instruction、data access 和 function call 仍明显减少，但幅度不及 Q1。Hard-coded 版本的 CPI 反而升高，是因为总 retired instruction 更少，昂贵 memory operation 在 CPI 中的占比因而更大。D1 prefetch efficiency 约翻倍，所有版本的 L2 prefetch efficiency 均约为 90%。
 
-![图 6：Aggregation 查询的执行时间分解和硬件指标](assets/precise-manual-figure-06-aggregation-profiling.png)
+![图 6](assets/precise-manual-figure-06-aggregation-profiling.png)
+
+图 6：Aggregation 查询的执行时间分解和硬件指标
 
 图 6 对 aggregation 查询做同样 profiling。Aggregation Query #1 中 HIQUE 仍保持优势；Aggregation Query #2 的 map-based aggregation 减少中间 staging，HIQUE 的 function calls 显著下降。
 
@@ -323,7 +331,9 @@ Aggregation Q2 使用 map-based algorithm，单趟扫描输入且无需 intermed
 
 ### B. 整体算法的性能
 
-![图 7：Join 与 aggregation 微基准性能](assets/precise-manual-figure-07-join-aggregation-performance.png)
+![图 7](assets/precise-manual-figure-07-join-aggregation-performance.png)
+
+图 7：Join 与 aggregation 微基准性能
 
 图 7 比较本文算法的 optimized iterator 版本和 HIQUE 为各查询生成的代码，覆盖 join scalability、multi-way join、join predicate selectivity 和 grouping attribute cardinality。
 
@@ -341,7 +351,9 @@ Aggregation 实验采用 1,000,000 条 72-byte tuple、两个 sum function 和�
 
 我们用 benchmark generator 生成 scaling factor 1 的数据集。导入各系统前未对表作排序等任何修改；不含索引的 raw data 约 1.3 GB，能放入实验机器主存。所有系统都建立索引、以最高详细级别收集统计信息，并把内存参数设置为允许 in-memory execution。实验使用 TPC-H Q1、Q3 和 Q10。后两者含有不能作为 join team 求值的高选择性 join predicate，并包含 grouping attribute 和 aggregate function 数量不一的 aggregation。TPC-H tuple 很宽、跨越多个 cache line，而每个查询实际只需要少数字段；因此预期 MonetDB 会从 vertical partitioning 获益，优于 NSM 系统。
 
-![图 8：TPC-H 查询性能对比](assets/precise-manual-figure-08-tpch-queries.png)
+![图 8](assets/precise-manual-figure-08-tpch-queries.png)
+
+图 8：TPC-H 查询性能对比
 
 图 8 比较 TPC-H Q1、Q3、Q10 上 PostgreSQL、System X、MonetDB 与 HIQUE 的响应时间。
 

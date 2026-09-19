@@ -37,7 +37,9 @@ Amir Shaikhha、Mohammad Dashti、Christoph Koch
 
 图 1 在公平场景下，用 8 GB TPC-H 数据比较 push 和 pull 引擎。结果没有明确赢家：TPC-H Q12 和 Q14 中 pull engine 更好；一些情况下 push-based engine 略好。各自优缺点在第 2 节详细说明。
 
-![图 1. push-based 与 pull-based query engine 在 TPC-H 查询上的性能比较。](assets/image-p02-01-xref15.png)
+![图 1](assets/image-p02-01-xref15.png)
+
+图 1. push-based 与 pull-based query engine 在 TPC-H 查询上的性能比较。
 
 我们深入研究 push 与 pull 范式的取舍。选择 push、pull 或任何合理替代方案，是查询引擎架构中的基本决策，会影响整个系统架构。因此必须深入理解相关性质和取舍，而不能寄希望于后续用“补丁”弥补选择的缺点。
 
@@ -76,7 +78,9 @@ WHERE R.A < 10
 
 图 2 展示 push 和 pull 引擎中 control flow 与 data flow 的区别。在 pull engine 中，每个查询算子都扮演 destination operator，通过调用 source operator 的 `next` 函数请求数据。每个算子也作为 source operator 为其 destination operator 生成结果数据。生成数据是 `next` 函数的返回值。pull engine 中 control-flow edge 与 data-flow edge 方向相反。
 
-![图 2. 示例 SQL 中 push/pull 引擎的数据流与控制流。](assets/figure-02-data-control-flow.png)
+![图 2](assets/figure-02-data-control-flow.png)
+
+图 2. 示例 SQL 中 push/pull 引擎的数据流与控制流。
 
 换一个角度，每个算子可看作一个 `while` 循环，其中每次迭代调用 source operator 的 `next`。当 `next` 返回特殊值（例如 `null`）时，循环终止。
 
@@ -117,7 +121,9 @@ Push engine 解决了 pull engine 在 selection operator 上的问题。若产�
 
 图 3b 展示相同查询在 push engine 中专门化后的代码。selection 可总结为单个 `if` 判断，整体代码更简单，如图 3d 所示。这更有利于底层优化编译器推理和优化，并改善 branch prediction。
 
-![图 3. pull/push 引擎中的内联查询和对应 CFG。](assets/figure-03-inlined-query-cfg.png)
+![图 3](assets/figure-03-inlined-query-cfg.png)
+
+图 3. pull/push 引擎中的内联查询和对应 CFG。
 
 此前研究常未把 pipelining 概念与 associated specializations 分离。例如 HyPer [42] 本质上是 push engine，同时默认使用编译器优化，却没有区分 push 范式与编译优化各自对性能的贡献。LegoBase [30] 假定 push engine 后接 operator inlining，而 pull engine 不使用 operator inlining [31]。另一方面，也缺少在同一环境中比较 inlined pull engine 与 inlined push engine 的实验；我们推测 Hekaton [13] 属于 inlined pull engine。我们在第 6 节尝试在尽可能共享环境和代码库的公平条件下做这种比较。
 
@@ -186,7 +192,9 @@ build(f1).foreach(f2)  =>  f1(f2)
 
 例如 `list.map(f).map(g)` 可转换为 `list.map(f o g)`。图 4 展示 fold、unfold 和 stream fusion 在该例子上的转换。Fold fusion 的关键优点是：不需要为每对 collection operation 编写 fusion rule。对 $n$ 个 collection operation，不需要 $O(n^2)$ 条 rewrite rule；只需把各操作表达为 `build` 和 `foreach`，即 $O(n)$ 条规则，从而大幅简化底层编译器转换的维护 [48]。
 
-![图 4. 三种 fusion 技术在简单例子上的转换。](assets/figure-04-fusion-techniques.png)
+![图 4](assets/figure-04-fusion-techniques.png)
+
+图 4. 三种 fusion 技术在简单例子上的转换。
 
 该方法能很好地 deforest 多数 collection operator，但不擅长 `zip` 和 `take`。`zip` 需要同时遍历两个 collection，而 `foreach` 只遍历一个 collection；因此只能 deforest 其中一个，另一个必须创建中间 collection。`take` 则无法中途停止 `foreach` 迭代。因此 fold fusion 在这两个操作上表现不好。
 
@@ -248,7 +256,9 @@ Nested loop join 可用两个嵌套 `flatMap` 表达，但 hash-based join 没�
 
 Query engine 中的 pipelining 类似 collection programming 中的 loop fusion：二者都移除会打断流式 pipeline 的中间 relation/collection。Pipelining 还对应面向对象编程中的设计模式 [54]：
 
-![图 5. pull/push pipelining 与 loop fusion 算法的 Scala 代码对照。](assets/figure-05-pipelining-fusion-comparison.png)
+![图 5](assets/figure-05-pipelining-fusion-comparison.png)
+
+图 5. pull/push pipelining 与 loop fusion 算法的 Scala 代码对照。
 
 **表 2. Pipelined query engine、设计模式和 loop fusion 的对应关系**
 
@@ -311,7 +321,9 @@ unstream(() => e).stream()  =>  e
 
 图 6 展示 stream-based query engine 和 stream fusion 技术的结构。`Step` 数据类型有三个情况：
 
-![图 6. Stream-based query engine 与 stream fusion 技术。](assets/figure-06-stream-fusion-engine.png)
+![图 6](assets/figure-06-stream-fusion-engine.png)
+
+图 6. Stream-based query engine 与 stream fusion 技术。
 
 ```scala
 trait Step[T] {
@@ -341,7 +353,9 @@ case object Done extends Step[Nothing]
 
 示例查询在 stream-fusion engine 中专门化后的代码与 push engine 一样紧凑。但如果直接实现，会因为创建中间 `Step` 对象而产生性能问题。第 5 节讨论如何优化。
 
-![图 7. stream-fusion engine 中示例查询的专门化代码。](assets/figure-07-stream-fusion-specialization.png)
+![图 7](assets/figure-07-stream-fusion-specialization.png)
+
+图 7. stream-fusion engine 中示例查询的专门化代码。
 
 ## 5. 实现
 
@@ -372,9 +386,13 @@ generate(f1).destroy(f2)  =>  f2(f1)
 unstream(() => e).stream()  =>  e
 ```
 
-![图 8. stream fusion 的构造。](assets/figure-08-stream-fusion-constructs.png)
+![图 8](assets/figure-08-stream-fusion-constructs.png)
 
-![图 9. stream-fusion rule 的推导。](assets/figure-09-stream-fusion-rule.png)
+图 8. stream fusion 的构造。
+
+![图 9](assets/figure-09-stream-fusion-rule.png)
+
+图 9. stream-fusion rule 的推导。
 
 ### 5.2 移除中间结果
 
@@ -446,21 +464,29 @@ Microbenchmark 分三类：
 
 **对 selectivity 的敏感性。** 图 11 展示一个 selection 后接 aggregation 的简单查询在不同 selectivity 下的行为。对高度选择性查询，Volcano pull engine 表现更好，因为无用元素在内部紧循环中被更快跳过；其他 engine 由外层循环负责跳过。文献 [43] 在 push engine 与 vectorized engine 的语境中也观察到类似效应。对较高 selectivity，多数情况下 push engine 最好。Visitor-based stream-fusion engine 与 push engine 几乎相同，而只使用 scalar replacement、不使用 Visitor pattern 的 stream-fusion engine 多数情况下更差。
 
-![图 11. query engine 对 selectivity 的敏感性。](assets/image-p10-01-xref113.png)
+![图 11](assets/image-p10-01-xref113.png)
+
+图 11. query engine 对 selectivity 的敏感性。
 
 **单 pipeline 聚合。** 图 12 展示单 pipeline、通过对一列求和产生单结果的查询。只有一个 filter 时，push engine 略好于 pull engine；stream-fusion engine 隐藏了 pull engine 的这一局限。若有 selection 链，差异更明显；HyPer [42] 使用最多四个连续 selection 时也展示过类似效应。不过从实践角度看，优化器会把所有合取谓词合并为单个 selection，因此该情况在实践中不会出现。
 
-![图 12. 产生聚合结果的简单查询。](assets/image-p11-01-xref118.png)
+![图 12](assets/image-p11-01-xref118.png)
+
+图 12. 产生聚合结果的简单查询。
 
 **单 pipeline 列表结果。** 图 13 展示不包含 aggregation、产生元素列表的查询。在该实验中，我们使用 1 GB 生成数据。selection 后接 projection 时，各 engine 类似。但如果查询过滤后返回 top-k，push engine 更差，因为 limit operator 会打断 push pipeline。selection-projection-limit 的情况更明显，pull engine 和 stream-fusion engine 更好；Java 8 streaming API 的 pull/push fusion 技术中也观察到类似现象 [4]。
 
-![图 13. 产生列表结果的简单查询。](assets/image-p11-02-xref119.png)
+![图 13](assets/image-p11-02-xref119.png)
+
+图 13. 产生列表结果的简单查询。
 
 **带 join 的聚合。** 最后，我们研究图 14 所示的不同 join 操作性能。hash join 和 semi hash join 中，各 engine 没有明显差异。merge join 中，pull engine 相比 push engine 有很大优势，主要因为 push engine 不能同时 pipeline merge join 的两个输入，被迫打断其中一个输入 pipeline。
 
 > **原文脚注 4：**Stream-fusion engine 处理 merge join 后接 filter 时需要特别小心。在 merge 主循环中跳过元素，会为取得下一条满足条件的元素浪费许多 CPU cycle；改用与 Iterator model 类似的方法，在紧循环中持续迭代直至找到下一条满足条件的元素，性能更好。
 
-![图 14. 带 join 并产生聚合结果的查询。](assets/image-p11-03-xref120.png)
+![图 14](assets/image-p11-03-xref120.png)
+
+图 14. 带 join 并产生聚合结果的查询。
 
 ### 6.2 Macro Benchmarks
 
@@ -470,13 +496,17 @@ Microbenchmark 分三类：
 
 > **原文脚注 5：**另一种实现可以把 join 后发生的 selection 融入 join 算子本身。文献 [47] 的 join 实验采用这一假设，此时 join 不再是纯 join 算子，而是包含 join 后接 selection 的 super operator；在本文中，我们不考虑这种情况。
 
-![图 15. TPC-H Q19 上 pull-based engine 多个变体的性能比较。](assets/image-p11-04-xref121.png)
+![图 15](assets/image-p11-04-xref121.png)
+
+图 15. TPC-H Q19 上 pull-based engine 多个变体的性能比较。
 
 **移除中间对象分配。** 图 15 还显示，heap allocation 中间 `Step` 对象会使性能差一个数量级。与只把 heap allocation 转为 stack allocation 相比，用 Visitor pattern 实现 `Step` 还能提升约 50%。此外，我们的实验显示，在 TPC-H 查询中，把 heap allocation 转为 stack allocation（通过 Visitor pattern 或 scalar replacement）可把内存消耗从 14 GB 降到 11 GB。
 
 **分析型查询中的不同 engine。** 图 16 展示多个 TPC-H 查询在不同 engine 上的性能。总体上，engine 之间差异不是数量级级别；多数情况下提升很小。这是因为比较在公平场景中进行，所有 engine 都做 specialization，不同于此前一些工作未对 pull engine 应用 operator inlining [30]。
 
-![图 16. TPC-H 查询上不同 query engine 的性能。](assets/image-p12-01-xref122.png)
+![图 16](assets/image-p12-01-xref122.png)
+
+图 16. TPC-H 查询上不同 query engine 的性能。
 
 这些查询可分两类。第一类中所有 engine 表现几乎相同。一些情况下，我们看到 push engine 略有提升，主要因为生成代码控制流更好，使底层编译器能生成更好机器码。但即使如此，差异也很小。
 

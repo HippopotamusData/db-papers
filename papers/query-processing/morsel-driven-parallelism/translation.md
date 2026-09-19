@@ -149,7 +149,9 @@ Morsel-driven 处理也提供简单优雅的 query canceling。用户取消查�
 
 许多核心最终可能让任何共享结构——即便 lock-free——成为瓶颈，但这里的 work-stealing 结构有多重保护。实现一开始把总工作分给所有线程，使每个线程暂时拥有自己的局部范围；各范围按缓存行对齐，所以很少发生缓存行冲突。只有局部范围耗尽后，线程才尝试从别的范围窃取工作。并发执行多个查询还会进一步分散该结构的压力；必要时也始终可以增大 morsel，减少对 work-stealing 结构的访问。其最坏后果只是 morsel 过大造成线程利用不足；只要并发查询足够，系统吞吐不受影响。
 
-![图 6. morsel size 对查询执行时间的影响。](assets/figure-06-morsel-size-effect.png)
+![图 6](assets/figure-06-morsel-size-effect.png)
+
+图 6. morsel size 对查询执行时间的影响。
 
 ## 4. 并行算子细节
 
@@ -363,11 +365,15 @@ Sandy Bridge EP 如果不能保证大多数访问本地，只能达到理论内�
 
 为展示 elasticity，我们改变并行 query stream 数量。64 个硬件线程均匀分布到 stream 上，每个 stream 执行 TPC-H 查询的随机排列。图 12 显示，即使 stream 很少（每个 stream 使用很多 core），吞吐仍保持较高。这允许在不牺牲过多吞吐的情况下，最小化高优先级查询响应时间。
 
-![图 12. 64 线程下 intra-query 与 inter-query parallelism。](assets/figure-12-intra-vs-inter-query-parallelism.png)
+![图 12](assets/figure-12-intra-vs-inter-query-parallelism.png)
+
+图 12. 64 线程下 intra-query 与 inter-query parallelism。
 
 图 13 展示 morsel-wise processing 的 profiler trace。每种颜色表示一个 pipeline stage，每个块是一个 morsel。实验只用 4 个线程。先执行 TPC-H Q13，它获得 4 个线程；稍后启动 Q14。trace 显示，一旦 worker 2 和 3 完成当前 morsel，它们切换到 Q14，直到 Q14 完成，之后继续处理 Q13。这说明 worker 线程可动态重分配给其他查询，即并行化方案完全 elastic。
 
-![图 13. morsel-wise processing 与 elasticity 的 trace。](assets/figure-13-elasticity-trace.png)
+![图 13](assets/figure-13-elasticity-trace.png)
+
+图 13. morsel-wise processing 与 elasticity 的 trace。
 
 我们还用 morsel-driven 框架模拟 Volcano 静态划分：把工作切成与线程数相同的 chunk，也就是 morsel size 设为 `n/t`。在只执行单个 TPC-H 查询时，由于输入数据均匀，该变化不会显著降低性能。但加入其他进程的干扰后结果就不同：让一个无关单线程进程占用一个 core，同时运行 TPC-H 查询，静态方法的查询性能下降 36.8%，动态 morsel 分派只下降 4.7%。细粒度 work stealing 能及时弥补被干扰的慢线程。
 

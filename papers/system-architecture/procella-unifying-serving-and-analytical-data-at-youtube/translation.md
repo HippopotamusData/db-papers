@@ -62,7 +62,9 @@ Procella 为 Google 基础设施而设计。Google 的分布式系统基础设�
   - Borg 主控会因维护、升级等原因频繁下线机器。行为良好的任务必须能从驱逐中迅速恢复，并在另一台机器上重启。再加上没有本地存储，保存大量本地状态并不现实，这也是系统采用大量小任务的原因之一。
   - 一个典型 Borg 集群有数千台廉价机器，硬件配置可能不同；每台机器上混合运行多种任务，而隔离并不完美，所以单个任务的性能难以预测。结合前述因素，任何运行在 Borg 上的分布式系统都必须采用成熟策略，处理异常任务、随机任务故障以及驱逐造成的周期性不可用。
 
-![图 1：Procella 系统架构。实时数据和批数据分别经摄取服务器与注册/批处理路径进入系统；查询客户端连接根服务器，根服务器使用元数据服务器，并协调数据服务器执行；持久数据位于 Colossus。](assets/procella-fig01-architecture.png)
+![图 1](assets/procella-fig01-architecture.png)
+
+图 1：Procella 系统架构。实时数据和批数据分别经摄取服务器与注册/批处理路径进入系统；查询客户端连接根服务器，根服务器使用元数据服务器，并协调数据服务器执行；持久数据位于 Colossus。
 
 图 1 展示整体架构。Procella 由多个组件组成，每个组件都以分布式方式执行。若某个组件没有任何运行实例，它提供的功能就不可用；不同组件彼此独立，例如即使数据服务器停机，摄取和注册仍可工作。
 
@@ -153,7 +155,9 @@ Procella 最初使用 Capacitor，它主要为即席分析中的大扫描设计�
 
 基准在一个典型 YouTube Analytics 数据集上比较 Artus 与 Capacitor。每项数字取测试框架 5 次运行中的最佳值。查询在一个约 25 万行、按视频 ID 排序且完全载入内存的文件上执行，查询见表 1，数据大小见表 2。
 
-![图 2：Artus 与 Capacitor 的性能对比。四组柱从左到右对应 Q1、Q2、Q3、Q4；纵轴为执行时间，数值越低越好。](assets/procella-fig02-artus-capacitor.png)
+![图 2](assets/procella-fig02-artus-capacitor.png)
+
+图 2：Artus 与 Capacitor 的性能对比。四组柱从左到右对应 Q1、Q2、Q3、Q4；纵轴为执行时间，数值越低越好。
 
 图中执行时间（微秒）依次为：Q1，Artus 3、Capacitor 420；Q2，Artus 20、Capacitor 990；Q3，Artus 630、Capacitor 2,600；Q4，Artus 1,750、Capacitor 12,970。
 
@@ -169,9 +173,13 @@ Procella 最初使用 Capacitor，它主要为即席分析中的大扫描设计�
 
 团队使用去掉过滤条件的 TPC-H 查询 1，比较 Superluminal、第一代行式求值器和开源 Supersonic 的聚合性能；数据载入内存数组，以排除文件格式影响，结果均为每 CPU 核性能。
 
-![图 3：Superluminal 与 Supersonic 在 C++ 数组上的性能。Superluminal 约快 5 倍；针对该问题精心手写优化的原生 C++ 又比 Superluminal 快约 50%。](assets/procella-fig03-superluminal-supersonic.png)
+![图 3](assets/procella-fig03-superluminal-supersonic.png)
 
-![图 4：Superluminal 与旧行式引擎在 Capacitor、Artus 和原始 C++ 数组上的性能。Superluminal 在 Capacitor 上接近快 2 倍，在 Artus 上接近快 5 倍；原始数组最快但内存开销更高。](assets/procella-fig04-superluminal-artus-capacitor.png)
+图 3：Superluminal 与 Supersonic 在 C++ 数组上的性能。Superluminal 约快 5 倍；针对该问题精心手写优化的原生 C++ 又比 Superluminal 快约 50%。
+
+![图 4](assets/procella-fig04-superluminal-artus-capacitor.png)
+
+图 4：Superluminal 与旧行式引擎在 Capacitor、Artus 和原始 C++ 数组上的性能。Superluminal 在 Capacitor 上接近快 2 倍，在 Artus 上接近快 5 倍；原始数组最快但内存开销更高。
 
 原始 C++ 数组上的 Superluminal 约为 Supersonic 的 5 倍，但专门手工优化的 C++ 仍快约 50%；相反，使用标准库哈希表的朴素 C++ 实现会比 Superluminal 慢一个数量级。脚注指出，在 TPC-H 数据集上，Artus 文件大约只有原始数据的十分之一。
 
@@ -218,7 +226,9 @@ MDS 从计划中裁剪 tablet 后，单独的叶请求会发往 DS。DS 再利�
 
 对重聚合查询，最终聚合常因必须在单节点处理大量数据而成为瓶颈。Procella 在最终聚合器输入端加入中间算子：该算子缓冲数据；若最终聚合器赶不上叶 DS 返回结果的速度，就动态创建额外线程执行中间聚合。
 
-![图 5：不同 TOP(K) 参数下的中间合并性能。横轴为中间聚合线程数，纵轴为查询时间；线程增加后重聚合查询显著加速，随后趋于平缓。](assets/procella-fig05-intermediate-merging.png)
+![图 5](assets/procella-fig05-intermediate-merging.png)
+
+图 5：不同 TOP(K) 参数下的中间合并性能。横轴为中间聚合线程数，纵轴为查询时间；线程增加后重聚合查询显著加速，随后趋于平缓。
 
 ### 3.6 查询优化
 
@@ -281,11 +291,15 @@ Procella 面向共享基础设施上的灵活工作负载，追求高性能和�
 
 即席分析使用广泛发布的 TPC-H 基准，它代表典型规范化数据库与分析负载。团队在一个含 3,000 个 CPU 核、20 TB RAM、运行于 Borg 的内部 Procella 实例上执行 TPC-H 1T（SF=1,000）和 10T（SF=10,000）查询。数据生成成 Artus 格式，经分区和排序后存入 Colossus；基准开始前预热缓存。10T 测试既执行单流 power run，也执行 10 个并行流的 throughput run。
 
-![图 6：TPC-H 扩展性。蓝柱是 10T 单流实测时间，红柱是由 1T 实测时间按 10 倍数据量线性外推的预期时间；图中覆盖全部 22 条 TPC-H 查询及几何平均值。](assets/procella-fig06-tpch-scalability.png)
+![图 6](assets/procella-fig06-tpch-scalability.png)
+
+图 6：TPC-H 扩展性。蓝柱是 10T 单流实测时间，红柱是由 1T 实测时间按 10 倍数据量线性外推的预期时间；图中覆盖全部 22 条 TPC-H 查询及几何平均值。
 
 图 6 比较同一实例上 1T 和 10T 每条查询的执行时间。1T 运行的几何平均约 2 秒，10T power run 约 10 秒，说明系统随数据量增长扩展良好；延迟呈次线性增长，主要因为 10T 能利用更多并行度。
 
-![图 7：TPC-H 10T 每查询吞吐运行时间。蓝柱为十个并行流下每条查询的平均时间，红柱为单流 power run 时间的 10 倍，覆盖全部 22 条查询。](assets/procella-fig07-tpch-throughput.png)
+![图 7](assets/procella-fig07-tpch-throughput.png)
+
+图 7：TPC-H 10T 每查询吞吐运行时间。蓝柱为十个并行流下每条查询的平均时间，红柱为单流 power run 时间的 10 倍，覆盖全部 22 条查询。
 
 图 7 显示十个并行流的 10T throughput run。并行查询增多时性能总体平滑退化，但方差明显：Q7 的退化远超预期，而 Q2 明显好于预期。主要瓶颈是节点间数据传输，包括 RPC、序列化和反序列化。这符合系统的横向扩展形态：它使用数百或数千个较小任务，而不是十个以内的大任务。
 

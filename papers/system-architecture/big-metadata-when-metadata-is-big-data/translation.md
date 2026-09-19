@@ -67,7 +67,9 @@ Delta Lake [3] 使用一种元数据管理系统，将事务日志压缩为 Parq
 
 BigQuery 是完全托管、无服务器的数据仓库，支持对 PB 级数据进行可扩展分析。BigQuery 架构基于存算分离原则：复制、可靠、分布式的存储系统保存数据；弹性分布式计算节点负责数据摄取和处理。此外，BigQuery 还有基于解耦分布式内存构建的独立 shuffle 服务，用于计算节点之间的通信。API、元数据、安全等横向服务将系统粘合在一起。本文关注查询处理与元数据服务和存储系统交互的部分。
 
-![图 1：BigQuery 高层架构。](assets/figure-01-bigquery-architecture.png)
+![图 1](assets/figure-01-bigquery-architecture.png)
+
+图 1：BigQuery 高层架构。
 
 ### 3.1 查询执行引擎
 
@@ -107,7 +109,9 @@ ORDER BY totalSales DESC
 LIMIT 10;
 ```
 
-![图 2：示例查询的查询执行计划。](assets/figure-02-query-execution-plan.png)
+![图 2](assets/figure-02-query-execution-plan.png)
+
+图 2：示例查询的查询执行计划。
 
 如图 2 所示，该查询分三阶段执行。第一阶段使用下推谓词扫描 Sales 表，产生 12 亿行，同时计算 totalSales 的局部聚合，将输出行数减少到 700 万。局部聚合按照聚合列 customerKey shuffle，作为下一阶段输入。下一阶段计算最终聚合、排序，并在每个分区应用 limit，产生 3320 行。最后阶段对这些结果做 union，执行最终排序并应用 limit。
 
@@ -649,7 +653,9 @@ c < min(x) OR c > max(x)
 
 GEOGRAPHY 是有趣的类型，因为它没有线性顺序，因此列值不存在 min/max 概念。相反，CMETA 为 GEOGRAPHY 类型值保存块内所有值的 S2 覆盖单元 [20]。每个 S2 单元表示地球表面不同粒度的一部分。0 级 S2 单元约为 8500 万平方公里，30 级 S2 单元约为 1 平方厘米。图 3 展示使用 8 个 15 到 18 级 S2 单元的覆盖示例。每个 S2 单元唯一编码为 64 位无符号整数。覆盖单元越多，对块内对象覆盖越紧，但空间开销也越高。
 
-![图 3：纽约大都会艺术博物馆的 S2 单元覆盖。](assets/figure-03-s2-cells-met-museum.png)
+![图 3](assets/figure-03-s2-cells-met-museum.png)
+
+图 3：纽约大都会艺术博物馆的 S2 单元覆盖。
 
 覆盖可与特殊内部函数结合，用于导出可证伪表达式。例如，对过滤条件：
 
@@ -798,25 +804,35 @@ WHERE
 
 图 4 展示运行不同过滤选择性的 `SELECT *` 查询时的查询运行时间。选择性极高、只选择百万分之一块的查询在使用 CMETA 时耗时 2.5 秒；不使用 CMETA 的同一查询耗时 120 秒。非 CMETA 查询大部分时间花在发现需要扫描的正确块上。
 
-![图 4：1PB 表上不同过滤选择性的查询运行时间比较。](assets/figure-04-runtime-filter-selectivity-1pb.png)
+![图 4](assets/figure-04-runtime-filter-selectivity-1pb.png)
+
+图 4：1PB 表上不同过滤选择性的查询运行时间比较。
 
 图 5 展示同一 1PB 表上选择性为 0.1% 且聚合部分列时的查询运行时间。非 CMETA 查询的大部分时间仍花在发现块上。随着读取列数增加，CMETA 查询由于读取列级元数据带来的延迟没有显著增加：读取 2 列的查询中，读取元数据耗时 0.2 秒（总运行时间 1.2 秒）；读取全部列的查询中，读取元数据耗时 0.8 秒（总运行时间 8.9 秒）。
 
-![图 5：1PB 表上按扫描列数比较查询运行时间。](assets/figure-05-runtime-scanned-columns-1pb.png)
+![图 5](assets/figure-05-runtime-scanned-columns-1pb.png)
+
+图 5：1PB 表上按扫描列数比较查询运行时间。
 
 除运行时间外，系统还希望降低处理查询所需资源。图 6 给出与图 4 相同查询的资源使用量，单位为 slot seconds[^6]。对高选择性查询，资源使用减少 30000 倍；对低选择性查询，资源使用减少 6000 倍。在非 CMETA 查询中，打开块并仅仅读取头部的时间主导了资源使用。
 
 [^6]: BigQuery slot 是执行 SQL 查询所用的虚拟 CPU；详见 <https://cloud.google.com/bigquery/docs/slots>。
 
-![图 6：1PB 表上不同过滤选择性的资源使用比较。](assets/figure-06-resource-usage-filter-selectivity-1pb.png)
+![图 6](assets/figure-06-resource-usage-filter-selectivity-1pb.png)
+
+图 6：1PB 表上不同过滤选择性的资源使用比较。
 
 系统也在中等大小表（10TB）上评估。图 7 展示 10TB 表上 `SELECT *` 查询的运行时间。与 PB 级表相比，不同选择性下 CMETA 与非 CMETA 的差距较小，但根据选择性不同，使用 CMETA 仍带来 5 到 10 倍运行时间改进。
 
-![图 7：10TB 表上不同过滤选择性的查询运行时间比较。](assets/figure-07-runtime-filter-selectivity-10tb.png)
+![图 7](assets/figure-07-runtime-filter-selectivity-10tb.png)
+
+图 7：10TB 表上不同过滤选择性的查询运行时间比较。
 
 最后，实验研究了表大小对中小型 BigQuery 表的影响。图 8 展示不同表大小的查询运行时间。随着表变小，非 CMETA 查询处理与基于 CMETA 的查询处理之间的运行时间差异缩小。
 
-![图 8：不同表大小下的查询运行时间比较。](assets/figure-08-runtime-table-size.png)
+![图 8](assets/figure-08-runtime-table-size.png)
+
+图 8：不同表大小下的查询运行时间比较。
 
 ## 7 结论与未来工作
 

@@ -67,7 +67,9 @@ DOI：10.14778/3436905.3436913
 
 结果显示，ODBC 和 CSV 比可能达到的速度慢数个数量级。差异来自转换为不同格式的开销，以及 PostgreSQL wire protocol 中过多序列化。查询处理本身只占总导出时间的 0.004%，其余时间花在序列化层和数据转换上。HANA 虽以 HTAP 为目标，但导出到 Python 的性能几乎和 PostgreSQL 一样慢；HANA 导出表到自有二进制磁盘格式只需约 45 秒，说明多数时间消耗在转换到 Python 格式。优化这一导出过程可以加速分析流水线。
 
-![图 1：把 TPC-H 表加载到 Pandas 的数据转换成本。ODBC、CSV 和 HANA 导出都远慢于内存中直接 buffer 读取。](assets/figure-01-data-transformation-costs.png)
+![图 1](assets/figure-01-data-transformation-costs.png)
+
+图 1：把 TPC-H 表加载到 Pandas 的数据转换成本。ODBC、CSV 和 HANA 导出都远慢于内存中直接 buffer 读取。
 
 ### 2.2 列存与 Apache Arrow
 
@@ -75,7 +77,9 @@ DOI：10.14778/3436905.3436913
 
 Apache Arrow 是面向内存数据的跨语言开发平台 [4]。2015 年，Apache Drill、Impala、Kudu、Pandas 等项目开发者共同开发一种通用内存列式数据格式。Arrow 于 2016 年推出，已成为内存列式分析和异构系统接口的标准。其生态包括多种语言 API 和库，TensorFlow 也通过 Python 模块集成 Arrow [19]。
 
-![图 2：SQL 表到 Arrow schema 的映射示例。](assets/figure-02-sql-to-arrow-schema.png)
+![图 2](assets/figure-02-sql-to-arrow-schema.png)
+
+图 2：SQL 表到 Arrow schema 的映射示例。
 
 图 2 的完整 schema 示例为：
 
@@ -111,7 +115,9 @@ Arrow 核心是用于扁平和层次数据的列式内存格式。它带来两�
 
 Arrow 的设计目标是只读分析负载，但其对齐要求和 NULL bitmaps 也有利于定长值上的写密集负载。问题出现在变长值（如 `VARCHAR`）上。Arrow 把变长值存为 offset 数组，索引到连续字节 buffer。长度隐含在下一个值的起始 offset 中。若把值 `"JOE"` 更新为 `"ANNA"`，程序必须把整个 values buffer 复制到更大的 buffer，并更新 offsets 数组，产生写放大。
 
-![图 3：Arrow 中变长值的 offsets 数组和 values buffer 表示；更新变长值会导致复制和 offset 更新。](assets/figure-03-arrow-varlen-values.png)
+![图 3](assets/figure-03-arrow-varlen-values.png)
+
+图 3：Arrow 中变长值的 offsets 数组和 values buffer 表示；更新变长值会导致复制和 offset 更新。
 
 核心问题是单一存储格式很难同时实现 [29]：
 
@@ -140,7 +146,9 @@ DBMS 把元组 delta 存在事务本地 buffer 中，而不是 Arrow 存储中�
 
 图 4 给出 version chain 例子。事务 2 先插入 `(id=12, val="foo")` 并填充 redo buffer；version chain 指向事务 2 undo buffer 中的条目，表示该元组之前不存在。事务 1 把元组改为 `(id=13)` 时，先把旧值 12 写入 undo buffer，把记录加入 version chain，再把 13 写到底层 data block。为支持任意大写集，DBMS 必须动态扩展 undo buffer，同时保持早期条目的内存地址不变，因为 version chain 中有指针指向它们。NoisePage 把 undo buffer 实现为固定大小 segment（当前 4096 字节）的链表，并按需添加 segment。随后，系统会把 undo 和 redo buffers 分别交给垃圾回收和日志组件；第 3.3、3.4 节将进一步讨论。
 
-![图 4：NoisePage 系统架构。事务通过 Data Table API 修改 Arrow-compatible data blocks，并由 GC、日志和事务管理组件维护版本与持久性。](assets/figure-04-system-architecture.png)
+![图 4](assets/figure-04-system-architecture.png)
+
+图 4：NoisePage 系统架构。事务通过 Data Table API 修改 Arrow-compatible data blocks，并由 GC、日志和事务管理组件维护版本与持久性。
 
 NoisePage 在该存储架构上实现乐观并发控制（Optimistic Concurrency Control）协议的一个变体 [55]。事务引擎为每个事务分配 `(start, commit)` 时间戳对，二者来自同一计数器。事务开始时，`commit` 与 `start` 相同但翻转符号位，表示未提交。version chain 上每次更新存储事务 commit 时间戳。读者通过复制最新版本并沿 version chain 应用 before-images，直到遇到小于自身 start 的时间戳。由于系统用无符号比较时间戳，未提交版本永不可见。系统禁止 write-write 冲突以避免级联回滚。以图 4 为例，时间戳为 8 的读者先读到 `id=13`，然后沿 version pointer 找到事务 1 的 undo record，其时间戳为 `-7`。读者识别出该值尚未提交，应用 delta 得到 `id=12`；继续看到事务 2 的 undo record 后，因为时间戳 6 小于自身时间戳 8，便以正确的 `id=12` 返回。
 
@@ -197,7 +205,9 @@ Arrow 有两个写放大来源：
 
 relaxed format 在 block header 中增加 validity bitmap，并为每个变长值增加元数据。对于 `VarlenEntry` 字段，系统维护 4 字节 size 和 8 字节指向底层值的 pointer。为对齐，每个 `VarlenEntry` 填充到 16 字节；额外 4 字节存储值的 prefix。若值短于 12 字节，系统把它完整存入对象本身，写入 pointer 字段。事务只访问 `VarlenEntry`，不直接访问 Arrow storage。这样，变长更新变成对 `VarlenEntry` 的定长常数时间更新。
 
-![图 5：NoisePage 的变长值存储。`VarlenEntry` 保存 size、prefix 和 pointer，小值可内联。](assets/figure-05-varlen-value-storage.png)
+![图 5](assets/figure-05-varlen-value-storage.png)
+
+图 5：NoisePage 的变长值存储。`VarlenEntry` 保存 size、prefix 和 pointer，小值可内联。
 
 直接访问 Arrow storage 的读者不会看到 `VarlenEntry` 中的更新。系统在 block header 中增加 status flag 和 counter 协调访问。NoisePage 中 block 有三种状态：
 
@@ -207,14 +217,18 @@ relaxed format 在 block header 中增加 validity bitmap，并为每个变长�
 
 每个 block 的 access counter 充当 shared latch。原地读者开始扫描时加一，结束时减一。当事务更新 frozen block 时，先把该 block 状态设为 hot，迫使未来读者 materialize 而不是原地读；然后在 counter 上自旋等待遗留读者离开该 block。block 成为 hot 后，事务访问不再需要 latch 保护，而依赖 MVCC 实现线程安全。除了翻转 flag，事务修改 frozen block 不需要转换过程，因为 relaxed format 是原始 Arrow format 的泛化。block 一旦成为 hot，就保持 hot，直到后台进程把它转换回完全 Arrow 合规。
 
-![图 6：Relaxed columnar format。热块允许非连续内存和事务元数据；后台转换再恢复为 Arrow columns。](assets/figure-06-relaxed-columnar-format.png)
+![图 6](assets/figure-06-relaxed-columnar-format.png)
+
+图 6：Relaxed columnar format。热块允许非连续内存和事务元数据；后台转换再恢复为 Arrow columns。
 
 转换流水线有两个组件，即图 7 中以虚线框标出的 access observer 和 block transformer：
 
 - access observer：搭载在 DBMS 正常 GC 上，检查近期变更，识别候选 block 并放入队列（第 4.2 节）。
 - block transformer：从队列轮询 block。为正确性，每个 block 在输出为 Arrow block 前至少处理两次。第一遍是事务性的，重排 block 中元组使其连续；该事务会经过 access observer，再次把 block 入队（第 4.3 节）。
 
-![图 7：转换到 Arrow 的流水线。Access Observer 识别冷块，Block Transformer 执行 compaction 和 varlen gather/dictionary compression。](assets/figure-07-transformation-to-arrow.png)
+![图 7](assets/figure-07-transformation-to-arrow.png)
+
+图 7：转换到 Arrow 的流水线。Access Observer 识别冷块，Block Transformer 执行 compaction 和 varlen gather/dictionary compression。
 
 ### 4.2 识别冷块
 
@@ -368,15 +382,21 @@ Arrow 提供基于 gRPC 的原生 RPC 框架 Flight [5]，可在传输数据时�
 
 作为 baseline，我们部署 TimesTen Classic v18.1 内存 DBMS [24]，设置 `DurableCommits=false` 关闭 WAL，并用 OLTP-Bench [35] 测量其 TPC-C 性能。TimesTen 的 TPC-C 性能随执行线程增加基本持平。由于 NoisePage 以 stored procedures 运行 TPC-C，而 TimesTen 通过 JDBC 执行，这并不意味着 NoisePage 优于 TimesTen；它说明在真实 OLTP 部署中，事务处理不是存储性能的唯一瓶颈。总体而言，该存储架构性能有竞争力，转换技术只增加可忽略开销。
 
-![图 8：NoisePage 与 TimesTen 在 TPC-C 工作负载下随线程数变化的运行时测量。](assets/figure-08-oltp-performance.png)
+![图 8](assets/figure-08-oltp-performance.png)
+
+图 8：NoisePage 与 TimesTen 在 TPC-C 工作负载下随线程数变化的运行时测量。
 
 **行存与列存。** 我们还比较行存与列存对 OLTP 的影响。通过声明一个大列保存元组所有属性来模拟 row-store；每个属性是 8 字节定长整数。固定查询线程数，扩大每元组属性数；负载分别为插入或更新，各执行 1000 万条查询。实验忽略索引维护，因为两种存储模型开销相同。结果显示二者性能差异不大。插入负载差距不超过 40%。更新负载中，当复制属性数较少时，列存因内存 footprint 更小优于行存；属性数增加时，行存略快。这表明在内存环境中，优化行存未必带来压倒性性能提升。
 
-![图 9：NoisePage 行存与列存原始存储速度。插入实验横轴是所插元组的属性数，更新实验横轴是被修改的属性数。](assets/figure-09-row-vs-column.png)
+![图 9](assets/figure-09-row-vs-column.png)
+
+图 9：NoisePage 行存与列存原始存储速度。插入实验横轴是所插元组的属性数，更新实验横轴是被修改的属性数。
 
 **吞吐与 compaction 随时间的变化。** 系统运行期间的 compaction backlog 实验使用 varlen gather backend、两个 compaction threads 和三个 GC threads，让 20 个线程按前述方式执行 TPC-C。系统每 100 ms 采样一次总 compaction queue size 和事务吞吐；图中给出五分钟运行，并裁掉启动与收尾阶段以便阅读。结果显示 compaction algorithm 能跟上吞吐。事务吞吐波动来自 CPU scaling，与 compaction queue size 没明显相关；dictionary compression 下也观察到类似模式。
 
-![图 10：Compaction queue size 与事务吞吐随时间变化，显示后台转换能跟上工作负载。](assets/figure-10-compaction-queue-over-time.png)
+![图 10](assets/figure-10-compaction-queue-over-time.png)
+
+图 10：Compaction queue size 与事务吞吐随时间变化，显示后台转换能跟上工作负载。
 
 ### 6.2 转换为 Arrow
 
@@ -394,19 +414,27 @@ baseline 包括：
 
 每种算法处理 500 个 1 MB blocks，并改变空 slot 百分比。结果显示 Hybrid-Gather 优于替代方案；block 大多填满时（空 slot 小于 5%）达到亚毫秒级性能。空 slot 比例增加后性能下降，因为需要移动更多元组。移动因随机内存访问模式比 Snapshot 昂贵一个数量级。当 block 超过一半为空时，需要移动的元组减少。In-Place 因版本维护开销表现较差。Hybrid-Compress 也比 Hybrid-Gather 和 Snapshot 慢一个数量级，因为计算昂贵。由于性能跨度很大，图 11 使用对数刻度。
 
-![图 11：从 relaxed format 迁移到 canonical Arrow format 的转换吞吐与移动成本。（a）50% 变长列；（b）全部定长列；（c）全部变长列。](assets/figure-11-transformation-throughput.png)
+![图 11](assets/figure-11-transformation-throughput.png)
+
+图 11：从 relaxed format 迁移到 canonical Arrow format 的转换吞吐与移动成本。（a）50% 变长列；（b）全部定长列；（c）全部变长列。
 
 分解实验表明，空 slot 很低时，compaction 阶段只需 bitmap scan，微秒级完成；此时变长 gather 成本占主导。空 slot 增加后，compaction 性能下降，在 5% empty 左右开始主导 Hybrid-Gather 成本。dictionary compression 始终是 Hybrid-Compress 瓶颈。实验还把表布局改为全部定长列或全部变长列重复同一微基准；数据布局变化没有改变总体性能趋势。因此，后续实验只报告 50% 变长列的结果。
 
-![图 13：转换算法阶段拆解，展示 varlen gather、dictionary compression 和 compaction 阶段的相对成本。](assets/figure-13-transformation-breakdown.png)
+![图 13](assets/figure-13-transformation-breakdown.png)
+
+图 13：转换算法阶段拆解，展示 varlen gather、dictionary compression 和 compaction 阶段的相对成本。
 
 **写放大。** 虽然 Snapshot 在 block 约 20% empty 时吞吐优于 hybrid algorithm，但该测量没有捕获由于元组物理位置改变导致的 index entry 更新开销 [55]。该开销由每次元组移动触发；其具体影响取决于索引，但每次移动的成本为常数，因而测量会触发 index update 的总 tuple movements 即可。Snapshot 总是移动 compacted blocks 中每个元组；实验把它与第 4.3 节的 compaction algorithms 比较。结果显示，本文算法在最佳情况下比 Snapshot 高效数个数量级；block 半空时仍高效约两倍。空 slot 增加时差距缩小。approximate approach 生成的物理配置几乎与 optimal approach 相同；而 optimal algorithm 需要多一次 block 扫描，因此后续实验都使用 approximate algorithm。
 
-![图 12：写放大对比。总写放大等于元组移动次数乘以每张表的一个常数；该常数由表布局和索引数量决定。](assets/figure-12-write-amplification.png)
+![图 12](assets/figure-12-write-amplification.png)
+
+图 12：写放大对比。总写放大等于元组移动次数乘以每张表的一个常数；该常数由表布局和索引数量决定。
 
 **Compaction group size 敏感性。** 该实验沿用前一实验的配置，对 500 个 blocks 执行一次 transformation pass，同时改变 group size。结果显示，blocks 仅有 1% empty 时，需要较大的 groups 才能释放任何内存；空洞比例增加后，较小 groups 的效果越来越好，而进一步增大 group size 只带来边际收益。较大 group size 还会增加事务 write-set size，却对释放 block 数产生递减收益。理想固定 group size 在 10 到 50 之间，能在良好内存回收和较小 write-set 之间平衡。最佳性能需要 DBMS 根据当前需求动态形成 groups，我们留作未来工作。
 
-![图 14：处理 500 个 blocks 时改变每个 compaction group 的 block 数。（a）一轮中释放的 blocks 数；（b）原文图注称“每秒处理的操作数”，但子图标题和正文将其说明为事务 write-set size。](assets/figure-14-compaction-group-size.png)
+![图 14](assets/figure-14-compaction-group-size.png)
+
+图 14：处理 500 个 blocks 时改变每个 compaction group 的 block 数。（a）一轮中释放的 blocks 数；（b）原文图注称“每秒处理的操作数”，但子图标题和正文将其说明为事务 write-set size。
 
 ### 6.3 数据导出
 
@@ -421,7 +449,9 @@ baseline 包括：
 
 结果显示，NoisePage 的数据导出比 baseline 快数个数量级。当所有 blocks 都 frozen 时，RDMA 达到可用网络带宽上限，Arrow Flight 可利用最多 80% 可用网络带宽。结合第 2 节的转换成本，NoisePage 可在约 15 秒完成导出任务。当系统必须 materialize 每个 block 时，Arrow Flight 性能下降到与 vectorized wire protocol 相当。热 block 较多时，RDMA 稍慢于 Arrow Flight，因为 Flight 物化后的 block 位于 CPU cache，而 NIC 发送数据会绕过该 cache。PostgreSQL wire protocol 和 vectorized protocol 都不能从冷只读数据上 eliding transactions 中受益。
 
-![图 15：NoisePage 不同导出机制的导出速度；原文图注称改变 hot blocks 百分比，但正文和图中横轴均以 frozen blocks 百分比表述。](assets/figure-15-data-export.png)
+![图 15](assets/figure-15-data-export.png)
+
+图 15：NoisePage 不同导出机制的导出速度；原文图注称改变 hot blocks 百分比，但正文和图中横轴均以 frozen blocks 百分比表述。
 
 实验说明，DBMS 数据导出的主要瓶颈是 serialization/deserialization。仅在当前架构中把 Arrow 当作 drop-in replacement wire protocol 无法充分发挥潜力；把数据直接存成通用格式才能减少成本并提升导出性能。
 

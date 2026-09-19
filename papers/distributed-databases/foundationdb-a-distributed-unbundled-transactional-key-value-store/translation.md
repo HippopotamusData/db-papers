@@ -86,7 +86,9 @@ FDB 事务观察并修改数据库某一版本的快照，只有事务提交时�
 
 如图 1 所示，FDB 集群包含管理关键系统元数据与全局编排的控制面，以及负责事务处理和数据存储的数据面。
 
-![图 1：FDB 架构与事务处理流程。客户端通过 Proxy 获取 read version、读取 StorageServer，并在提交时经 Proxy/Resolver/Sequencer/LogServer/StorageServer 完成冲突检测、日志复制和异步持久化。](assets/fdb-fig01-architecture.png)
+![图 1](assets/fdb-fig01-architecture.png)
+
+图 1：FDB 架构与事务处理流程。客户端通过 Proxy 获取 read version、读取 StorageServer，并在提交时经 Proxy/Resolver/Sequencer/LogServer/StorageServer 完成冲突检测、日志复制和异步持久化。
 
 #### 2.3.1 控制面
 
@@ -164,13 +166,17 @@ FDB 的 OCC 设计避免了获取与释放逻辑锁的复杂逻辑，显著简�
 
 Proxy 决定提交事务后，把日志消息广播到全部 LogServer。如图 2，Proxy 首先查询内存分片映射，确定负责已修改 key range 的 StorageServer，再给 mutation 附上 StorageServer 标签 1、4、6，每个标签都有首选 LogServer。例中标签 1 和 6 的首选 LogServer 相同，因此 mutation 只发往首选 LogServer 1、4，另发给 LogServer 3 以满足复制要求；其他 LogServer 只收到空消息体。
 
-![图 2：Proxy 在 sequencing 和 resolution 后把客户端 mutation 写入 LogServer；随后 mutation 异步复制到 StorageServer。](assets/fdb-fig02-log-protocol.png)
+![图 2](assets/fdb-fig02-log-protocol.png)
+
+图 2：Proxy 在 sequencing 和 resolution 后把客户端 mutation 写入 LogServer；随后 mutation 异步复制到 StorageServer。
 
 日志消息头包含从 Sequencer 获得的 LSN、前一 LSN，以及该 Proxy 的已知提交版本（KCV）。LogServer 将日志持久化后回复 Proxy；若全部副本 LogServer 都已回复且该 LSN 大于当前 KCV，Proxy 就把 KCV 更新为该 LSN。
 
 从 LS 向 SS 传输 redo log 不在提交路径上，而在后台完成。StorageServer 会在日志于 LS 持久化之前就积极拉取 redo log，因此能以很低延迟提供多版本读取。图 3 给出一个生产集群 12 小时内两者的滞后：平均滞后和最大滞后的 99.9 分位分别为 3.96 ms 与 208.6 ms。滞后很小，所以客户端读抵达 StorageServer 时，请求版本通常已经可用。若短暂延迟使某副本暂时不可读，客户端会等待数据到达或向另一个副本发出第二次请求 [32]；两次都超时则收到可重试错误，并重启事务。
 
-![图 3：StorageServer 到 LogServer 的滞后。图中显示最大和平均 storage lag。](assets/fdb-fig03-storage-lag.png)
+![图 3](assets/fdb-fig03-storage-lag.png)
+
+图 3：StorageServer 到 LogServer 的滞后。图中显示最大和平均 storage lag。
 
 日志已在 LogServer 持久化，所以 StorageServer 可以在内存缓冲更新，稍后成批写盘，通过合并更新提高 I/O 效率。积极预取也意味着 StorageServer 可能拿到“半提交”更新，即恢复期间因 LogServer 故障而中止的事务操作；这类更新需要回滚（第 2.4.4 节）。
 
@@ -188,7 +194,9 @@ Proxy 与 Resolver 无状态，恢复时无需额外工作。LogServer 则保存
 
 恢复旧 LogServer 的本质是确定 redo log 的末端，即恢复版本（RV）；回滚 undo log 等价于丢弃旧 LogServer 和 StorageServer 中 RV 之后的全部数据。图 4 展示 Sequencer 如何确定 RV。Proxy 发给 LogServer 的请求会捎带 KCV，即该 Proxy 已提交的最大 LSN；每个 LogServer 保存收到的最大 KCV 和持久版本（DV），后者是已持久化的最大 LSN。
 
-![图 4：RV 与 PEV 示意。左图中 Proxy 发送 redo log 给 LogServer，带有 KCV 和 LSN；LogServer 维护收到的最大 KCV。右图中恢复使用 LogServer 的 DV 计算 PEV 和 RV。](assets/fdb-fig04-rv-pev.png)
+![图 4](assets/fdb-fig04-rv-pev.png)
+
+图 4：RV 与 PEV 示意。左图中 Proxy 发送 redo log 给 LogServer，带有 KCV 和 LSN；LogServer 维护收到的最大 KCV。右图中恢复使用 LogServer 的 DV 计算 PEV 和 RV。
 
 恢复期间，Sequencer 尝试停止全部 $m$ 个旧 LogServer；每个响应都包含该 LogServer 的 DV 与 KCV。设 LogServer 复制度为 $k$。Sequencer 收到超过 $m-k$ 个回复后，即可得知前一 epoch 已提交到所有 KCV 的最大值，并将其作为前一 epoch 结束版本 PEV；PEV 之前的全部数据都已完整复制。当前 epoch 从 $PEV+1$ 开始，Sequencer 把所有 DV 的最小值选为 RV。它将 $[PEV+1,RV]$ 范围的日志从前一 epoch 的 LogServer 复制到当前 LogServer，在 LogServer 发生故障时恢复复制度。该范围仅含几秒的日志，复制开销很小。若把 LogServer 组织为 Copyset [29]，即每组取一个，则所需的 $m-k$ 个回复可以减少到 $m/k$，提高容错能力。
 
@@ -218,7 +226,9 @@ Storage team 比 Copyset 策略 [29] 更复杂。Copyset 只把分片分配给�
 
 该设计具备五项性质：（1）像异步复制一样始终避免跨地域写延迟；（2）只要同一地域的多个可用区不同时故障，就像同步复制一样提供完整事务持久性；（3）地域间切换快速且完全自动；（4）整个地域同时失效时，可按异步复制的保证手动切换，即仍提供 ACID 中的原子性、一致性和隔离性，但可能违反持久性；（5）只需在主、备地域的主要可用区各放一份完整数据库副本，不要求每地域多份完整副本。
 
-![图 5：双区域 FDB 集群复制设置。两个区域各有一个 data center 和两个 satellite site。](assets/fdb-fig05-two-region-replication.png)
+![图 5](assets/fdb-fig05-two-region-replication.png)
+
+图 5：双区域 FDB 集群复制设置。两个区域各有一个 data center 和两个 satellite site。
 
 图 5 的双地域集群中，每个地域有一个数据中心（DC）和一个或多个邻近但故障独立的卫星站点。卫星只保存日志副本，即 redo log 的后缀，资源需求很低；数据中心承载 LS、SS，并在作为主地域时承载 TS。控制面 Coordinator 副本跨三个或更多故障域部署，某些部署还会利用额外地域，通常至少有 9 个副本。多数 quorum 使控制面能够容忍一个站点（数据中心或卫星）故障，再加一个副本故障。
 
@@ -242,7 +252,9 @@ LogRouter 是负责跨地域传输的特殊 FDB 角色，用于避免同一信�
 
 测试和调试分布式系统既困难又低效。FDB 提供很强的并发控制契约，任何违反都可能让上层系统产生几乎任意形式的数据损坏。因此，从项目伊始，团队就让真实数据库软件与随机合成负载、故障注入一起运行在确定性离散事件仿真中。严酷环境会快速触发数据库缺陷，而确定性保证每个缺陷都能复现、诊断和修复。
 
-![图 6：FDB 确定性仿真器。真实世界中的网络、时钟、磁盘和进程被仿真环境替代，多个 FDB server 在同一仿真进程中运行。](assets/fdb-fig06-deterministic-simulator.png)
+![图 6](assets/fdb-fig06-deterministic-simulator.png)
+
+图 6：FDB 确定性仿真器。真实世界中的网络、时钟、磁盘和进程被仿真环境替代，多个 FDB server 在同一仿真进程中运行。
 
 **确定性仿真器。** FDB 从零开始按可仿真目标构建。全部数据库代码都是确定性的，因此避免多线程并发，每个数据库节点按一个 CPU 核部署。如图 6，网络、磁盘、时间和伪随机数生成器等所有不确定性与通信源都被抽象。FDB 采用 Flow [4] 编写；Flow 是 C++ 的语法扩展，增加类似 async/await 的并发原语，以 Actor 编程模型 [13] 把服务器行为抽象成由 Flow 运行库调度的 actor。仿真进程可在一次离散事件仿真中生成多个 FDB 服务器，让它们通过模拟网络通信；生产实现则只是相关系统调用的简单适配层。
 
@@ -274,7 +286,9 @@ FDB 代码本身也配合仿真，使稀有状态和事件更常见。这种高�
 
 这些机器共运行 862 个 FDB 进程，另预留 55 个进程应急。集群存储 292 TB 数据，共有 464 块 SSD（每机 8 块）。每块 SSD 绑定一个 LogServer 或两个 StorageServer 进程，以最大化 I/O 利用率。测量统计 StorageServer 上的客户端读取和 Proxy 上的写入（提交）操作。
 
-![图 7：生产集群一个月的测量（按小时绘图）。左图为读写操作吞吐；右图为客户端读和提交请求的平均与 99.9 分位延迟。](assets/fdb-fig07-production-measurement.png)
+![图 7](assets/fdb-fig07-production-measurement.png)
+
+图 7：生产集群一个月的测量（按小时绘图）。左图为读写操作吞吐；右图为客户端读和提交请求的平均与 99.9 分位延迟。
 
 **流量模式。** 图 7a 给出一个月的集群流量，具有清晰的昼夜周期。平均每秒读操作、写操作和读取 key 数分别为 390.4K、138.5K 和 1.467M。许多读是返回多个 key 的 range read，故读取 key 数是读操作数的数倍。
 
@@ -288,19 +302,25 @@ FDB 代码本身也配合仿真，使稀有状态和事件更常见。这种高�
 
 合成负载含四类事务：（1）blind write，更新指定数量的随机 key；（2）range read，从随机 key 开始获取指定数量的连续 key；（3）point read，读取 10 个随机 key；（4）point write，读取 5 个随机 key，再更新另外 5 个。blind write 与 range read 分别评估写、读性能；point read 与 point write 组合评估混合负载。例如 90% 读、10% 写的 90/10 负载由 80% point read 和 20% point write 事务构成。key 长 16 字节，value 在 8 到 100 字节均匀分布，平均 54 字节。数据库按相同分布预填充，并保证数据集不能完全缓存于 StorageServer 内存。
 
-![图 8：扩展性测试。左图展示读写吞吐，右图展示 90/10 read-write 负载。](assets/fdb-fig08-scalability.png)
+![图 8](assets/fdb-fig08-scalability.png)
+
+图 8：扩展性测试。左图展示读写吞吐，右图展示 90/10 read-write 负载。
 
 图 8 展示 FDB 从 4 台扩展到 24 台机器、Proxy 或 LogServer 从 2 个增至 22 个的结果。对于每事务 100 次操作（T100），写吞吐由 67 MB/s 提升至 391 MB/s，为 5.84 倍；每事务 500 次操作（T500）则由 73 MB/s 增至 467 MB/s，为 6.40 倍。由于每次写都向 LogServer 和 StorageServer 复制三份，原始写吞吐其实是图中三倍；达到最大写吞吐时，LogServer CPU 饱和。
 
 T100 的读吞吐由 2,946 MB/s 增至 10,096 MB/s，为 3.43 倍；T500 由 5,055 MB/s 增至 21,830 MB/s，为 4.32 倍，此时 StorageServer 饱和。无论读写，增加每事务操作数都能提高吞吐，但继续增加到 1,000 等更高值没有显著收益。图 8b 中 90/10 混合负载的操作率由 593K/s 增至 2.779M/s，为 4.69 倍，此时 Resolver 和 Proxy CPU 饱和。
 
-![图 9：24 机器集群在不同操作速率下的吞吐和平均延迟。](assets/fdb-fig09-throughput-latency.png)
+![图 9](assets/fdb-fig09-throughput-latency.png)
+
+图 9：24 机器集群在不同操作速率下的吞吐和平均延迟。
 
 上述实验研究饱和性能。图 9 则在 24 台机器上改变 90/10 负载的操作率；配置包含 2 个 Resolver、22 个 LogServer、22 个 Proxy 和 336 个 StorageServer。图 9a 显示，读写吞吐随每秒操作数线性增长。图 9b 显示，在操作率低于 100K/s 时，平均延迟保持稳定：读一个 key 约 0.35 ms，提交约 2 ms，取得读取版本（GRV）约 1 ms。读取只需一跳，比需要两跳的 GRV 快；提交要经过多跳并持久化到三个 LogServer，因此慢于读和 GRV。操作率超过 100K/s 后，排队时间使各类延迟上升；达到 2M/s 时 Resolver 与 Proxy 饱和。批处理维持了吞吐，但饱和使提交延迟尖峰达到 368 ms。
 
 ### 5.3 重配置耗时
 
-![图 10：重配置耗时的 CDF 图。](assets/fdb-fig10-reconfiguration-cdf.png)
+![图 10](assets/fdb-fig10-reconfiguration-cdf.png)
+
+图 10：重配置耗时的 CDF 图。
 
 我们从通常承载数百 TB 数据的生产集群收集了 289 条重配置，也就是事务系统恢复轨迹。面向客户端的集群要保持高可用，重配置必须很短。如图 10，重配置耗时中位数为 3.08 秒，90 分位为 5.28 秒。恢复时间不受数据量或事务日志大小限制，只与系统元数据大小相关，因此很短。
 

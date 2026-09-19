@@ -49,13 +49,17 @@ Flink 起源于 Stratosphere 项目 [4]，后来成为 Apache Software Foundatio
 
 **Flink 的 Runtime 与 API。** 图 1 展示 Flink 软件栈。Flink 核心是分布式 dataflow 引擎，用来执行 dataflow 程序。Flink runtime 程序是由数据流连接的有状态算子 DAG。Flink 有两个核心 API：DataSet API 用于处理有限数据集，通常称为批处理；DataStream API 用于处理潜在无界数据流，通常称为流处理。Flink 核心 runtime 引擎可视为流式 dataflow 引擎，DataSet 和 DataStream API 都生成该引擎可执行的 runtime 程序。因此，它作为共同基础，抽象有界批处理和无界流处理。
 
-![图 1：Flink 软件栈。](assets/figure-01-flink-software-stack.png)
+![图 1](assets/figure-01-flink-software-stack.png)
+
+图 1：Flink 软件栈。
 
 在核心 API 之上，Flink 捆绑特定领域库和 API，它们生成 DataSet 和 DataStream API 程序；当时包括用于机器学习的 FlinkML、用于图处理的 Gelly，以及用于类 SQL 操作的 Table。
 
 图 2 展示 Flink 集群的三类进程：client、JobManager 和至少一个 TaskManager。client 接收程序代码，将其转换为 dataflow graph，并提交给 JobManager。转换阶段还检查算子间交换数据的数据类型（schema），并生成序列化器和其他类型/schema 特定代码。DataSet 程序还会经过基于代价的查询优化阶段，类似关系查询优化器所做的物理优化（原文此处指向第 4.1 节；对应的查询优化正文实际位于第 5.1 节）。
 
-![图 2：Flink 进程模型。](assets/figure-02-flink-process-model.png)
+![图 2](assets/figure-02-flink-process-model.png)
+
+图 2：Flink 进程模型。
 
 JobManager 协调 dataflow 的分布式执行。它跟踪每个算子和流的状态与进度，调度新算子，并协调 checkpoint 和恢复。在高可用设置中，JobManager 在每个 checkpoint 将最小元数据集持久化到容错存储，使备用 JobManager 能重构 checkpoint 并从那里恢复 dataflow 执行。实际数据处理发生在 TaskManager 中。TaskManager 执行一个或多个产生流的算子，并向 JobManager 报告状态。TaskManager 维护 buffer pool 以缓冲或物化流，并维护算子之间交换数据流所需的网络连接。
 
@@ -67,7 +71,9 @@ JobManager 协调 dataflow 的分布式执行。它跟踪每个算子和流的�
 
 图 3 所示的 dataflow graph 是一个有向无环图，包含两类元素：有状态算子，以及表示算子产生并可被其他算子消费的数据的数据流。由于 dataflow graph 以数据并行方式执行，算子被并行化为一个或多个并行实例，称为 subtasks；流被拆分为一个或多个 stream partitions，每个 producing subtask 对应一个 partition。有状态算子也可以把无状态算子作为特殊情况，实现所有处理逻辑，例如 filter、hash join 和 stream window 函数。许多算子是知名算法的标准实现；第 4 节我们将详述窗口算子的实现。流以多种模式在生产算子和消费算子之间分发数据，例如 point-to-point、broadcast、re-partition、fan-out 和 merge。
 
-![图 3：简单 dataflow graph。](assets/figure-03-simple-dataflow-graph.png)
+![图 3](assets/figure-03-simple-dataflow-graph.png)
+
+图 3：简单 dataflow graph。
 
 ### 3.2 通过中间数据流交换数据
 
@@ -79,7 +85,9 @@ Blocking stream 则适用于有界数据流。blocking stream 会在可被消费
 
 **平衡延迟与吞吐。** Flink 数据交换机制围绕 buffer 交换实现。当生产者侧有一条数据记录就绪时，它被序列化并拆分为一个或多个 buffer；一个 buffer 也可容纳多条记录。buffer 会在填满时发送给消费者，或在达到 timeout 条件时发送。这使 Flink 可通过把 buffer size 设为较大值（例如几 KB）获得高吞吐，也可通过把 buffer timeout 设为较低值（例如几毫秒）获得低延迟。图 4 展示 buffer timeout 对一个在 30 台机器、120 核上运行的简单 streaming grep 作业中记录投递吞吐和延迟的影响。Flink 可达到可观测的 99 百分位延迟 20 ms，对应吞吐为每秒 150 万事件。随着我们增大 buffer timeout，我们看到延迟随吞吐提高而增加，直到达到满吞吐，即 buffer 在 timeout 到期前就已填满。当 buffer timeout 为 50 ms 时，集群达到每秒超过 8000 万事件的吞吐，同时 99 百分位延迟为 50 ms。
 
-![图 4：buffer timeout 对延迟和吞吐的影响。](assets/figure-04-buffer-timeout-effect.png)
+![图 4](assets/figure-04-buffer-timeout-effect.png)
+
+图 4：buffer timeout 对延迟和吞吐的影响。
 
 **控制事件。** 除数据交换外，Flink 中的流还传递不同类型的 control events。这些特殊事件由算子注入数据流，并与流分区内所有其他数据记录和事件按序投递。接收算子在这些事件到达时执行特定动作。Flink 使用多种 control events，包括：
 
@@ -97,7 +105,9 @@ Apache Flink 的 checkpoint 机制基于分布式一致快照概念，以实现 
 
 核心挑战是在不停止拓扑执行的情况下，对所有并行算子取得一致快照。本质上，所有算子的快照都应对应计算中的同一个逻辑时间。Flink 使用的机制称为 Asynchronous Barrier Snapshotting（ABS [7]）。Barrier 是注入输入流的控制记录，对应一个逻辑时间，并把流逻辑分成两部分：当前快照会包含其影响的部分，以及稍后才会被快照的部分。算子接收来自上游的 barrier 后执行 alignment 阶段，确保所有输入都已收到 barrier。随后算子把自己的状态（例如滑动窗口的内容或自定义数据结构）写入持久存储（例如可使用 HDFS 这样的外部系统作为存储后端），并把 barrier 向下游转发。最终所有算子都会注册其状态快照，全局快照完成。
 
-![图 5：异步屏障快照。](assets/figure-05-asynchronous-barrier-snapshotting.png)
+![图 5](assets/figure-05-asynchronous-barrier-snapshotting.png)
+
+图 5：异步屏障快照。
 
 例如，我们在图 5 中展示：快照 $t_2$ 包含所有算子消费 $t_2$ barrier 之前全部记录后得到的状态。ABS 与 Chandy-Lamport 异步分布式快照算法 [11] 相似；但由于 Flink 程序是 DAG，ABS 无需 checkpoint 在途记录（in-flight records），只需依靠 alignment 阶段把这些记录的全部影响施加到算子状态。这保证写入可靠存储的数据量保持在理论最小值，即只写算子的当前状态。
 
@@ -113,7 +123,9 @@ ABS 有三项收益：
 
 增量处理和迭代对图处理、机器学习等应用至关重要。数据并行平台通常通过为每轮迭代提交新作业、向正在运行的 DAG 增加节点 [6, 25]，或增加反馈边 [23] 来支持迭代。Flink 把迭代实现为 iteration step：这种特殊算子自身可以包含一个执行图，如图 6 所示。为了保持基于 DAG 的 runtime 与调度器，Flink 允许设置 iteration head 和 iteration tail 任务，并在两者之间建立隐式反馈边。这些任务负责为 iteration step 建立活动反馈通道，并协调仍在该通道中传输的数据记录。Bulk Synchronous Parallel（BSP）等结构化并行迭代模型需要这种协调，Flink 通过 control events 实现。我们将在第 4.4 节和第 5.3 节分别说明 DataStream 与 DataSet API 中的迭代实现。
 
-![图 6：Apache Flink 的迭代模型。](assets/figure-06-flink-iteration-model.png)
+![图 6](assets/figure-06-flink-iteration-model.png)
+
+图 6：Apache Flink 的迭代模型。
 
 ## 4 流分析
 

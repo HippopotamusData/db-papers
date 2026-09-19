@@ -79,7 +79,9 @@ Starling 面向低到中等查询量、数据位于云对象存储中的分析�
 
 Starling 是一个查询执行引擎。用户向系统提交已规划查询，系统返回查询结果。架构中，用户将查询提交给一个小型 coordinator，coordinator 编译查询并上传到云函数服务，然后通过函数服务调用任务来调度执行。函数服务负责为执行查询任务的 worker 预置执行环境。worker 从廉价云对象存储读取基础表数据。由于函数无状态，它们通过某种通信介质（例如共享存储）交换状态。所有任务完成后，worker 从函数通信介质读取结果并返回给用户。
 
-![图 1：Starling 查询执行架构。蓝色是不透明云组件，黄色是 Starling 组件。](assets/figure-01-query-execution.png)
+![图 1](assets/figure-01-query-execution.png)
+
+图 1：Starling 查询执行架构。蓝色是不透明云组件，黄色是 Starling 组件。
 
 Starling 对底层云服务有若干要求。首先，需要能够从冷启动一次性并行启动数百个函数调用。其次，需要相对便宜且高吞吐的数据交换方式，例如对象存储服务。它的性能依赖于各个并行 worker 即使在其他 worker 并发执行时也能获得高吞吐。下面我们更详细地说明 coordinator 与 worker 的分工。
 
@@ -113,7 +115,9 @@ ORC [12] 等开源列式格式有助于 Starling 获得良好性能，因为它�
 
 每个 producer 任务只向 S3 写一个包含所有分区的对象，以避免过高写成本。图 2 展示了这种分区文件格式。每个文件包含元数据，记录各分区在对象中的结束位置。为降低向 S3 读写对象的延迟，Starling 对低基数字符串列使用字典编码 [28]，字典编码放在文件开头。元数据之后是分区数据。可选地，分区可使用通用压缩算法压缩。
 
-![图 2：Starling 分区 S3 对象格式。橙色为元数据，绿色为分区数据。](assets/figure-02-partitioned-s3-object.png)
+![图 2](assets/figure-02-partitioned-s3-object.png)
+
+图 2：Starling 分区 S3 对象格式。橙色为元数据，绿色为分区数据。
 
 consumer 读取中间文件时，先读取对象头部元数据，再读取所需分区。因此任意分区都可通过两次读取获得。该格式还允许 consumer 用与读取单个分区相同数量的 GET 请求读取相邻分区数据；我们借此支持第 4.2 节讨论的多阶段 shuffle。
 
@@ -121,7 +125,9 @@ consumer 读取中间文件时，先读取对象头部元数据，再读取所�
 
 S3 聚合吞吐很高，但延迟远高于其他 shuffle 方案。一次 256KB 读取的中位延迟为 14ms。如果 worker 对 S3 执行单线程阻塞读取，它们会在等待响应时空闲，从而增加查询延迟和函数调用运行成本。为缓解这种延迟，每个任务并行执行多次 S3 读取。幸运的是，Starling 中大多数任务本来就需要执行许多读取，因此易于并行化。ORC 等列式格式被拆分为列段；在 join 中，任务也需要执行大量读取，从输入任务写出的对象中获取分区数据。并行读取让任务保持忙碌，减少空闲时间，把更多时间用于查询处理。如图 3 所示，随着我们增加函数调用执行的 256KB 并行读取数，我们获得的有效吞吐持续提升，直到 16 个并行读取；继续增加并行读取不再改善延迟。
 
-![图 3：单个函数调用随并行 256KB 读取数增加而获得的有效吞吐。](assets/figure-03-parallel-read-throughput.png)
+![图 3](assets/figure-03-parallel-read-throughput.png)
+
+图 3：单个函数调用随并行 256KB 读取数增加而获得的有效吞吐。
 
 #### 3.3.1 缓解对象可见性延迟
 
@@ -147,7 +153,9 @@ Starling 查询执行引擎的目标是在低成本下实现交互式性能。�
 
 为解决这个问题，我们为 partitioned hash join 实现两种策略。第一，对于小 join，我们使用标准 shuffle：每个 consumer 读取每个 producer 任务的输出。其 S3 读取次数为 $2sr$，其中 $s$ 为 producer 任务数， $r$ 为 consumer 任务数。
 
-![图 4：Starling 的 shuffle 策略。（a）标准 shuffle；（b）多阶段 shuffle。蓝色为函数执行，红色系 S3 对象表示分区；线表示读取，箭头表示写入。](assets/figure-04-shuffling-strategies.png)
+![图 4](assets/figure-04-shuffling-strategies.png)
+
+图 4：Starling 的 shuffle 策略。（a）标准 shuffle；（b）多阶段 shuffle。蓝色为函数执行，红色系 S3 对象表示分区；线表示读取，箭头表示写入。
 
 第二，当请求成本因大量输入任务而不可接受时，我们用计算时间换取对象存储请求成本，采用多阶段 shuffle。我们在 producer 和 consumer 之间引入 combining task 阶段。combining stage 中的每个任务从一部分输入对象中读取连续分区子集，并生成一个采用相同分区文件格式的合并输出。由于这些 combining task 读取连续分区，它们对每个输入仍只需要两次读取。最后，consumer 读取相关 combiner 写出的输出。因为每个 combining task 只读取分区子集，consumer 也只需读取这些 combining task 输出的一个子集。
 
@@ -189,7 +197,9 @@ $$
 
 在微基准中，我们从 Lambda 对 S3 执行数千次 256KB 读取，比较启用和禁用 read straggler mitigation（RSM）的请求时间 CDF。RSM 并不完美，有时请求仍需 2.5 秒，但未启用时的长尾被截短，有助于查询更快运行。在第 99.99 百分位，未启用 RSM 时延迟超过 1 秒，启用后约为 0.25 秒。
 
-![图 5：从 AWS Lambda 到 S3 的 256KB 读请求完成时间 CDF，对比开启和关闭读取 straggler 缓解。](assets/figure-05-read-straggler-cdf.png)
+![图 5](assets/figure-05-read-straggler-cdf.png)
+
+图 5：从 AWS Lambda 到 S3 的 256KB 读请求完成时间 CDF，对比开启和关闭读取 straggler 缓解。
 
 重复请求会带来额外开销，但节省的函数调用时间可以抵消它。一次额外读取请求只需节省 8 毫秒调用时间即可回本。在该实验中，RSM 只在 0.3% 情况触发（52000 次读取中 160 次），但节省了近 95 秒计算时间，额外读取成本只相当于 1.3 秒。因此 RSM 不仅降低延迟，也节省成本。
 
@@ -201,7 +211,9 @@ $$
 
 我们用另一个微基准评估 write straggler mitigation（WSM）：执行大量 100MB S3 写入并测量响应时间。未启用 WSM 时，最慢写入超过 20 秒。仅使用单个 timeout 时，最慢写入降到约 18 秒；完整 WSM（包括客户端发送完请求后设置第二个 timeout）将尾延迟降到约 10 秒。在第 99 百分位，未启用 WSM 的写入接近 9 秒，单 timeout 为 5 秒，完整 WSM 为 3.8 秒。
 
-![图 6：从 AWS Lambda 到 S3 的 100MB 写请求完成时间 CDF，对比关闭、仅单 timeout、完整 WSM 三种状态。](assets/figure-06-write-straggler-cdf.png)
+![图 6](assets/figure-06-write-straggler-cdf.png)
+
+图 6：从 AWS Lambda 到 S3 的 100MB 写请求完成时间 CDF，对比关闭、仅单 timeout、完整 WSM 三种状态。
 
 每次额外写入需要节省 102 毫秒计算时间才能回本。在该实验中，完整 WSM 在 31% 写入中触发（10240 次写入中 3138 次），成本相当于 314 秒计算时间，但节省了相当于 2100 秒的计算时间。由于后续阶段必须等待所有写入完成才能读取，WSM 是 Starling 同时实现低延迟和节省计算时间的关键部分。
 
@@ -227,7 +239,9 @@ Redshift 允许用户在 schema 中定义 distribution key 和 sort key，把表
 
 我们开展实验来证明，在中等查询速率下，Starling 比替代方案更便宜。我们比较本地存储数据的预置集群与 Starling 在我们改变每小时执行查询数量时的日成本，并使用工作负载中查询的几何平均执行时间估计典型查询执行时间。
 
-![图 7：Starling 与替代系统的日成本对比。（a）Starling 与数据存储在本地的配置；（b）Starling 与数据存储在 S3 的配置。](assets/figure-07-daily-cost.png)
+![图 7](assets/figure-07-daily-cost.png)
+
+图 7：Starling 与替代系统的日成本对比。（a）Starling 与数据存储在本地的配置；（b）Starling 与数据存储在 S3 的配置。
 
 图 7(a) 比较 Starling 与预加载并在本地保存数据的 Redshift 配置的日成本；线段长度表示各系统背靠背执行查询时的最大吞吐。默认分布 schema 的性能低于 distribution key schema，但日成本相同，因此我们为简洁起见未把它画入图中。Starling 在没有查询执行时几乎没有成本，随着查询数量增加成本上升；redshift-dc-dk 的线会向图右延伸到每小时 774 个查询，redshift-ds-dk 则延伸到 330。Redshift 的本地数据配置成本固定，与执行查询数无关。因此在 1TB 数据集上大约每小时 60 个查询时，运行 Redshift 会变得比 Starling 更便宜。由于 Redshift 已加载并索引数据，其最高效配置能比 Starling 更快运行查询，正如我们将在第 6.3 节展示的。不过，这种性能需要预加载数据并仔细调优数据库。
 
@@ -239,11 +253,17 @@ Redshift 允许用户在 schema 中定义 distribution key 和 sort key，把表
 
 低成本之外，临时查询负载用户还需要交互式性能。图 9 比较工作负载查询延迟的几何平均。Athena 未完成查询 2、8、9 和 15，原因是资源耗尽错误或缺少某些 SQL 功能；因此我们还单独绘制只包含 Athena 能完成查询的几何平均，并在第 6.6 节完整比较 Starling 与 Athena。这四个查询慢于平均水平，去掉它们会降低大多数系统的几何平均延迟。
 
-![图 8：1TB TPC-H 数据集上多个系统相对 Starling 归一化后的逐查询延迟。黑框表示 Athena 未完成的查询。](assets/figure-08-query-latency-1tb.png)
+![图 8](assets/figure-08-query-latency-1tb.png)
 
-![图 9：1TB 数据集上的查询延迟几何平均。](assets/figure-09-latency-gmean-1tb.png)
+图 8：1TB TPC-H 数据集上多个系统相对 Starling 归一化后的逐查询延迟。黑框表示 Athena 未完成的查询。
 
-![图 10：1TB 数据集上查询到达间隔增加时，已执行查询的几何平均单查询成本；最短间隔表示背靠背发送查询。](assets/figure-10-cost-per-query-1tb.png)
+![图 9](assets/figure-09-latency-gmean-1tb.png)
+
+图 9：1TB 数据集上的查询延迟几何平均。
+
+![图 10](assets/figure-10-cost-per-query-1tb.png)
+
+图 10：1TB 数据集上查询到达间隔增加时，已执行查询的几何平均单查询成本；最短间隔表示背靠背发送查询。
 
 Starling 比 redshift-dc-dk 慢略多于 4 倍，但它没有预分区基础表或已排序数据的优势。与同一集群上既未预排序也未预分区的 redshift-dc-dd 相比，即使 Redshift 已把数据加载为原生格式，Starling 的延迟也只慢不到 50%。Starling 并不排斥这些优化：在预分区数据上，Q12 相比未分区基础表获得近 2 倍加速。图 8 给出逐查询比较；我们没有画出 presto-4，因为其延迟显著高于 presto-16。对 Q1、Q6 等简单扫描与聚合查询，和 Starling 一样使用无状态 worker 扫描基础表的 Spectrum 即使相对本地数据 Redshift 配置也能获得很低延迟；对 Q9 等 join 代价较高的查询，Starling 延迟与默认分布的 Redshift 配置（dd）相近。我们认为这是因为基础表未按 join key 分区时，需要付出额外 shuffle 成本。
 
@@ -253,7 +273,9 @@ Starling 比 redshift-dc-dk 慢略多于 4 倍，但它没有预分区基础表�
 
 本节我们展示 Starling 比预置系统扩展性更好，并且不需要其他系统为获得良好性能所需的昂贵重新预置步骤。我们生成 scale factor 10000 的 TPC-H 数据集（压缩前 10TB），从查询集中选择 12 个查询，覆盖不同输入数据规模和 join 数。为扩展到 10TB，Starling 增加执行大型 join 的 worker 数量，并使用多阶段 shuffle 来缓解大型 S3 读取成本；我们保持其他系统的配置不变，并在图 11 中总结结果。
 
-![图 11：10TB 数据集上的查询延迟几何平均。](assets/figure-11-latency-gmean-10tb.png)
+![图 11](assets/figure-11-latency-gmean-10tb.png)
+
+图 11：10TB 数据集上的查询延迟几何平均。
 
 在 10TB 数据集上，每个预置系统的查询延迟都至少是 Starling 的 2.7 倍。Starling 在 12 个查询中的 8 个上延迟最低；次快的 redshift-ds-dk 只在 12 个查询中的 1 个上比 Starling 延迟更低。1TB 数据集上表现最佳的 redshift-dc-dk 在加载 10TB 数据时因加载阶段建立的额外索引占用磁盘空间而耗尽磁盘，因此我们无法在本实验中比较它。
 
@@ -261,13 +283,17 @@ Starling 比 redshift-dc-dk 慢略多于 4 倍，但它没有预分区基础表�
 
 图 12 比较 10TB 上查询到达间隔变化时的单查询成本。Starling 在所有可达到查询速率下，都是所有直接从 S3 读取数据系统中单查询成本最低者。即使与预加载数据的 Redshift 相比，当查询间隔达到 721 秒或更长时，Starling 也更便宜，并获得更高性能；部分原因是我们扩展数据集时，没有同时扩展我们的 Redshift 集群。为估算若扩展 Redshift 后的单查询成本，我们假设它随节点数线性扩展：16 节点集群的单查询延迟可能接近 Starling，但美元成本会高 4 倍。图中标为 redshift-dc-dd (predicted 16 nodes) 与 redshift-ds-dk (predicted 16 nodes) 的虚线给出这些配置的估计单查询成本；在这种假设下，当查询间隔为 80 秒或更长时，Starling 仍比 Redshift ds-dk 更便宜。
 
-![图 12：10TB TPC-H 数据集上查询到达间隔变化时，已执行查询的几何平均单查询成本。](assets/figure-12-cost-per-query-10tb.png)
+![图 12](assets/figure-12-cost-per-query-10tb.png)
+
+图 12：10TB TPC-H 数据集上查询到达间隔变化时，已执行查询的几何平均单查询成本。
 
 ### 6.5 并发
 
 Starling 最适合低到中等查询量负载。不过，当用户需要一次运行一批查询时，它也能扩展到多个并发查询。我们让多个用户执行同一个查询 Q12，以展示 Starling 随并发用户增加的扩展能力；我们在图 13 中看到，当我们增加并发用户数时，吞吐如何变化。最大吞吐受两个因素限制。第一，云函数服务对并发函数调用数有限制；当我们接近该限制时，吞吐会趋于平稳。第二，为支持许多并发查询，coordinator 必须通过 HTTP 请求并行调用越来越多函数，会给我们的低成本 coordinator 带来资源压力。高并发不是本文重点，因此我们把 coordinator 优化留作未来工作。
 
-![图 13：Starling 在 1TB TPC-H Q12 上的并发吞吐。](assets/figure-13-q12-concurrency.png)
+![图 13](assets/figure-13-q12-concurrency.png)
+
+图 13：Starling 在 1TB TPC-H Q12 上的并发吞吐。
 
 ### 6.6 按查询付费服务
 
@@ -281,7 +307,9 @@ Athena 不适合扩展到更大数据集。在 10TB 数据集上，Athena 只完
 
 Starling 允许用户调节查询以降低成本或提高性能。我们使用 TPC-H Query 12 展示该能力。Q12 是在数据集中两个最大表上的 select-project-join-aggregate 查询。图 14 显示 Starling 能以增加成本换取更高性能；每个点表示 join 阶段使用的任务数，任务数越多，性能越高，成本也越高。我们用连线辅助观察。随着我们减少任务数，Starling 成本主要由 AWS Lambda 执行时间支配；随着我们增加任务数，S3 读取成本开始占主导。
 
-![图 14：TPC-H Q12 的成本与延迟可调性。](assets/figure-14-q12-cost-latency.png)
+![图 14](assets/figure-14-q12-cost-latency.png)
+
+图 14：TPC-H Q12 的成本与延迟可调性。
 
 presto-16 和 spectrum 的成本表示查询之间没有空闲时间时的单查询成本；正如我们在第 6.3 节所示，若查询间有更多空闲时间，单查询成本会更高。即使采用最严格的查询到达时间假设，Starling 在该查询上也处于 Pareto frontier：在相同性能下比 spectrum 和 Athena 更便宜，并能达到比其他从 S3 读取数据系统更高的性能。与预置系统相比，Starling 更容易按成本和性能目标调节。
 
@@ -289,7 +317,9 @@ presto-16 和 spectrum 的成本表示查询之间没有空闲时间时的单查
 
 没有各种性能优化，Starling 无法达到与预置系统竞争的延迟。我们在图 15 中展示随着我们在 Q12 上逐步增加优化而变化的延迟和成本。对该查询，我们把 join worker 数量固定为 128，并沿图中从左到右逐项启用优化。整个实验中查询成本近似不变，但查询延迟按预期下降。
 
-![图 15：逐步启用 Starling 优化时 Q12 的平均延迟和成本；误差线为十次执行的标准差。](assets/figure-15-optimization-ablation.png)
+![图 15](assets/figure-15-optimization-ablation.png)
+
+图 15：逐步启用 Starling 优化时 Q12 的平均延迟和成本；误差线为十次执行的标准差。
 
 没有优化时，查询执行时间方差很高，平均约 80 秒。并行读取对性能影响很大，尤其在 join 阶段，因为每个 worker 执行数百次小读取。加入 RSM 和 WSM 后，个体读写方差下降，查询运行时间方差下降，延迟接近 presto-16。最后，doublewrite 将均值降低到 12.8 秒。与无优化平均运行时间相比提升 6 倍以上；与仅并行读取相比提升 2.4 倍以上。
 
@@ -303,7 +333,9 @@ Amazon Athena [1] 基于 Presto [24] 0.172 [2]。虽然我们的 presto-16 配�
 
 图 16 中，我们比较 Starling 与 presto-16 每个查询消耗的 core-seconds。Starling 的 join order 来自 Redshift，因此具有查询优化器的收益；所以我们将其与查询延迟低于未优化配置的、已经优化的 presto-16 运行时间比较。多数查询中，Starling 相比 presto-16 消耗更少计算资源来执行同一查询。虽然查询某些阶段可以充分利用机器集群，但有些阶段只使用部分核心或低效利用集群。在这些情况下，对云提供商而言，在 AWS Lambda 这类通用计算服务上执行查询的服务，可能比为查询处理工作负载专门预置机器更高效。
 
-![图 16：按 core-seconds 计的总计算时间，对 Starling 归一化。](assets/figure-16-core-seconds.png)
+![图 16](assets/figure-16-core-seconds.png)
+
+图 16：按 core-seconds 计的总计算时间，对 Starling 归一化。
 
 没有云提供商内部的详细集群架构、负载和利用率信息，很难确定 Starling 是否一定比 Athena 类服务有更低资源消耗。但基于保守 CPU 利用率估计，我们认为这很可能成立。因此，未来云提供商提供类似 Starling 架构的查询执行服务可能更高效。
 

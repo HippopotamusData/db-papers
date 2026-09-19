@@ -19,6 +19,17 @@ import build_site  # noqa: E402
 
 
 class BuildSiteTests(unittest.TestCase):
+    def test_smart_symbols_preserve_paper_subfigure_and_variable_labels(self) -> None:
+        config = tomllib.loads((ROOT / "zensical.toml").read_text(encoding="utf-8"))
+        extension = "pymdownx.smartsymbols"
+        settings = config["project"]["markdown_extensions"]["pymdownx"]["smartsymbols"]
+        rendered = markdown.markdown(
+            "图2(c)、level(r)；原文符号 ©、®。",
+            extensions=[extension],
+            extension_configs={extension: settings},
+        )
+        self.assertEqual(rendered, "<p>图2(c)、level(r)；原文符号 ©、®。</p>")
+
     def test_preview_generation_does_not_touch_acceptance_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

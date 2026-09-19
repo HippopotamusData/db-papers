@@ -77,7 +77,9 @@ SELECT TOP(signal1, 100), COUNT(*) FROM t;
 
 第二个要素是共享存储格式。列式存储已经证明对 flat relational data 有效，但把它用于 Google 的嵌套数据模型需要适配。图 1 展示核心思想：嵌套字段如 `A.B.C` 的所有值连续存储。因此可以读取 `A.B.C`，而无需读取 `A.E`、`A.B.D` 等字段。挑战是如何保留所有结构信息，并能从任意字段子集重建记录。接下来先讨论数据模型，再讨论算法和查询处理。
 
-![图 1：嵌套数据的 record-wise 表示与 columnar 表示。列式表示把同一路径字段的值连续存放，使查询可只读取需要的嵌套字段。](assets/figure-01-record-vs-columnar-nested-data.png)
+![图 1](assets/figure-01-record-vs-columnar-nested-data.png)
+
+图 1：嵌套数据的 record-wise 表示与 columnar 表示。列式表示把同一路径字段的值连续存放，使查询可只读取需要的嵌套字段。
 
 ## 3. 数据模型
 
@@ -91,7 +93,9 @@ $$
 
 图 2 展示了例子。该 schema 定义了表示 web document 的记录类型 `Document`。`Document` 有 required integer `DocId`，以及 optional `Links`，其中包含保存其他网页 DocId 的 repeated `Forward` 和 `Backward` 条目。一个 document 可以有多个 `Name`，它们是不同 URL，可被其他 document 引用。`Name` 包含一组 `Code` 和 optional `Country` 的 `Language`。图 2 也展示了符合该 schema 的两个样例记录 `r1` 和 `r2`，记录结构用缩进表示。
 
-![图 2：两个样例嵌套记录及其 schema。Document 记录包含 DocId、Links、Name、Language 等 required、optional 和 repeated 字段。](assets/figure-02-sample-nested-records-schema.png)
+![图 2](assets/figure-02-sample-nested-records-schema.png)
+
+图 2：两个样例嵌套记录及其 schema。Document 记录包含 DocId、Links、Name、Language 等 required、optional 和 repeated 字段。
 
 后续各节将用这两个样例记录解释相应算法。
 
@@ -119,7 +123,9 @@ Dremel 使用 integer definition level 而不是 single null bit，使 leaf fiel
 
 图 3 总结了样例记录中所有 atomic field 的 repetition level 和 definition level。
 
-![图 3：图 2 样例数据的 column-striped 表示，展示 repetition level (r) 和 definition level (d)。每个 leaf field 形成单独列，并带有结构级别信息。](assets/figure-03-column-striped-sample-data.png)
+![图 3](assets/figure-03-column-striped-sample-data.png)
+
+图 3：图 2 样例数据的 column-striped 表示，展示 repetition level (r) 和 definition level (d)。每个 leaf field 形成单独列，并带有结构级别信息。
 
 ### 4.2 Splitting Records into Columns
 
@@ -133,13 +139,17 @@ Google 的许多数据集是稀疏的：一条记录中可能定义了数千字�
 
 图 4 展示重建样例中完整记录的 FSM。Start state 是 `DocId`。读出 `DocId` 后，FSM 转到 `Links.Backward`。所有 repeated `Backward` 值读完后，FSM 跳到 `Links.Forward`，依此类推。记录组装算法的细节见附录 B。
 
-![图 4：完整 record assembly automaton。边用 repetition level 标注，FSM 根据 level 在不同字段 reader 之间跳转。](assets/figure-04-record-assembly-automaton.png)
+![图 4](assets/figure-04-record-assembly-automaton.png)
+
+图 4：完整 record assembly automaton。边用 repetition level 标注，FSM 根据 level 在不同字段 reader 之间跳转。
 
 要勾画 FSM transition 的构造，令 $l$ 为当前 field reader 返回的 repetition level。若 $f$ 是 schema tree 中第一个字段，则找出其 ancestor 中 repetition level 等于 $l$ 的最深节点，并选择该 ancestor 中的第一个 leaf field。这给出 FSM transition $(f,l)\rightarrow n$。例如，令 $l=1$，下一个 repetition level 读自 $f=Name.Language.Country$。它在 level 1 的 ancestor 是 `Name`，其首个 leaf field 是 `Name.Url`。FSM 构造算法见附录 C。
 
 如果只需要读取字段子集，Dremel 会构造更简单的 FSM。图 5 展示读取字段 `DocId` 和 `Name.Language.Country` 的 reader 对应的简单 FSM。图中输出记录 $s_1$ 和 $s_2$ 由该 automaton 产生。注意，Dremel 的编码和组装算法保留了字段 `Country` 的外围嵌套结构。这一点对访问例如第二个 `Name` 的第一个 `Language` 中出现的 `Country` 很重要；在 XPath 中，这对应于计算 `/Name[2]/Language[1]/Country` 这样的表达式。
 
-![图 5：从两个字段组装记录的 automaton 及其产生的记录。该图展示只读取 DocId 和 Name.Language.Country 时如何保留嵌套结构。](assets/figure-05-two-field-assembly-automaton.png)
+![图 5](assets/figure-05-two-field-assembly-automaton.png)
+
+图 5：从两个字段组装记录的 automaton 及其产生的记录。该图展示只读取 DocId 和 Name.Language.Country 时如何保留嵌套结构。
 
 ## 5. Query Language
 
@@ -153,7 +163,9 @@ FROM t
 WHERE REGEXP(Name.Url, '^http') AND DocId < 20;
 ```
 
-![图 6：样例查询、查询结果和输出 schema。查询对嵌套字段执行过滤、投影和 within-record aggregation。](assets/figure-06-sample-query-result-schema.png)
+![图 6](assets/figure-06-sample-query-result-schema.png)
+
+图 6：样例查询、查询结果和输出 schema。查询对嵌套字段执行过滤、投影和 within-record aggregation。
 
 为了说明查询做了什么，考虑 selection 操作，即 `WHERE` 子句。把 nested record 看成一棵带标签树，每个 label 对应一个 field name。Selection operator 会剪除不满足条件的树分支。因此，只有 nested record 中满足 `Name.Url` 定义且以 `http` 开头的部分会被投影。`SELECT` 子句中的每个 scalar expression 都在 expression 中最深 repeated input field 的 nesting level 上发出值。因此，字符串拼接表达式会在输出 schema 中 `Name.Language.Code` 的 level 上发出 `Str` 值。`COUNT` 表达式展示 within-record aggregation。`WITHIN` 子句中的 aggregation 按每个 `Name` 统计 `Name.Language.Code` 的出现次数，并生成非负 64-bit integer。
 
@@ -165,7 +177,9 @@ WHERE REGEXP(Name.Url, '^http') AND DocId < 20;
 
 **Tree architecture。** Dremel 使用多级 serving tree 执行查询，如图 7 所示。Root server 接收进入查询，读取表元数据，并把查询路由到 serving tree 的下一层。Leaf server 与存储层通信，或访问本地磁盘上的数据。
 
-![图 7：系统架构和 server node 内部执行。查询沿 serving tree 下发，leaf server 从本地存储或存储层读取 tablet，并在节点内使用 execution tree。](assets/figure-07-system-architecture-execution-node.png)
+![图 7](assets/figure-07-system-architecture-execution-node.png)
+
+图 7：系统架构和 server node 内部执行。查询沿 serving tree 下发，leaf server 从本地存储或存储层读取 tablet，并在节点内使用 execution tree。
 
 考虑一个简单聚合查询：
 
@@ -207,7 +221,9 @@ Leaf server 以 columnar representation 读取嵌套数据条带。每个 stripe
 
 本节在若干 Google 数据集上评估 Dremel 性能，并检查 columnar storage 对 nested data 的有效性。实验使用的数据集属性见图 8。未压缩、非复制形式下，数据集总量约为 1 PB。所有表均三副本复制，除一个两副本表外，并包含 100K 到 800K 个不同大小的 tablet。先检查基本数据访问特性，然后展示 columnar storage 如何有益于 MR execution，最后关注 Dremel 性能。实验在生产系统实例上进行，这些实例在正常业务运行期间还承载许多其他应用。除特别说明外，执行时间取 5 次运行平均。表名和字段名均已匿名化。
 
-![图 8：实验研究使用的数据集。图中列出表名、记录数、未复制压缩大小、字段数、数据中心和复制因子。](assets/figure-08-experimental-datasets.png)
+![图 8](assets/figure-08-experimental-datasets.png)
+
+图 8：实验研究使用的数据集。图中列出表名、记录数、未复制压缩大小、字段数、数据中心和复制因子。
 
 图 8 中的数据集信息如下。
 
@@ -223,7 +239,9 @@ Leaf server 以 columnar representation 读取嵌套数据条带。每个 stripe
 
 图 9 展示读取、解压、组装和解析记录的五条曲线。Graph (a)-(c) 是 columnar storage 的结果。每个数据点取 30 次运行平均；每次运行随机选择给定 cardinality 的字段集合。Graph (a) 展示读取和解压时间。Graph (b) 增加组装 nested record 的时间。Graph (c) 展示把记录解析为 strongly typed C++ data structure 的时间。Graph (d)-(e) 是 record-oriented storage 的对应曲线。Graph (d) 展示读取和解压时间。Graph (e) 展示解析增加的时间；事实上，在 record-oriented 情况下，压缩数据约一半时间即可从磁盘读出。
 
-![图 9：从本地磁盘读取时的性能分解。图中比较列式读取、记录组装、对象解析以及 record-oriented 读取/解析随字段数增加的成本。](assets/figure-09-local-disk-performance-breakdown.png)
+![图 9](assets/figure-09-local-disk-performance-breakdown.png)
+
+图 9：从本地磁盘读取时的性能分解。图中比较列式读取、记录组装、对象解析以及 record-oriented 读取/解析随字段数增加的成本。
 
 主要结论是：当读取少数字段时，columnar representation 的收益约为一个数量级。嵌套 columnar data 的检索时间随字段数线性增长。Record assembly 和 parsing 很昂贵，每一步约让执行时间翻倍。其他数据集上也观察到类似趋势。自然问题是，在什么点上 record-oriented storage 开始优于 columnar storage。经验上，如果大多数或全部字段都需要重组，这一交叉点可能在数十个字段处，具体取决于数据集和是否需要 record assembly。
 
@@ -244,7 +262,9 @@ Q1: SELECT SUM(CountWords(txtField)) / COUNT(*) FROM T1;
 
 图 10 以对数刻度展示两个 MR 作业和 Dremel 的执行时间。两个 MR 作业都运行在 3000 个 worker 上；Dremel 同样使用 3000 节点实例执行 Query Q1。Dremel 和 MR-on-columns 均读取约 0.5 TB 压缩 columnar data，而 MR-on-records 读取约 87 TB。图中显示，MR 从 record-oriented storage 切换到 columnar storage 后，效率提高约一个数量级，执行时间从小时降至分钟；使用 Dremel 又获得一个数量级的提升，从分钟降至秒。
 
-![图 10：MR 和 Dremel 在 columnar 与 record-oriented storage 上的执行。图中展示 MR-records、MR-columns 和 Dremel 的执行时间差异。](assets/figure-10-mr-dremel-columnar-record.png)
+![图 10](assets/figure-10-mr-dremel-columnar-record.png)
+
+图 10：MR 和 Dremel 在 columnar 与 record-oriented storage 上的执行。图中展示 MR-records、MR-columns 和 Dremel 的执行时间差异。
 
 **Serving tree topology。** 下一个实验展示 serving tree 深度对 query execution time 的影响。考虑表 $T_2$ 上两个 GROUP BY 查询，每个查询使用单次扫描。表 $T_2$ 包含 240 亿嵌套记录。每条记录有一个 repeated field `item`，其中字段 `item.amount` 在数据集中大约重复 400 亿次。第一个查询按 `country` 对 `item.amount` 求和：
 
@@ -265,11 +285,15 @@ Q3: SELECT domain, SUM(item.amount) FROM T2
 
 图 11 展示每个查询在不同 server topology 下的执行时间。每种 topology 中，leaf server 数固定为 2900，以便假设相同累计 scan speed。2-level topology 中，一个 root server 直接与全部 leaf server 通信。3-level 中为 1:100:2900，即额外有一层 100 个 intermediate server。4-level topology 为 1:10:100:2900。Query Q2 在使用 3 层 serving tree 时于 3 秒内运行完成，并且从额外层级获益不大。相反，Q3 的执行时间因 aggregation 并行度增加而减半。2-level 下 Q3 超出图表范围，因为 root server 需要近乎串行地聚合来自数千节点的结果。该实验展示：返回大量 group 的 aggregation 受益于 multi-level serving tree。
 
-![图 11：两个聚合查询在不同 serving tree 层级下的执行时间。返回大量 group 的 Q3 更受益于多级 serving tree。](assets/figure-11-serving-tree-levels.png)
+![图 11](assets/figure-11-serving-tree-levels.png)
+
+图 11：两个聚合查询在不同 serving tree 层级下的执行时间。返回大量 group 的 Q3 更受益于多级 serving tree。
 
 **Per-tablet histograms。** 为深入理解查询执行期间发生了什么，Dremel 使用图 12 所示的 execution profile。图中展示 leaf server 处理特定运行的 $Q_2$ 和 $Q_3$ 时，在每个 tablet 上的处理时间 histogram。时间从 tablet 被调度到可用 slot 的时刻开始测量，即不包括等待 job queue 的时间。该测量方法会排除同时在一个 slot 内运行的其他查询导致的影响。Histogram 下方面积对应 100%。如图所示，99% 的 $Q_2$ tablet 或 $Q_3$ tablet 会在一秒或两秒内处理完。
 
-![图 12：处理时间 histogram。图中展示 Q2 与 Q3 每个 tablet 的处理时间分布。](assets/figure-12-processing-time-histograms.png)
+![图 12](assets/figure-12-processing-time-histograms.png)
+
+图 12：处理时间 histogram。图中展示 Q2 与 Q3 每个 tablet 的处理时间分布。
 
 **Within-record aggregation。** 另一个实验考察表 $T_3$ 上 Query Q4 的性能。该查询展示 within-record aggregation：它计算记录内 `a.b.c.d` 值之和大于 `a.b.p.q.r` 值之和的记录数；这两个字段在不同 nesting level 上重复。由于 column striping，只需从 70 TB 数据中读取 13 GB，查询在 15 秒内完成。若不支持嵌套，在 $T_3$ 上运行该查询将代价极高。
 
@@ -289,7 +313,9 @@ Q5: SELECT TOP(aid, 20), COUNT(*) FROM T4
 
 查询被执行在系统的多种配置上，leaf server 数从 1000 到 4000 不等。每次运行中，total expended CPU time 几乎相同，约为 300K 秒；而用户感知时间随系统规模增加几乎线性下降。该结果表明，更大的系统在资源使用上同样有效，同时允许更快执行。
 
-![图 13：使用 top-k 查询 Q5 在 trillion-row table T4 上从 1000 到 4000 节点扩展。随着 leaf server 数增加，执行时间近似线性下降。](assets/figure-13-scalability-leaf-servers.png)
+![图 13](assets/figure-13-scalability-leaf-servers.png)
+
+图 13：使用 top-k 查询 Q5 在 trillion-row table T4 上从 1000 到 4000 节点扩展。随着 leaf server 数增加，执行时间近似线性下降。
 
 **Stragglers。** 最后一个实验展示 straggler 的影响。Query Q6 在 trillion-row table $T_5$ 上运行。与其他数据集不同， $T_5$ 是双副本复制。因此，straggler 降低执行速度的可能性更高，因为重新路由机会更少。
 
@@ -299,7 +325,9 @@ Q6: SELECT COUNT(DISTINCT a) FROM T5;
 
 Query Q6 读取超过 1 TB 压缩数据。被取回字段的压缩率约为 10。图 14 显示，99% 的 tablet 在每个 slot 上每 tablet 的处理时间低于 5 秒；但少量 tablet 耗时长得多，使得该查询在 2500 节点系统上的响应时间从不足 1 分钟拖慢到数分钟。下一节总结实验发现。
 
-![图 14：原文图注写作“在两副本表 T5 上运行 Query Q5 时的 straggler 分布”；少量 tablet 的处理时间远高于主体分布。](assets/figure-14-stragglers-q5-t5.png)
+![图 14](assets/figure-14-stragglers-q5-t5.png)
+
+图 14：原文图注写作“在两副本表 T5 上运行 Query Q5 时的 straggler 分布”；少量 tablet 的处理时间远高于主体分布。
 
 （译者注：本节正文和查询定义均称此实验为 Q6，原文图 14 图注写为 Q5；此处保留并标明这一不一致。）
 
@@ -316,7 +344,9 @@ Dremel 每月扫描数千万亿记录。图 15 用对数刻度展示一个 Dreme
 - 如果可以用准确性换取速度，查询可以更早终止，仍能看到大部分数据。
 - 获取 web-scale 数据集的大部分数据可以很快；但在严格时间边界内获取最后几个百分点很难。
 
-![图 15：月度工作负载中的查询响应时间分布。多数查询在 10 秒内完成，少量查询耗时更长。](assets/figure-15-monthly-query-response-distribution.png)
+![图 15](assets/figure-15-monthly-query-response-distribution.png)
+
+图 15：月度工作负载中的查询响应时间分布。多数查询在 10 秒内完成，少量查询耗时更长。
 
 Dremel 代码库较密集，包含不到 100K 行 C++、Java 和 Python 代码。
 
@@ -376,7 +406,9 @@ Dremel 从许多 Google 工程师和实习生的贡献中受益良多，特别�
 
 输入可能有数千字段和数百万条 record，因此不可能把全部 level 都保存在内存中；部分 level 可以暂存到磁盘文件。为无损编码空的 subrecord，`Name.Language` 一类 non-atomic field 还可能需要拥有自己的 column stripe，其中只保存 level，不含任何非 `NULL` 值。
 
-![图 16：把 record 分解成 column 的算法。算法递归遍历字段，维护 repetition level、definition level 和 FieldWriter 状态。](assets/figure-16-dissect-record-algorithm.png)
+![图 16](assets/figure-16-dissect-record-algorithm.png)
+
+图 16：把 record 分解成 column 的算法。算法递归遍历字段，维护 repetition level、definition level 和 FieldWriter 状态。
 
 ### B. Record Assembly Algorithm
 
@@ -386,7 +418,9 @@ Dremel 从许多 Google 工程师和实习生的贡献中受益良多，特别�
 
 `MoveToLevel` 把 record 从 `lastReader` 的状态转换到 `nextReader` 的状态。例如，若 `lastReader` 对应图 2 的 `Links.Backward`，`nextReader` 对应 `Name.Language.Code`，该过程会先结束 nested record `Links`，再依次开始 `Name` 和 `Language`。`ReturnToLevel` 与之对应，但只结束当前 record，不开始新 record。
 
-![图 17：从 column 组装 record 的算法。算法从多个 FieldReader 读取值，根据 repetition/definition level 重建嵌套记录结构。](assets/figure-17-assemble-record-algorithm.png)
+![图 17](assets/figure-17-assemble-record-algorithm.png)
+
+图 17：从 column 组装 record 的算法。算法从多个 FieldReader 读取值，根据 repetition/definition level 重建嵌套记录结构。
 
 ### C. FSM Construction Algorithm
 
@@ -394,7 +428,9 @@ Dremel 从许多 Google 工程师和实习生的贡献中受益良多，特别�
 
 算法分三步。第 1 步（第 6–10 行）逆序遍历必定单调不增的 common repetition level，并在遇到的每个 level 上选取序列中最靠左、即 `FieldReader` 返回该 level 时应跳转到的字段。第 2 步（第 11–14 行）填补空缺，因为第 8 行计算出的 common repetition level 未必覆盖所有 repetition level。第 3 步（第 15–17 行）让所有不高于 barrier level 的 transition 跳到 barrier field；当 `FieldReader` 产生这样的 level 时，可以继续构造 nested record，而无需从 barrier 再折返。
 
-![图 18：构造 record assembly automaton 的算法。算法按字段顺序添加 FSM transition，并处理 common repetition level 与 barrier。](assets/figure-18-construct-fsm-algorithm.png)
+![图 18](assets/figure-18-construct-fsm-algorithm.png)
+
+图 18：构造 record assembly automaton 的算法。算法按字段顺序添加 FSM transition，并处理 common repetition level 与 barrier。
 
 ### D. Select-Project-Aggregate Evaluation Algorithm
 
@@ -402,4 +438,6 @@ Dremel 从许多 Google 工程师和实习生的贡献中受益良多，特别�
 
 算法实质上以 lockstep 方式把 reader 推进到下一组值，并在 selection condition 成立时发出 projected value。Selection 和 projection 由 `fetchLevel` 与 `selectLevel` 两个变量控制：只有下一个 repetition level 不小于 `fetchLevel` 的 reader 才会前进（`Fetch` 过程第 19 行），同样，只有当前 repetition level 不小于 `selectLevel` 的 expression 才会发出值（第 7–10 行）。这样，nesting level 更高、即 repetition level 更小的 expression，对每个更深层的 nested expression 只会求值并发出一次。
 
-![图 19：在 columnar input 上求值 select-project-aggregate 查询的算法，绕过 record assembly。](assets/figure-19-select-project-aggregate-algorithm.png)
+![图 19](assets/figure-19-select-project-aggregate-algorithm.png)
+
+图 19：在 columnar input 上求值 select-project-aggregate 查询的算法，绕过 record assembly。

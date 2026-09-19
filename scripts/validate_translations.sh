@@ -269,12 +269,7 @@ while IFS=$'\x1f' read -r manifest_kind dir reading_status paper_page_limit skip
       warn "$translation has $abridgement_candidate"
     fi
 
-    source_table_numbers=$(perl -ne 'while (/(?:^|\f|\s{2,})Table\s+(\d+)\s*[:.]/ig) { print "$1\n" }' "$source_text" | sort -nu)
-    while IFS= read -r table_number; do
-      [[ -z "$table_number" ]] && continue
-      rg -q "(表|Table)[[:space:]]*${table_number}([^0-9]|$)" "$visible_translation" || warn "$translation may not identify source Table $table_number"
-    done <<< "$source_table_numbers"
-
+    # Resource validation owns table coverage, including actual payload checks.
     resource_args=("$dir" "$source_text")
     [[ "$require_complete_references" == "true" ]] && resource_args+=(--require-complete-references)
     resource_args+=(--require-inline-citations)

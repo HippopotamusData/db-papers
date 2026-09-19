@@ -49,7 +49,9 @@ CWI，Kruislaan 413，Amsterdam, The Netherlands
 
 图 1 分别给出过去十年里每一年的最高 CPU 主频、最高实际性能——两者并不必然等价——以及当年量产的最先进芯片制造工艺。CPU 主频提高的根源是制造工艺尺度进步：它通常每 18 个月缩小 1.4 倍，即摩尔定律 [13]。尺度每缩小一次，单位面积可容纳的晶体管数量约增至 2 倍，晶体管尺寸约减半，连线距离和信号延迟则缩短至约 $1/1.4$。因此，CPU 主频本应大致随信号延迟的倒数增长；图 1 显示其增长还要更快，主要原因是流水线化：把一条 CPU 指令的工作切成越来越多的阶段。每阶段工作更少，时钟频率就可以更高。
 
-![图 1：十年 CPU 性能趋势。](assets/figure-01-cpu-performance.png)
+![图 1](assets/figure-01-cpu-performance.png)
+
+图 1：十年 CPU 性能趋势。
 
 流水线引入两个风险。第一，若某条指令需要前一条指令的结果，它不能紧随其后进入流水线，必须等前一条指令走完整条流水线或其中很大一段。第二，遇到 `if a then b else c` 这类分支时，CPU 必须预测 `a` 的结果。它可能先猜测为假，让 `c` 在 `a` 之后进入流水线；若许多阶段后才发现预测错误，就必须清空流水线中的所有指令，改从 `b` 重新开始。流水线越长，清空代价越高。对应到数据库系统，选择算子中那些依赖数据且选择率既不很高也不很低的分支无法可靠预测，会显著拖慢查询执行 [17]。
 
@@ -75,7 +77,9 @@ F(A[0]), F(A[1]), F(A[2]), G(A[0]), G(A[1]), G(A[2]), F(A[3]), …
 
 图 2 的微基准执行查询 `SELECT oid FROM table WHERE col < X`，其中 `X` 在 `[0, 100]` 上均匀随机分布，并让选择率 `X` 从 0 变化到 100。AthlonMP 这类普通 CPU 在 50% 选择率附近因分支误预测而表现最差。按照 [17] 的建议巧妙改写代码，把分支转换为布尔计算后，性能不再依赖选择率，但平均成本更高。Itanium2 上原始“branch”版本也很高效且不依赖选择率，因为编译器会把分支转换成硬件谓词化代码。
 
-![图 2：Itanium 硬件谓词化消除分支误预测。](assets/figure-02-branch-predication.png)
+![图 2](assets/figure-02-branch-predication.png)
+
+图 2：Itanium 硬件谓词化消除分支误预测。
 
 片上缓存同样关键。CPU 执行的指令约 30% 是内存 load/store；它们访问位于主板上、与 CPU 相距数英寸的 DRAM 芯片，因而存在约 50ns 的物理延迟下界。对 3.6GHz CPU 而言，这个理想下界已经相当于约 180 个等待周期。只有绝大多数内存访问命中片上缓存，现代 CPU 才可能接近最大吞吐。数据库研究已经证明，缓存未命中会严重损害 DBMS 性能 [3]；缓存对齐 B-tree [16, 7]、PAX [2] 和 DSM [8] 这类按列布局，以及把随机内存访问限制在 CPU cache 可容纳区域内的 radix 分区哈希连接 [18, 11]，都能显著改善性能。
 
@@ -87,7 +91,9 @@ F(A[0]), F(A[1]), F(A[2]), G(A[0]), G(A[1]), G(A[2]), F(A[3]), …
 
 TPC-H 数据仓库的基准大小为 1GB，可按缩放因子（SF）扩大。Query 1 扫描含 $SF \times 6\mathrm{M}$ 个元组的 `lineitem` 表，选择其中几乎全部的 $SF \times 5.9\mathrm{M}$ 个元组，并计算一组定点 decimal 表达式：两次列减常量、一次列加常量、三次列乘列，以及八个聚合——四个 `SUM()`、三个 `AVG()` 和一个 `COUNT()`。group-by 只作用于两个单字符列，产生 4 个唯一组合，可用小哈希表高效完成，不需要额外 I/O，甚至不需要因访问哈希表而产生 CPU 缓存未命中。
 
-![图 3：TPC-H Query 1 的 SQL 形态。](assets/figure-03-tpch-query-1.png)
+![图 3](assets/figure-03-tpch-query-1.png)
+
+图 3：TPC-H Query 1 的 SQL 形态。
 
 我们依次分析 Query 1 在传统关系数据库系统、MonetDB/MIL 和手写程序中的表现。
 
@@ -221,7 +227,9 @@ Query 1 先从 600 万元组中选择 98%，再对剩余 590 万元组聚合。M
 
 为了确定现代硬件在 Query 1 这类问题上能达到什么基线，我们把它实现为 MonetDB 中的单个用户定义函数（UDF），如图 4。UDF 只接收查询实际访问的列。在 MonetDB 中，这些列以 `BAT[void,T]` 中的数组形式存储：head 列的 OID 从 0 开始稠密递增，MonetDB 因而使用不实际存储的 void（“virtual OID”），BAT 退化为数组。我们把这些数组作为 `restrict` 指针传入，让 C 编译器知道它们互不重叠；只有这样，编译器才能做循环流水化。
 
-![图 4：TPC-H Query 1 的手写 C UDF。](assets/figure-04-hard-coded-udf.png)
+![图 4](assets/figure-04-hard-coded-udf.png)
+
+图 4：TPC-H Query 1 的手写 C UDF。
 
 **译者注：** 图 4 的原文代码在更新 `sum_charge` 时写作 `extprice*(1-p_tax[i])`，与 Query 1 的加税表达式不一致；图片按原文保留，没有静默改成加号。
 
@@ -240,7 +248,9 @@ X100 的目标有三项：以很高 CPU 效率执行大数据量查询；能扩�
 
 因此，X100 在 Volcano 和 MonetDB/MIL 之间取得平衡：它使用流水线算子避免整列物化，但每次 `next()` 返回小型向量而非一个元组。解释开销按向量大小摊销，中间结果也不会膨胀为主存带宽瓶颈。论文中的 ColumnBM 尚在开发，实验实际以 MonetDB 的内存 BAT 作为存储管理器。
 
-![图 5：X100 软件架构。](assets/figure-05-x100-architecture.png)
+![图 5](assets/figure-05-x100-architecture.png)
+
+图 5：X100 软件架构。
 
 ### 4.1 查询语言
 
@@ -261,7 +271,9 @@ Aggr(
     [sum_disc_price = sum(discountprice)])
 ```
 
-![图 6：简化 TPC-H Query 1 在 MonetDB/X100 中的执行方案。](assets/figure-06-execution-scheme.png)
+![图 6](assets/figure-06-execution-scheme.png)
+
+图 6：简化 TPC-H Query 1 在 MonetDB/X100 中的执行方案。
 
 执行以向量（例如 1000 个值）为粒度。Scan 每次从 Monet BAT 取回一个向量，且只扫描查询真正用到的属性。Select 生成 selection vector，其中存放通过谓词的元组位置。Project 计算聚合需要的表达式；`discount`、`extendedprice` 不会在选择后复制压紧，map primitive 读取 selection vector，只计算相关位置，并把结果写回输出向量的相同位置。因此 selection vector 一直传到 Aggr。Aggr 为每个元组计算哈希表位置、更新聚合值，并在新组出现时保存分组属性；下层算子耗尽后，哈希表内容即为结果。
 
@@ -269,7 +281,9 @@ Aggr(
 
 X100 代数支持常规算子，如 Scan、Select、Project、Aggregation、Join 等。表达式被分解为 primitive 调用；primitive 针对操作、类型和输入格式组合实现。例如 map primitive 对输入向量执行加减乘除，select primitive 生成 selection vector，aggregation primitive 在 group id 上更新聚合状态。
 
-![图 7：X100 查询代数。](assets/figure-07-query-algebra.png)
+![图 7](assets/figure-07-query-algebra.png)
+
+图 7：X100 查询代数。
 
 `Table` 表示物化关系，`Dataflow` 表示在流水线中流动的元组。`Order`、`TopN` 和 `Select` 保持输入 dataflow 的 shape，其余算子可定义新 shape。`Project` 只做表达式计算，不负责消重；消重用只有 group-by 列的 `Aggr` 完成。`Array` 把 N 维数组表示为一个 N 元关系，按 column-major 维序产生所有合法数组下标坐标；MonetDB 的 RAM 数组操作前端使用这个算子 [9]。`Fetch1Join`/`FetchNJoin` 按 row id 从垂直列取值；`OrdAggr`、`DirectAggr`、`HashAggr` 是按输入性质选择的聚合实现。
 
@@ -338,7 +352,9 @@ MonetDB/X100 以垂直分片形式存储所有表。无论使用新的 ColumnBM 
 
 垂直存储的一个缺点是更新成本较高：单行更新或删除可能需要对每列执行一次 I/O。X100 通过把垂直分片视为不可变对象来规避这一点。更新写入 delta 结构。删除通过把 tuple id 加入删除列表处理；插入则追加到独立 delta 列。ColumnBM 把所有 delta 列一起存储在一个块中，等同于 PAX [2]。因此删除和插入都只需一次 I/O。更新可视为先删除再插入。随着 delta 增长，当其大小超过总表大小的某个较小百分比时，系统应重组数据存储，使垂直存储重新最新并清空 delta。
 
-![图 8：垂直存储与更新处理。](assets/figure-08-storage-updates.png)
+![图 8](assets/figure-08-storage-updates.png)
+
+图 8：垂直存储与更新处理。
 
 垂直存储的优势是，访问大量元组但不访问所有列的查询可以节省带宽。这既适用于 RAM 带宽，也适用于 I/O 带宽。X100 还使用轻量压缩进一步降低带宽需求。枚举类型可把列存为一字节或二字节整数，该整数引用映射表的 row id。当查询使用这些列时，X100 自动加入 Fetch1Join 操作取回未压缩值。由于垂直分片不可变，更新只进入未压缩 delta 列，不会使压缩方案复杂化。
 
@@ -385,7 +401,9 @@ X100 还支持与 [12] 类似的简单 summary index，用于已聚簇、即近�
 
 我们进一步分析 X100 上 TPC-H Query 1。X100 提供基于底层 CPU 计数器的 tracing 和 profiling。trace 的 primitive 级统计显示，X100 能以很低的每元组周期数运行 primitive。即使相对复杂的聚合 primitive，也约为每元组 6 个周期；乘法 map primitive 约为每元组 2.2 个周期，远好于 MySQL 中约 49 周期的乘法。
 
-![图 9：TPC-H Query 1 的 X100 Algebra 计划。](assets/figure-09-x100-algebra.png)
+![图 9](assets/figure-09-x100-algebra.png)
+
+图 9：TPC-H Query 1 的 X100 Algebra 计划。
 
 另一个观察是，因为 primitive 处理的大部分数据来自 CPU cache 中的向量，X100 能维持很高带宽。MonetDB/MIL 中乘法受约 500MB/s RAM 带宽限制，而 X100 在 Itanium2 的同一算子上超过 7.5GB/s（AthlonMP 约 5GB/s）。此外，Query 1 的 `l_discount`、`l_tax`、`l_quantity` 以枚举类型存储，X100 自动插入三个 Fetch1Join 恢复原值，每个都低于 2 cycles/tuple。
 
@@ -425,7 +443,9 @@ X100 默认向量大小为 1024，但用户可覆盖。理想情况下，所有�
 
 实验显示，当向量大小为 1，即 tuple-at-a-time 处理时，解释开销对 X100 也很严重。随着向量大小增加，执行时间迅速改善。对该查询和平台而言，最佳值约为 1000，128 到 8K 都表现良好。Query 1 所有向量的合计宽度略高于每元组 40 字节；AthlonMP 的 L1+L2 合计 320KB，因此超过 8K 后 cache 需求越界，性能开始下降。Itanium2 有 16KB L1、256KB L2、3MB L3，退化稍早开始，随后持续到 64K × 40 字节也越过 L3。极端向量大小为 4M 时，中间结果都物化到主存，X100 行为接近 MonetDB/MIL，但仍因不需要 MIL 为投影选中元组所做的额外 join 而更快。
 
-![图 10：Query 1 性能随 vector size 的变化。](assets/figure-10-vector-size.png)
+![图 10](assets/figure-10-vector-size.png)
+
+图 10：Query 1 性能随 vector size 的变化。
 
 ## 6. 相关工作
 

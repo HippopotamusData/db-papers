@@ -75,7 +75,9 @@ Presto 支撑着多个面向外部开发者和广告主的定制报表工具。F
 
 Presto 集群由一个 coordinator 节点和一个或多个 worker 节点组成。Coordinator 负责查询准入、解析、规划和优化，以及查询编排；worker 节点负责查询处理。图 1 是 Presto 架构的简化视图。
 
-![图 1：Presto 架构。](assets/presto-fig01-architecture.png)
+![图 1](assets/presto-fig01-architecture.png)
+
+图 1：Presto 架构。
 
 客户端向 coordinator 发送包含 SQL 语句的 HTTP 请求。Coordinator 通过评估队列策略、解析和分析 SQL 文本、创建并优化分布式执行计划来处理请求。
 
@@ -119,7 +121,9 @@ GROUP BY orders.orderkey
 
 该查询的逻辑计划如图 2 所示。
 
-![图 2：逻辑计划。](assets/presto-fig02-logical-plan.png)
+![图 2](assets/presto-fig02-logical-plan.png)
+
+图 2：逻辑计划。
 
 ### C. 查询优化
 
@@ -141,7 +145,9 @@ GROUP BY orders.orderkey
 
 优化过程的一部分，是识别计划中能够跨 worker 并行执行的部分。这些部分称为“stage”；每个 stage 被分发为一个或多个 task，每个 task 对不同的输入数据集合执行相同计算。引擎在 stage 之间插入带缓冲的内存数据传输（shuffle），以交换数据。Shuffle 会增加延迟、占用缓冲内存并产生很高的 CPU 开销。因此，优化器必须慎重考虑计划中插入的 shuffle 总数。图 3 展示一种朴素实现如何把计划划分为 stage，并用 shuffle 将其连接。
 
-![图 3：图 2 的分布式计划。Connector 未公开任何数据布局属性，且尚未应用减少 shuffle 的优化；执行查询需要四次 shuffle。](assets/presto-fig03-distributed-plan.png)
+![图 3](assets/presto-fig03-distributed-plan.png)
+
+图 3：图 2 的分布式计划。Connector 未公开任何数据布局属性，且尚未应用减少 shuffle 的优化；执行查询需要四次 shuffle。
 
 **数据布局属性。** 优化器可以利用物理数据布局，尽量减少计划中的 shuffle 数。这对 A/B 测试用例非常有用，因为几乎每条查询都要执行大型连接，以产生实验细节或群体信息。引擎利用参与连接的两张表按同一列分区这一事实，采用共置连接策略，消除耗费大量资源的 shuffle。
 
@@ -158,7 +164,9 @@ GROUP BY orders.orderkey
 
 在这两种场景中，每个 worker 使用多个线程执行计算，可以在一定程度上缓解并发瓶颈。引擎能够用多个线程运行同一个算子序列，即同一条 pipeline。图 4 展示优化器如何把连接的一部分并行化。
 
-![图 4：与图 3 对应的物化和优化后计划，其中展示了 task、pipeline 和 operator。Pipeline 1 与 2 在多个线程上并行执行，以加速哈希连接的构建端。](assets/presto-fig04-materialized-plan.png)
+![图 4](assets/presto-fig04-materialized-plan.png)
+
+图 4：与图 3 对应的物化和优化后计划，其中展示了 task、pipeline 和 operator。Pipeline 1 与 2 在多个线程上并行执行，以加速哈希连接的构建端。
 
 ### D. 调度
 
@@ -305,7 +313,9 @@ Hive 和 Raptor 等 connector 会尽可能利用特定文件格式的功能 [20]
 
 图 5 展示一个 page 的布局，其中每列采用一种压缩编码方案。字典编码 block 能有效压缩低基数数据区段，游程编码（RLE）block 则压缩重复数据。多个 page 可以共享一个字典，从而显著提高内存效率。ORC 文件中的一列可以为整个 stripe（最多数百万行）使用同一个字典。
 
-![图 5：一个 page 中的不同 block 类型。](assets/presto-fig05-page-blocks.png)
+![图 5](assets/presto-fig05-page-blocks.png)
+
+图 5：一个 page 中的不同 block 类型。
 
 ### D. 惰性数据加载
 
@@ -346,19 +356,25 @@ Presto 在执行期间还会产生压缩的中间结果。例如，当生成字�
 
 图 6 表明，connector 的特征会显著影响 Presto 查询运行时间。在不改变查询或集群配置的情况下，Presto 能利用 connector 的吞吐量、延迟、统计信息可用性等特征来适应 connector。结果还说明，一个 Presto 集群既能充当传统企业数据仓库（数据必须摄取到其中），也能充当 Hadoop 数据仓库上的查询引擎。Facebook 数据工程师经常先用 Presto 在 Hadoop 仓库上开展探索式分析，再把聚合结果或频繁访问的数据装入 Raptor，以获得更快的分析和低延迟仪表盘。
 
-![图 6：TPC-DS 查询子集的运行时间。](assets/presto-fig06-tpcds-runtimes.png)
+![图 6](assets/presto-fig06-tpcds-runtimes.png)
+
+图 6：TPC-DS 查询子集的运行时间。
 
 ### B. 灵活性
 
 Presto 的灵活性很大程度上来自低延迟数据 shuffle 机制，以及支持高性能处理大量数据的 Connector API。图 7 展示所选用例在生产部署中的查询运行时间分布。这里只纳入成功且实际从存储读取数据的查询。结果说明，可以有效配置 Presto，使其既服务延迟要求严格（20-100 毫秒）的 Web 用例，也运行由程序调度、持续数小时的 ETL 作业。
 
-![图 7：所选用例的查询运行时间分布。横轴为对数刻度。](assets/presto-fig07-runtime-distribution.png)
+![图 7](assets/presto-fig07-runtime-distribution.png)
+
+图 7：所选用例的查询运行时间分布。横轴为对数刻度。
 
 ### C. 资源管理
 
 Presto 集成的细粒度资源管理系统，可以在查询之间迅速转移 CPU 和内存资源，从而最大化多租户集群的资源效率。图 8 是某个交互式分析集群四小时内的 CPU 和并发度指标轨迹。即使需求从峰值 44 条查询降到最低 8 条，Presto 的 worker 节点平均 CPU 利用率仍约为 90%。值得注意的是，为维持响应能力，调度器会优先处理新到达且成本低的工作负载（第 IV-F1 节）：查询获准进入系统后数毫秒内，它就会把集群很大一部分 CPU 分配给新查询。
 
-![图 8：四小时内的集群平均 CPU 利用率和并发度。](assets/presto-fig08-resource-management.png)
+![图 8](assets/presto-fig08-resource-management.png)
+
+图 8：四小时内的集群平均 CPU 利用率和并发度。
 
 ## VII. 工程经验
 

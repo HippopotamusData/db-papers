@@ -373,8 +373,8 @@ $$
 | 输出类型 | 说明 | 参数 |
 | --- | --- | --- |
 | 不含数值的字符串 | 若答案出现在字符串中则得 1 分，否则得 0 分。 | `pred (str)`：要搜索的预测字符串。`gold (List[str])`：要在预测中检查的字符串列表。`conj (str)`：匹配连接方式，`and` 或 `or`，默认 `or`。`exclude (List[str])`：答案中不得出现的字符串。 |
-| 含数值的字符串 | 抽取输出中的数值，并通过 `number_match` 函数进行数值匹配评分。 | `pred (str)`：预测字符串。`gold (List[str|float])`：要检查的字符串或数值。`percentage (bool)`：标准答案与百分比有关时设为 `true`，默认 `false`。`precision (int)`：比较的小数位数，默认 4。`conj (str)`：`and` 或 `or`，默认且通常为 `or`。 |
-| 表格 | 答案为 CSV 文件或字符串形式表格时执行表级评测。 | `result (str)`：CSV 路径或结果字符串。`gold (str | List[str])`：相对根目录的一个或多个标准文件路径。`condition_cols (List[int] | List[List[int]])`：需匹配的列号；如 `[0, 1]` 只使用标准表的第 0、1 列并忽略其余列。`ignore_order (bool)`：匹配元素时是否忽略行序。 |
+| 含数值的字符串 | 抽取输出中的数值，并通过 `number_match` 函数进行数值匹配评分。 | `pred (str)`：预测字符串。<code>gold (List[str&#124;float])</code>：要检查的字符串或数值。`percentage (bool)`：标准答案与百分比有关时设为 `true`，默认 `false`。`precision (int)`：比较的小数位数，默认 4。`conj (str)`：`and` 或 `or`，默认且通常为 `or`。 |
+| 表格 | 答案为 CSV 文件或字符串形式表格时执行表级评测。 | `result (str)`：CSV 路径或结果字符串。<code>gold (str &#124; List[str])</code>：相对根目录的一个或多个标准文件路径。<code>condition_cols (List[int] &#124; List[List[int]])</code>：需匹配的列号；如 `[0, 1]` 只使用标准表的第 0、1 列并忽略其余列。`ignore_order (bool)`：匹配元素时是否忽略行序。 |
 | 数据库 | 答案存于数据库文件时执行数据库级评测。 | `result (str)`：包含结果表的 DuckDB 文件路径。`gold (str)`：标准 DuckDB 文件路径。`condition_tabs (List[str], optional)`：要检查的表名；未提供时检查标准库所有表。`condition_cols (List[List[int]], optional)`：各表用于匹配的列号，默认检查全部列。`ignore_orders (List[bool], optional)`：逐表指定是否忽略行序，默认每表为 `False`。 |
 | SQL | 输出为 SQL 时使用基于执行的评测。主要用于 Spider 2.0-lite。 | 执行预测 SQL 和标准 SQL，并用表格匹配比较结果。 |
 

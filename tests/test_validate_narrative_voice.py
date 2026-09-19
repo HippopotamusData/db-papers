@@ -54,6 +54,22 @@ class NarrativeVoiceValidationTests(unittest.TestCase):
             [],
         )
 
+    def test_affiliations_table_cells_and_named_paper_are_not_narration(self) -> None:
+        text = (
+            "| 作者 | 机构 | 地址 | 联系方式 |\n"
+            "作者地址：Alice，Example University。\n"
+            "六位作者的机构与地址均为：Example University。\n"
+            "PQS 论文作者报告的缺陷尚未解决。\n"
+            "版权归所有者/作者所有。\n"
+        )
+        self.assertEqual(find_ambiguous_author_narration(text), [])
+
+    def test_metadata_cell_does_not_hide_narration_in_other_cells(self) -> None:
+        self.assertTrue(find_ambiguous_author_narration("| 作者 | 作者提出新方法 |"))
+        self.assertTrue(find_ambiguous_author_narration("作者的实验结果显示性能更好。"))
+        self.assertTrue(find_ambiguous_author_narration("论文作者认为该方法更好。"))
+        self.assertEqual(find_ambiguous_author_narration(""), [])
+
     def test_prepared_visible_markdown_is_not_parsed_again(self) -> None:
         with mock.patch.object(
             validate_narrative_voice,

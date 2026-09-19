@@ -35,7 +35,9 @@ CockroachDB（CRDB）是一种可扩展 SQL DBMS，从一开始就面向这种�
 
 例如，一家大型企业的核心用户在欧洲和澳大利亚，而美国用户增长迅速。为了在降低运营成本的同时支撑全球平台，该企业决定迁移到云数据库管理系统。为遵守欧盟《通用数据保护条例》（GDPR），欧洲用户的个人数据必须驻留在欧盟境内。为避免跨洲通信造成的高延迟，数据应尽量靠近最常访问它的用户；当用户旅行时，数据还应在监管允许的范围内动态跟随用户。用户期望“永远在线”的体验，因此 DBMS 必须具备容错能力，甚至能承受整个区域故障。最后，为避免数据异常并简化应用开发，DBMS 必须支持 SQL 和可串行化事务。
 
-![图 1：全球 CockroachDB 集群示意。副本和 leaseholder 分布在不同区域，客户端访问靠近自己的区域。](assets/cockroach-fig01-global-cluster.png)
+![图 1](assets/cockroach-fig01-global-cluster.png)
+
+图 1：全球 CockroachDB 集群示意。副本和 leaseholder 分布在不同区域，客户端访问靠近自己的区域。
 
 CRDB（CockroachDB 的简称）是一种商业 DBMS，旨在满足上述全部要求。前述公司是真实组织，正在把全球平台迁移到 CRDB；图 1 展示了其 CRDB 部署的战略设想。本文介绍 CRDB 的设计与实现，解释各项设计选择的理由以及沿途总结的经验，并聚焦以下三类特性：
 
@@ -160,7 +162,9 @@ SQL 要求当前操作返回响应后才会发出下一项操作。为避免事�
 
 我们还在分布于三个区域的三台服务器上运行微基准。工作负载对一个十列的表做单行写入，并改变这些列上的二级索引数量。图 2 表明，只要表上存在一个或多个二级索引、索引更新因而需要跨 Range 事务，Parallel Commits 就能把吞吐最高提高 72%，把 p50 延迟最高降低 47%。即使事务需要跨 Range 协调，其延迟曲线仍基本保持稳定。
 
-![图 2：Parallel Commits 的性能影响。并行提交在二级索引数量增加时降低延迟并提升吞吐。](assets/cockroach-fig02-parallel-commits.png)
+![图 2](assets/cockroach-fig02-parallel-commits.png)
+
+图 2：Parallel Commits 的性能影响。并行提交在二级索引数量增加时降低延迟并提升吞吐。
 
 #### 3.1.2 在 Leaseholder 上执行
 
@@ -291,7 +295,9 @@ CRDB 使用 Cascades 风格 [27] 查询优化器。转换规则用名为 Optgen 
 
 CRDB 的 SQL 查询可在两种模式下执行：gateway-only 模式中，规划查询的节点负责全部 SQL 处理；distributed 模式中，集群中其他节点参与 SQL 处理。论文所述版本只有只读查询可使用 distributed 模式。由于分布层提供整体键空间抽象，SQL 算子无论在哪种模式下都能从任意节点访问任意 Range。系统用启发式规则估算网络传输量；只读少量行的查询留在 gateway，大查询才做分布式物理规划。
 
-![图 3：分布式 hash join 的物理计划。TableReader 在不同节点上读取 Range，HashJoiner 在节点本地连接部分数据，最终结果返回 gateway。](assets/cockroach-fig03-distributed-hash-join.png)
+![图 3](assets/cockroach-fig03-distributed-hash-join.png)
+
+图 3：分布式 hash join 的物理计划。TableReader 在不同节点上读取 Range，HashJoiner 在节点本地连接部分数据，最终结果返回 gateway。
 
 物理规划阶段把优化器计划转换为物理 SQL 算子 DAG。逻辑扫描按 Range 所在节点拆为多个 TableReader；其余过滤、join 和聚合尽量调度到相同节点、靠近物理数据。图 3 的三节点 hash join 中，表 `b` 的目标 Range 位于节点 2，表 `a` 分布在节点 1、3；扫描结果按 hash 重分布到参与节点，本地 HashJoiner 完成连接，再返回 gateway 合并结果。用户可用 `EXPLAIN(DISTSQL)` 为任意查询生成这类物理图。
 
@@ -321,7 +327,9 @@ CRDB 支持在线 schema change，例如添加列或二级索引。表在 schema
 
 我们使用 Sysbench OLTP 套件 [33] 中的插入和点查工作负载评估垂直与水平扩展。图 4 显示，读写吞吐除以 vCPU 后，在 vCPU 数增加时近乎恒定。垂直扩展实验使用三节点集群，并依次采用 `c5d.large`、`c5d.xlarge`、`c5d.2xlarge`、`c5d.4xlarge` 和 `c5d.9xlarge` AWS 实例，分别含 2、4、8、16 和 36 个 vCPU。水平扩展实验固定使用 `c5d.9xlarge`，把集群从 3 个节点扩展到 48 个节点。
 
-![图 4：Sysbench 工作负载在不同 vCPU 数量下的每 vCPU 最大吞吐。](assets/cockroach-fig04-sysbench-throughput.png)
+![图 4](assets/cockroach-fig04-sysbench-throughput.png)
+
+图 4：Sysbench 工作负载在不同 vCPU 数量下的每 vCPU 最大吞吐。
 
 所有集群都横跨 `us-east-1` 的三个可用区，每个点是三次运行的平均值。每项实验在每个节点上使用 4 张表、每表 1,000,000 行；48 节点集群的数据量约为 38 GB。结果表明，CRDB 在这些易并行工作负载上具备垂直和水平扩展能力。
 
@@ -329,7 +337,9 @@ CRDB 支持在线 schema change，例如添加列或二级索引。表在 schema
 
 我们使用 TPC-C [68]，改变 New Order 事务访问远程 warehouse 的比例，同时改变同样会引入跨节点协调的复制因子，以评估跨节点协调开销。
 
-![图 5：在不同远程事务比例、集群规模和复制因子下的最大 tpmC。](assets/cockroach-fig05-tpcc-tpmc.png)
+![图 5](assets/cockroach-fig05-tpcc-tpmc.png)
+
+图 5：在不同远程事务比例、集群规模和复制因子下的最大 tpmC。
 
 相对单副本，三副本的复制开销会使吞吐最高降低 48%，五副本最高降低 57%；分布式事务还会进一步使吞吐最高降低 46%。尽管如此，所有工作负载仍随集群规模线性扩展。实验使用每台 4 vCPU 的 `n1-standard-4` GCP 机器 [25]。每个点取三次运行的平均值；每次运行寻找能够持续至少 10 分钟的最高 tpmC。由于 TPC-C 吞吐随数据量扩展，最大实验使用 10,000 个 warehouse，对应 800 GB 数据。
 
@@ -359,7 +369,9 @@ CRDB 支持在线 schema change，例如添加列或二级索引。表在 schema
 
 我们在美国三个区域部署 9 个 `n1-standard-4` GCP 节点，并在每个区域另设工作负载生成器，以 TPC-C 1,000 warehouse 工作负载注入可用区和区域故障，比较第 2.3 节的四种放置策略在性能与容错之间的取舍。
 
-![图 6：多区域集群在不同放置策略和 AZ/region 故障下的性能。](assets/cockroach-fig06-multiregion-failure.png)
+![图 6](assets/cockroach-fig06-multiregion-failure.png)
+
+图 6：多区域集群在不同放置策略和 AZ/region 故障下的性能。
 
 图 6 的虚线区间依次表示一个可用区发生故障并恢复，以及整个区域发生故障并恢复。发生故障时，请求会按策略路由到同一区域或另一区域的备用可用区。对于分区策略，表和索引按 warehouse 分区；对于 duplicated indexes 策略，只读的 `items` 表被复制到每个区域。
 
@@ -369,7 +381,9 @@ CRDB 支持在线 schema change，例如添加列或二级索引。表在 schema
 
 我们在 YCSB 基准套件 [16] 上比较 CRDB 与 Cloud Spanner，并使用官方 YCSB 生成器 [76] 及 Spanner、JDBC 客户端。Spanner 是托管服务，不公开硬件配置，因此实验给出每节点 4、8、16 vCPU 的多种 CRDB 配置作为对照。作为成本参照，三台带本地存储的 `n2-standard-8` GCP 虚拟机（每台 8 vCPU）与一个由三副本组成的 Spanner “node” 价格相差不到 0.2%。所有测试都在单一区域内横跨三个可用区放置副本。
 
-![图 7：CRDB 和 Spanner 在 YCSB A-F 工作负载上的吞吐，以及轻负载下的读写延迟。](assets/cockroach-fig07-ycsb-spanner.png)
+![图 7](assets/cockroach-fig07-ycsb-spanner.png)
+
+图 7：CRDB 和 Spanner 在 YCSB A-F 工作负载上的吞吐，以及轻负载下的读写延迟。
 
 多数 YCSB 工作负载上，CRDB 的吞吐显著高于 Spanner，两套系统都能随集群规模水平扩展。例外是 update-heavy、key 呈 Zipf 分布的 Workload A；CRDB 在其高竞争访问模式下扩展不佳，我们预计 20.1 版将加入的可选读锁会显著改善这类负载。轻负载下，CRDB 的读写平均、p95 和 p99 延迟也明显更低，我们认为原因之一是 Spanner 的 commit-wait。重负载延迟虽然趋势相似，但噪声较大，论文因篇幅未报告。
 

@@ -80,25 +80,33 @@ GPU 已用于通用查询 [2]，也用于加速索引 [15]、排序 [31]、连�
 
 ### 3.1 选择性存储
 
-![图 1：选择性存储把掩码选中的 lane 连续写入内存。](assets/figure-01-selective-store.png)
+![图 1](assets/figure-01-selective-store.png)
+
+图 1：选择性存储把掩码选中的 lane 连续写入内存。
 
 选择性存储把向量中特定子集的 lane 连续写到一个内存位置。写入哪些 lane 由向量或标量寄存器中的掩码决定，掩码不能被限制为编译期常量。图 1 中，掩码选中的 `B、D、F、G、I、K、N、O、P` 被紧凑写成连续序列。
 
 ### 3.2 选择性加载
 
-![图 2：选择性加载用连续内存值替换掩码选中的 lane。](assets/figure-02-selective-load.png)
+![图 2](assets/figure-02-selective-load.png)
+
+图 2：选择性加载用连续内存值替换掩码选中的 lane。
 
 选择性加载是对称操作：从一个连续内存位置读取值，只写入掩码指定的 lane；掩码中不活跃的 lane 保留向量原值。它可在一个循环中只替换已经完成任务的 lane，从而立即复用向量容量。
 
 ### 3.3 Gather
 
-![图 3：Gather 根据索引向量从非连续位置读取值。](assets/figure-03-gather.png)
+![图 3](assets/figure-03-gather.png)
+
+图 3：Gather 根据索引向量从非连续位置读取值。
 
 Gather 从非连续位置加载值。输入是索引向量与数组指针，输出向量的每个 lane 取得相应数组单元。增加掩码后得到 selective gather，只访问部分 lane，其余 lane 保持原值。
 
 ### 3.4 Scatter
 
-![图 4：Scatter 根据索引向量向非连续位置写值。](assets/figure-04-scatter.png)
+![图 4](assets/figure-04-scatter.png)
+
+图 4：Scatter 根据索引向量向非连续位置写值。
 
 Scatter 向多个非连续位置写值。输入是索引向量、数组指针和值向量。若多个 lane 指向同一位置，本文假定最右侧 lane 的值最终写入；加入掩码即可只写部分 lane。
 
@@ -554,7 +562,9 @@ Xeon Phi 代码用 ICC 15 编译，选项为 `-mmic -no-vec`，后者关闭编�
 
 ### 10.1 选择扫描
 
-![图 5：Xeon Phi 与 Haswell 上的选择扫描；输入为 32 位 key 与 payload。](assets/figure-05-selection-scan.png)
+![图 5](assets/figure-05-selection-scan.png)
+
+图 5：Xeon Phi 与 Haswell 上的选择扫描；输入为 32 位 key 与 payload。
 
 图 5 的表由 32 位 key 与 32 位 payload 构成，谓词为 $k\verb0_0\mathrm{min}\le k\le k\verb0_0\mathrm{max}$，其中上下界是查询常量。实验改变选择率，测量六种实现：有分支和无分支两种标量版本 [29]，以及由两个正交设计选择组合出的四种向量版本。第一维是在 bitmask 中逐位抽取合格元组，还是用 selective store；第二维是谓词求值时直接访问 key 与 payload 并缓冲合格值，还是只加载 key、缓冲合格 rid，flush 时再解引用真实 key 与 payload。
 
@@ -566,41 +576,57 @@ Haswell 上四个向量版本几乎相同，因为都已打满带宽；无分支
 
 本节先在 Xeon Phi 与 Haswell 上测量 probe throughput，并同先进标量和向量方法比较；随后只在具备 scatter 的 Xeon Phi 上，迭代测量 shared-nothing 哈希表的 build 与 probe。
 
-![图 6：线性探测与双重哈希表的 probe throughput。](assets/figure-06-probe-linear-double.png)
+![图 6](assets/figure-06-probe-linear-double.png)
+
+图 6：线性探测与双重哈希表的 probe throughput。
 
 图 6 比较线性探测（LP）与双重哈希（DH）。输入是一列 $10^9$ 个 32 位 key，输出是一列匹配项的 32 位 payload；几乎所有 key 都命中，哈希表装载因子为 50%。水平向量版本使用 bucketized 表，让一个输入 key 同多个表中 key 比较 [30]；本文的垂直版本则以 gather 让多个输入 key 分别同一个候选表 key 比较。在 Xeon Phi 上，本文实现最高比其他所有方法快 6 倍；在 Haswell 上，cache-resident 表也获得较小但明确的加速。
 
-![图 7：两哈希函数 cuckoo 表的 probe throughput。](assets/figure-07-probe-cuckoo.png)
+![图 7](assets/figure-07-probe-cuckoo.png)
+
+图 7：两哈希函数 cuckoo 表的 probe throughput。
 
 图 7 在相同设置下测量 cuckoo hashing。标量版包括有分支和无分支 [42]；向量版包括水平 bucketized [30] 与垂直方案，后者又分为总是加载两桶再 blend，以及 selective load 第二桶。无分支标量 [42] 在 Xeon Phi 和 Haswell 上都慢于有分支标量。Haswell 上 ICC 生成的有分支代码更快，而 GCC 生成的有分支代码很慢。垂直向量化在 Xeon Phi 上最高快 5 倍，在 Haswell 上最高快 1.7 倍。
 
 Bucketized probe 使用 128 位 SSE 4、每次探 4 个 key，反而比 256 位 AVX 2、每次探 8 个 key 更快，原因是前者的寄存器内 broadcast 更便宜。这也说明“向量越宽必然越快”并不成立，布局与指令成本同样关键。
 
-![图 8：Xeon Phi 上 shared-nothing 线性探测、双重哈希与 cuckoo 表的 1:1 build/probe。](assets/figure-08-build-probe-1-1.png)
+![图 8](assets/figure-08-build-probe-1-1.png)
+
+图 8：Xeon Phi 上 shared-nothing 线性探测、双重哈希与 cuckoo 表的 1:1 build/probe。
 
 图 8 模拟 partitioned hash join 的最后阶段，交替 build 和 probe shared-nothing 表。Build:probe 为 1:1，全部 key 命中，并改变表大小：约 4 KB 时位于 L1，64 KB 时位于 L2，1 MB 时超出 cache。两侧输入都有 32 位 key 与 payload，输出包含匹配 key 与两侧 payload；装载因子 50%，并让 Phi 内存带宽饱和。吞吐定义为 $(|R|+|S|)/t$。表在 L1 时向量化加速 $2.6\text{-}4\times$，在 L2 时加速 $2.4\text{-}2.7\times$，超出 cache 时仍加速 $1.2\text{-}1.4\times$。
 
-![图 9：Xeon Phi 上 L1 shared-nothing 表的 1:10 build/probe；重复键数逐步增加。](assets/figure-09-build-probe-1-10.png)
+![图 9](assets/figure-09-build-probe-1-10.png)
+
+图 9：Xeon Phi 上 L1 shared-nothing 表的 1:10 build/probe；重复键数逐步增加。
 
 图 9 在保持输出大小相同的条件下改变重复键数。所有表均在 L1，build:probe 为 1:10，其余设置同图 8。无重复键时加速 $6.6\text{-}7.7\times$，高于图 8，因为 build 比 probe 昂贵，还要检测冲突；单独 build 的加速为 $2.5\text{-}2.7\times$。每个 key 重复 5 次时，DH 仍加速 4.1 倍，LP 只加速 2.7 倍，说明 DH 对重复键聚簇更有韧性。CH 不直接支持重复键，因此只出现在无重复组。
 
 ### 10.3 Bloom Filter
 
-![图 10：Bloom filter probe；5 个哈希函数，每项 10 bit，选择率 5%。](assets/figure-10-bloom-filter.png)
+![图 10](assets/figure-10-bloom-filter.png)
+
+图 10：Bloom filter probe；5 个哈希函数，每项 10 bit，选择率 5%。
 
 图 10 使用 [27] 的设计，并在 Xeon Phi 上增加 selective load/store 与缓冲，同时关闭循环展开。Filter 使用 5 个哈希函数、每项 10 bit，选择率为 5%，输入是 32 位 key 与 payload。随着 filter 大小从 4 KB 增长到 64 MB，Xeon Phi 的向量加速为 $3.6\text{-}7.8\times$，Haswell 为 $1.3\text{-}3.1\times$。Cache-resident filter 尤其适合这种以不同 lane 并发探测不同 key 的垂直向量化。
 
 ### 10.4 分区
 
-![图 11：Xeon Phi 上 radix 与 hash 直方图生成。](assets/figure-11-histogram.png)
+![图 11](assets/figure-11-histogram.png)
+
+图 11：Xeon Phi 上 radix 与 hash 直方图生成。
 
 图 11 比较 Xeon Phi 上 radix/hash histogram。主流 CPU 上这一步已经打满内存加载带宽 [26]；Phi 的标量代码则主要受分区函数限制。把每个计数复制 $W$ 份后，向量 radix 相对标量加速 2.55 倍。复制直方图超过 L1 时会变慢，但把计数压缩到 8 bit 可支持更大 $P$。冲突串行化不需要复制，却更慢，尤其当 $P\le W$ 时； $P$ 过大后，复制与串行化都变得昂贵。
 
-![图 12：32 位 key 的 range function；比较分支/无分支标量、向量二分和 SIMD tree index。](assets/figure-12-range-function.png)
+![图 12](assets/figure-12-range-function.png)
+
+图 12：32 位 key 的 range function；比较分支/无分支标量、向量二分和 SIMD tree index。
 
 图 12 测量 range partition function。向量二分查找在 Xeon Phi 上加速 $7\text{-}15\times$，在 Haswell 上加速 $2.4\text{-}2.8\times$。SIMD range index [26] 在 Haswell 上更快，在 Xeon Phi 上却更慢，因为简单流水线被标量指令占满。图中树节点标注如 $17\times17$、 $9\times9\times9$，表示每层节点 fanout；根节点常驻寄存器。
 
-![图 13：Xeon Phi 上 shared-nothing、超出 cache 的 radix/hash 数据重排。](assets/figure-13-radix-shuffling.png)
+![图 13](assets/figure-13-radix-shuffling.png)
+
+图 13：Xeon Phi 上 shared-nothing、超出 cache 的 radix/hash 数据重排。
 
 图 13 使用大于 cache 的输入测量 Xeon Phi shuffling。主流 CPU 因无 scatter 无法完全向量化，但在较大 fanout 下能饱和内存复制带宽 [4, 26]。Xeon Phi 上：无缓冲版本中，向量化最高加速 1.95 倍；标量版本中，缓冲最高加速 1.8 倍；缓冲版本中，向量化最高加速 2.85 倍，并使用到约 60% 的 copy bandwidth。使 $\mathrm{throughput}\times\mathrm{bits}$ 最大的每轮最佳 fanout 为 5-8 个 radix bit。图中的不稳定 hash partitioning 比稳定 radix partitioning 最高快 17%。
 
@@ -610,17 +636,23 @@ Bucketized probe 使用 128 位 SSE 4、每次探 4 个 key，反而比 256 位 
 
 #### 10.5.1 向量化加速与算法设计
 
-![图 14：Xeon Phi 上 LSB radix sort；输入为仅 32 位 key 或 32 位 key+payload。](assets/figure-14-radixsort.png)
+![图 14](assets/figure-14-radixsort.png)
+
+图 14：Xeon Phi 上 LSB radix sort；输入为仅 32 位 key 或 32 位 key+payload。
 
 图 14 中，LSB radix sort 相对先进标量代码加速 2.2 倍，执行时间随输入大小从 1 亿到 8 亿元组近似线性增长。主流 CPU 的每轮分区已接近带宽上限，因此通常接近饱和 [26, 31, 38]。
 
-![图 15：Xeon Phi 上 no/min/max partition 三种 hash join。](assets/figure-15-hash-join-variants.png)
+![图 15](assets/figure-15-hash-join-variants.png)
+
+图 15：Xeon Phi 上 no/min/max partition 三种 hash join。
 
 图 15 测量第 9 节的三种 hash join。实验假定 foreign-key join，但实现本身通用。No-partition 与 min-partition 只分别获得 1.05 倍和 1.25 倍加速；fully/max-partitioned 方案获得 3.3 倍加速，成为总体最快方案，并领先第二名 2.25 倍。这一差距大到无法再为 hardware-oblivious join [12] 辩护。
 
 Hash join 也快于 sort-merge join [4, 14]：排序 $4\times10^8$ 个元组用 0.6 秒，而把两侧各 $2\times10^8$ 个元组连接并物化输出只用 0.54 秒。
 
-![图 16：Xeon Phi 上 radix sort 与 partitioned hash join 的线程扩展性，双对数坐标。](assets/figure-16-scalability.png)
+![图 16](assets/figure-16-scalability.png)
+
+图 16：Xeon Phi 上 radix sort 与 partitioned hash join 的线程扩展性，双对数坐标。
 
 图 16 把线程数从 1 增长到 244，radix sort 与 partitioned hash join 都接近线性扩展，即使进入 2-way、4-way SMT 仍继续提升，因为 SMT 隐藏了 load 与指令延迟。Xeon Phi 的向量指令延迟为 4 个周期，4-way SMT 对隐藏该延迟至关重要。主流 CPU 的 LSB radix sort 已经饱和，2-way SMT 只能带来边际加速 [26]。
 
@@ -628,7 +660,9 @@ Hash join 也快于 sort-merge join [4, 14]：排序 $4\times10^8$ 个元组用 
 
 本节把 Xeon Phi 与四颗 Sandy Bridge（SB）CPU 比较，任务为 radix sort 与 partitioned hash join。SB 上的 LSB radix sort 使用 [26] 的源码。其分区轮次受内存限制，无法从完全向量化中受益。Radix sort 与 hash join 均 NUMA-aware，数据跨 CPU 最多传输一次 [26]；cache 内连接使用图 6 的水平线性探测。
 
-![图 17：Xeon Phi 7120P 与四颗 Xeon E5-4620 的 radix sort/hash join 性能和带宽配平实验。](assets/figure-17-xeon-phi-vs-cpus.png)
+![图 17](assets/figure-17-xeon-phi-vs-cpus.png)
+
+图 17：Xeon Phi 7120P 与四颗 Xeon E5-4620 的 radix sort/hash join 性能和带宽配平实验。
 
 图 17 的排序输入为 $4\times10^8$ 个元组，连接输入为两侧各 $2\times10^8$ 个元组，每表均为 32 位 key 与 payload。原始配置下，Phi 的 radix sort 与 hash join 都比四颗 SB CPU 慢约 14%。若假设运行功耗与 TDP 成比例，两项任务在 Phi 上的能效都高约 1.5 倍。
 
@@ -638,11 +672,15 @@ Hash join 也快于 sort-merge join [4, 14]：排序 $4\times10^8$ 个元组用 
 
 向量代码不像标量代码那样容易同时处理多种类型。前文只使用 32 位列，足以表达排序键和连接索引。Radix-decluster [21] 等类型通用物化方法只能单轮执行，受 cache 容量限制；类型通用的 buffered shuffling 能同时解决类型与容量问题。
 
-![图 18：Xeon Phi 上 32 位 key 的 radix sort；改变 payload 列数与列宽。](assets/figure-18-payload-sort.png)
+![图 18](assets/figure-18-payload-sort.png)
+
+图 18：Xeon Phi 上 32 位 key 的 radix sort；改变 payload 列数与列宽。
 
 图 18 对 32 位 key 的 radix sort 改变 payload 列数与宽度。每一轮只生成一次直方图，然后逐列重排。8 位、16 位列的重排成本与 32 位列相同，因为实现受计算而非带宽限制，而且 Xeon Phi 会把 8/16 位操作提升为 32 位向量 lane。方法对更宽元组扩展良好：8 字节元组排序需 0.36 秒，36 字节元组约 1 秒。
 
-![图 19：Xeon Phi 上带多列 64 位 payload 的 partitioned hash join。](assets/figure-19-payload-join.png)
+![图 19](assets/figure-19-payload-join.png)
+
+图 19：Xeon Phi 上带多列 64 位 payload 的 partitioned hash join。
 
 图 19 的关系大小为 $10^7\bowtie10^8$ 个元组，key 为 32 位，两侧 payload 为数量不同的 64 位列。Cache 外按图 18 方法逐列重排；cache 内哈希表只存 rid，再用 rid 解引用各列。
 

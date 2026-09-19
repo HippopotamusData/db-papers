@@ -96,7 +96,9 @@ Snowflake 被设计为企业级服务。除提供高度易用性和互操作性�
 
 图 1 展示了 Snowflake 的三个架构层及其主要组件。
 
-![图 1：Snowflake 的 multi-cluster shared-data architecture。Cloud Services 负责认证、访问控制、事务、优化、安全和元数据；多个 Virtual Warehouse 共享底层 Data Storage。](assets/figure-01-multicluster-shared-data-architecture.png)
+![图 1](assets/figure-01-multicluster-shared-data-architecture.png)
+
+图 1：Snowflake 的 multi-cluster shared-data architecture。Cloud Services 负责认证、访问控制、事务、优化、安全和元数据；多个 Virtual Warehouse 共享底层 Data Storage。
 
 ### 3.1 Data Storage
 
@@ -204,7 +206,9 @@ Snowflake 支持标准数据库接口，包括 JDBC、ODBC、Python PEP-0249，�
 
 图 2 展示一个 Snowflake 多数据中心实例：Cloud Services 始终在线，多个按需 VW 共享无限 Data Storage。
 
-![图 2：Snowflake 的 multi-data center instance。负载均衡器、Cloud Services、元数据存储、按需 VW 和 Data Storage 跨多个数据中心组织。](assets/figure-02-multidatacenter-instance.png)
+![图 2](assets/figure-02-multidatacenter-instance.png)
+
+图 2：Snowflake 的 multi-data center instance。负载均衡器、Cloud Services、元数据存储、按需 VW 和 Data Storage 跨多个数据中心组织。
 
 #### 4.2.1 故障弹性
 
@@ -222,7 +226,9 @@ Snowflake 不仅在故障发生时提供持续可用性，也在软件升级期�
 
 图 3 展示一个正在进行的升级过程快照。Snowflake 的两个版本并行运行，版本 1 为浅色，版本 2 为深色。一个 Cloud Services 实例有两个版本，控制两个 virtual warehouse，每个 virtual warehouse 也有两个版本。负载均衡器把进入调用导向合适版本的 Cloud Services。某个版本的 Cloud Services 只与匹配版本的 VW 通信。
 
-![图 3：Snowflake 的在线升级。Cloud Services 和 Virtual Warehouse 的两个版本并行运行，共享元数据和底层数据，负载均衡器按版本路由请求。](assets/figure-03-online-upgrade.png)
+![图 3](assets/figure-03-online-upgrade.png)
+
+图 3：Snowflake 的在线升级。Cloud Services 和 Virtual Warehouse 的两个版本并行运行，共享元数据和底层数据，负载均衡器按版本路由请求。
 
 如前所述，两个版本的 Cloud Services 共享同一个元数据存储。此外，不同版本的 VW 能够共享相同 worker node 及其缓存。因此，升级后不需要重新填充缓存。整个过程对用户透明，没有停机或性能下降。
 
@@ -270,7 +276,9 @@ Cloudera Impala [21] 结合 Parquet [10]，以及 Google Dremel [34] 已经证�
 
 最后，我们使用一个 medium standard warehouse[^5] 对四个数据库运行全部 22 个 TPC-H 查询。图 4 展示结果。数字来自三次 warm cache 运行。标准误差不显著，因此省略。
 
-![图 4：TPC-H SF100 和 SF1000 性能，比较关系格式与无模式行格式。两组柱状图显示多数查询中 schema-less 存储和查询处理开销接近关系格式。](assets/figure-04-tpch-schema-row-format-performance.png)
+![图 4](assets/figure-04-tpch-schema-row-format-performance.png)
+
+图 4：TPC-H SF100 和 SF1000 性能，比较关系格式与无模式行格式。两组柱状图显示多数查询中 schema-less 存储和查询处理开销接近关系格式。
 
 可以看到，除两个查询外，schema-less 存储和查询处理的开销大约为 10%。这两个查询是 SF1000 上的 Q9 和 Q17。我们确认导致降速的原因是 sub-optimal join order，而该 join order 来自 distinct value estimation 中的一个已知 bug。我们持续改进半结构化数据上的元数据收集和查询优化。
 
@@ -327,7 +335,9 @@ Snowflake 使用强 AES 256-bit 加密，并采用根植于 AWS CloudHSM [12] �
 
 图 5 所示的 Snowflake 密钥层次结构有四层：root key、account key、table key 和 file key。每一层父密钥都会加密，即 wrap，下方一层子密钥。每个 account key 对应一个用户账户，每个 table key 对应一张数据库表，每个 file key 对应一个表文件。
 
-![图 5：Snowflake 的加密密钥层次结构。Root key 包装 account key，account key 包装 table key，table key 通过派生关系保护 file key。](assets/figure-05-encryption-key-hierarchy.png)
+![图 5](assets/figure-05-encryption-key-hierarchy.png)
+
+图 5：Snowflake 的加密密钥层次结构。Root key 包装 account key，account key 包装 table key，table key 通过派生关系保护 file key。
 
 层次化密钥模型是良好的安全实践，因为它限制每个密钥保护的数据量。每一层都会缩小下方密钥的作用域，如图 5 中方框所示。Snowflake 的层次化密钥模型保证了其多租户架构中的用户数据隔离，因为每个用户账户都有单独的 account key。
 
@@ -341,7 +351,9 @@ Rekeying 是用新密钥重新加密旧数据的过程。在某个特定时间�
 
 图 6 展示单个 table key 的生命周期。假设密钥每月轮换一次，数据每年 rekey 一次。Table file 1 和 2 于 2014 年 4 月创建，使用 key 1 version 1 (k1v1)。2014 年 5 月，key 1 轮换到 version 2 (k1v2)，table file 3 使用 k1v2 创建。2014 年 6 月，key 1 轮换到 version 3 (k1v3)，又创建两个表文件。2014 年 6 月之后，该表不再有插入或更新。2015 年 4 月，k1v1 满一年，需要销毁。系统创建新密钥 key 2 version 1 (k2v1)，并用 k2v1 对所有关联 k1v1 的文件 rekey。2015 年 5 月，k1v2 及 table file 3 发生同样过程，用 k2v2 rekey。2015 年 6 月，table file 4 和 5 使用 k2v3 rekey。
 
-![图 6：Table key 生命周期。图中展示 key rotation 与 rekeying 如何随时间把 table file 从旧 key version 迁移到新 key version。](assets/figure-06-table-key-life-cycle.png)
+![图 6](assets/figure-06-table-key-life-cycle.png)
+
+图 6：Table key 生命周期。图中展示 key rotation 与 rekeying 如何随时间把 table file 从旧 key version 迁移到新 key version。
 
 Account key 与 table key 之间、root key 与 account key 之间实现了类似方案。密钥层次结构中的每一层都会经历 key rotation 和 rekeying，包括 root key。Account key 和 root key 的 key rotation 与 rekeying 不需要重新加密文件，只需要重新加密直接下层的密钥。
 

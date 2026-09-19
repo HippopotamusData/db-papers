@@ -91,7 +91,9 @@ Data warehouse 相比低延迟更重视读写吞吐，因为应用通常批处�
 
 集群是 Tectonic 顶层部署单元。Tectonic 集群位于单个数据中心内，提供可抵抗主机、机架和电力域故障的持久存储。租户可以在 Tectonic 之上构建地理复制，以防数据中心级故障。
 
-![图 1：Tectonic 在单数据中心内提供持久、容错存储；每个租户拥有一个或多个相互独立的 namespace，跨数据中心复制由租户实现。](assets/figure-01-tectonic-cluster.png)
+![图 1](assets/figure-01-tectonic-cluster.png)
+
+图 1：Tectonic 在单数据中心内提供持久、容错存储；每个租户拥有一个或多个相互独立的 namespace，跨数据中心复制由租户实现。
 
 一个 Tectonic 集群由 storage nodes、metadata nodes 和用于后台操作的 stateless nodes 组成。Client Library 编排到元数据节点和存储节点的远程调用。Tectonic 集群可以非常大，单个集群能服务一个数据中心内所有租户的存储需求。
 
@@ -112,7 +114,9 @@ Tectonic 的主要组件如下：
 
 Chunk Store 与 Metadata Store 的可扩展性使 Tectonic 能够存储 exabytes 数据。Tectonic 是一个由客户端驱动、基于 microservice 的系统，这一设计支持租户特定优化。Chunk Store 和 Metadata Store 分别运行独立服务，处理数据和元数据读写请求；Client Library 编排这些服务，把客户端文件系统 API 调用转换为发往 Chunk Store 和 Metadata Store 服务的 RPC。
 
-![图 2：Tectonic 架构，箭头表示网络调用。文件系统元数据保存在 key-value store 中；除 Chunk Store 和 Metadata Store 外，其他组件均为无状态组件。](assets/figure-02-architecture.png)
+![图 2](assets/figure-02-architecture.png)
+
+图 2：Tectonic 架构，箭头表示网络调用。文件系统元数据保存在 key-value store 中；除 Chunk Store 和 Metadata Store 外，其他组件均为无状态组件。
 
 ### 3.2 Chunk Store：exabyte 级存储
 
@@ -290,7 +294,9 @@ partial block quorum append 的挑战是 straggler append 可能让副本 chunk 
 
 Tectonic 的 blob storage 读写延迟与 Haystack 相当，说明通用性没有带来显著性能成本。
 
-![图 3：Tectonic 的尾延迟优化。(a) 展示测试集群负载约 80% 时，hedged quorum writes 对 data warehouse 72 MB block 写尾延迟的改善；(b) 展示使用和不使用 quorum append 时 Tectonic blob storage 的写延迟，并与 Haystack 比较；(c) 比较 Tectonic 与 Haystack 的 blob storage 读延迟。](assets/figure-03-tail-latency.png)
+![图 3](assets/figure-03-tail-latency.png)
+
+图 3：Tectonic 的尾延迟优化。(a) 展示测试集群负载约 80% 时，hedged quorum writes 对 data warehouse 72 MB block 写尾延迟的改善；(b) 展示使用和不使用 quorum append 时 Tectonic blob storage 的写延迟，并与 Haystack 比较；(c) 比较 Tectonic 与 Haystack 的 blob storage 读延迟。
 
 #### 为提高存储效率而重新编码 block
 
@@ -341,7 +347,9 @@ Metadata Store 的 load spikes 可能导致 metadata shard 热点。服务元数
 
 代表性集群中，File 和 Block 层所有 shard 都低于该限制。约 1% Name 层 shard 达到 QPS 限制，因为它们保存非常热的目录。未即时处理的小部分元数据请求会 backoff 后重试，让 metadata nodes 清理初始尖峰并成功服务重试请求。结合其他 shard 都低于最大值，Tectonic 能成功处理 data warehouse 的大元数据负载尖峰。
 
-![图 4：代表性生产集群三天内的 IO 和元数据负载。(a)(b) 展示几乎占用相同空间的 blob storage 与 data warehouse 的不同流量模式，以及 Tectonic 对 IOPS 和带宽尖峰的处理；(c) 是三天内 metadata shard 峰值负载的 CDF。每个 shard 的上限为灰线所示的 10 KQPS；File、Block 层的全部操作和几乎所有 Name 层操作可立即处理，其余 Name 层操作通过重试完成。](assets/figure-04-production-io-metadata-load.png)
+![图 4](assets/figure-04-production-io-metadata-load.png)
+
+图 4：代表性生产集群三天内的 IO 和元数据负载。(a)(b) 展示几乎占用相同空间的 blob storage 与 data warehouse 的不同流量模式，以及 Tectonic 对 IOPS 和带宽尖峰的处理；(c) 是三天内 metadata shard 峰值负载的 CDF。每个 shard 的上限为灰线所示的 10 KQPS；File、Block 层的全部操作和几乎所有 Name 层操作可立即处理，其余 Name 层操作通过重试完成。
 
 Name、File、Block 层的 shard 负载分布不同。越高层会把更多租户操作共置在一起，因此每 shard QPS 分布更宽。例如某目录的所有 directory-to-file lookups 都由一个 shard 处理。若像 ADLS [42] 那样使用 range partition，更多租户操作会共置，负载尖峰更大。data warehouse 作业常读取许多名称相似的目录，若目录按 range 分区会导致极端热点；它们也常读取一个目录中的许多文件，造成 Name 层尖峰。若 File 层也 range partition，把同一目录下文件放同一 shard，会因 File 层操作更多而产生更大尖峰。Tectonic 的 hash partition 减少共置，使系统可用更少节点处理元数据尖峰。
 

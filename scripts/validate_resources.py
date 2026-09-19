@@ -25,41 +25,41 @@ from reference_sections import select_reference_heading
 
 SOURCE_RESOURCE_PATTERNS = {
     "figure": re.compile(
-        r"(?:^[ \t\f]*|[ \t]{2,})(?:Figure|Fig\.)\s*([1-9]\d*)\s*[:.]",
+        r"(?:^[ \t\f]*|[ \t]{2,})(?:Figure|Fig\.)\s*(?=[1-9]\d*\.\d|[1-9]\d*[ \t]*[:.])([1-9]\d*(?:\.\d+)*)(?!\d|\.\d)[ \t]*(?:[:.]|$)",
         re.IGNORECASE | re.MULTILINE,
     ),
     "table": re.compile(
-        r"(?:^[ \t\f]*|[ \t]{2,})Table\s*([1-9]\d*)\s*[:.]",
+        r"(?:^[ \t\f]*|[ \t]{2,})Table\s*(?=[1-9]\d*\.\d|[1-9]\d*[ \t]*[:.])([1-9]\d*(?:\.\d+)*)(?!\d|\.\d)[ \t]*(?:[:.]|$)",
         re.IGNORECASE | re.MULTILINE,
     ),
     "algorithm": re.compile(
         # Some proceedings print ``Algorithm 1 Name`` without a colon.  Keep
         # this anchored like a caption and reject the common prose forms so a
         # sentence such as "Algorithm 1 shows ..." is not source evidence.
-        r"(?:^[ \t\f]*|[ \t]{2,})Algorithm\s*([1-9]\d*)"
+        r"(?:^[ \t\f]*|[ \t]{2,})Algorithm\s*([1-9]\d*(?:\.\d+)*)(?!\d|\.\d)"
         r"(?:(?:[ \t]*[:.][ \t]*)|(?:[ \t]+(?!(?:shows?|depicts?|presents?|"
         r"describes?|illustrates?|lists?|uses?|is|was|has|can|will)\b)(?=\S)))",
         re.IGNORECASE | re.MULTILINE,
     ),
 }
 IMAGE_ALT_NUMBER_PATTERNS = {
-    "figure": re.compile(r"^\s*(?:图|Figure|Fig\.)\s*([1-9]\d*)(?:[a-z])?(?!\d)", re.IGNORECASE),
-    "table": re.compile(r"^\s*(?:表|Table)\s*([1-9]\d*)(?:[a-z])?(?!\d)", re.IGNORECASE),
-    "algorithm": re.compile(r"^\s*(?:算法|Algorithm)\s*([1-9]\d*)(?!\d)", re.IGNORECASE),
+    "figure": re.compile(r"^\s*(?:图|Figure|Fig\.)\s*([1-9]\d*(?:\.\d+)*)(?:[a-z])?(?!\d|\.\d)", re.IGNORECASE),
+    "table": re.compile(r"^\s*(?:表|Table)\s*([1-9]\d*(?:\.\d+)*)(?:[a-z])?(?!\d|\.\d)", re.IGNORECASE),
+    "algorithm": re.compile(r"^\s*(?:算法|Algorithm)\s*([1-9]\d*(?:\.\d+)*)(?!\d|\.\d)", re.IGNORECASE),
 }
 TRANSLATION_CAPTION_PATTERNS = {
     "figure": re.compile(
         r"^\s*(?:[-*]\s+)?(?:\*\*)?(?:图|Figure|Fig\.)\s*"
-        r"([1-9]\d*)(?:[a-z])?(?!\d)\s*[:：.]",
+        r"([1-9]\d*(?:\.\d+)*)(?:[a-z])?(?!\d|\.\d)\s*[:：.]",
         re.IGNORECASE,
     ),
     "table": re.compile(
         r"^\s*(?:[-*]\s+)?(?:\*\*)?(?:表|Table)\s*"
-        r"([1-9]\d*)(?:[a-z])?(?!\d)\s*[:：.]",
+        r"([1-9]\d*(?:\.\d+)*)(?:[a-z])?(?!\d|\.\d)\s*[:：.]",
         re.IGNORECASE,
     ),
     "algorithm": re.compile(
-        r"^\s*(?:[-*]\s+)?(?:\*\*)?(?:算法|Algorithm)\s*([1-9]\d*)(?!\d)"
+        r"^\s*(?:[-*]\s+)?(?:\*\*)?(?:算法|Algorithm)\s*([1-9]\d*(?:\.\d+)*)(?!\d|\.\d)"
         r"(?:\s*[:：.]|\s+(?!(?:展示|给出|说明|列出|描述|表明|显示|报告|中|的|为))"
         r"(?!(?:shows?|depicts?|presents?|describes?|illustrates?|lists?|uses?|is|was|has|can|will)\b)"
         r"(?=\S))",
@@ -384,6 +384,104 @@ def image_links(translation_text: str) -> list[tuple[str, str]]:
     return _commonmark_structure(translation_text).image_links
 
 
+def image_caption_risks(translation_text: str) -> list[str]:
+    """Flag numbered alt descriptions without an adjacent visible caption.
+
+    This is deliberately separate from payload existence: a bitmap may itself
+    contain the caption, so these candidates require PDF/image review, not a
+    hard failure. Empty or number-only alt text supplies no such evidence.
+    """
+
+    tokens = MarkdownIt("commonmark").parse(reader_visible_markdown(translation_text))
+    # Keep code, headings and other blocks as adjacency barriers; comments have
+    # already been removed. Reference-style images resolve in the same parser.
+    blocks = [
+        token for token in tokens
+        if token.type in {"inline", "fence", "code_block", "html_block", "hr"}
+    ]
+
+    labels = {
+        "figure": r"(?:图|Figure|Fig\.)",
+        "table": r"(?:表|Table)",
+        "algorithm": r"(?:算法|Algorithm)",
+    }
+    patterns = {
+        kind: re.compile(rf"^\s*{label}\s*([1-9]\d*(?:\.\d+)*[a-z]?)(?!\d)", re.I)
+        for kind, label in labels.items()
+    }
+
+    def caption_number(text: str, kind: str, *, formatted: bool = False) -> str | None:
+        match = patterns[kind].match(text)
+        if not match:
+            return None
+        tail = text[match.end():]
+        # Require a delimiter: "图2超图上的遍历" refers to another figure,
+        # whereas "图 2：遍历" labels this image. Preserve decimal identifiers.
+        if not tail or not re.match(r"[\s:：.。]", tail):
+            return None
+        description = tail.lstrip(" \t\n\u3000:：.。")
+        if not description:
+            return None
+        if not tail.lstrip().startswith((":", "：", ".", "。")):
+            if not formatted and not tail.startswith("\u3000"):
+                return None
+            if re.match(
+                r"(?:展示|给出|说明|列出|描述|表明|显示|报告|中|的|为|"
+                r"shows?\b|depicts?\b|presents?\b|describes?\b|is\b)",
+                description, re.I,
+            ):
+                return None
+        return match.group(1).lower()
+
+    def visible_caption(token: Token, kind: str, number: str) -> bool:
+        if token.type != "inline":
+            return False
+        plain = "".join(
+            child.content if child.type == "text" else
+            "\x00" if child.type == "code_inline" else
+            "\n" if child.type in {"softbreak", "hardbreak"} else ""
+            for child in token.children or []
+        ).strip()
+        # Match the start of the whole block, never an embedded cross-reference.
+        children = [
+            child for child in token.children or []
+            if child.type not in {"image", "softbreak", "hardbreak"}
+            and (child.type != "text" or child.content.strip())
+        ]
+        formatted = bool(children and children[0].type in {"strong_open", "em_open"})
+        label_only = patterns[kind].fullmatch(plain)
+        if label_only:
+            # Some original figures have only a numbered label. Presence is
+            # detectable; whether their alt adds missing content is semantic.
+            return label_only.group(1).lower() == number
+        return caption_number(plain, kind, formatted=formatted) == number
+
+    risks: list[str] = []
+    for index, block in enumerate(blocks):
+        if block.type != "inline":
+            continue
+        for child in block.children or []:
+            if child.type != "image":
+                continue
+            for kind in patterns:
+                number = caption_number(child.content, kind, formatted=True)
+                if number is None:
+                    continue
+                if any(
+                    visible_caption(candidate, kind, number)
+                    for candidate in blocks[max(0, index - 1):index + 2]
+                ):
+                    continue
+                line = block.map[0] + 1 if block.map else "?"
+                risks.append(
+                    f"line {line}: {kind.title()} {number} image alt contains a "
+                    "caption description without a matching adjacent visible caption "
+                    f"({child.attrGet('src')}); verify alt-only caption candidate "
+                    "against the PDF and bitmap"
+                )
+    return risks
+
+
 def _lexical_absolute(path: Path) -> Path:
     """Return an absolute path without resolving symlinks."""
 
@@ -452,6 +550,34 @@ def _is_table_delimiter(line: str) -> bool:
     return bool(cells) and all(
         re.fullmatch(r":?-{3,}:?", cell) is not None for cell in cells
     )
+
+
+def markdown_table_risks(translation_text: str) -> list[str]:
+    """Find column-width mismatches without assuming a numbered table caption."""
+
+    visible = reader_visible_markdown(translation_text)
+    lines = visible.splitlines()
+    structure = _commonmark_structure(visible)
+    risks: list[str] = []
+    for index in range(len(lines) - 1):
+        if index not in structure.inline_lines or index + 1 not in structure.inline_lines:
+            continue
+        header = _table_cells(lines[index])
+        if len(header) < 2 or not _is_table_delimiter(lines[index + 1]):
+            continue
+        expected = len(header)
+        row = index + 1
+        while row < len(lines) and row in structure.inline_lines and lines[row].strip():
+            cells = _table_cells(lines[row])
+            if len(cells) < 2 and not lines[row].strip().startswith("|"):
+                break
+            if len(cells) != expected:
+                risks.append(
+                    f"line {row + 1}: Markdown table has {len(cells)} cells "
+                    f"but its header has {expected}; verify unescaped pipes and column alignment"
+                )
+            row += 1
+    return risks
 
 
 def _markdown_table_marker(
@@ -553,7 +679,16 @@ def _following_payload_marker(
     return None
 
 
-def formal_resource_representations(translation_text: str) -> dict[str, dict[int, set[str]]]:
+def _resource_number(value: str) -> int | str:
+    """Preserve chapter-qualified identifiers without changing integer callers."""
+    return value if "." in value else int(value)
+
+
+def _resource_number_sort(value: int | str) -> tuple[int, ...]:
+    return tuple(int(part) for part in str(value).split("."))
+
+
+def formal_resource_representations(translation_text: str) -> dict[str, dict[int | str, set[str]]]:
     """Return formal translation-side representations keyed by type and number.
 
     Ordinary prose references never enter this map.  Evidence must be either a
@@ -564,34 +699,48 @@ def formal_resource_representations(translation_text: str) -> dict[str, dict[int
     over an adjacent fenced transcription because the two can be complementary.
     """
 
+    translation_text = reader_visible_markdown(translation_text)
     structure = _commonmark_structure(translation_text)
-    representations: dict[str, dict[int, set[str]]] = {
+    representations: dict[str, dict[int | str, set[str]]] = {
         kind: {} for kind in SOURCE_RESOURCE_PATTERNS
     }
 
     for alt, target in structure.image_links:
         for kind, pattern in IMAGE_ALT_NUMBER_PATTERNS.items():
             match = pattern.match(alt)
-            if match:
-                number = int(match.group(1))
+            if match and (
+                match.end() == len(alt)
+                or re.match(r"[\s:：.。()（）\-—]", alt[match.end():])
+            ):
+                number = _resource_number(match.group(1))
                 representations[kind].setdefault(number, set()).add(f"image:{target}")
 
     lines = translation_text.splitlines()
+    caption_candidates: list[tuple[str, int | str, list[str]]] = []
     for kind, caption_pattern in TRANSLATION_CAPTION_PATTERNS.items():
         for index, line in enumerate(lines):
             if index not in structure.inline_lines:
                 continue
-            caption = caption_pattern.match(line)
+            # Headings and emphasis are presentation, not part of the label.
+            # Parse inline syntax so a code literal or image alt cannot become
+            # a caption. Fenced/indented blocks are excluded by inline_lines.
+            caption_line = re.sub(r"^\s{0,3}#{1,6}\s+", "", line)
+            if not re.match(r"\s*(?:[-*]\s+)?[*_]*(?:图|表|算法|Figure|Fig\.|Table|Algorithm)", caption_line, re.I):
+                continue
+            parsed = MarkdownIt("commonmark").parseInline(caption_line)[0]
+            caption_text = "".join(
+                child.content if child.type == "text" else
+                "\x00" if child.type == "code_inline" else ""
+                for child in parsed.children or []
+            )
+            caption = caption_pattern.match(caption_text)
             if not caption:
                 continue
-            payload_index = index + 1
-            while payload_index < len(lines) and not lines[payload_index].strip():
-                payload_index += 1
-            marker: str | None = None
+            candidates: list[str] = []
             same_line_images = structure.image_markers_by_line.get(index)
             if same_line_images and len(same_line_images) == 1:
-                marker = next(iter(same_line_images))
-            if marker is None:
+                candidates = list(same_line_images)
+            if not candidates:
                 preceding = _preceding_payload_marker(
                     lines,
                     index,
@@ -604,31 +753,41 @@ def formal_resource_representations(translation_text: str) -> dict[str, dict[int
                     kind,
                     structure,
                 )
-                if kind == "table":
-                    marker = next(
-                        (
-                            candidate
-                            for candidate in (preceding, following)
-                            if candidate is not None
-                            and candidate.startswith("table-line:")
-                        ),
-                        preceding or following,
-                    )
-                elif kind == "algorithm":
-                    marker = next(
-                        (
-                            candidate
-                            for candidate in (preceding, following)
-                            if candidate is not None
-                            and candidate.startswith("fence-line:")
-                        ),
-                        preceding or following,
-                    )
-                else:
-                    marker = preceding or following
-            if marker is not None:
-                number = int(caption.group(1))
-                representations[kind].setdefault(number, set()).add(marker)
+                candidates = list(dict.fromkeys(
+                    marker for marker in (preceding, following) if marker is not None
+                ))
+                preferred_prefix = {"table": "table-line:", "algorithm": "fence-line:"}.get(kind)
+                if preferred_prefix:
+                    preferred = [marker for marker in candidates if marker.startswith(preferred_prefix)]
+                    candidates = preferred or candidates
+            if candidates:
+                caption_candidates.append((kind, _resource_number(caption.group(1)), candidates))
+
+    # Resolve runs of caption/payload pairs from their unambiguous endpoint.
+    # A caption between two tables must not steal the preceding table already
+    # paired with its own caption. Conversely, a single payload between two
+    # otherwise unsupported captions remains ambiguous and satisfies neither.
+    while True:
+        fixed: dict[str, set[tuple[str, int | str]]] = {}
+        for kind, number, candidates in caption_candidates:
+            if len(candidates) == 1:
+                fixed.setdefault(candidates[0], set()).add((kind, number))
+        changed = False
+        for kind, number, candidates in caption_candidates:
+            if len(candidates) <= 1:
+                continue
+            available = [
+                marker for marker in candidates
+                if marker not in fixed or (kind, number) in fixed[marker]
+            ]
+            if available != candidates:
+                candidates[:] = available
+                changed = True
+        if not changed:
+            break
+    for kind, number, candidates in caption_candidates:
+        if candidates:
+            representations[kind].setdefault(number, set()).add(candidates[0])
 
     for markers in representations["figure"].values():
         if any(marker.startswith("image:") for marker in markers):
@@ -636,7 +795,7 @@ def formal_resource_representations(translation_text: str) -> dict[str, dict[int
                 {marker for marker in markers if marker.startswith("fence-line:")}
             )
 
-    owners: dict[str, set[tuple[str, int]]] = {}
+    owners: dict[str, set[tuple[str, int | str]]] = {}
     for kind, numbered in representations.items():
         for number, markers in numbered.items():
             for marker in markers:
@@ -660,7 +819,7 @@ def validate_images(
     allow_whole_page: bool,
 ) -> tuple[list[str], list[str]]:
     errors: list[str] = []
-    risks: list[str] = []
+    risks: list[str] = image_caption_risks(translation_text) + markdown_table_risks(translation_text)
     links = image_links(translation_text)
     targets = [target for _alt, target in links]
     duplicates = sorted(target for target, count in Counter(targets).items() if count > 1)
@@ -942,6 +1101,7 @@ def _reference_line_starts(
         bare_marker = marker.lstrip("[(").rstrip("]")
         if (
             marker.count(".") >= 2
+            or re.fullmatch(r"\d+(?:st|nd|rd|th)", bare_marker, re.IGNORECASE)
             or re.fullmatch(r"(?:18|19|20)\d{2}", bare_marker)
         ):
             # Two-column OCR can align author initials or venue years where a
@@ -983,9 +1143,25 @@ def _page_after_form_feed_has_reference_start(
     return any(_reference_line_starts(line) for line in page_lines)
 
 
+def _joined_reference_body(lines: list[str]) -> str:
+    # Layout extraction wraps words in titles and author names.  Join only a
+    # lower-case continuation across a physical line; a title's later tokens
+    # must not displace its leading identity evidence because of a wrap.
+    text = re.sub(r"(?<=[A-Za-z])-\n\s*(?=[a-z])", "", "\n".join(lines))
+    return " ".join(text.split())
+
+
 def _reference_entries(section: str) -> list[tuple[str, str]]:
     # Preserve form-feed page boundaries: ``str.splitlines()`` silently drops
     # them, which can make a final reference absorb an unrelated appendix.
+    section = re.sub(
+        r"(?m)^(\s*(?:[-*]\s+)?)\*\*(\[[A-Za-z0-9][A-Za-z0-9+_.: -]*\])\*\*(?=\s)",
+        r"\1\2", section,
+    )
+    section = re.sub(
+        r"(?m)^(\s*(?:[-*]\s+)?\[[A-Za-z][A-Za-z0-9+_.:-]*)[ \t]+(\d+[A-Za-z]?\])",
+        r"\1\2", section,
+    )
     lines = section.split("\n")
     raw_starts = [_reference_line_starts(line) for line in lines]
     has_bracketed_numeric_style = any(
@@ -1012,7 +1188,7 @@ def _reference_entries(section: str) -> list[tuple[str, str]]:
             and current_id is not None
             and not _page_after_form_feed_has_reference_start(lines, line_index)
         ):
-            entries.append((current_id, " ".join(current_lines).strip()))
+            entries.append((current_id, _joined_reference_body(current_lines)))
             return entries
         valid_starts = [
             start
@@ -1038,7 +1214,7 @@ def _reference_entries(section: str) -> list[tuple[str, str]]:
             valid_starts
         ):
             if current_id is not None:
-                entries.append((current_id, " ".join(current_lines).strip()))
+                entries.append((current_id, _joined_reference_body(current_lines)))
             body_end = (
                 valid_starts[index + 1][0]
                 if index + 1 < len(valid_starts)
@@ -1054,7 +1230,7 @@ def _reference_entries(section: str) -> list[tuple[str, str]]:
         ):
             current_lines.append(line.strip())
     if current_id is not None:
-        entries.append((current_id, " ".join(current_lines).strip()))
+        entries.append((current_id, _joined_reference_body(current_lines)))
     return entries
 
 
@@ -1158,15 +1334,22 @@ def _same_page_preheading_reference_column(
 
 
 def _source_post_reference_appendix_boundary(section: str) -> int:
-    """Return the first page boundary that starts a clear appendix.
+    """Return the boundary that starts explicit bibliography end matter.
 
     Some papers place an unnumbered bibliography before numbered appendix
     instructions.  Without a boundary, those instructions (and angle-bracket
     labels inside appendix figures) can be misclassified as bibliography
-    identifiers.  Only stop at a new PDF page with an explicit ``APPENDIX``
-    heading or a layout-style section letter followed by an uppercase title.
+    identifiers. Stop at an explicit ``APPENDIX`` or ``Checklist`` heading,
+    including one on the same page, or a new PDF page with a layout-style
+    section letter followed by an uppercase title.
     """
 
+    explicit_end = re.search(
+        r"(?im)^[ \t]*(?:APPENDIX(?:[ \t]+[A-Z]\.[ \t]+[^\n]+)?|Checklist)[ \t]*$",
+        section,
+    )
+    if explicit_end is not None:
+        return explicit_end.start()
     page_start = 0
     while True:
         page_boundary = section.find("\f", page_start)
@@ -1202,6 +1385,153 @@ def _source_post_reference_appendix_boundary(section: str) -> int:
         page_start = next_page_start
 
 
+def _source_reference_marker_lines(section: str) -> str:
+    """Expose standalone author keys and visibly damaged bracket delimiters.
+
+    Applied only inside a source bibliography.  Keep OCR spelling for the
+    existing unique-content normalization; never manufacture an identifier
+    from a translation or from a reference's position.
+    """
+
+    lines = section.replace("\f", "\n\f\n").split("\n")
+    for index, line in enumerate(lines):
+        line = re.sub(r"^(\s*\[[A-Za-z][A-Za-z0-9+_.:-]*)[ \t]+(\d+[A-Za-z]?\])", r"\1\2", line)
+        line = re.sub(r"^(\s*\[[A-Za-z0-9+_.:-]+\])(?=[A-Z])", r"\1 ", line)
+        lines[index] = line
+        numeric_ocr = SOURCE_LAYOUT_DAMAGED_NUMERIC_ENTRY_RE.match(line.lstrip())
+        if numeric_ocr is not None:
+            marker = numeric_ocr.group("marker")
+            bare = marker.lstrip("[(").rstrip("]")
+            if not re.fullmatch(r"(?:18|19|20)\d{2}|\d+(?:st|nd|rd|th)", bare, re.IGNORECASE) and marker.count(".") < 2:
+                lines[index] = line.lstrip()
+                continue
+        standalone = re.fullmatch(r"[ \t]*([A-Z][A-Za-z]{2,8}[0-9][A-Za-z0-9]{1,3})[ \t]*", line)
+        if standalone is not None:
+            following = next((item.strip() for item in lines[index + 1:] if item.strip()), "")
+            if re.match(r"[A-Z][A-Za-z'’.-]+,", following):
+                lines[index] = f"[{standalone.group(1)}] "
+            continue
+        damaged = re.match(
+            r"^\s*(?P<marker>[\[(Il1] *[A-Za-z][A-Za-z0-9]{2,11}[\]J)1])\s+(?P<body>\S.*)$", line,
+        )
+        if damaged is not None and REFERENCE_ENTRY_PREFIX_RE.match(line) is None:
+            marker = damaged.group("marker").replace(" ", "")
+            if not any(char.isdigit() for char in marker) and (
+                marker.startswith("(")
+                or not marker.lstrip("[Il").rstrip("]J)").isupper()
+            ):
+                continue
+            # A leading bracket is punctuation; I/l/1 can be an OCR bracket
+            # and must remain available to content-based identity matching.
+            marker = marker.lstrip("[(1").rstrip("])")
+            lines[index] = f"[{marker}] {damaged.group('body')}"
+            continue
+        # A suffix-only alphabetic author key can lose every numeric glyph
+        # in an old scan, but still repeats the following author's surname.
+        repeated = re.match(r"^\s*([A-Z][A-Za-z]{3,9})\s+([A-Z][A-Za-z]{2,8}),", line)
+        if repeated is not None and repeated.group(1)[:-1].casefold() == repeated.group(2).casefold():
+            lines[index] = f"[{repeated.group(1)}] " + line[repeated.start(2):]
+    return "\n".join(lines)
+
+
+def _layout_reference_columns(
+    page: str, previous_boundaries: tuple[int, ...] = (),
+) -> list[int]:
+    """Find gutters from repeated entry-marker positions, never from content matches.
+
+    A layout extractor emits PDF rows across columns.  At least two markers
+    must agree on a non-left column; a whitespace gutter must also separate
+    that column.  Thus an isolated inline citation cannot create a column.
+    """
+
+    lines = page.split("\n")
+    positions: list[int] = [position for position in previous_boundaries for _ in range(2)]
+    for line in lines:
+        for start, body_start, _key, _decimal in _reference_line_starts(line):
+            marker = re.search(r"\S", line[start:body_start])
+            if marker is not None:
+                positions.append(start + marker.start())
+        # Older bibliographies put their author/year keys on a separate line.
+        for match in re.finditer(
+            r"(?:^| {4,})([A-Z][A-Za-z]{2,8}[0-9][A-Za-z0-9]{1,3})(?= *$)",
+            line,
+        ):
+            positions.append(match.start(1))
+    groups: list[list[int]] = []
+    for position in sorted(positions):
+        if groups and position - groups[-1][0] <= 10:
+            groups[-1].append(position)
+        else:
+            groups.append([position])
+    boundaries: list[int] = []
+    for group in groups:
+        if len(group) < 2 or min(group) < 32:
+            continue
+        candidates = range(max(1, min(group) - 12), min(group) + 1)
+        # Prefer a wide persistent gutter, including rows without entry starts.
+        def gutter_score(column: int) -> tuple[int, int]:
+            whitespace = sum(
+                len(line) <= column or not line[max(0, column - 1):column + 1].strip()
+                for line in lines
+            )
+            return whitespace, column
+        boundary = max(candidates, key=gutter_score)
+        if gutter_score(boundary)[0] * 10 >= len(lines) * 9:
+            boundaries.append(boundary)
+    return sorted(set(boundaries))
+
+
+def _layout_reference_section(
+    text: str, heading: re.Match[str],
+) -> tuple[str, str] | None:
+    """Rebuild bibliography columns, including those above the heading row.
+
+    Keep the heading match in original coordinates for other diagnostics.
+    Only the bibliography and the body used for citation comparison are
+    reconstructed.  No translated content participates in source recovery.
+    """
+
+    heading_start = heading.start("heading")
+    page_start = text.rfind("\f", 0, heading_start) + 1
+    pages = text[page_start:].split("\f")
+    first_boundaries = _layout_reference_columns(pages[0])
+    if not first_boundaries:
+        return None
+    heading_row = text[page_start:heading_start].count("\n")
+    heading_column = heading_start - text.rfind("\n", page_start, heading_start) - 1
+    if text.rfind("\n", page_start, heading_start) < 0:
+        heading_column = heading_start - page_start
+    sections: list[str] = []
+    masked_prefix = list(text[:heading_start])
+    previous_boundaries = first_boundaries
+    for page_index, page in enumerate(pages):
+        boundaries = first_boundaries if page_index == 0 else _layout_reference_columns(page, tuple(previous_boundaries))
+        previous_boundaries = boundaries
+        lines = page.split("\n")
+        edges = [0, *boundaries, max((len(line) for line in lines), default=0) + 1]
+        page_columns: list[str] = []
+        for left, right in zip(edges, edges[1:]):
+            if page_index == 0 and right <= heading_column:
+                continue
+            first_row = heading_row + 1 if page_index == 0 and left <= heading_column < right else 0
+            column_lines = [line[left:right] for line in lines[first_row:]]
+            if page_index == 0 and first_row == heading_row + 1 and heading_row:
+                overlap = re.fullmatch(r"\s*\d+\.(\[1\]\s+\S.*)", lines[heading_row - 1][left:right])
+                if overlap is not None:
+                    column_lines.insert(0, overlap.group(1))
+            page_columns.append("\n".join(column_lines))
+            if page_index == 0 and left > heading_column:
+                offset = page_start
+                for line in lines[:heading_row + 1]:
+                    start = min(offset + left, len(masked_prefix))
+                    end = min(offset + min(right, len(line)), len(masked_prefix))
+                    if end > start:
+                        masked_prefix[start:end] = " " * (end - start)
+                    offset += len(line) + 1
+        sections.append("\n".join(page_columns))
+    return "\f".join(sections), "".join(masked_prefix)
+
+
 def _review_source_reference_parts(
     source_text: str,
 ) -> tuple[re.Match[str] | None, str, str]:
@@ -1213,6 +1543,11 @@ def _review_source_reference_parts(
     )
     if heading is None:
         return None, "", source_text
+    reconstructed = _layout_reference_section(source_text, heading)
+    if reconstructed is not None:
+        section, masked_body = reconstructed
+        section = section[:_source_post_reference_appendix_boundary(section)]
+        return heading, _source_reference_marker_lines(section), masked_body
     heading_start = heading.start("heading")
     heading_end = heading.end("heading")
     recovered, masked_body = _same_page_preheading_reference_column(
@@ -1223,7 +1558,7 @@ def _review_source_reference_parts(
     if recovered:
         section = recovered + "\n" + section
     section = section[:_source_post_reference_appendix_boundary(section)]
-    return heading, section, masked_body
+    return heading, _source_reference_marker_lines(section), masked_body
 
 
 def _reference_structure_text(text: str) -> str:
@@ -2636,20 +2971,20 @@ def source_coverage_findings(
     risks: list[str] = []
     risks.extend(_section_heading_findings(source_text, translation_text))
     for kind, source_pattern in SOURCE_RESOURCE_PATTERNS.items():
-        source_numbers = {int(value) for value in source_pattern.findall(source_text)}
+        source_numbers = {_resource_number(value) for value in source_pattern.findall(source_text)}
         formal_numbers = set(formal_representations[kind])
-        for number in sorted(source_numbers - formal_numbers):
+        for number in sorted(source_numbers - formal_numbers, key=_resource_number_sort):
             risks.append(
                 f"source {kind.title()} {number} has no formal translation-side payload candidate"
             )
 
-    for number, markers in sorted(formal_representations["algorithm"].items()):
+    for number, markers in sorted(formal_representations["algorithm"].items(), key=lambda item: _resource_number_sort(item[0])):
         if len(markers) > 1:
             errors.append(f"Algorithm {number} has {len(markers)} formal representations")
-    for number, markers in sorted(formal_representations["table"].items()):
+    for number, markers in sorted(formal_representations["table"].items(), key=lambda item: _resource_number_sort(item[0])):
         if len(markers) > 1:
             errors.append(f"Table {number} has {len(markers)} formal representations")
-    for number, markers in sorted(formal_representations["figure"].items()):
+    for number, markers in sorted(formal_representations["figure"].items(), key=lambda item: _resource_number_sort(item[0])):
         if len(markers) > 1:
             risks.append(
                 f"Figure {number} has {len(markers)} image candidates; "

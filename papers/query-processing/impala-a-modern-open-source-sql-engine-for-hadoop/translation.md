@@ -103,7 +103,9 @@ Statestore daemon (statestored) 是 Impala 的元数据 publish-subscribe 服务
 
 这些 Impala 服务以及若干配置选项，例如 resource pool 大小、可用内存等，也暴露给 Cloudera Manager[^5]。Cloudera Manager 是一个复杂的集群管理应用，可以管理 Impala，也可以管理 Hadoop 部署中的几乎所有服务。
 
-![图 1：Impala 是 Hadoop 生态中的分布式查询处理系统。图中同时展示了查询处理期间的流程：客户端发送 SQL，impalad 规划、协调和执行查询，并访问 HDFS/HBase、Hive Metastore、NameNode、Statestore 和 Catalog。](assets/figure-01-impala-architecture-query-flow.png)
+![图 1](assets/figure-01-impala-architecture-query-flow.png)
+
+图 1：Impala 是 Hadoop 生态中的分布式查询处理系统。图中同时展示了查询处理期间的流程：客户端发送 SQL，impalad 规划、协调和执行查询，并访问 HDFS/HBase、Hive Metastore、NameNode、Statestore 和 Catalog。
 
 ### 3.1 State Distribution
 
@@ -145,7 +147,9 @@ Impala frontend 负责把 SQL 文本编译成 Impala backend 可执行的查询�
 
 图 2 通过例子说明查询规划的两个阶段。左侧展示一个查询的 single-node plan：它连接两个 HDFS 表 `t1`、`t2` 和一个 HBase 表 `t3`，随后执行 aggregation 和带 limit 的 order by，即 top-n。右侧展示分布式、fragmented plan。圆角矩形表示 fragment 边界，箭头表示数据 exchange。表 `t1` 和 `t2` 通过 partitioned 策略 join。由于扫描结果立即 exchange 给 consumer，即 join node，而该 join node 在基于 hash 的 data partition 上运行，因此 scan 位于自己的 fragment 中。后续与 `t3` 的 join 是 broadcast join，并放在与 `t1`、`t2` join 相同的 fragment 中，因为 broadcast join 保留已有 data partition。Join 之后，我们执行两阶段分布式 aggregation，其中 pre-aggregation 与最后一个 join 位于同一 fragment。Pre-aggregation 结果根据 grouping key 做 hash-exchange，然后再次聚合以计算最终聚合结果。Top-n 采用同样两阶段方法，最终 top-n 步骤在 coordinator 上执行，由 coordinator 返回结果给用户。
 
-![图 2：两阶段查询优化示例。左侧是 single-node plan；右侧是 distributed plan，展示 HDFS/HBase/Coordinator 位置、exchange、broadcast 和 partitioned join，以及 aggregation/top-n 的分布式拆分。](assets/figure-02-two-phase-query-optimization.png)
+![图 2](assets/figure-02-two-phase-query-optimization.png)
+
+图 2：两阶段查询优化示例。左侧是 single-node plan；右侧是 distributed plan，展示 HDFS/HBase/Coordinator 位置、exchange、broadcast 和 partitioned join，以及 aggregation/top-n 的分布式拆分。
 
 ## 5. Backend
 
@@ -167,11 +171,15 @@ Impala 使用 runtime code generation 生成查询特定版本的关键性能函
 
 大型运行时开销的一个来源是 virtual function。Virtual function call 具有很大性能惩罚，特别是被调用函数非常简单时，因为调用无法 inline。如果对象实例类型在运行时已知，我们可以用 code generation 把 virtual function call 替换为直接调用正确函数，随后该调用可以 inline。这在 expression tree 求值时特别有价值。Impala 中和许多系统中一样，expression 由各个 operator 和 function 组成的树构成，如图 3 左侧所示。树中每种 expression 类型都通过覆盖 expression base class 中的 virtual function 实现，该 virtual function 递归调用子 expression。许多 expression function 非常简单，例如两个数字相加。因此，调用 virtual function 的成本常常远超过实际计算该函数的成本。如图 3 所示，通过用 code generation 解析 virtual function call 并 inline 生成的函数调用，expression tree 可以直接求值，没有 function call overhead。此外，inline function 增加 instruction-level parallelism，并允许编译器执行更多优化，例如跨 expression 的 subexpression elimination。
 
-![图 3：Impala 中 interpreted code 与 codegen 后代码的对比。左侧表达式树通过 function pointer 和虚函数递归求值；右侧 codegen 后将表达式专门化为直接计算。](assets/figure-03-interpreted-vs-codegen.png)
+![图 3](assets/figure-03-interpreted-vs-codegen.png)
+
+图 3：Impala 中 interpreted code 与 codegen 后代码的对比。左侧表达式树通过 function pointer 和虚函数递归求值；右侧 codegen 后将表达式专门化为直接计算。
 
 总体而言，JIT compilation 的效果类似为查询手写定制代码。例如，它会消除分支、展开循环、传播常量、offset 和 pointer，并 inline 函数。Code generation 对性能有显著影响，如图 4 所示。我们在一个 10 节点集群上测量 codegen 的影响，每节点有 8 core、48 GB RAM 和 12 块磁盘；我们使用 scale factor 100 的 Avro TPC-H 数据库，并运行简单聚合查询。Code generation 最多使执行加速 5.7 倍，且加速随查询复杂度增加而增加。
 
-![图 4：Runtime code generation 对 Impala 性能的影响。柱状图比较 Codegen Off 与 Codegen On，复杂查询上加速更明显。](assets/figure-04-runtime-codegen-impact.png)
+![图 4](assets/figure-04-runtime-codegen-impact.png)
+
+图 4：Runtime code generation 对 Impala 性能的影响。柱状图比较 Codegen Off 与 Codegen On，复杂查询上加速更明显。
 
 ### 5.2 I/O Management
 
@@ -189,7 +197,9 @@ Impala 支持多数流行文件格式：Avro、RC、Sequence、plain text 和 Pa
 
 如前所述，Parquet 同时提供高压缩和扫描效率。图 5 左侧比较 TPC-H scale factor 1000 的 Lineitem 表在一些常见文件格式和压缩算法组合下的磁盘大小。带 snappy 压缩的 Parquet 在这些组合中压缩效果最好。图 5 右侧展示当数据库以 plain text、Sequence、RC 和 Parquet 格式存储时，Impala 执行 TPC-DS benchmark 中多个查询的时间。Parquet 持续优于其他所有格式，最高可达 5 倍。
 
-![图 5：左侧比较常见文件格式和压缩组合的压缩率；右侧比较 plain text、Sequence、RC 和 Parquet 在 Impala 中的查询效率。](assets/figure-05-storage-format-compression-runtime.png)
+![图 5](assets/figure-05-storage-format-compression-runtime.png)
+
+图 5：左侧比较常见文件格式和压缩组合的压缩率；右侧比较 plain text、Sequence、RC 和 Parquet 在 Impala 中的查询效率。
 
 ## 6. Resource/Workload Management
 
@@ -233,7 +243,9 @@ Resource pool 以层次方式定义。进入请求根据 placement policy 分配
 
 图 6 比较四个系统在 single-user run 下的性能，其中单个用户以零 think time 反复提交查询。Impala 在运行的所有查询上都优于其他替代系统。Impala 的性能优势范围为 2.1 倍到 13.0 倍，平均快 6.7 倍。事实上，相比早期 Impala 版本[^9]，它相对 Hive 0.13 的平均优势从 4.9 倍扩大到 9 倍，相对 Presto 的平均优势从 5.3 倍扩大到 7.5 倍。
 
-![图 6：Single-user run 上的查询响应时间比较。Impala 在 interactive、reporting 和 analytic 三类查询上均明显低于 SparkSQL、Presto 和 Hive 0.13。](assets/figure-06-single-user-query-response.png)
+![图 6](assets/figure-06-single-user-query-response.png)
+
+图 6：Single-user run 上的查询响应时间比较。Impala 在 interactive、reporting 和 analytic 三类查询上均明显低于 SparkSQL、Presto 和 Hive 0.13。
 
 ### 7.3 Multi-User Performance
 
@@ -241,13 +253,17 @@ Impala 的性能优势在多用户工作负载中更加明显，而这类负载�
 
 类似地，图 7 右侧比较四个系统的吞吐。当 10 个用户提交 interactive bucket 中的查询时，Impala 吞吐比其他系统高 8.7 倍到 22 倍。
 
-![图 7：Multi-user run 上的查询响应时间和吞吐比较。左侧展示 10 用户下完成时间，右侧展示 interactive bucket 中每小时查询数。](assets/figure-07-multi-user-response-throughput.png)
+![图 7](assets/figure-07-multi-user-response-throughput.png)
+
+图 7：Multi-user run 上的查询响应时间和吞吐比较。左侧展示 10 用户下完成时间，右侧展示 interactive bucket 中每小时查询数。
 
 ### 7.4 Comparing Against a Commercial RDBMS
 
 从上述比较可以看出，Impala 在 SQL-on-Hadoop 系统的性能方面处于前沿。但 Impala 也适合部署在传统数据仓库环境中。图 8 中，我们比较 Impala 与一个流行商业列式分析 DBMS 的性能。由于限制性专有许可协议，后者在文中称为 “DBMS-Y”。我们使用 scale factor 30,000 的 TPC-DS 数据集，即 30 TB 原始数据，并运行前文工作负载中的查询。我们可以看到，Impala 最多比 DBMS-Y 快 4.5 倍，平均快 2 倍，只有 3 个查询更慢。
 
-![图 8：Impala 与商业分析 RDBMS 的性能比较。柱状图展示多个 TPC-DS 查询的完成时间，Impala 平均快约 2 倍；横轴最右两项依次为 q98 和 ss_max。](assets/figure-08-impala-vs-commercial-rdbms.png)
+![图 8](assets/figure-08-impala-vs-commercial-rdbms.png)
+
+图 8：Impala 与商业分析 RDBMS 的性能比较。柱状图展示多个 TPC-DS 查询的完成时间，Impala 平均快约 2 倍；横轴最右两项依次为 q98 和 ss_max。
 
 ## 8. Roadmap
 

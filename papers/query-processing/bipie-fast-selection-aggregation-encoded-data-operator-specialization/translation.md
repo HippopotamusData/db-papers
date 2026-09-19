@@ -93,7 +93,9 @@ GROUP BY g;
 
 BIPie 把解码、过滤、分组与聚合融合进 columnstore scan，并结合即时编译、向量化和 SIMD；实现分为 Vector Toolbox、生成代码和承载算子逻辑的高层组件三层。
 
-![图 1：BIPie 架构概览。](assets/figure-01-bipie-architecture.png)
+![图 1](assets/figure-01-bipie-architecture.png)
+
+图 1：BIPie 架构概览。
 
 图 1 聚焦单个 segment 的扫描及其主要数据结构；为清晰起见，省略了 segment 管理、segment elimination 和已删除行管理。
 
@@ -177,11 +179,15 @@ for (int i = 0; i < number_of_rows; ++i)
 
 图 2 的 Single Array 曲线显示一个反直觉现象：组数极少时反而更慢，例如 2 组为 2.9 cycles/row，而 6 组约为 1.65 cycles/row。这很可能是由于相邻行写入同一聚合槽位的概率高，造成 CPU pipeline stall。即使组数很多，只要输入中某个 group id 高频出现，也会有类似现象，例如 group-by 列部分有序或数据倾斜时。把循环展开两次或更多次，在两个或更多 sum 数组间轮转更新，最后合并各数组的部分结果，可以打破这种依赖。
 
-![图 2：COUNT 聚合的 CPU cycles/row 随 group 数变化。](assets/figure-02-count-aggregation.png)
+![图 2](assets/figure-02-count-aggregation.png)
+
+图 2：COUNT 聚合的 CPU cycles/row 随 group 数变化。
 
 多个 `SUM` 可以按列逐个完成，也可逐行更新所有聚合。在第一种情况下，我们会先完整处理一个 batch 的第一个聚合列，再处理下一列；在后一种情况下，我们会先更新一行的所有 sum，再处理下一行。我们的实验中，聚合结果数组采用面向行的布局，逐行更新全部 sum 的 row-at-a-time 方法更快；展开遍历所有聚合列的内层循环还能进一步改善它。图 3 在 32 组和不同 sum 数量下比较了 column-at-a-time、row-at-a-time 与 loop-unrolled row-at-a-time 三种实现，单位为 cycles/row/aggregate。
 
-![图 3：标量 SUM 实现的性能对比。](assets/figure-03-scalar-sum.png)
+![图 3](assets/figure-03-scalar-sum.png)
+
+图 3：标量 SUM 实现的性能对比。
 
 ### 5.2 基于排序的 SUM 聚合
 
@@ -205,7 +211,9 @@ Sort-Based SUM 是我们提出的第一个使用 SIMD 的聚合策略。它把�
 
 寄存器内聚合是我们在本文中提出的第二种 SIMD-friendly 聚合策略。核心思路是把中间结果完全保留在 CPU/SIMD 寄存器中，而不是写入内存；该技术同时适用于 `COUNT` 与 `SUM`，但在当时的硬件上只适合约 32 组以内的小组数，并且每个聚合需要单独处理。
 
-![图 4：寄存器内聚合的数据布局。](assets/figure-04-in-register-layout.png)
+![图 4](assets/figure-04-in-register-layout.png)
+
+图 4：寄存器内聚合的数据布局。
 
 为理解数据布局，我们以计算每组行数为例：有 $N$ 个组，group id 均为一字节且范围是 $0,\ldots,N-1$。顺序处理输入时，我们把一批 group id 装入向量 $V$，其中第 $i$ 个 lane 对应第 $i$ 行。每个 lane 都可视为拥有一套独立的“每组计数数组”；实现实际使用 $N$ 个 SIMD 寄存器，每个寄存器保存某一组在各 lane 上的局部计数。对 `COUNT`，我们可以用总行数减去其他组计数，省去对第 $N-1$ 组的处理，从而节省一个寄存器。图 4 的示例使用 4 个 lane 和 4 个组。
 
@@ -247,7 +255,9 @@ MemSQL 中，我们为不超过 32 个组的 `COUNT` 以及 1、2、4 字节 `SU
 
 组数越多，需要的比较与累加指令越多；值位宽越小，一个寄存器可并行处理的元素越多。因此成本随组数近似线性增长，窄值明显更快。
 
-![图 5：寄存器内聚合的性能。](assets/figure-05-in-register-performance.png)
+![图 5](assets/figure-05-in-register-performance.png)
+
+图 5：寄存器内聚合的性能。
 
 图 5 比较所有寄存器虚拟数组变体，并加入标量 `COUNT(*)` 作为参照。组数增加时，每组都多执行一次操作，所以性能近似线性下降；输入值越窄，每个寄存器的 lane 越多，可利用的 SIMD 并行度越高。
 
@@ -255,7 +265,9 @@ MemSQL 中，我们为不超过 32 个组的 `COUNT` 以及 1、2、4 字节 `SU
 
 Multi-Aggregate 是我们在本文中提出的第三种 SIMD-friendly 聚合策略，面向同一查询计算多个 `SUM` 的情形。它与前两种策略不同：数据级并行沿水平方向展开，即同一输入行的多个聚合一起处理，而不是同一聚合的多行一起处理。传统 column-at-a-time 实现每次更新一个聚合数组；Multi-Aggregate 改为把一行的多个聚合值布局到同一个 SIMD 寄存器中，从一个 group 对应的连续结果区域执行 load-add-store，一次更新多个聚合。
 
-![图 6：多列聚合的数据布局示例。](assets/figure-06-multicolumn-layout.png)
+![图 6](assets/figure-06-multicolumn-layout.png)
+
+图 6：多列聚合的数据布局示例。
 
 我们在第 5.1 节已经表明，对多个 sum 而言，row-at-a-time 聚合快于 column-at-a-time 聚合；如果我们把同一行的多个 sum 输入装入一个 SIMD 寄存器，并对它们只执行一组 load-add-store 指令，还可以进一步改善。我们的输入在内存中仍按列存储，因此为了组装成行，我们需要重排被求和各列的值。考虑 4 个 64 位输入列的简单情形：从每列装入一个 256 位向量后，我们得到寄存器中的 4×4 矩阵；用 4 条 `PUNPCKLQDQ` 和 4 条 `PUNPCKHQDQ` 转置，就得到每个寄存器保存一行全部聚合的目标布局。
 
@@ -287,13 +299,17 @@ Multi-Aggregate 是我们在本文中提出的第三种 SIMD-friendly 聚合策�
 
 直觉上，低选择率适合 gather，中等选择率适合 compaction，高选择率适合 special group。图 7 比较 gather 与“先全列解包、再 physical compaction”。对 4、7、14、21 bit 四种输入，每种位宽都有一个阈值，超过后 compaction 更快。图中只画出两者较快的一段：例如 4 bit 时选择率达到约 2% compaction 就胜出，而 21 bit 时 gather 一直领先到约 38%。较宽编码增加全列解包成本，因此延后交叉点。
 
-![图 7：选择策略性能对比。](assets/figure-07-selection-strategies.png)
+![图 7](assets/figure-07-selection-strategies.png)
+
+图 7：选择策略性能对比。
 
 ### 6.2 BIPie 中选择与聚合的全部组合
 
 我们把 gather、compaction、special group 三种选择方法，与 sort-based、in-register、multi-aggregate 三种聚合方法两两组合，共 9 种实现；然后跨组数、聚合列位宽、选择率和 `SUM` 数量比较。图 8-10 分别对应 8 组/7 bit、12 组/14 bit、32 组/28 bit。每个单元格写出最佳组合的 cycles/row/sum；相邻同色区域表示同一获胜策略。
 
-![图 8：8 组、7 bit 编码下的聚合技术性能。](assets/figure-08-aggregation-8-groups.png)
+![图 8](assets/figure-08-aggregation-8-groups.png)
+
+图 8：8 组、7 bit 编码下的聚合技术性能。
 
 在该实验中，我们使用从主存取入的超大输入，以确保计入主存访问成本；我们使用所有可用硬件线程；所有输入列、group-by 列和聚合列都是 bit-packed 整数。随着组数和编码 bit width 从图 8 增加到图 10，我们可以看到每个 `SUM` 的总体成本显著上升且近似线性。这来自寄存器内算法的局限、解码成本升高，以及把更宽输入带入 CPU cache 所需的额外内存带宽。
 
@@ -307,9 +323,13 @@ Multi-Aggregate 是我们在本文中提出的第三种 SIMD-friendly 聚合策�
 
 总体而言，对小 bit width 和少数组，in-register group-by aggregation 明显胜出。对较高 bit width 和较多组，multi-aggregate 更好，因为它对这两个参数不太敏感；而 in-register 方法对 bit width 和组数都近似线性敏感。
 
-![图 9：12 组、14 bit 编码下的聚合技术性能。](assets/figure-09-aggregation-12-groups.png)
+![图 9](assets/figure-09-aggregation-12-groups.png)
 
-![图 10：32 组、28 bit 编码下的聚合技术性能。](assets/figure-10-aggregation-32-groups.png)
+图 9：12 组、14 bit 编码下的聚合技术性能。
+
+![图 10](assets/figure-10-aggregation-32-groups.png)
+
+图 10：32 组、28 bit 编码下的聚合技术性能。
 
 ### 6.3 在 TPC-H Query 1 中评估 BIPie
 

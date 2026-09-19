@@ -66,7 +66,9 @@ FROM lineitem;
 
 ### 向量化执行
 
-![算法 1：示例查询的向量化和编译实现。静态编译的 map primitive 覆盖操作、类型与输入形式组合；动态编译的 primitive 可承载任意复杂表达式。](assets/algorithm-01-project-vectorized-compiled.png)
+![算法 1](assets/algorithm-01-project-vectorized-compiled.png)
+
+算法 1：示例查询的向量化和编译实现。静态编译的 map primitive 覆盖操作、类型与输入形式组合；动态编译的 primitive 可承载任意复杂表达式。
 
 VectorWise 在 Project 中把函数作为 map primitive 执行。算法 1 展示二元 primitive 的代码模式。`chr`、`sht`、`int` 和 `lng` 分别表示 1、2、4、8 字节整数；`idx` 是内部类型，用于表示数据列中的大小、索引或偏移，其实现采用所需宽度的整数。primitive 名称中的 `val` 后缀表示该参数是常量，而非列参数。VectorWise 为所需的操作、类型和参数模式组合预生成 primitive。支持 SQL 的全部函数约用 9000 行宏代码表达，展开后得到约 3000 个不同的 primitive 函数、20 万行代码以及一个 5 MB 的二进制文件。
 
@@ -90,7 +92,9 @@ VectorWise 在 Project 中把函数作为 map primitive 执行。算法 1 展示
 
 实验表明，如果在不打破 tuple-at-a-time 算子 API 的情况下给 MySQL 一类引擎加入编译，表达式计算可加速约 3 倍，从 23 cycles/tuple 降至 7 cycles/tuple。但绝对性能仍明显低于块式处理的 1.2 cycles/tuple，原因主要是无法利用 SIMD，同时每个元组一次的虚方法调用会阻碍 CPU 跨元组推测执行。更糟的是，在 tuple-at-a-time 的 OLAP 查询求值中，表达式 primitive 只占总时间很小一部分，不足 5% [1]，大部分工作耗在 tuple-at-a-time 算子 API 上。因此，如果不改变引擎一次一个元组的本质，仅使用编译带来的总体收益最多只有几个百分点，价值值得怀疑。
 
-![图 1：Project 微基准中编译、向量化和 SIMD 的不同组合；SIMD-sht 曲线规避了 icc SIMD 代码生成中的对齐次优问题。](assets/figure-01-project-microbenchmark.png)
+![图 1](assets/figure-01-project-microbenchmark.png)
+
+图 1：Project 微基准中编译、向量化和 SIMD 的不同组合；SIMD-sht 曲线规避了 icc SIMD 代码生成中的对齐次优问题。
 
 ## 3. 案例研究：Select
 
@@ -100,7 +104,9 @@ VectorWise 在 Project 中把函数作为 map primitive 执行。算法 1 展示
 WHERE col1 < v1 AND col2 < v2 AND col3 < v3
 ```
 
-![算法 2：小于号选择 primitive 的两种实现。算法返回所选元素数量；VectorWise 根据观察到的选择率动态选择有分支或无分支版本。](assets/algorithm-02-select-primitives.png)
+![算法 2](assets/algorithm-02-select-primitives.png)
+
+算法 2：小于号选择 primitive 的两种实现。算法返回所选元素数量；VectorWise 根据观察到的选择率动态选择有分支或无分支版本。
 
 算法 2 的选择 primitive 生成条件为真的位置索引向量，即 selection vector。选择 primitive 也可接收 selection vector 参数，只求值该向量所指位置上的元素；事实上，其他 primitive 同样能处理 selection vector，只是与实验无关的代码片段省略了这一参数。向量化合取把多个选择 primitive 串联：前一个 primitive 的输出 selection vector 成为下一个的输入，后续条件只在原始向量逐渐缩小的子集上求值。因此，合取仍是惰性求值，只处理通过先前条件的元素。
 
@@ -108,7 +114,9 @@ WHERE col1 < v1 AND col2 < v2 AND col3 < v3
 
 算法 2 的 `sel_lt` 函数包含这两种方法。无分支 primitive 对每个输入位置先执行 `res[j] = i`，再只用谓词真假增加 `j`；若存在输入 selection vector，则读取并写回其中的原始位置。有分支版本只在谓词为真时写入并递增 `j`。VectorWise 根据观察到的选择率选择有分支或无分支策略，性能因而达到图 2 两条向量化曲线中的较小值。系统甚至会动态重排合取谓词，让选择性最强的谓词最先求值。
 
-![算法 3：合取选择的四种编译实现。单循环无法在不急切执行其余操作的同时完全消除分支，四种实现分别权衡分支与急切计算。](assets/algorithm-03-compiled-select.png)
+![算法 3](assets/algorithm-03-compiled-select.png)
+
+算法 3：合取选择的四种编译实现。单循环无法在不急切执行其余操作的同时完全消除分支，四种实现分别权衡分支与急切计算。
 
 循环编译的自然写法是在一个循环中使用 `if (p1 && p2 && p3)`。这可以短路求值，避免不必要的工作，但在中等选择率下会产生难预测分支。算法 3 比较四种生成方式：三个条件都使用短路分支；前两个使用分支而第三个转为无分支计数；只对第一个使用分支而后两个用布尔与；以及三个条件全部计算后用布尔与合并。最后一种近似为：
 
@@ -121,7 +129,9 @@ for (idx i = 0, j = 0; i < n; ++i) {
 
 实验中，`col1`、`col2` 和 `col3` 都是整数列，`v1`、`v2` 和 `v3` 是用于控制各条件选择率的常量。三个分支的选择率保持相同，因此每个条件的选择率等于总体选择率的立方根；总体选择率从 0 变化到 1。实验处理 1K 个输入元组。
 
-![图 2：合取选择条件的总 cycles、分支预测失败次数与选择率的关系。](assets/figure-02-select-case.png)
+![图 2](assets/figure-02-select-case.png)
+
+图 2：合取选择条件的总 cycles、分支预测失败次数与选择率的关系。
 
 图 2 表明，编译后的合取 Select 不如纯向量化方法。惰性编译程序略优于有分支的向量化版本，但在中等选择率下，有分支版本远非最佳。问题的实质在于，单一循环不能同时做到两点：把所有控制依赖转换为数据依赖，又避免不必要的条件求值。若像算法 3 的 compute-all 方法那样消除所有分支，就必须始终求值全部条件，即便前一条件已经失败，仍会浪费资源。
 
@@ -140,13 +150,17 @@ WHERE probe.key1 = build.key1
 
 我们关注键由两个整数列构成的等值连接，因为复合键对向量化执行器更具挑战。讨论假设使用 VectorWise 所采用的简单 bucket chaining，如图 3 所示。键被哈希到数组 `B` 的桶上；`B` 的大小 `N` 是 2 的幂。每个桶保存 value space `V` 中某个元组的 offset。`V` 可按 DSM 或 NSM 组织，VectorWise 两者都支持 [14]；其中保存 build 关系的值，以及实现桶链的 `next` offset。链长大于 1 可能来自哈希碰撞，也可能来自 build 关系中存在多个相同键的元组。
 
-![图 3：VectorWise 使用的 bucket-chain hash table。图中 value space V 为 DSM，每个属性单独成列；也可改用按元组存储的 NSM。](assets/figure-03-bucket-chain-hash-table.png)
+![图 3](assets/figure-03-bucket-chain-hash-table.png)
+
+图 3：VectorWise 使用的 bucket-chain hash table。图中 value space V 为 DSM，每个属性单独成列；也可改用按元组存储的 NSM。
 
 ### 向量化哈希探测
 
 由于篇幅限制，算法 4 只讨论 probe 阶段，代码采用 DSM 数据表示，并聚焦每个 probe 元组至多命中一次的场景，这在通过外键参照约束连接的关系中很常见。
 
-![算法 4：向量化 hash probing 实现，包括哈希、候选位置查找、键复核、桶链推进以及非键属性获取。](assets/algorithm-04-vectorized-hash-probe.png)
+![算法 4](assets/algorithm-04-vectorized-hash-probe.png)
+
+算法 4：向量化 hash probing 实现，包括哈希、候选位置查找、键复核、桶链推进以及非键属性获取。
 
 探测首先按列使用 map primitive 计算键的哈希值。`map_hash_T_col` 把类型为 `T` 的每个键哈希为 `lng` 长整数。若为复合键，则使用 `map_rehash_lng_col_T_col` 逐列细化哈希值，每次传入已有哈希值和下一键列。随后用按位与 map primitive 计算桶号：`H & (N - 1)`。
 
@@ -164,7 +178,9 @@ WHERE probe.key1 = build.key1
 
 第三处机会是 fetch 代码：可以生成 compound fetch primitive，根据位置向量一次获取多个列。这一收益尤其出现在 NSM 组织的 `V` 上。向量化方式一次处理一列，因此结果有几列，就会对 NSM value space 做几轮随机访问；此处为三轮。在有效向量大小下，随机访问数量肯定超过 TLB 容量，甚至可能超过缓存行数量。前一轮访问的页和缓存行会在下一轮到来前被逐出，造成 TLB 和缓存抖动。编译后的 fetch 在同一位置一次取出全部列，因而有更好的数据局部性。
 
-![图 4：从哈希表获取不同数量的列时，每元组 cycles 与 TLB miss 总数。](assets/figure-04-hash-table-fetching.png)
+![图 4](assets/figure-04-hash-table-fetching.png)
+
+图 4：从哈希表获取不同数量的列时，每元组 cycles 与 TLB miss 总数。
 
 图 4 表明，普通向量化哈希下 NSM 与 DSM 性能相近，但编译使 NSM 明显优于 DSM。输出列越多，一次从同一 NSM 元组取全多列的收益越明显，TLB miss 也显著更少。
 
@@ -172,7 +188,9 @@ WHERE probe.key1 = build.key1
 
 也可以像 HIQUE [7] 那样创建整个 Join 的循环编译版本。算法 5 展示并测试了它的 hash probe 部分：遍历 probe key；对每个键读取相应桶；沿桶链逐项检查键是否相等；若相等，则取出所需结果列。
 
-![算法 5：完整循环编译的 hash probing。对每个 NSM 元组读取 B 中的桶，沿 V 中的链检查，并在匹配时获取结果。](assets/algorithm-05-compiled-hash-probe.png)
+![算法 5](assets/algorithm-05-compiled-hash-probe.png)
+
+算法 5：完整循环编译的 hash probing。对每个 NSM 元组读取 B 中的桶，沿 V 中的链检查，并在匹配时获取结果。
 
 ### 并行内存访问
 
@@ -190,7 +208,9 @@ WHERE probe.key1 = build.key1
 
 图 5 比较向量化、完整编译和部分编译方法，并分别采用 DSM 和 NSM 表示哈希表 value space `V`。实验改变哈希表大小、选择率（probe key 命中的比例）和桶链长度；默认值分别为 16M、1.0 和 1。
 
-![图 5：哈希表探测。左：value space V 大小变化；中：probe 命中率变化；右：桶数组 B 相对 V 的大小变化，即链长变化。](assets/figure-05-hash-probing.png)
+![图 5](assets/figure-05-hash-probing.png)
+
+图 5：哈希表探测。左：value space V 大小变化；中：probe 命中率变化；右：桶数组 B 相对 V 的大小变化，即链长变化。
 
 左图显示，哈希表增大时，每元组性能下降；原因是 cache 和 TLB miss，且 DSM 局部性弱于 NSM。中图显示，命中率提高时成本上升，主要因为生成元组所需的 fetch 工作增加；编译后的 NSM fetch 表现最佳。右图显示，随着链长增加，完整编译的 NSM 版本受损最重，因为它无法获得并行内存访问；在 bucket 数从表大小的 2 倍缩小到 $1/32$ 时，图中完整编译曲线达到 4419 和 5293 cycles/tuple 的极端值。
 

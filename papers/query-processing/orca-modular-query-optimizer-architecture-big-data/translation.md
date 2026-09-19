@@ -67,7 +67,9 @@ Pivotal Greenplum Database（GPDB）[20] 是一个大规模并行处理（Massiv
 
 图 1 展示 GPDB 的高层架构。大量数据的存储和处理通过把负载分散到多个服务器或主机上完成，形成一组协同工作的独立数据库，对外呈现为单一数据库映像。master 是 GPDB 的入口，客户端连接 master 并提交 SQL 语句。master 与其他数据库实例协作完成数据处理和存储，这些实例称为 segment。当查询提交给 master 后，查询会被优化并拆成更小组件，再分发到 segments 协同产生最终结果。interconnect 是负责 segments 之间进程通信的网络层，使用标准千兆以太网交换结构。
 
-![图 1：GPDB 高层架构。](assets/figure-01-final.png)
+![图 1](assets/figure-01-final.png)
+
+图 1：GPDB 高层架构。
 
 查询执行期间，数据可以用多种方式分布到 segments：哈希分布（hashed distribution）根据某个哈希函数把元组分发到 segments；复制分布（replicated distribution）在每个 segment 保存表的完整副本；单点分布（singleton distribution）把整个分布式表从多个 segments 收集到单个主机，通常是 master。
 
@@ -88,13 +90,17 @@ Orca 是 Pivotal 数据管理产品的新查询优化器，包括 GPDB 和 HAWQ�
 
 图 2 展示 Orca 与外部数据库系统的交互。Orca 的输入是 DXL 查询，输出是 DXL 计划。优化期间，Orca 可以向数据库系统查询元数据，例如表定义。Orca 通过允许数据库系统注册元数据提供器（Metadata Provider, MD Provider）来抽象元数据访问细节；该提供器负责在元数据发送给 Orca 前把它序列化为 DXL。元数据也可以来自普通文件，文件中保存了以 DXL 格式序列化的元数据对象。
 
-![图 2：Orca 与数据库系统的交互。](assets/figure-02-precise3.png)
+![图 2](assets/figure-02-precise3.png)
+
+图 2：Orca 与数据库系统的交互。
 
 数据库系统需要包含能消费和生成 DXL 格式数据的转换器。Query2DXL 转换器把查询解析树转换为 DXL 查询，DXL2Plan 转换器把 DXL 计划转换为可执行计划。这些转换器完全在 Orca 外部实现，因此多个系统可以通过提供适当转换器来使用 Orca。
 
 Orca 架构高度可扩展；所有组件都可以单独替换并分别配置。图 3 展示 Orca 的不同组件。
 
-![图 3：Orca 架构。](assets/figure-03-final.png)
+![图 3](assets/figure-03-final.png)
+
+图 3：Orca 架构。
 
 
 **Memo**。优化器生成的计划备选空间被编码在一种紧凑的内存数据结构中，称为 Memo [13]。Memo 由一组容器组成，容器称为 group；每个 group 包含逻辑等价表达式。Memo group 捕获查询的不同子目标，例如对表的过滤或两个表的连接。group 成员称为 group expression，它们用不同逻辑方式达成 group 目标，例如不同连接顺序。每个 group expression 是一个算子，其子节点是其他 groups。Memo 的递归结构可以紧凑编码巨大的可能计划空间，如第 4.1 节所示。
@@ -171,7 +177,9 @@ ORDER BY T1.a;
 
 DXL 查询消息被发送到 Orca，Orca 解析它并转换为内存中的逻辑表达式树，再 copy-in 到 Memo。图 4 展示 Memo 的初始内容。该逻辑表达式为两个表和 `InnerJoin` 操作创建三个 groups。为简洁起见，图中省略了连接条件。Group 0 称为 root group，因为它对应逻辑表达式的根。逻辑表达式中算子之间的依赖以 group 引用捕获。例如， $\mathrm{InnerJoin}[1,2]$ 表示把 Group 1 和 Group 2 作为子节点。
 
-![图 4：把初始逻辑表达式 copy-in 到 Memo。](assets/figure-04-precise3.png)
+![图 4](assets/figure-04-precise3.png)
+
+图 4：把初始逻辑表达式 copy-in 到 Memo。
 
 
 优化按照以下步骤进行。
@@ -187,7 +195,9 @@ DXL 查询消息被发送到 Orca，Orca 解析它并转换为内存中的逻辑
 
 图 5 用贯穿示例说明统计派生机制。首先执行自顶向下 pass，由父 group expression 向其子 group 请求统计信息。例如， $\mathrm{InnerJoin}(T_1,T_2)$ 在 $(a=b)$ 上请求 $T_1.a$ 和 $T_2.b$ 的直方图。所需直方图按需通过注册的 MD Provider 从 catalog 加载，解析为 DXL，并存储在 MD Cache 中供后续请求使用。然后执行自底向上 pass，把子统计对象合并为父统计对象。结果是在 $T_1.a$ 和 $T_2.b$ 列上得到可能被修改过的直方图，因为连接条件可能影响列直方图。
 
-![图 5：统计派生机制。](assets/figure-05-precise3.png)
+![图 5](assets/figure-05-precise3.png)
+
+图 5：统计派生机制。
 
 构造出的统计对象附着到各个 group 上，之后可在优化期间增量更新，例如添加新的直方图。这对控制统计派生成本至关重要。
 
@@ -202,13 +212,17 @@ DXL 查询消息被发送到 Orca，Orca 解析它并转换为内存中的逻辑
 
 [^1]: 所需属性还包括输出列、可回卷性（rewindability）、公共表表达式和数据分区；论文因篇幅限制省略了这些属性。
 
-![图 6：在 Memo 中处理优化请求。](assets/figure-06-final.png)
+![图 6](assets/figure-06-final.png)
+
+图 6：在 Memo 中处理优化请求。
 
 图 7 展示 $\mathrm{InnerHashJoin}[1,2]$ 对优化请求 1 的处理。对该请求，一种备选计划是基于连接条件对齐子节点分布，使要连接的元组位于同一位置[^2]。这通过向 group 1 请求 $\mathrm{Hashed}(T_1.a)$ 分布、向 group 2 请求 $\mathrm{Hashed}(T_2.b)$ 分布实现。两个 group 都被要求输出任意排序顺序（Any sort order）。找到子节点最佳计划后，`InnerHashJoin` 合并子属性以确定交付的数据分布和排序顺序。注意，group 2 的最佳计划需要按 $T_2.b$ 对表 $T_2$ 进行哈希重分布，因为 $T_2$ 原本按 $T_2.a$ 哈希分布；group 1 的最佳计划则只是简单 `Scan`，因为 $T_1$ 已按 $T_1.a$ 哈希分布。
 
 [^2]: 还可能存在许多其他备选，例如先把两个子节点收集到 master 再做连接。Orca 允许为每个算子扩展任意数量的优化备选，并通过属性强制框架把这些备选干净地隔离开。
 
-![图 7：生成 InnerHashJoin 计划备选。](assets/figure-07-precise3.png)
+![图 7](assets/figure-07-precise3.png)
+
+图 7：生成 InnerHashJoin 计划备选。
 
 当交付属性不满足初始需求时，未满足属性必须被强制。Orca 中的属性强制是一个灵活框架，允许每个算子基于子计划交付属性和算子的局部行为定义强制所需属性的行为。例如，如果外侧子节点已经交付所需顺序，一个保持顺序的 Nested Loop Join 可能不需要在连接之上再强制排序。
 
@@ -244,7 +258,9 @@ Orca 是支持多核的优化器。优化过程被拆成小工作单元，称为
 
 图 8 展示了一个局部 job 图，其中在优化请求 $\mathit{req} _ 0$ 下优化 group $g_0$ 会触发一棵很深的依赖 job 树。依赖通过子父链接编码；父 job 必须等所有子 job 完成后才能结束。当子 job 推进时，父 job 需要挂起。这允许没有相互依赖的子 job 获取可用线程并并行运行。当所有子 job 完成后，被挂起的父 job 会收到通知并恢复处理。
 
-![图 8：优化 job 依赖图。](assets/figure-08-precise3.png)
+![图 8](assets/figure-08-precise3.png)
+
+图 8：优化 job 依赖图。
 
 Orca 包含一个从头设计的专门 job scheduler，用于最大化 job 依赖图的 fan-out，并为并行查询优化提供所需基础设施。调度器提供 API，把优化 job 定义为可重入过程，使其能被可用处理线程拾取执行。调度器还维护 job 依赖图，以识别并行机会，例如在不同 groups 中运行 transformation，并在被依赖 job 结束时通知挂起 job。
 
@@ -257,7 +273,9 @@ Orca 被设计为在数据库系统外运行。优化器与数据库系统之间
 
 图 9 展示 Orca 如何与不同后端系统交换元数据。查询优化期间，Orca 访问的所有元数据对象都会 pin 在内存缓存中，并在优化完成或抛出错误时 unpin。所有元数据对象访问都通过 MD Accessor 完成。MD Accessor 跟踪优化会话中正在访问的对象，并确保不再需要时释放它们。如果请求的元数据对象尚未在缓存中，MD Accessor 还负责透明地从外部 MD Provider 获取元数据。服务不同优化会话的不同 MD Accessor 可以具有不同外部 MD Provider。
 
-![图 9：元数据交换框架。](assets/figure-09-precise3.png)
+![图 9](assets/figure-09-precise3.png)
+
+图 9：元数据交换框架。
 
 除系统特定 provider 外，Orca 还实现了基于文件的 MD Provider，用于从 DXL 文件加载元数据，从而无需访问在线后端系统。Orca 包含自动工具，用于把优化器需要的元数据采集到最小 DXL 文件中。第 6.1 节说明该工具如何在后端数据库系统离线时重放客户查询优化。
 
@@ -321,7 +339,9 @@ AMPERe dump 会在遇到非预期错误时自动触发，也可以按需生成�
 
 AMPERe 允许在生成 dump 的系统之外重放 dump。任意 Orca 实例都可以加载 dump，取回输入查询、元数据和配置参数，从而发起与触发问题场景相同的优化会话。该过程如图 10 所示：优化器从 dump 中加载输入查询，为元数据创建基于文件的 MD Provider，设置优化器配置，然后启动优化线程以即时重现问题。
 
-![图 10：重放 AMPERe dump。](assets/figure-10-precise3.png)
+![图 10](assets/figure-10-precise3.png)
+
+图 10：重放 AMPERe dump。
 
 AMPERe 也被用作测试框架，其中一个 dump 就是包含输入查询及其期望计划的测试用例。重放 dump 文件时，Orca 可能生成与期望不同的计划，例如由于代价模型变化。这种差异会导致测试用例失败，并触发对计划差异根因的调查。借助该框架，任何带有 AMPERe dump 的 bug，无论来自内部测试还是客户报告，都可以自动转化为自包含测试用例。
 
@@ -331,7 +351,9 @@ Orca 代价模型的准确性会受多种误差源影响，包括不准确的基
 
 Orca 包含一个内建工具 TAQO [15]，用于 Testing the Accuracy of Query Optimizer。TAQO 测量优化器代价模型正确排序任意两个给定计划的能力，也就是说，估计代价更高的计划是否确实运行更久。图 11 中，优化器正确排序了 $(p_1,p_3)$，因为它们的实际代价与计算出的估计代价成正比。另一方面，优化器错误排序了 $(p_1,p_2)$，因为它们的实际代价与计算出的估计代价成反比。
 
-![图 11：计划空间。](assets/figure-11-precise3.png)
+![图 11](assets/figure-11-precise3.png)
+
+图 11：计划空间。
 
 
 TAQO 通过为优化给定查询时优化器考虑的计划估价并执行这些计划，来测量优化器准确性。一般来说，评估搜索空间中每一个计划是不可行的。该限制可以通过从搜索空间均匀采样计划来克服。优化请求的链接结构（见第 4.1 节）为 TAQO 构建基于 [29] 方法的均匀计划采样器提供了基础设施。
@@ -363,7 +385,9 @@ Orca 与 Planner 的比较使用一个 16 节点集群，节点之间通过 10Gb
 
 图 12 展示 Orca 相对 Planner 在所有查询上的加速比，其中高于 1 的柱表示 Orca 性能更好。可以看到，Orca 能够为 80% 的查询产生相近或更好的查询计划。对完整 TPC-DS 套件，Orca 相对 Planner 达到 5 倍加速。
 
-![图 12：Orca 相对 Planner 的加速比（TPC-DS 10TB）。](assets/figure-12-final.png)
+![图 12](assets/figure-12-final.png)
+
+图 12：Orca 相对 Planner 的加速比（TPC-DS 10TB）。
 
 特别地，有 14 个查询中 Orca 达到至少 1000 倍加速，这是由于实验设置了 10000 秒超时。这些查询使用 Planner 的计划运行超过 10000 秒，而使用 Orca 的计划能在数分钟内完成。
 
@@ -405,13 +429,19 @@ Impala 使用 CDH 4.4 和 Impala 1.1.1，Presto 使用 0.52，Stinger 使用 Hiv
 
 图 15 总结所有系统中受支持查询的数量。图中同时展示每个系统能够优化的查询数，即返回查询计划的查询数，以及在 256GB 数据集上能够完成执行并返回查询结果的查询数。
 
-![图 15：TPC-DS 查询支持情况。](assets/figure-15-final.png)
+![图 15](assets/figure-15-final.png)
+
+图 15：TPC-DS 查询支持情况。
 
 图 13 和图 14 展示 HAWQ 相对 Impala 和 Stinger 的加速比。由于两个系统并不支持所有查询，图中只列出成功查询。图 13 中带 `*` 的柱表示在 Impala 中内存不足的查询。查询 46、59 和 68 中，Impala 与 HAWQ 性能相近。
 
-![图 13：HAWQ 相对 Impala 的加速比（TPC-DS 256GB）。](assets/figure-13-final.png)
+![图 13](assets/figure-13-final.png)
 
-![图 14：HAWQ 相对 Stinger 的加速比（TPC-DS 256GB）。](assets/figure-14-final.png)
+图 13：HAWQ 相对 Impala 的加速比（TPC-DS 256GB）。
+
+![图 14](assets/figure-14-final.png)
+
+图 14：HAWQ 相对 Stinger 的加速比（TPC-DS 256GB）。
 
 在 HAWQ 加速最显著的查询中，我们发现 Impala 和 Stinger 会按查询中指定的字面顺序处理连接，而 Orca 会探索不同连接顺序，并使用基于代价的方法推荐最佳顺序。例如在 query 25 中，Impala 先连接两个事实表 `store_sales` 和 `store_returns`，再把这个巨大的中间结果与另一个事实表 `catalog_sales` 连接，这很低效。相比之下，Orca 先把事实表与维表连接，以减少中间结果。
 

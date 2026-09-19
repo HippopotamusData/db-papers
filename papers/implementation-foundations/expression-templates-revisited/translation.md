@@ -195,7 +195,9 @@ inline void addVectors(const Vector& a, const Vector& b, Vector& c)
 
 图 1 给出小向量（缓存内）和大向量（缓存外）的性能结果。正如预期，经典 C++ 运算符重载因临时向量造成的额外数据传输而遥遥落后。这一直接比较清楚表明，创建临时向量的开销会妨碍良好性能。就此而言，与朴素 C++ 运算符重载相比，ET 可以视为一种性能优化：它们避免创建中间临时对象，从而达到手写类 C 向量加法的性能。此外，借助运算符重载，它们还提供了领域专用语言 [1] 的表达力、自然性和灵活性；例如，可以直观地串接多个向量加法。
 
-![图 1. 六种稠密向量加法实现的性能比较。](assets/figure-01-vector-addition-performance.png)
+![图 1](assets/figure-01-vector-addition-performance.png)
+
+图 1. 六种稠密向量加法实现的性能比较。
 
 ## 5. ET 是一种性能优化技术吗？
 
@@ -256,7 +258,9 @@ C = A * B;
 
 图 2 给出六种实现的性能结果。对于两个大小为 $30^2$ 的缓存内矩阵乘法，以及两个大小为 $5000^2$ 的缓存外矩阵乘法，`dgemm` 函数都显然是最快的参赛者。虽然同样基于 ET，Blaze 也达到了相同的性能水平，因为 Blaze 内部同样使用 `dgemm`（参见第 8 节）。相比之下，另外两个基于 ET 的库表现很差。`dgemm` 的目的就是为矩阵乘法提供最高性能，因而这一结果并不意外；真正令人意外的是，对缓存外矩阵而言，即使是简单、未优化、老式的运算符重载，性能也比基于 ET 的库好得多。
 
-![图 2. 五种稠密矩阵乘法实现的性能比较。](assets/figure-02-matrix-multiplication-performance.png)
+![图 2](assets/figure-02-matrix-multiplication-performance.png)
+
+图 2. 五种稠密矩阵乘法实现的性能比较。
 
 > **原文一致性说明：** 图 2 的原文图注写作“五种实现”，但图中与相邻正文实际列出六种实现；此处分别保留原文图注和正文表述。
 
@@ -324,7 +328,9 @@ b = A * a;
 
 图 3 分别给出填充率为 10% 和 40% 时的缓存内与缓存外性能。Boost uBLAS 与 Blaze 的直接比较表明，无论规模还是填充率如何，两者都没有巨大的性能差异。原因是 ET 实现使用的默认内存访问方案恰好完全适合这个操作：为了计算结果向量的每个元素，都需要用矩阵的一行乘以稠密向量。按行访问稀疏矩阵和访问稠密向量都完全利用了两种数据结构的结构，因而性能处在合理水平。
 
-![图 3. 稀疏矩阵与稠密向量乘法的性能比较。](assets/figure-03-sparse-matrix-vector-performance.png)
+![图 3](assets/figure-03-sparse-matrix-vector-performance.png)
+
+图 3. 稀疏矩阵与稠密向量乘法的性能比较。
 
 第二个操作是行存稠密矩阵乘行存稀疏矩阵：
 
@@ -350,7 +356,9 @@ C = A * B;
 
 *<sup>3</sup> 提醒一下：由于抽象掉了实际操作，这种方法是必需的。*
 
-![图 4. 稠密矩阵与稀疏矩阵乘法的性能比较。](assets/figure-04-dense-sparse-matrix-performance.png)
+![图 4](assets/figure-04-dense-sparse-matrix-performance.png)
+
+图 4. 稠密矩阵与稀疏矩阵乘法的性能比较。
 
 > **原文一致性说明：** 图 4 右下子图在源 PDF 中标作 “10% Filled”，而图注及相邻正文将右列描述为 40% 填充率；图像按原文保留。
 
@@ -413,7 +421,9 @@ d = A * (a + b + c);
 
 无论 $N$ 较小还是较大，两个传统的基于 ET 的库表现都不好。尤其对大 $N$ 而言，经典运算符重载虽然在求值过程中总共需要三个临时对象，却快于 Boost uBLAS，尤其快于 Blitz++。Blaze 使用一个临时对象保存向量加法的中间结果，再调用优化的 `dgemv` 执行矩阵-向量乘法，因而具有明显的性能优势。
 
-![图 5. 复杂表达式 A · (a + b + c) 的性能比较。](assets/figure-05-complex-expression-matvec-performance.png)
+![图 5](assets/figure-05-complex-expression-matvec-performance.png)
+
+图 5. 复杂表达式 A · (a + b + c) 的性能比较。
 
 **表 2. 复杂表达式 $A\cdot(a+b+c)$ 的 LIKWID 分析（ $N=5000$ ）**
 
@@ -435,7 +445,9 @@ $$
 
 为了高效执行矩阵乘法，左、右矩阵表达式都必须先求值。Blitz++ 同样无法用单条语句计算该表达式，因而会生成两个显式临时矩阵。图 6 展示经典运算符重载、Blitz++、Boost uBLAS 和 Blaze 在缓存内与缓存外的结果。Blitz++ 总是优于不创建任何中间临时对象、因而会反复求值矩阵加法和减法的 Boost uBLAS。但两者都远远慢于 Blaze；Blaze 内部创建两个临时对象来保存矩阵加法和减法的中间结果，然后调用 `dgemm` 执行矩阵乘法。特别惊人的是，对大 $N$ 而言，Blitz++ 和 Boost uBLAS 都被经典运算符重载遥遥超过，因为后者创建了必要的临时对象，并为矩阵乘法使用了更快的 kernel。
 
-![图 6. 复杂表达式 (A + B) · (C − D) 的性能比较。](assets/figure-06-complex-expression-matmul-performance.png)
+![图 6](assets/figure-06-complex-expression-matmul-performance.png)
+
+图 6. 复杂表达式 (A + B) · (C − D) 的性能比较。
 
 **表 3. 复杂表达式 $(A+B)\cdot(C-D)$ 的 LIKWID 分析（ $N=5000$ ）**
 
@@ -578,7 +590,9 @@ Inlining 是所有 ET 框架的核心问题：如果整个 ET 功能不能完全
 
 *<sup>6</sup> 我们必须承认，这同样影响 Blaze 库的 ET 实现；但由于嵌入 HPC kernel 的设计，它受到的影响远小于其他 ET 框架。*
 
-![图 7. 稠密向量加法在正确内联与内联失败时的性能比较。](assets/figure-07-inlining-performance.png)
+![图 7](assets/figure-07-inlining-performance.png)
+
+图 7. 稠密向量加法在正确内联与内联失败时的性能比较。
 
 ## 10. 结论与未来工作
 

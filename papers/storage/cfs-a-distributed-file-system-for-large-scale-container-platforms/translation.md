@@ -53,7 +53,9 @@ Haifeng Liu（§†）、Wei Ding（†）、Yuan Chen（†）、Weilong Guo（
 
 如图 1 所示，CFS 由元数据子系统、数据子系统和资源管理器组成；容器中托管的各组应用进程可通过不同客户端访问 CFS。
 
-![图 1：CFS 的架构。](assets/cfs-fig01-architecture.png)
+![图 1](assets/cfs-fig01-architecture.png)
+
+图 1：CFS 的架构。
 
 元数据子系统存储文件元数据，由一组 meta node 组成；每个 meta node 又包含一组 meta partition。数据子系统存储文件内容，由一组 data node 组成；每个 data node 又包含一组 data partition。后续小节将详细介绍这两个子系统。
 
@@ -116,7 +118,9 @@ Data subsystem 同时为大文件和小文件优化存储，并支持顺序与�
 
 下面的代码片段给出 CFS 中 data partition 的结构。
 
-![图 2：Data partition 的内部结构。](assets/cfs-fig02-data-partition.png)
+![图 2](assets/cfs-fig02-data-partition.png)
+
+图 2：Data partition 的内部结构。
 
 ```go
 type dataPartition struct {
@@ -230,7 +234,9 @@ CFS 部署在京东集群中时主要采用了以下两项优化。
 
 CFS 的取舍是放松这一原子性要求，只保证一个 dentry 始终至少关联一个 inode；所有元数据操作都遵循这一原则。代价是仍有机会产生 orphan inode，即没有任何 dentry 与之关联的 inode，而它们可能难以从内存中释放。为降低这一概率，CFS 仔细设计了每种元数据操作的工作流。实践中，meta node 内存里很少积累过多 orphan inode；若确实发生，管理员可用 `fsck` 等工具修复文件。
 
-![图 3：三种常见元数据操作的工作流：create、link 和 unlink。](assets/cfs-fig03-metadata-operations.png)
+![图 3](assets/cfs-fig03-metadata-operations.png)
+
+图 3：三种常见元数据操作的工作流：create、link 和 unlink。
 
 #### 2.6.1 Create
 
@@ -252,13 +258,17 @@ CFS 放松了 POSIX 一致性语义：它只保证文件/目录操作的顺序�
 
 如图 4 所示，顺序写文件时，客户端先从缓存中随机选择一个可用 data partition，再持续向 leader 发送固定大小（例如 128 KB）的数据包。每个数据包都包含各副本地址、目标 extent id、extent 内 offset 和文件内容。副本地址由 resource manager 以数组形式提供并缓存在客户端；数组下标规定复制顺序，下标为 0 的副本就是 leader。因此客户端总能直接向 leader 发送写请求，不引入额外通信；之后 primary-backup replication 按该顺序执行。客户端收到 leader 的 commit 后，立即更新本地缓存，并周期性地与 meta node 同步，或在上层应用调用 [`fsync()`](http://man7.org/linux/man-pages/man2/fdatasync.2.html) 时同步。
 
-![图 4：顺序写工作流。](assets/cfs-fig04-sequential-write.png)
+![图 4](assets/cfs-fig04-sequential-write.png)
+
+图 4：顺序写工作流。
 
 #### 2.7.2 随机写
 
 CFS 的随机写是 in-place 写。随机写文件时，客户端先比较原数据和新数据的 offset，把数据分为需要追加和需要覆盖的部分，再分别处理。追加部分按前述顺序写流程处理；覆盖部分则按图 5 所示流程写入，文件在 data partition 上的 offset 不变。
 
-![图 5：覆盖已有文件的工作流（不追加）。](assets/cfs-fig05-overwrite-existing-file.png)
+![图 5](assets/cfs-fig05-overwrite-existing-file.png)
+
+图 5：覆盖已有文件的工作流（不追加）。
 
 #### 2.7.3 删除
 
@@ -341,9 +351,13 @@ CFS 在 10 台机器组成的同一集群上同时部署 meta node 和 data node
 | TreeCreation | 10 | 11 | -9 |
 | TreeRemoval | 12 | 3 | 300 |
 
-![图 6：单客户端操作文件元数据时的 IOPS。](assets/cfs-fig06-single-client-metadata-iops.png)
+![图 6](assets/cfs-fig06-single-client-metadata-iops.png)
 
-![图 7：多客户端操作文件元数据时的 IOPS。](assets/cfs-fig07-multiple-client-metadata-iops.png)
+图 6：单客户端操作文件元数据时的 IOPS。
+
+![图 7](assets/cfs-fig07-multiple-client-metadata-iops.png)
+
+图 7：多客户端操作文件元数据时的 IOPS。
 
 为评估元数据子系统的性能和可扩展性，我们聚焦 [`mdtest`](https://github.com/hpc/ior) 中 7 种常用元数据操作；表 2 给出其说明。`TreeCreation` 和 `TreeRemoval` 主要关注把目录作为树形结构中的非叶节点来操作。
 
@@ -359,9 +373,13 @@ CFS 在 10 台机器组成的同一集群上同时部署 meta node 和 data node
 
 大文件实验先考察单客户端环境中不同进程数的结果，每个进程操作一个独立的 40 GB 文件。我们使用 [`fio`](https://github.com/axboe/fio) 的 direct I/O 模式生成不同工作负载；CFS 和 Ceph 的客户端与服务器均部署在不同机器上。为了让 Ceph 达到最佳性能，需要调节控制队列数和队列处理线程数的 `osd_op_num_shards` 与 `osd_op_num_threads_per_shard`，我们分别将其设为 6 和 4；继续增大任一值都会因 CPU 压力过高而降低写性能。
 
-![图 8：单客户端中不同进程数、不同访问模式下操作文件的 IOPS。每个进程操作独立 40 GB 文件。](assets/cfs-fig08-processes-file-access-iops.png)
+![图 8](assets/cfs-fig08-processes-file-access-iops.png)
 
-![图 9：不同客户端数下的 IOPS。随机读/写测试中每个客户端有 64 个进程，顺序读/写测试中每个客户端有 16 个进程；每个进程操作独立 40 GB 文件。](assets/cfs-fig09-clients-file-access-iops.png)
+图 8：单客户端中不同进程数、不同访问模式下操作文件的 IOPS。每个进程操作独立 40 GB 文件。
+
+![图 9](assets/cfs-fig09-clients-file-access-iops.png)
+
+图 9：不同客户端数下的 IOPS。随机读/写测试中每个客户端有 64 个进程，顺序读/写测试中每个客户端有 16 个进程；每个进程操作独立 40 GB 文件。
 
 如图 8 所示，二者在不同进程数下的性能很相近；例外是进程数超过 16 后，CFS 在随机读写测试中具有更高 IOPS。这可能有两个原因。第一，Ceph 的每个 MDS 只在内存中缓存部分文件元数据；随机读取时，缓存未命中率会随进程数增加而大幅上升，导致频繁磁盘 I/O。相比之下，CFS 的每个 meta node 都把全部文件元数据缓存在内存中，从而避免昂贵磁盘 I/O。第二，CFS 的 overwrite 是 in-place 写，无需更新文件元数据；Ceph 的 overwrite 通常需要经过多个队列，只有数据和元数据都持久化并同步后，才能向客户端返回 commit 消息。
 
@@ -371,7 +389,9 @@ CFS 在 10 台机器组成的同一集群上同时部署 meta node 和 data node
 
 小文件实验使用 `mdtest` 操作大小从 1 KB 到 128 KB 的小文件，模拟产品图片这一通常创建后不再修改的用例。在 CFS 配置中，128 KB 是决定文件是否聚合到单个 extent、即是否视为“小文件”的阈值。Ceph 中每个客户端操作不同目录，并把每个目录绑定到一个特定 MDS，以最大化并发度并提升性能稳定性。
 
-![图 10：8 个客户端、每个 64 进程操作不同大小小文件时的 IOPS。](assets/cfs-fig10-small-files-iops.png)
+![图 10](assets/cfs-fig10-small-files-iops.png)
+
+图 10：8 个客户端、每个 64 进程操作不同大小小文件时的 IOPS。
 
 CFS 在小文件读写中优于 Ceph。读场景中，CFS 将所有文件元数据保存在内存中，避免昂贵磁盘 I/O；写场景中，小文件继续使用已分配 extent，客户端不必向 resource manager 请求新 extent，而可直接把写请求发给 data node，从而进一步减少网络开销。
 

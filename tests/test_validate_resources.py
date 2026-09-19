@@ -28,6 +28,89 @@ def save_nonuniform_image(path: Path, size: tuple[int, int] = (32, 16)) -> None:
 
 
 class ResourceValidationTests(unittest.TestCase):
+    def test_alt_only_caption_candidates_cover_numbered_resource_kinds(self) -> None:
+        for label in ("图 1：吞吐量（千次/秒）", "Table 1: Results", "算法 1：合并"):
+            with self.subTest(label=label):
+                text = f"![{label}](assets/figure.png)\n"
+                risks = validate_resources.image_caption_risks(text)
+                self.assertEqual(len(risks), 1)
+                self.assertIn("alt-only caption candidate", risks[0])
+                self.assertIn("line 1", risks[0])
+
+    def test_visible_caption_before_after_and_with_bold_number(self) -> None:
+        image = "![图 1：吞吐量（千次/秒）](assets/figure.png)"
+        for caption in (
+            "图 1：吞吐量。", "**图 1**：吞吐量。", "**图 1：吞吐量。**",
+            "*图 1：吞吐量。*", "**图 1。** 吞吐量。", "**图 1　吞吐量。**",
+            "**图 1** 吞吐量。",
+            "*图 1*",
+        ):
+            for text in (f"{caption}\n\n{image}", f"{image}\n\n{caption}", f"{image}\n{caption}"):
+                with self.subTest(text=text):
+                    self.assertEqual(validate_resources.image_caption_risks(text), [])
+
+    def test_reference_image_caption_candidate_and_visible_caption(self) -> None:
+        text = "![图 2：架构][architecture]\n\n[architecture]: assets/figure.png\n"
+        self.assertEqual(len(validate_resources.image_caption_risks(text)), 1)
+        self.assertEqual(
+            validate_resources.image_caption_risks("**图 2**：架构。\n\n" + text), []
+        )
+
+    def test_caption_cross_references_hidden_text_and_code_do_not_suppress_warning(self) -> None:
+        image = "![图 1：吞吐量（千次/秒）](assets/figure.png)"
+        for noncaption in (
+            "图 1 显示吞吐量。", "见图 1：吞吐量。", "图 2：不同编号。",
+            "<!-- 图 1：隐藏图注。 -->", "`图 1：代码中的字面量。`",
+            "```text\n图 1：代码中的字面量。\n```",
+            "    图 1：缩进代码中的字面量。",
+        ):
+            with self.subTest(noncaption=noncaption):
+                self.assertEqual(
+                    len(validate_resources.image_caption_risks(f"{image}\n\n{noncaption}")), 1
+                )
+        self.assertEqual(len(validate_resources.image_caption_risks(
+            f"{image}\n\n过渡正文。\n\n图 1：并不相邻。"
+        )), 1)
+
+    def test_caption_warning_ignores_nonimages_empty_and_number_only_alt(self) -> None:
+        for text in (
+            "", "普通正文", "![](assets/figure.png)", "![图 1](assets/figure.png)",
+            "![普通替代文本](assets/figure.png)",
+            "<!-- ![图 1：说明](assets/figure.png) -->",
+            "<!-- ![图 1：说明](assets/figure.png)",
+            "```markdown\n![图 1：说明](assets/figure.png)\n```",
+            "    ![图 1：说明](assets/figure.png)",
+            "`![图 1：说明](assets/figure.png)`",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(validate_resources.image_caption_risks(text), [])
+
+    def test_caption_decimal_identifier_and_alt_cross_reference(self) -> None:
+        image = "![图 3.1：树结构](assets/tree.png)"
+        self.assertEqual(validate_resources.image_caption_risks(image + "\n\n图 3.1：树结构。"), [])
+        self.assertEqual(len(validate_resources.image_caption_risks(image + "\n\n图 3：其他结构。")), 1)
+        self.assertEqual(validate_resources.image_caption_risks(
+            "![图2超图上的26个遍历步骤](assets/steps.png)\n\n**图 3：遍历步骤。**"
+        ), [])
+
+    def test_caption_candidate_is_warning_without_changing_resource_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            paper = Path(temporary)
+            (paper / "assets").mkdir()
+            save_nonuniform_image(paper / "assets/figure.png")
+            text = "![图 1：吞吐量（千次/秒）](assets/figure.png)\n"
+            errors, risks = validate_resources.validate_paper(
+                paper, "Figure 1: Throughput\n", text,
+                require_references=False, require_inline_citations=False,
+                allow_whole_page=False,
+            )
+            self.assertEqual(errors, [])
+            self.assertTrue(any("alt-only caption candidate" in risk for risk in risks))
+            self.assertEqual(
+                validate_resources.formal_resource_representations(text)["figure"],
+                {1: {"image:assets/figure.png"}},
+            )
+
     @staticmethod
     def complete_numeric_two_column_fixture(
         *,

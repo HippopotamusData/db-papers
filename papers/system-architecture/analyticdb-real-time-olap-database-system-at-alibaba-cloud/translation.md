@@ -68,7 +68,9 @@ AnalyticDB 作为云数据库运行在飞天（Apsara）之上。飞天是阿里
 
 图 1 展示了 AnalyticDB 架构。客户端通过 JDBC/ODBC 连接协调器（coordinator）。协调器把写入请求分派给写节点，把查询请求分派给读节点。写节点处理 INSERT、DELETE、UPDATE，并把 SQL/log 持久化到盘古；读节点处理 SELECT，并缓存/加载分区数据；Fuxi 为异步任务提供计算资源。
 
-![图 1：AnalyticDB 架构。](assets/analyticdb-fig01-architecture.png)
+![图 1](assets/analyticdb-fig01-architecture.png)
+
+图 1：AnalyticDB 架构。
 
 ### 3.1 数据模型和查询语言
 
@@ -78,7 +80,9 @@ AnalyticDB 遵循标准关系数据模型，即记录存放在具有固定 schem
 
 AnalyticDB 的表支持两级分区：主分区（primary partition），以及用户可以选择指定的次分区（secondary/sub partition）。图 2 展示了一个建表 DDL：主分区按 `id` 哈希成 50 个分区，次分区按 `dob` 列做列表分区，最多保留 12 个可用分区。
 
-![图 2：创建分区表的 DDL。](assets/analyticdb-fig02-partition-ddl.png)
+![图 2](assets/analyticdb-fig02-partition-ddl.png)
+
+图 2：创建分区表的 DDL。
 
 ```sql
 CREATE TABLE db_name.table_name (
@@ -101,7 +105,9 @@ AnalyticDB 主要包含三类节点：协调器、写节点和读节点。协调
 
 图 3 展示流水线执行引擎。数据以列块（page）为单位从存储流向客户端；所有数据处理都在内存中完成，并跨网络在不同阶段间流水化。这样的流水线工作流使 AnalyticDB 能以高吞吐、低延迟服务用户的复杂查询。
 
-![图 3：流水线模式执行引擎。](assets/analyticdb-fig03-pipeline-engine.png)
+![图 3](assets/analyticdb-fig03-pipeline-engine.png)
+
+图 3：流水线模式执行引擎。
 
 ### 3.4 读写解耦
 
@@ -117,7 +123,9 @@ AnalyticDB 主要包含三类节点：协调器、写节点和读节点。协调
 
 图 4 展示读节点之间的数据放置。具有相同哈希值的分区被放在同一读节点上。这样的分区放置配合存储感知优化器，可减少数据重分布成本；我们生产服务的统计表明，数据重分布可减少 80% 以上。读节点默认有副本，以支持并发和可靠性。
 
-![图 4：读节点之间的数据放置。](assets/analyticdb-fig04-data-placement.png)
+![图 4](assets/analyticdb-fig04-data-placement.png)
+
+图 4：读节点之间的数据放置。
 
 每个读节点从盘古加载初始分区，再周期性地从对应写节点拉取后续更新，并把更新应用到不会回写盘古的本地数据副本。我们选择持续从写节点而非盘古拉取数据，以降低同步延迟；因此，写节点也充当缓存，为不同读节点副本的并发拉取提供服务。
 
@@ -125,7 +133,9 @@ AnalyticDB 主要包含三类节点：协调器、写节点和读节点。协调
 
 我们用版本验证机制解决这一问题。图 5 展示了一个先写后读的请求序列：每个主分区在写节点上关联自己的版本。一批分区写入刷盘后，写节点递增该分区版本，并把版本附在响应中。用户写入一条记录（步骤 1、2）后立即发查询；协调器收到查询时，把查询和此前刷盘响应中缓存的版本 $V_1$ 一并发给相应读节点（步骤 4）。对有界陈旧读，协调器使用缓存版本；对实时读，则在步骤 3 从写节点拉取版本。读节点将本地版本 $V_2$ 与 $V_1$ 比较：若 $V_1 \leq V_2$，即可直接执行查询；否则须先从写节点拉取最新数据（步骤 5）并更新本地副本。
 
-![图 5：实时读取工作流。](assets/analyticdb-fig05-realtime-read-workflow.png)
+![图 5](assets/analyticdb-fig05-realtime-read-workflow.png)
+
+图 5：实时读取工作流。
 
 通过上述操作，我们可以确保读写节点之间实时查询的数据可见性。
 
@@ -155,7 +165,9 @@ AnalyticDB 的一个设计目标是同时支持 OLAP 风格查询和点查找。
 
 为解决这一矛盾，我们设计了图 6 所示的混合行列存储布局。在我们的设计中，每个表分区的数据保存在一个 detail file 中，并划分为多个 row group。每个 row group 包含固定数量的行（该数量可配置；根据我们的生产实践，默认值为 30,000）；同一列的所有值连续聚集为一个 data block，各 data block 顺序存储。data block 是 AnalyticDB 中 fetch、cache 等操作的基本单位，也有助于取得较高压缩率并节省存储空间。
 
-![图 6：混合行列存储中的数据格式，包括元数据和索引格式。](assets/analyticdb-fig06-hybrid-row-column-format.png)
+![图 6](assets/analyticdb-fig06-hybrid-row-column-format.png)
+
+图 6：混合行列存储中的数据格式，包括元数据和索引格式。
 
 这种设计以可接受的开销平衡 OLAP 风格查询和点查找 [12, 20, 34]。与列存类似，混合存储仍按列聚集数据，有利于 OLAP 查询。虽然完整的一列分布在不同 row group 的多个 data block 中，但取出全部数据只需少量顺序 seek；正如我们在真实 AnalyticDB 服务中观察到的，这一开销占总查询延迟不到 5%。点查找也能保持良好性能，因为特定行的所有列都在同一个 row group 中；组装一行只需短距离顺序 seek [23]，而不需要列存中的跨 segment seek。
 
@@ -163,7 +175,9 @@ AnalyticDB 的一个设计目标是同时支持 OLAP 风格查询和点查找。
 
 一个 FBlock 所含行数可以从不足一行（即一行的局部）到多行不等。为支持快速查找，我们在 data block 中为每个 FBlock 维护一条 block entry，记录对应 FBlock 的起始行和结束行。一行可以拆到多个连续 FBlock 中；例如图 7 的 FBlock1 和 FBlock2 分别保存行区间 $[0,99]$ 与 $[99,200]$，说明第 99 行跨越两个 FBlock。访问该行时，我们先扫描 data block 中的 block entry 定位相关 FBlock，再取出并拼接各部分行。
 
-![图 7：复杂类型数据格式。](assets/analyticdb-fig07-complex-type-format.png)
+![图 7](assets/analyticdb-fig07-complex-type-format.png)
+
+图 7：复杂类型数据格式。
 
 #### 4.1.2 元数据
 
@@ -177,7 +191,9 @@ AnalyticDB 的底层存储采用 Lambda 架构，包含基线数据和增量数�
 
 行被更新或删除时，我们把 bit-set snapshot 连同版本号存入内存映射，供后续查询使用。为节省空间，删除 bit-set 被切分成多个小型压缩 segment，使不同 snapshot 能共享未变化的 segment。创建新版本 snapshot 后，一旦最旧版本上已无查询运行，系统便将其淘汰。我们目前只支持按主键更新，以避免一次操作改动过多数据；一次 UPDATE 被视为 DELETE 与 INSERT 的组合。
 
-![图 8：存储上的数据操作与查询执行。](assets/analyticdb-fig08-storage-manipulation-query.png)
+![图 8](assets/analyticdb-fig08-storage-manipulation-query.png)
+
+图 8：存储上的数据操作与查询执行。
 
 INSERT 会解析 SQL、把值追加到增量数据尾部、为删除位图添加新位、创建位图快照，并把版本与快照写入映射。
 
@@ -233,7 +249,9 @@ return minus(row_ids, delete_bitset_snap);
 
 随着数据持续写入，在增量数据上搜索会显著变慢，因此系统异步启动构建过程，把增量数据并入基线数据；该过程忽略已删除记录，并相应创建新索引。图 9 展示合并流程。构建开始时，我们冻结当前增量数据，并创建新的增量数据继续接收写入。在构建结束前，所有查询都访问旧基线数据、被冻结的旧增量数据和新增量数据。新版本基线数据合并完成后，旧基线数据和旧增量数据可安全删除；此后，由新基线数据与新增量数据共同服务后续查询。
 
-![图 9：合并基线数据和增量数据的过程。](assets/analyticdb-fig09-baseline-incremental-merge.png)
+![图 9](assets/analyticdb-fig09-baseline-incremental-merge.png)
+
+图 9：合并基线数据和增量数据的过程。
 
 ### 4.2 索引管理
 
@@ -245,7 +263,9 @@ return minus(row_ids, delete_bitset_snap);
 
 每个分区的每列都构建倒排索引，每个索引存放在独立文件中；索引键是原列值，索引值是对应 row id（即行号）列表。由于每个 row group 行数固定，我们可以按 row id 轻松定位一行。图 10 给出一个同时包含结构化条件和复杂类型条件的 SQL 过滤示例。索引引擎先在每个条件对应的索引上过滤，得到一组局部 row id；再通过交、并、差等操作把所有局部结果合并为最终结果。多数数据库常用的 2-way merging 会产生巨大内存开销并导致低并发。为减轻这一影响，我们改用 K-way merging [17]，在大数据集上保证亚秒级查询延迟。
 
-![图 10：在所有列索引上执行查询。](assets/analyticdb-fig10-all-column-index-query.png)
+![图 10](assets/analyticdb-fig10-all-column-index-query.png)
+
+图 10：在所有列索引上执行查询。
 
 **索引路径选择。** 过度使用索引有时会降低性能。例如条件 A 的局部结果远小于条件 B 时，先用 A 取得少量结果再用 B 过滤，比同时取得 A、B 的局部结果并合并更划算。为此，我们提出基于运行时过滤比（filter ratio）的索引路径选择机制，在运行时评估每个条件的过滤比，决定是否使用相应索引。过滤比定义为索引返回的合格行数除以元数据中的总行数。AnalyticDB 按过滤比从小到大使用索引处理条件；每完成一个条件，如果所有已处理条件的联合过滤比（由各过滤比相乘得到）已经足够小，例如低于总行数的 1%，便停止该过程，并以 K-way merging 合并此前取得的局部结果。后续条件直接作用于这些 row id，而不再访问索引。
 
@@ -287,7 +307,9 @@ AnalyticDB 每秒服务数千万写请求，无法在写路径同步构建全列
 
 异步索引会带来一个性能空窗：新索引上线前，增量数据缺少完整索引，查询增量数据可能变慢。AnalyticDB 在读节点上独立地为增量数据建立 sorted index。图 11 中，升序 sorted index 是 data block 中按值排序的 row id 数组，第 $i$ 个元素 $T_i$ 表示 data block 中第 $i$ 小的值位于第 $T_i$ 行；查询因此从扫描 $O(n)$ 转化为二分搜索 $O(\log n)$。我们在每个 data block 中分配额外 header 保存该索引；一个 block 约含 30K 行，row id 使用 short integer，因此 header（即 sorted index）约 60KB。flush data block 前，索引引擎构建 sorted index 并写入文件头。整个过程在读节点本地执行，开销很小。
 
-![图 11：增量数据的排序索引。](assets/analyticdb-fig11-sorted-index-incremental.png)
+![图 11](assets/analyticdb-fig11-sorted-index-incremental.png)
+
+图 11：增量数据的排序索引。
 
 #### 4.2.6 条件索引缓存
 
@@ -305,7 +327,9 @@ AnalyticDB 优化器同时提供 CBO（cost-based optimization）和 RBO（rule-
 
 图 12 展示 STARs（Strategy Alternative Rules）框架。优化器内部包含数据源能力、STARs 建模、动态规划、source-specific planner 和 connector manager。不同数据源向框架注册能力，优化器据此生成可执行 API 调用，并选择合适的数据位置和执行路径。
 
-![图 12：AnalyticDB 的 STARs 框架。](assets/analyticdb-fig12-stars-framework.png)
+![图 12](assets/analyticdb-fig12-stars-framework.png)
+
+图 12：AnalyticDB 的 STARs 框架。
 
 #### 5.1.1 存储感知计划优化
 
@@ -317,7 +341,9 @@ Join 下推。分布式数据库执行计划中的另一个重要问题是数据
 
 基于索引的 join 和 aggregation。全列索引允许直接查询现有索引，进一步消除构建 hash index 的开销。调整 join order 时，如果大多数 join column 都是 partition column 且已有索引，优化器会避免生成 BushyTree，优先选择 LeftDeepTree，以便更充分利用现有索引（图 13）。我们还下推 predicate 和 aggregation；例如 `count` 等聚合可直接由索引返回，过滤也可完全在索引上求值。这些优化降低查询延迟并改善集群利用率，使 AnalyticDB 能够支持高并发。
 
-![图 13：存储感知 join 优化。](assets/analyticdb-fig13-storage-aware-join.png)
+![图 13](assets/analyticdb-fig13-storage-aware-join.png)
+
+图 13：存储感知 join 优化。
 
 #### 5.1.2 高效实时采样
 
@@ -363,9 +389,13 @@ AnalyticDB 提供通用的 pipeline-mode 执行引擎，并在其上提供 DAG [
 
 我们生成 1TB 数据集，运行表 2 中的三条查询。图 14 和图 15 分别展示 AnalyticDB、PrestoDB、Druid、Spark SQL 和 Greenplum 的 50 分位与 95 分位查询延迟。三个子图对应 Q1、Q2 和 Q3。AnalyticDB 在三类查询上都至少比其他系统低一个数量级。
 
-![图 14：1TB 数据上的 50 分位延迟，子图 (a) Q1、(b) Q2、(c) Q3；PDB 表示 PrestoDB，ADB 表示 AnalyticDB，GP 表示 Greenplum。](assets/analyticdb-fig14-latency-p50-1tb.png)
+![图 14](assets/analyticdb-fig14-latency-p50-1tb.png)
 
-![图 15：1TB 数据上的 95 分位延迟，子图 (a) Q1、(b) Q2、(c) Q3；PDB 表示 PrestoDB，ADB 表示 AnalyticDB，GP 表示 Greenplum。](assets/analyticdb-fig15-latency-p95-1tb.png)
+图 14：1TB 数据上的 50 分位延迟，子图 (a) Q1、(b) Q2、(c) Q3；PDB 表示 PrestoDB，ADB 表示 AnalyticDB，GP 表示 Greenplum。
+
+![图 15](assets/analyticdb-fig15-latency-p95-1tb.png)
+
+图 15：1TB 数据上的 95 分位延迟，子图 (a) Q1、(b) Q2、(c) Q3；PDB 表示 PrestoDB，ADB 表示 AnalyticDB，GP 表示 Greenplum。
 
 **Q1。** 受益于索引引擎，AnalyticDB 避免对全表执行昂贵的扫描和排序，这不同于 PrestoDB 和 Spark SQL。它把 ORDER BY 与 LIMIT 算子分发到每个次分区；次分区保存 `o_trade_time` 列的有序索引，所以各分区只需遍历几十条索引项即可取得合格 row id。Greenplum 虽有全列索引，却不能将其用于 ORDER BY，仍需全扫描；Druid 以 `o_trade_time` 做范围分区 [36]，执行该列上的 ORDER BY 时从最大的范围分区开始过滤，表现好于 Greenplum，但因仍需扫描该分区全部行而慢于 AnalyticDB。
 
@@ -377,7 +407,9 @@ AnalyticDB 提供通用的 pipeline-mode 执行引擎，并在其上提供 DAG [
 
 我们进一步生成 10TB 数据集并提高并发。由于对比系统在大数据集和更高并发下远慢于 AnalyticDB，我们在本节省略这些系统。图 16 对比 1TB 与 10TB 数据上三类查询的 50 分位延迟。我们可以看到，Q1 和 Q2 在不同并发下仍保持百毫秒级。Q3 在 200 并发下延迟显著高于 40 并发，因为 8 台机器的计算能力已经饱和：64 个主分区、10 个次分区和 200 并发会产生多达 128,000 个实际并发线程，而 8 台机器总共只有 $48 \times 8 = 384$ 个 CPU 核。Q3 是计算密集型查询，频繁上下文切换导致性能下降和高延迟。
 
-![图 16：AnalyticDB 在 1TB 和 10TB 数据上的 50 分位延迟。](assets/analyticdb-fig16-latency-1tb-10tb.png)
+![图 16](assets/analyticdb-fig16-latency-1tb-10tb.png)
+
+图 16：AnalyticDB 在 1TB 和 10TB 数据上的 50 分位延迟。
 
 从图 16 中我们可以看到，10TB 上不同并发的趋势与 1TB 类似。数据量增加后查询延迟仅约翻倍，因为 AnalyticDB 先通过索引查找 row id，再获取合格行；索引缓存降低了 lookup 成本。总体性能更多受索引计算和合格行数影响，而非表总大小。
 
@@ -395,7 +427,9 @@ AnalyticDB 提供通用的 pipeline-mode 执行引擎，并在其上提供 DAG [
 
 我们生成 1TB 数据用于 TPC-H 评估。图 17 比较 AnalyticDB、PrestoDB、Spark SQL 和 Greenplum 的执行时间。若某个查询时间为 1,000 秒，表示系统运行该查询时发生异常，我们未得到结果，例如 PrestoDB 的 Query No.3 和 Spark SQL 的 Query No.21。AnalyticDB 在 22 个查询中的 20 个上取得最短运行时间，并比第二名 Greenplum 快约 2 倍。
 
-![图 17：TPC-H 性能对比。](assets/analyticdb-fig17-tpch-comparison.png)
+![图 17](assets/analyticdb-fig17-tpch-comparison.png)
+
+图 17：TPC-H 性能对比。
 
 相较 Spark SQL，AnalyticDB 采用流水线处理模型和索引，比 stage-based 处理更快；PrestoDB 也采用流水线处理，但列上没有索引。Greenplum 同样兼具流水线处理和全列索引，而 AnalyticDB 还有四项优势：第一，AnalyticDB 使用混合行列存储，Greenplum 使用列存；常见 TPC-H 查询涉及约一半列，所以 AnalyticDB 一次 I/O 即可取得一行的多个列。第二，AnalyticDB 基于运行时代价的索引路径选择使用真实中间结果，比 Greenplum 基于统计信息的规划产生更好的表访问计划。第三，AnalyticDB 把 K-way merging 与复合谓词下推结合。第四，AnalyticDB 使用向量化执行引擎，并把优化后的 CodeGen 应用于所有算子和表达式。Query No.2 上 AnalyticDB 慢于 PrestoDB 与 Greenplum，原因是为多表 join 选择了不同的 join order。
 

@@ -86,7 +86,9 @@ void hash_int32(int32_t* data, uint32_t* hash, size_t tuples) {
 
 ### 3.1 选择扫描
 
-![图 1：selection scan 示例（未使用短路求值）。](assets/figure-01-selection-scan-example.png)
+![图 1](assets/figure-01-selection-scan-example.png)
+
+图 1：selection scan 示例（未使用短路求值）。
 
 现代分析型数据库在选择上更偏向线性扫描而非索引 [39, 40]。代码生成引擎也倾向于对扫描和解压使用预编译 SIMD 代码 [22]。在原始 column-at-a-time 模型 [27] 中，每个谓词产生一个表示合格元组的 rid 列表（数组），合取和析取通过 rid 列表的交或并计算。VIP 使用 bitmap 保存谓词之间的中间结果，类似商业系统的做法 [39]。
 
@@ -319,7 +321,9 @@ VIP 的 group-by aggregation 分为多步：（i）估算 group 数；（ii）�
 
 可选分区完成后，主 group-by 算子的第一步是把 group-by key 的哈希值映射到 gid。哈希表保存 `(hash, gid)` 对；每个 group 起初由唯一哈希值标识。VIP 逐列计算每个输入元组的 group-by hash，并在 cuckoo table 的两个候选桶中查找匹配；若没有匹配，就创建 group、分配下一个隐式 gid，并保存当前元组的 rid。
 
-![图 2：将 hash 映射到 group id 的示例。](assets/figure-02-hash-to-gids.png)
+![图 2](assets/figure-02-hash-to-gids.png)
+
+图 2：将 hash 映射到 group id 的示例。
 
 下面的子算子使用 group-by 列的 hash 生成 gid。为降低代码复杂度，原文省略了向表中插入新 group 的部分。由于 cuckoo hash table 的插入本身可能失败 [32]，也可能低估 group 数，系统设置阈值；达到阈值后会扩容并从头重建 hash table。
 
@@ -377,7 +381,9 @@ size_t hashes_to_gids(const uint32_t* hashes, int32_t* gids, size_t tuples,
 
 与 join 不同，这里显式使用 cuckoo hashing，以输入顺序探测 hash 并映射到 gid [34]。唯一 hash 到 gid 的映射仍可能因 hash collision 而错误，即使分区后碰撞已很少。连接通过重新求值包括等值条件在内的谓词解决碰撞；聚合则用每组第一个元组的 rid 解引用 group-by 列，验证同组列值是否一致。系统对每个 payload 列扫描一次，把最新列值与该组首元组的列值比较；若不匹配，就沿着表示同一 hash 下不同 group 的 gid-rid 对链表继续比较。找到匹配便改写当前元组的 gid，否则向同 hash 的 group 列表追加新的 gid-rid 对。
 
-![图 3：解决 group-by hash 冲突的示例。](assets/figure-03-resolve-collisions.png)
+![图 3](assets/figure-03-resolve-collisions.png)
+
+图 3：解决 group-by hash 冲突的示例。
 
 VIP 使用类型专用子算子解决 group-by 列的 hash collision：顺序加载 group-by 列和 gid，用 gid gather 每组第一个元组的 rid，再用 rid gather 定义该组的列值；不匹配时分支到标量代码创建新 group。
 
@@ -411,9 +417,13 @@ void update_min_int32(const int32_t* data, const int32_t* gids,
 
 ### 4.1 TPC-H Q19 的复杂选择
 
-![图 4：TPC-H Q19 对 part 表执行选择时的谓词表达式求值树（选择率 0.24%）。](assets/figure-04-q19-predicate-tree.png)
+![图 4](assets/figure-04-q19-predicate-tree.png)
 
-![图 5：TPC-H Q19 part 表选择吞吐。](assets/figure-05-q19-selection.png)
+图 4：TPC-H Q19 对 part 表执行选择时的谓词表达式求值树（选择率 0.24%）。
+
+![图 5](assets/figure-05-q19-selection.png)
+
+图 5：TPC-H Q19 part 表选择吞吐。
 
 我们选择 TPC-H 中谓词组合最复杂的选择：Q19 中对 `part` 表的选择。表达式树按选择率排列，既不是 CNF 也不是 DNF。`p_brand` 和 `p_container` 是 `char(10)`，分别有 25 和 40 个不同值；`p_size` 是 32 位整数，有 50 个不同值。压缩后，这三列分别只需 5、6、5 位，每个元组 footprint 从 24 字节降到 2 字节。payload 列是 `p_partkey`，只为通过选择的 0.24% 元组访问。
 
@@ -421,7 +431,9 @@ void update_min_int32(const int32_t* data, const int32_t* gids,
 
 ### 4.2 TPC-H 核心表哈希连接
 
-![图 6：TPC-H 最大表上的 hash join 吞吐。](assets/figure-06-hash-joins.png)
+![图 6](assets/figure-06-hash-joins.png)
+
+图 6：TPC-H 最大表上的 hash join 吞吐。
 
 我们评测 TPC-H 核心表连接；这些连接位于大多数含连接的 TPC-H 查询的核心，其 payload 是继续与较小维度表连接所用的外键。在 DRAM（LBW）上，相比 MCDRAM（HBW），实验使用更少的分区趟数和更大的 fanout：
 
@@ -440,7 +452,9 @@ where l_partkey = ps_partkey
 
 ### 4.3 TPC-H Q1 的分组聚合
 
-![图 7：TPC-H Q1 分组聚合吞吐。](assets/figure-07-q1-groupby.png)
+![图 7](assets/figure-07-q1-groupby.png)
+
+图 7：TPC-H Q1 分组聚合吞吐。
 
 对分组聚合，我们使用 TPC-H Q1。每列使用能容纳值域的最小数据类型。基线一次处理一个元组，并为每个线程更新私有哈希表。VIP 对下一个元组块一次计算一个表达式。传统 column-at-a-time 执行 [27] 会在每个列上的每个算子之后物化中间结果，而 VIP 的各算子从不把中间结果物化到缓存外。VIP 还能复用 Q1 聚合函数中的公共子表达式，例如：
 

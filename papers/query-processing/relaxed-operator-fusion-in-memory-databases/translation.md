@@ -38,7 +38,9 @@ Carnegie Mellon University
 
 论文以 TPC-H Q19 的简化查询贯穿说明。为方便论述，图 1 省略了完整 WHERE 条件；原查询中的三个分支分别是 LineItem 和 Part 属性上的一组合取谓词。
 
-![图 1：TPC-H Q19 的简化 SQL，三个 WHERE 子句是 LineItem 与 Part 表属性上的合取谓词序列。](assets/manual-figure-01-tpch-q19-sql.png)
+![图 1](assets/manual-figure-01-tpch-q19-sql.png)
+
+图 1：TPC-H Q19 的简化 SQL，三个 WHERE 子句是 LineItem 与 Part 表属性上的合取谓词序列。
 
 ```sql
 SELECT SUM(...) AS revenue
@@ -62,7 +64,9 @@ HyPer [30] 和 MemSQL [32] 采用的推送式模型更有效：它减少函数�
 
 图 2c 中的彩色代码块与图 2a 的同色流水线相对应。P1 扫描 Part 表并执行连接的 build 阶段；P2 扫描 LineItem，与 Part 连接，然后计算聚合；P3 返回聚合结果。流水线内的操作只通过寄存器执行，只有读取新元组或在流水线断点处物化结果时才访问内存。图 2b 则提前展示了加入 ROF 暂存点后的计划。
 
-![图 2：查询编译示例。左侧为带 pipeline 标注的 Q19 计划，右侧为对应生成代码。](assets/manual-figure-02-query-compilation-example.png)
+![图 2](assets/manual-figure-02-query-compilation-example.png)
+
+图 2：查询编译示例。左侧为带 pipeline 标注的 Q19 计划，右侧为对应生成代码。
 
 图 2 中的核心代码结构如下：
 
@@ -100,7 +104,9 @@ return agg.GetRevenue();
 
 图 3 给出 Q19 的向量化伪代码。P1 与图 2c 基本相同，但以 block 读取 Part。向量化 DBMS 采用晚期物化，因此哈希表只保存连接键属性及对应的 tuple ID。P2 读取 LineItem block，并把整个 block 一次交给 `PassesPredicate1`。谓词函数返回通过条件的元组位置数组，即选择向量（selection vector）；后续每次调用都携带该向量，只处理仍然有效的元组。系统用输入 block 和选择向量探测哈希表，找出候选连接匹配，再依据匹配位置从 Part 重构元组 block。倒数第二步同时使用两个 block 与连接产生的选择向量，生成最终有效元组列表，然后执行聚合。
 
-![图 3：向量化示例。P1 以 block 形式构建 hash table，P2 使用选择向量和 block 级 join/filter/aggregate。](assets/manual-figure-03-vectorization-example.png)
+![图 3](assets/manual-figure-03-vectorization-example.png)
+
+图 3：向量化示例。P1 以 block 形式构建 hash table，P2 使用选择向量和 block 级 join/filter/aggregate。
 
 ```cpp
 HashTable ht; // Join Hash-Table
@@ -149,7 +155,9 @@ return agg.GetRevenue();
 
 图 4 给出结果。采用垂直向量化的 SIMD probe 即使在哈希表可驻留 cache 时，也慢于带预取的一次一条元组 probe，因为哈希冲突与键冲突会迫使向量化版本重新计算哈希。当哈希表超出 cache 后，一次一条元组的两个版本（有、无预取）都快于 SIMD：此时连接从计算受限转为内存受限，提高计算吞吐已无济于事。在所有规模下，带预取的一次一条元组处理都表现最好，常常最多快 1.2 倍。
 
-![图 4：哈希表大小对连接性能的影响。哈希表变大后，预取能比单纯 SIMD 更好地隐藏随机内存访问延迟。](assets/manual-figure-04-microbenchmark.png)
+![图 4](assets/manual-figure-04-microbenchmark.png)
+
+图 4：哈希表大小对连接性能的影响。哈希表变大后，预取能比单纯 SIMD 更好地隐藏随机内存访问延迟。
 
 微基准的主要结论是：对哈希连接而言，不论哈希表大小如何，带预取的一次一条元组处理都胜过 SIMD。预取必须同时观察一批元组，才能利用元组间并行；而完全流水线化的编译计划恰恰避免一切物化。与此同时，越往计划树上层，数据越稀疏、访问越随机，软件预取越重要：在叶子处还可依靠硬件预取器，在上层则不行。因此，全向量化和全编译融合都不是最优解。DBMS 应该能在查询计划中的适当位置谨慎物化元组，为预取与向量化创造条件；在其他位置仍融合算子，保持高效流水线。
 
@@ -169,7 +177,9 @@ ROF 是流水线式一次一条元组处理与向量化处理的混合体。它�
 
 第二阶段（原文第 22-30 行）据此读取有效 LineItem 元组，探测连接哈希表并寻找匹配。若存在匹配，LineItem 和 Part 两侧的数据一起交给第二个谓词 $\sigma_2$；仍通过的结果进入最终聚合。
 
-![图 5：ROF staged pipeline 代码例程。P2 被拆成 scan/filter 阶段和 probe/filter/aggregate 阶段。](assets/manual-figure-05-rof-staged-pipeline-code.png)
+![图 5](assets/manual-figure-05-rof-staged-pipeline-code.png)
+
+图 5：ROF staged pipeline 代码例程。P2 被拆成 scan/filter 阶段和 probe/filter/aggregate 阶段。
 
 ```cpp
 #define VECTOR_SIZE 256
@@ -218,7 +228,9 @@ ROF 足够灵活，可以同时表示一次一条元组和传统向量化，因�
 
 图 6 对 4-byte 整数列 `attr_A` 求值谓词 `attr_A < 44`。DBMS 先把硬件最宽 SIMD 寄存器能容纳的属性值及其 tuple ID 一并装入，然后比较得到 bitmask。示例中 ID 为 1、3、7 的元组未通过。系统调用 `movemask` 把 bitmask 转为整数 174，用它索引 permutation table，查得重排序列 `(0,2,4,5,6)`。该序列把位置 0、2、4、5、6 的有效元素移至寄存器最前方，相当于在寄存器内划分有效与无效部分。系统对原 bitmask 和 tuple ID 计数器应用同一 permutation，再以重排后的 bitmask 为选择 mask，用 masked store 把 ID 写到当前输出位置。最后通过 `popcnt` 统计有效元组数并推进写位置，装入下一组属性，同时让 tuple ID 向量前进 8。
 
-![图 6：SIMD 谓词求值。比较、permute 和 masked store 共同把有效 tuple id 紧凑写入输出向量。](assets/manual-figure-06-simd-predicate-evaluation.png)
+![图 6](assets/manual-figure-06-simd-predicate-evaluation.png)
+
+图 6：SIMD 谓词求值。比较、permute 和 masked store 共同把有效 tuple id 紧凑写入输出向量。
 
 若 SIMD register 有 $n$ 个元素，则 bitmask 可能状态数为：
 
@@ -250,7 +262,9 @@ ROF 在需要随机访问、且访问结构大于 cache 的算子输入处安装
 
 该布局同时适合软件和硬件预取。连接与聚合以元组向量为输入，软件预取可加速第一次随机探测；发生哈希冲突后，连续 bucket 的线性探测又能触发硬件预取器。把状态和键放在最前面，旨在用至多一次 bucket 内存引用判断是否占用及键是否匹配。
 
-![图 7：hash table 数据结构。bucket 以 status、key、value、hash 布局，支持 cache-friendly probe。](assets/manual-figure-07-hash-table-data-structure.png)
+![图 7](assets/manual-figure-07-hash-table-data-structure.png)
+
+图 7：hash table 数据结构。bucket 以 status、key、value、hash 布局，支持 cache-friendly probe。
 
 ROF 可搭配任意软件预取方法，本文选择 GP 有四个原因。第一，GP 代码比 SPP 和 AMAC 更容易生成。第二，GP 天然在各代码步骤之间提供组级同步边界，插入重复键值对时可借此解决潜在数据竞争。第三，文献 [14] 表明 SPP 相对 GP 只带来很小提升，却需要更复杂的代码结构。第四，开放寻址加线性探测意味着每条元组在插入或探测时恰好发生一次随机哈希表访问，只有重复值处理需要两次；即便数据倾斜，同一组中的元组仍有相同随机访问次数，因而 AMAC 的提前换出机制不会比 GP 更有优势。
 
@@ -282,7 +296,9 @@ TPC-H 共 22 条查询，我们选择 Q1、Q3、Q4、Q5、Q6、Q13、Q14 和 Q19
 
 图 8 展示其中 Q1、Q3、Q13 和 Q14 的高层查询计划与流水线标注；Q19 的计划见图 2a。
 
-![图 8：TPC-H 查询计划及 pipeline。图中标出 Q1、Q3、Q13、Q14 的高层计划和 pipeline 边界。](assets/manual-figure-08-tpch-query-plans.png)
+![图 8](assets/manual-figure-08-tpch-query-plans.png)
+
+图 8：TPC-H 查询计划及 pipeline。图中标出 Q1、Q3、Q13、Q14 的高层计划和 pipeline 边界。
 
 ### 5.2 基线比较
 
@@ -290,7 +306,9 @@ TPC-H 共 22 条查询，我们选择 Q1、Q3、Q4、Q5、Q6、Q13、Q14 和 Q19
 
 图 9 比较 Peloton 以数据为中心的编译引擎启用与不启用 ROF 的结果。除 Q1 外，其余七条查询均加速 1.7-2.5 倍。Q1 的特殊原因在 5.3 节详述：它的聚合哈希表只有 4 项、可驻留 L1，预取指令反而带来成本；准确统计应避免这项优化。
 
-![图 9：基线比较。ROF optimized 版本在大多数 TPC-H 查询上显著降低执行时间。](assets/manual-figure-09-baseline-comparison.png)
+![图 9](assets/manual-figure-09-baseline-comparison.png)
+
+图 9：基线比较。ROF optimized 版本在大多数 TPC-H 查询上显著降低执行时间。
 
 ### 5.3 优化分解
 
@@ -302,7 +320,9 @@ O1 在 P1 的 LineItem 谓词后加入边界，并把标量谓词改为 SIMD 检
 
 O2 复用 SIMD 扫描写入 $\Xi$ 的阶段向量，为聚合 build 阶段预取哈希 bucket。结果查询反而变慢，因为聚合哈希表只有 4 项，足以放进 L1 cache，无需预取；调用预取指令的成本不可忽略。这个结果说明准确查询统计很重要：错误估计会让 planner 为预取安装不必要的 ROF 阶段边界并降低性能。
 
-![图 10：Q1 case study。ROF 优化对 Q1 帮助有限，主要瓶颈仍在选择和聚合。](assets/manual-figure-10-q1-case-study.png)
+![图 10](assets/manual-figure-10-q1-case-study.png)
+
+图 10：Q1 case study。ROF 优化对 Q1 帮助有限，主要瓶颈仍在选择和聚合。
 
 | 优化 | 修改 | 说明 |
 |---|---|---|
@@ -313,7 +333,9 @@ O2 复用 SIMD 扫描写入 $\Xi$ 的阶段向量，为聚合 build 阶段预取
 
 Q3 三个 scan/filter 仅占相应 pipeline 的约 1%、3.7%、7%；O3 对第一 join probe prefetch 使 P2 快 1.4 倍，O4 对第二 join build prefetch 使 P2 再快 1.26 倍、全查询 1.14 倍；O6 对最大 LineItem 的 probe prefetch 带 1.38 倍，全部优化累计约 1.61 倍。
 
-![图 11：Q3 case study。Q3 的主要收益来自 join probe 前后的 staging 和 prefetching。](assets/manual-figure-11-q3-case-study.png)
+![图 11](assets/manual-figure-11-q3-case-study.png)
+
+图 11：Q3 case study。Q3 的主要收益来自 join probe 前后的 staging 和 prefetching。
 
 | 优化 | 修改 | 说明 |
 |---|---|---|
@@ -328,7 +350,9 @@ Q3 三个 scan/filter 仅占相应 pipeline 的约 1%、3.7%、7%；O3 对第一
 
 O1 对 group-join build/probe prefetch 快 1.34 倍；O2 对 aggregation build prefetch 再快 1.04 倍，累计约 1.5 倍。
 
-![图 12：Q13 case study。即使谓词本身不能 SIMD 化，ROF 也能通过 prefetching 获益。](assets/manual-figure-12-q13-case-study.png)
+![图 12](assets/manual-figure-12-q13-case-study.png)
+
+图 12：Q13 case study。即使谓词本身不能 SIMD 化，ROF 也能通过 prefetching 获益。
 
 | 优化 | 修改 | 说明 |
 |---|---|---|
@@ -339,7 +363,9 @@ O1 对 group-join build/probe prefetch 快 1.34 倍；O2 对 aggregation build p
 
 SIMD 使 P1 快 1.89 倍、全查询快 1.37 倍；join build/probe prefetch 相对前一步再快 1.45 倍，累计近 2 倍。最终 aggregation 是固定单输出 counter，几乎无成本。
 
-![图 13：Q14 case study。低选择率谓词适合 SIMD，后续 join 也受益于 prefetching。](assets/manual-figure-13-q14-case-study.png)
+![图 13](assets/manual-figure-13-q14-case-study.png)
+
+图 13：Q14 case study。低选择率谓词适合 SIMD，后续 join 也受益于 prefetching。
 
 | 优化 | 修改 | 说明 |
 |---|---|---|
@@ -350,7 +376,9 @@ SIMD 使 P1 快 1.89 倍、全查询快 1.37 倍；join build/probe prefetch 相
 
 O1 使全查询近 1.6 倍；复用其 vector 对 join probe/build prefetch 后，相对前一步再近 1.6 倍，累计约 2.5 倍。
 
-![图 14：Q19 case study。Q19 同时受益于低选择率 SIMD 谓词和后续 staging/prefetching。](assets/manual-figure-14-q19-case-study.png)
+![图 14](assets/manual-figure-14-q19-case-study.png)
+
+图 14：Q19 case study。Q19 同时受益于低选择率 SIMD 谓词和后续 staging/prefetching。
 
 | 优化 | 修改 | 说明 |
 |---|---|---|
@@ -368,7 +396,9 @@ Q1 也不敏感，但原因不同：LineItem 上超过 98% 的元组通过谓词
 
 唯一随宽度改善的是 Q3，但超过 16K 后也不再提升。其 LineItem SIMD 扫描谓词约有 54% 选择率，较大的向量让执行在 SIMD 阶段连续停留更久，并减少最外层循环迭代。一般来说，较大向量可减少最外层迭代次数，对低选择率扫描有利；对含连接的查询则帮助有限，因为现代 CPU 可同时维持的内存引用数量有限，查询很快从计算受限转为内存受限。
 
-![图 15：vector width 敏感性。多数查询在较宽范围内稳定，Q3 会随 vector 增宽小幅改善并在 16K 后饱和。](assets/manual-figure-15-vector-width.png)
+![图 15](assets/manual-figure-15-vector-width.png)
+
+图 15：vector width 敏感性。多数查询在较宽范围内稳定，Q3 会随 vector 增宽小幅改善并在 16K 后饱和。
 
 ### 5.5 预取距离敏感性
 
@@ -378,7 +408,9 @@ Q1 也不敏感，但原因不同：LineItem 上超过 98% 的元组通过谓词
 
 其余查询随 group 增大而加速，直到 16 后趋于饱和。实验 CPU 每核最多有 10 个未完成 L1 cache reference，直觉上 group 10 已应饱和 memory-level parallelism，实测最优值却是 16。原因是本文 GP 实现还受指令数约束：更大的组会减少最外层循环迭代，从而降低总指令数；超过 16 后 CPU 已经饱和，继续增大不再改善性能。
 
-![图 16：prefetch distance 敏感性。group prefetch size 增大到一定值后，性能收益趋于饱和。](assets/manual-figure-16-prefetch-distance.png)
+![图 16](assets/manual-figure-16-prefetch-distance.png)
+
+图 16：prefetch distance 敏感性。group prefetch size 增大到一定值后，性能收益趋于饱和。
 
 ### 5.6 多线程执行
 
@@ -390,7 +422,9 @@ Q1 是高选择率谓词的 CPU-bound 查询，ROF 仍无改善，与第 5.3-5.5
 
 Q3 和 Q13 在超过 10 线程后出现轻微执行时间抖动，原因是双路 CPU 的 NUMA 效应（每个 socket 10 核）。两者都采用 group hash join，DBMS 在 build 和 probe 阶段使用同一个物化哈希表，并用 64-bit compare-and-swap 串行化对表的并发更新；不同 NUMA region 的 CPU 访问 global table 中计数器时延迟不同。Q5 也出现该效应，因为它需要探测两张 global hash table，即四次随机内存访问。尽管如此，ROF 仍约快 1.5 倍。
 
-![图 17：多线程执行。ROF optimized 版本在多数查询和线程数下低于 baseline。](assets/manual-figure-17-multithreaded-execution.png)
+![图 17](assets/manual-figure-17-multithreaded-execution.png)
+
+图 17：多线程执行。ROF optimized 版本在多数查询和线程数下低于 baseline。
 
 ### 5.7 系统比较
 
@@ -398,7 +432,9 @@ Q3 和 Q13 在超过 10 线程后出现轻微执行时间抖动，原因是双�
 
 所有系统使用第 5.1 节相同的硬件与数据库。为公平起见，三者都禁用多线程，并尽力针对 TPC-H 调优。Vector 和 HyPer 各自还有三套系统不完全共有的优化，因此我们只保证生成计划等价或至少差异不大。正式测量前，先在每个 DBMS 上执行一遍全部 TPC-H 查询完成 warm-up。
 
-![图 18：系统比较。Peloton optimized 代表启用 ROF 后的配置，与 Vector、HyPer 和 Peloton baseline 比较。](assets/manual-figure-18-system-comparison.png)
+![图 18](assets/manual-figure-18-system-comparison.png)
+
+图 18：系统比较。Peloton optimized 代表启用 ROF 后的配置，与 Vector、HyPer 和 Peloton baseline 比较。
 
 图 18 的逐查询结果如下。
 

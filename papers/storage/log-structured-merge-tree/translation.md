@@ -59,7 +59,7 @@ WHERE History.Acct-ID = %custacctid
 
 LSM-tree 由两个或更多树状组件数据结构构成。本节中，我们讨论最简单的双组件情形，并继续假设它为例 1.2 的 History 表行建立索引。
 
-![图 2：双组件 LSM-tree 示意图](assets/figure-2-1.png)
+![图 2.1：双组件 LSM-tree 示意图](assets/figure-2-1.png)
 
 图 2.1：双组件 LSM-tree 的示意图。
 
@@ -158,7 +158,7 @@ $$
 T_f=\frac{COST_d}{COST_P},\qquad T_b=\frac{COST_m}{COST_P}.
 $$
 
-![图 3：访问成本与数据温度的关系](assets/figure-3-1-temperature.png)
+![图 3.1：访问成本与数据温度的关系](assets/figure-3-1-temperature.png)
 
 图 3.1：我们绘制的单位 MB 总成本与温度 $H/S$（每秒每 MB 访问次数）的关系。冷数据由介质容量决定成本，温数据由磁盘臂决定，热数据则适合缓存在内存。
 
@@ -479,7 +479,7 @@ Dadam、Lum、Praedel 与 Schlageter [7] 的文本索引维护方法也通过延
 
 B-tree 会把热门目录节点缓存在内存，因此本来就是一种混合数据结构：大部分数据利用低成本磁盘介质，最热门数据则利用高成本内存的可访问性。LSM-tree 把该层次扩展到一个以上层级，并利用合并 I/O 的多页磁盘读优势。
 
-![图 6：B-tree 与双组件 LSM-tree 的单位访问成本](assets/figure-6-1.png)
+![图 6.1：B-tree 与双组件 LSM-tree 的单位访问成本](assets/figure-6-1.png)
 
 图 6.1：我们在图中扩展图 3.1，绘制单位 MB 访问成本与插入温度的关系，比较 B-tree 和磁盘组件数 $K=1$ 的双组件 LSM-tree。
 

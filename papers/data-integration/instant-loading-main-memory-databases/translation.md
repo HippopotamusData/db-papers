@@ -51,9 +51,13 @@ eScience 和大数据分析应用面临一个共同挑战：需要在网络存�
 
 我们的愿景是使用单节点主存数据库中的 Instant Loading 支撑这类周期性的 load-work-unload 工作流。图 2 展示三步 `(lwu)*` 方法。第一步，将一个由热 CSV 文件组成的兴趣窗口从 NAS/DFS 或本地高性能 SSD/RAID 以线速加载到主存数据库。即使兴趣窗口大于主存，也可以通过把选择谓词下推到加载过程来处理；此外，数据可在加载时压缩。第二步，多个用户可以在该兴趣窗口上使用关系型主存数据库的完整功能，包括高效查询支持（OLAP）和事务更新（OLTP）。第三步，在加载新数据之前，将可能已修改的数据卸载为压缩二进制格式，或为了可移植性和可调试性卸载为 CSV。Instant Loading 是支撑 `(lwu)*` 方法的关键基础。
 
-![图 2：Instant Loading 的 load-work-unload 数据暂存循环](assets/figure-02.png)
+![图 2](assets/figure-02.png)
 
-![图 3：CSV、关系模型和物理分块列存表示](assets/figure-03.png)
+图 2：Instant Loading 的 load-work-unload 数据暂存循环
+
+![图 3](assets/figure-03.png)
+
+图 3：CSV、关系模型和物理分块列存表示
 
 ### 与 MapReduce 方法的比较
 
@@ -125,7 +129,9 @@ Instant Loading 面向高可扩展性设计，分两步执行（见图 4）。�
 
 SSE 4.2 包含用于比较两个显式或隐式长度 16 字节操作数的指令。Instant Loading 使用 EQUAL ANY 和 RANGES 比较模式加速解析和反序列化：在 EQUAL ANY 模式下，第二个操作数中的每个字符会检查是否等于第一个操作数中的任一字符；在 RANGES 模式下，第二个操作数中的每个字符会检查是否落在第一个操作数定义的范围内。每个范围由两个条目成对定义，分别指定下界和上界。intrinsics 的结果可以是位掩码，也可以是标记首次命中位置的索引；结果还可以取反。图 5 展示了两种模式。
 
-![图 5：SSE 4.2 特殊字符搜索与字符校验比较](assets/figure-05.png)
+![图 5](assets/figure-05.png)
+
+图 5：SSE 4.2 特殊字符搜索与字符校验比较
 
 为改进解析，我们使用 EQUAL ANY 以每次 16 字节的方式查找分隔符（见图 5(a)）。只有发现特殊字符时才执行分支。伪代码如下：
 
@@ -272,11 +278,17 @@ HyPer 中 Instant Loading 的评估在一台商品工作站上进行，配备 In
 
 图 9 显示，在所有多道程序级别上，SSE 和 non-SSE 都优于 Boost Spirit.Qi。SSE 优于 non-SSE，并显示更高加速：在多道程序级别为 8 时，SSE 解析和反序列化吞吐超过 1.6 GB/s，而 non-SSE 约为 1.0 GB/s，提升 60%。SSE 的更高性能来自两点：(i) 除所有核心的标量执行单元外，还利用了向量执行引擎；(ii) 相比 non-SSE，减少了分支误预测数量。性能计数器显示，分支误预测从 non-SSE 的 194 次/kB CSV 降到 SSE 的 89 次/kB CSV，降幅超过 50%。使用 CPU 核心的所有执行单元也让 SSE 从 Hyper-Threading 中获益更多。这没有额外成本，并提升能效：近期 Intel CPU 的 Running Average Power Limit 能量传感器显示，SSE 使用 388 J，non-SSE 使用 503 J（多 23%），Boost Spirit.Qi 使用 625 J（多 38%）。
 
-![图 9：解析和反序列化方法加速](assets/figure-09.png)
+![图 9](assets/figure-09.png)
 
-![图 10：可合并哈希表和 ART 的并行索引构建与合并加速](assets/figure-10.png)
+图 9：解析和反序列化方法加速
 
-![图 11：Instant Loading 线速饱和与 I/O 预取影响](assets/figure-11.png)
+![图 10](assets/figure-10.png)
+
+图 10：可合并哈希表和 ART 的并行索引构建与合并加速
+
+![图 11](assets/figure-11.png)
+
+图 11：Instant Loading 线速饱和与 I/O 预取影响
 
 ### 5.2 分区缓冲区
 
@@ -303,9 +315,13 @@ HT 性能不依赖键分布，而有序密集键范围是 ART 的最佳情况。
 
 图 12 展示结果。相比对手，Instant Loading 在批量加载加查询处理的组合性能上表现最佳。加载耗时 6.9 s（HyPer）；加载后将数据库以 LZ4 压缩二进制卸载到 `ramfs` 额外耗时 4.3 s（HyPer /w unload）。压缩二进制大小为 4.7 GB，是 CSV 文件大小的 50%，再次加载只需 2.6 s（比加载 CSV 快 3 倍）。两种情况下，查询求值都略低于 12 s。HyPer 中的卸载和二进制加载同样高度并行化。我们进一步评估从本地 I/O 设备加载时的 I/O 饱和情况。图 11 显示，Instant Loading 完全饱和传统 HDD（160 MB/s）和 SSD（500 MB/s）的线速。当内存用作源和汇时，只饱和约 10% 可用线速（CPU 受限）。图 11 还显示，要接近 100% 饱和本地设备，必须使用 `madvise` 建议内核从本地 I/O 设备预取数据。
 
-![图 12：离线 CSV 批量加载和查询处理性能](assets/figure-12.png)
+![图 12](assets/figure-12.png)
 
-![图 13：吞吐随 CSV chunk 大小变化](assets/figure-13.png)
+图 12：离线 CSV 批量加载和查询处理性能
+
+![图 13](assets/figure-13.png)
+
+图 13：吞吐随 CSV chunk 大小变化
 
 Hive 是基于 Hadoop 的数据仓库方案。基准中使用 4 个 Hadoop 节点。HDFS 和 Hive 配置为在 `ramfs` 中存储数据，其他配置保持默认，包括 HDFS 默认复制因子 3。这意味着每个节点都有 CSV 文件副本。我们没有把 HDFS 加载时间（125.8 s）计入结果，因为假设理想情况下数据已经存储在那里。查询性能使用 TPC-H 查询的官方 HiveQL 实现评估。尽管 Hive 不需要显式加载并且使用 4 个节点，它处理 22 个查询仍需 50 分钟。我们还评估了使用 RCFiles 的 Hive。通过 BinaryColumnarSerDe 把 CSV 文件加载为 RCFiles（一个把字符串反序列化为二进制数据类型表示的转换过程）耗时 173.5 s；但在 RCFiles 上查询只比在原始 CSV 文件上快 5 分钟。
 

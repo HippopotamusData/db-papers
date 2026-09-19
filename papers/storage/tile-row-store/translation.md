@@ -100,9 +100,13 @@ WHERE a0 < delta;
 
 我们测量一个主存 DBMS 在 NSM、DSM 和 FSM 存储布局上完成这两类负载的总时间。FSM 把 Q2 访问的属性共置为 $\lbrace \lbrace a _ 0 \rbrace, \lbrace a _ 1, \ldots, a _ k \rbrace, \lbrace a _ {k+1}, \ldots, a _ {500} \rbrace \rbrace$。实验把 Q2 投影度从 1% 逐步提高到 100%，对每个投影度又把选择率从 10% 改到 100%。
 
-![图 1：三类存储模型。NSM 按元组连续存储，DSM 按属性连续存储，FSM 将经常一起访问的属性组合为混合布局。](assets/figures/figure-01-storage-models.png)
+![图 1](assets/figures/figure-01-storage-models.png)
 
-![图 2：存储模型对混合负载和只读负载执行时间的影响。FSM 在混合负载中兼顾插入与扫描优势。](assets/figures/figure-02-storage-model-performance.png)
+图 1：三类存储模型。NSM 按元组连续存储，DSM 按属性连续存储，FSM 将经常一起访问的属性组合为混合布局。
+
+![图 2](assets/figures/figure-02-storage-model-performance.png)
+
+图 2：存储模型对混合负载和只读负载执行时间的影响。FSM 在混合负载中兼顾插入与扫描优势。
 
 图 2(a)-2(c) 给出混合负载结果。在所有设置下，NSM 和 FSM 都比 DSM 最多快 1.3 倍。原因是 DSM 每次插入都必须拆分元组属性，并将它们写入不同内存位置。FSM 采用类似 NSM 的较宽垂直分区，所以插入比 DSM 快；扫描时，它把谓词属性 $a _ 0$ 和投影属性 $a _ 1, \ldots, a _ k$ 与表中其他属性分开，在谓词计算及随后投影时只取回必需属性，因而又比 NSM 快。
 
@@ -120,7 +124,9 @@ DBMS 最基本的物理存储单位是 tile tuple。非形式地说，tile tuple
 
 同一个元组在 FSM 数据库中可以随时间使用不同布局。默认做法是以元组导向布局存储所有新元组；当它们逐渐变冷后，DBMS 再把数据重组为具有更窄垂直分区、更友好于 OLAP 的布局。系统把元组复制到具有新布局的 tile group，然后用新构造的 group 替换表中原 group。第 5 节将说明，该过程在后台执行，并且维持事务安全，不引入假阴性或假阳性结果。
 
-![图 3：Physical tile 示例。一个表由多个 tile group 组成，每个 tile group 可以包含不同数量与属性组合的 physical tiles。](assets/figures/figure-03-physical-tile.png)
+![图 3](assets/figures/figure-03-physical-tile.png)
+
+图 3：Physical tile 示例。一个表由多个 tile group 组成，每个 tile group 可以包含不同数量与属性组合的 physical tiles。
 
 NSM 和 DSM 都是基于 tile 的 FSM 布局特例。如果每个 tile group 只有一个包含表全部属性的 tile，该布局就等价于 NSM 的元组导向布局。如果每个 tile 恰好只包含一个属性，就等价于 DSM 的属性导向布局。
 
@@ -144,7 +150,9 @@ X 第一行第一列的值表示 A-1 第一个元组前两个属性的值，物�
 
 这一简化并不削弱抽象的表达能力。查询执行期间，DBMS 可以动态选择将中间结果 logical tile 物化为 physical tile [6]。此时，算子会构造一个只有一列、直接映射到新 physical tile 属性的透传 logical tile（passthrough logical tile），并将它沿计划树传给父算子。
 
-![图 4：Logical tile 示例。Logical tile 通过 offset 与 metadata 指向多个 physical tiles，并在需要时 materialize。](assets/figures/figure-04-logical-tile.png)
+![图 4](assets/figures/figure-04-logical-tile.png)
+
+图 4：Logical tile 示例。Logical tile 通过 offset 与 metadata 指向多个 physical tiles，并在需要时 materialize。
 
 ### 3.3 Logical Tile Algebra
 
@@ -157,7 +165,9 @@ WHERE R.a = 1 AND S.x = 2
 GROUP BY R.c;
 ```
 
-![图 5：示例 SQL 查询及其计划树，用于说明 logical tile algebra 的算子。](assets/figures/figure-05-sql-plan-tree.png)
+![图 5](assets/figures/figure-05-sql-plan-tree.png)
+
+图 5：示例 SQL 查询及其计划树，用于说明 logical tile algebra 的算子。
 
 我们定义了一个基于 logical tile 的代数，使 DBMS 实现布局透明。代数算子分为几类：
 
@@ -209,7 +219,9 @@ HTAP 负载由短事务与长时间运行的分析查询组成。DBMS 必须保�
 - `EndCTS`：元组停止可见的提交时间戳。
 - `PreV`：指向同一逻辑元组前一版本的位置。
 
-![图 6：并发控制中的版本 metadata。系统把 MVCC 信息与 physical tile 数据分离，使同一 tile group 中所有 physical tiles 可共享版本信息。](assets/figures/figure-06-concurrency-control.png)
+![图 6](assets/figures/figure-06-concurrency-control.png)
+
+图 6：并发控制中的版本 metadata。系统把 MVCC 信息与 physical tile 数据分离，使同一 tile group 中所有 physical tiles 可共享版本信息。
 
 图 6 是版本 metadata 示例。DBMS 把这些信息与 physical tile 分开保存，因此可以对同一 tile group 中的全部 physical tile 统一处理。系统通过 `PreV` 沿版本链访问同一逻辑元组的更早版本。版本链可跨越多个 tile group，所以各版本可能使用不同物理布局存在主存中。
 
@@ -338,7 +350,9 @@ $k$ 与 $\delta$ 的取值分别改变查询的投影度与选择率。后续实
 
 实验先在不同投影度和选择率下，考察扫描、聚合与插入查询。两类负载分别是：（1）只含一条扫描或聚合查询的只读负载；（2）先执行一条扫描或聚合，再执行 100 万条插入的混合负载。对每个负载，先加载数据库并执行查询 5 次，直到 DBMS 完成表布局重组。这是 FSM 最理想的情况。随后在不同存储管理器上再执行负载，测量完成时间。
 
-![图 7：不同投影度下存储布局对查询处理时间的影响。实验覆盖窄表/宽表、扫描/聚合、只读/混合负载。](assets/figures/figure-07-projectivity-measurements.png)
+![图 7](assets/figures/figure-07-projectivity-measurements.png)
+
+图 7：不同投影度下存储布局对查询处理时间的影响。实验覆盖窄表/宽表、扫描/聚合、只读/混合负载。
 
 图 7(a)-7(b) 给出窄表扫描在不同投影度下的结果，扫描选择全部元组。低投影度时，DSM 与 FSM 对只读负载的执行比 NSM 快 2.3 倍，因为它们只取回必需属性，更好地利用了内存带宽。随投影度增大，性能差距缩小。查询输出一半属性时，DSM 比其他存储管理器慢 21%，原因是元组重构成本增大。混合负载的低投影度设置下，FSM 分别比 NSM 和 DSM 快 24% 与 33%，因为它比 NSM 更快执行扫描，又比 DSM 更快执行插入。
 
@@ -346,7 +360,9 @@ $k$ 与 $\delta$ 的取值分别改变查询的投影度与选择率。后续实
 
 图 7(e)-7(h) 的聚合负载也呈现相同趋势。聚合查询对所有元组的目标属性计算最大值。低投影度下，不同存储管理器间的差距较小，FSM 对只读负载最多比 NSM 快 1.9 倍。这是因为所有存储模型的执行引擎都需物化包含聚合元组的 logical tile。
 
-![图 8：不同选择率下存储布局对查询处理时间的影响。](assets/figures/figure-08-selectivity-measurements.png)
+![图 8](assets/figures/figure-08-selectivity-measurements.png)
+
+图 8：不同选择率下存储布局对查询处理时间的影响。
 
 选择率实验把扫描和聚合查询投影度固定为 0.1，即窄表投影 5 个属性，宽表投影 50 个属性，然后把选择率从 10% 提高到 100%。图 8 显示，全部设置下 FSM 执行时间都优于或接近其他存储管理器，说明混合布局对 HTAP 负载有明显优势。
 
@@ -358,7 +374,9 @@ $k$ 与 $\delta$ 的取值分别改变查询的投影度与选择率。后续实
 
 实验执行一组性质不断变化的查询序列。为模拟 HTAP 的时间局部性，并清楚分离存储布局对各查询的影响，序列被分为每段 25 条查询、每段只对应一种查询类型的 segment。一个 segment 内查询类型相同但输入参数不同，下一 segment 再切换类型。实验在宽表上测量 NSM、DSM、FSM 执行每条查询的时间。为演示方便，Peloton 重组进程被配置为更快的适应速度。
 
-![图 9：工作负载感知适应。FSM 随查询段变化逐步调整 tile group 布局，执行时间向适合当前负载的布局收敛。](assets/figures/figure-09-workload-aware-adaptation.png)
+![图 9](assets/figures/figure-09-workload-aware-adaptation.png)
+
+图 9：工作负载感知适应。FSM 随查询段变化逐步调整 tile group 布局，执行时间向适合当前负载的布局收敛。
 
 图 9 时间序列图的关键结论是，FSM 会随时间收敛到适合当前 segment 的布局。第一段是低投影度扫描 Q2。表刚加载时，FSM 还没观察过查询，所以所有元组都使用默认 NSM 布局，查询时间与 NSM 接近。接下来几条查询中，FSM 开始把数据重组为最适合 Q2 的 $\lbrace \lbrace a _ 0 \rbrace, \lbrace a _ 1, \ldots, a _ k \rbrace, \lbrace a _ {k+1}, \ldots, a _ {500} \rbrace \rbrace$。重组后，执行时间下降到与 DSM 存储管理器相当。
 
@@ -366,13 +384,17 @@ $k$ 与 $\delta$ 的取值分别改变查询的投影度与选择率。后续实
 
 为深入理解 FSM 如何重组，我们在每个查询 segment 结束时统计每种布局的 tile group 数。图 10 显示只有两种布局：上述 FSM 布局和 NSM 布局。每个插入 segment 之后，NSM tile group 数都增加，因为新元组默认以 NSM 布局保存。随时间推移，适合扫描 segment 的 FSM tile group 数又增加，这解释了图 9 中这些 segment 上更好的执行时间。
 
-![图 10：布局分布随时间变化。随着后台重组推进，FSM 布局 tile group 数量逐渐增加。](assets/figures/figure-10-layout-distribution.png)
+![图 10](assets/figures/figure-10-layout-distribution.png)
+
+图 10：布局分布随时间变化。随着后台重组推进，FSM 布局 tile group 数量逐渐增加。
 
 ### 6.4 水平分片
 
 下一项实验测量水平分片对 DBMS 性能的影响，目的是比较基于 logical tile 的查询处理和经典的每次一元组 iterator 模型 [21]。实验把 FSM 每个 tile group 中的元组数在 10 到 10000 之间变化，再测量第 6.2 节扫描 Q2 负载的执行时间。
 
-![图 11：水平分片对性能的影响。较大的 tile group 可降低解释和函数调用开销，但过大后收益趋于饱和。](assets/figures/figure-11-horizontal-fragmentation.png)
+![图 11](assets/figures/figure-11-horizontal-fragmentation.png)
+
+图 11：水平分片对性能的影响。较大的 tile group 可降低解释和函数调用开销，但过大后收益趋于饱和。
 
 图 11(a) 是窄表只读负载。每 tile group 元组数从 10 增至 1000 时，执行时间下降 24%，原因是解释开销减少。图 11(b) 混合负载中，差距缩小到 17%，因为插入 Q1 所做的写入不受水平分片影响。
 
@@ -380,7 +402,9 @@ $k$ 与 $\delta$ 的取值分别改变查询的投影度与选择率。后续实
 
 ### 6.5 重组敏感性分析
 
-![图 12：权重敏感性分析。`w` 控制旧查询样本被遗忘的速度，从而影响 split point 的调整速度。](assets/figures/figure-12-weight-sensitivity.png)
+![图 12](assets/figures/figure-12-weight-sensitivity.png)
+
+图 12：权重敏感性分析。`w` 控制旧查询样本被遗忘的速度，从而影响 split point 的调整速度。
 
 我们分析聚类算法中旧查询样本权重 $w$ 的影响。工作负载由宽表扫描组成，查询投影度跨查询段从 100% 逐渐降到 10%。系统把表布局表示为 $\lbrace \lbrace a _ 0 \rbrace, \lbrace a _ 1, \ldots, a _ k \rbrace, \lbrace a _ {k+1}, \ldots, a _ {500} \rbrace \rbrace$，其中 $k$ 是 split point。 $w$ 太小时，旧样本影响强，split point 更新慢； $w$ 太大时，系统紧跟负载变化，重组激进且容易受短暂负载波动影响。我们选择 $w=0.001$，在适应速度和稳定性之间折中。
 
@@ -388,7 +412,9 @@ $k$ 与 $\delta$ 的取值分别改变查询的投影度与选择率。后续实
 
 ### 6.6 数据重组策略
 
-![图 13：数据重组策略比较。immediate reorganization 会造成查询延迟尖峰；incremental reorganization 将成本摊销到多个查询。](assets/figures/figure-13-data-reorganization-strategies.png)
+![图 13](assets/figures/figure-13-data-reorganization-strategies.png)
+
+图 13：数据重组策略比较。immediate reorganization 会造成查询延迟尖峰；incremental reorganization 将成本摊销到多个查询。
 
 我们比较 immediate reorganization（类似 H2O，把查询处理与重组结合）和 incremental reorganization（Peloton 的后台增量方法）。结果显示，增量方法能把重组开销摊销到多个查询上，避免单个查询承担高昂重组成本；立即重组在某些查询上可能因额外 I/O 或复制而造成尖峰延迟。
 
@@ -507,7 +533,9 @@ H2O 是会随 HTAP 负载演化动态改变存储布局的混合系统 [11]。�
 | Pipeline Breakers | SUM | $\mathrm{LT}\thinspace X$，属性 $C$ | $\mathrm{LT} \equiv [\sum _ {x \in X} x _ c \quad \forall c \in C]$ |
 | Pipeline Breakers | MAX | $\mathrm{LT}\thinspace X$，属性 $C$ | $\mathrm{LT} \equiv [\max _ {x \in X} x _ c \quad \forall c \in C]$ |
 
-![图 14：Logical tile 算子的运行行为。图示 sequential scan、projection、join 和 materialization 如何只通过 logical tile metadata 传递必要数据。](assets/figures/figure-14-logical-tile-operators.png)
+![图 14](assets/figures/figure-14-logical-tile-operators.png)
+
+图 14：Logical tile 算子的运行行为。图示 sequential scan、projection、join 和 materialization 如何只通过 logical tile metadata 传递必要数据。
 
 **Bridge operators。** Sequential scan 为表 $X$ 中每个包含满足 $P(x)$ 的元组 $x$ 的 tile group 生成 logical tile。输出 tile 只有一列，其中是 tile group 中匹配元组的 offset。图 14 给出图 5 计划树中 sequential scan 的运行行为：它产生 logical tile $X$，表示 physical tile $R$ 中满足 $a=1$ 的元组。Index scan 用索引 $X$ 找出满足 $P$ 的元组，再构造一个或多个 logical tile。每个 logical tile 只能表示同一 tile group 中的匹配元组。
 
@@ -529,7 +557,9 @@ Logical tile 抽象在表达能力上没有限制。它只是对一个或多个�
 
 实验使用自连接 Q5，向表 R 加载 1000 万个元组，测量连接查询的执行时间。投影度从 1% 变化到 100%，每次随机选择 $a _ i$ 和 $a _ j$ 构造连接谓词。
 
-![图 16：join 查询中不同布局的执行时间。布局主要影响 join 后的投影属性重构成本。](assets/figures/figure-16-join-measurements.png)
+![图 16](assets/figures/figure-16-join-measurements.png)
+
+图 16：join 查询中不同布局的执行时间。布局主要影响 join 后的投影属性重构成本。
 
 图 16(a) 中，窄表高投影度时，NSM 和 FSM 执行 join 比 DSM 快 1.3 倍，因为它们降低了元组重构时取回投影属性的成本。图 16(b) 的宽表上，NSM 和 FSM 比 DSM 快 1.5 倍。结果与第 6.2 节投影度实验一致。
 
@@ -539,7 +569,9 @@ Logical tile 抽象在表达能力上没有限制。它只是对一个或多个�
 
 图 15(a) 显示，窄表只读负载中，每 group 元组数从 10 增到 1000 时，cache miss 数减少 1.5 倍，原因是解释开销降低。图 15(b) 的混合负载也有类似下降。宽表只读负载中，粗粒度分片的 cache miss 比细粒度少 1.7 倍，说明 logical tile 的紧凑表示在宽表上收益更大。但每 group 元组数从 1000 增到 10000 时，cache miss 反而增加，因为 logical tile 越过饱和点后已无法装入 CPU cache。
 
-![图 15：水平分片对 cache miss 的影响。不同 tile group 大小在窄表/宽表、只读/混合负载上产生不同缓存行为。](assets/figures/figure-15-caching-behavior.png)
+![图 15](assets/figures/figure-15-caching-behavior.png)
+
+图 15：水平分片对 cache miss 的影响。不同 tile group 大小在窄表/宽表、只读/混合负载上产生不同缓存行为。
 
 ## 附录 D. 间接层开销
 
@@ -565,7 +597,9 @@ Logical tile 抽象在表达能力上没有限制。它只是对一个或多个�
 
 图 17(d) 的写密集负载则相反，FSM 和 NSM 超过 DSM，因为它们处理插入时向不同内存位置的写入更少。其绝对吞吐比只读混合高 400 倍以上，原因是存储管理器执行插入的开销较低。
 
-![图 17：并发混合负载下不同存储布局的吞吐。读多负载中 FSM/DSM 更好，写多负载中 DSM 落后。](assets/figures/figure-17-concurrent-hybrid-workloads.png)
+![图 17](assets/figures/figure-17-concurrent-hybrid-workloads.png)
+
+图 17：并发混合负载下不同存储布局的吞吐。读多负载中 FSM/DSM 更好，写多负载中 DSM 落后。
 
 ## 附录 F. 动态布局适应
 
@@ -575,7 +609,9 @@ Logical tile 抽象在表达能力上没有限制。它只是对一个或多个�
 
 图 18 显示 FSM 会收敛到适合当前 segment 的布局。第一个高投影段中，它的表现与 Hyrise 接近。切换到低投影段后，FSM 重组进程动态调整为该 segment 合适的布局，比 Hyrise 静态布局快 1.5 倍。
 
-![图 18：动态布局适应收益。动态布局在查询段切换后逐步收敛，并在低投影度阶段优于静态布局。](assets/figures/figure-18-dynamic-layout-adaptation.png)
+![图 18](assets/figures/figure-18-dynamic-layout-adaptation.png)
+
+图 18：动态布局适应收益。动态布局在查询段切换后逐步收敛，并在低投影度阶段优于静态布局。
 
 ## 附录 G. 未来工作
 

@@ -97,7 +97,9 @@ errors.filter(_.contains("HDFS"))
 
 最后，用图 1 说明该模型如何实现容错。第三个查询从 `errors` 开始——它本身是对 `lines` 过滤的结果——又做了一次 `filter` 和 `map`，最后运行 `collect`。Spark 调度器把后两个转换组成流水线，并向缓存了 `errors` 分区的节点发送一组任务。若 `errors` 的某个分区丢失，Spark 只需对 `lines` 的对应分区重新应用一次过滤即可重建它。
 
-![图 1：示例中第三个查询的血缘图。方框表示 RDD，箭头表示转换。](assets/rdd-fig01-lineage-example.png)
+![图 1](assets/rdd-fig01-lineage-example.png)
+
+图 1：示例中第三个查询的血缘图。方框表示 RDD，箭头表示转换。
 
 ### 2.3 RDD 模型的优势
 
@@ -131,7 +133,9 @@ Spark 使用 Scala [2] 提供 RDD 抽象，其语言集成 API 类似 DryadLINQ 
 
 开发者编写一个连接工作节点集群的驱动程序，如图 2 所示。驱动程序定义一个或多个 RDD 并在其上调用动作；驱动端的 Spark 代码还会跟踪 RDD 血缘。工作进程长期运行，可以跨操作在 RAM 中保存 RDD 分区。
 
-![图 2：Spark 运行时。用户的驱动程序启动多个工作进程；它们从分布式文件系统读取数据块，并可将计算得到的 RDD 分区持久化到内存。](assets/rdd-fig02-spark-runtime.png)
+![图 2](assets/rdd-fig02-spark-runtime.png)
+
+图 2：Spark 运行时。用户的驱动程序启动多个工作进程；它们从分布式文件系统读取数据块，并可将计算得到的 RDD 分区持久化到内存。
 
 如 §2.2.1 的日志挖掘示例所示，用户通过闭包——即函数字面量——给 `map` 等 RDD 操作传参。Scala 把每个闭包表示为 Java 对象，这些对象可以序列化并载入其他节点，从而经网络传递闭包。Scala 还把闭包绑定的变量保存为 Java 对象的字段。例如，`var x = 5; rdd.map(_ + x)` 会给 RDD 的每个元素加 5。Spark 在闭包创建时保存它，所以即使以后 `x` 改变，该 `map` 仍始终加 5。
 
@@ -219,7 +223,9 @@ for (i <- 1 to ITERATIONS) {
 
 该程序产生图 3 所示的 RDD 血缘图。每轮都会基于上一轮的 `contribs`、`ranks` 和静态 `links` 创建一个新的 `ranks` 数据集。虽然 RDD 不可变，程序变量 `ranks` 与 `contribs` 在每轮会指向不同 RDD。
 
-![图 3：PageRank 中各数据集的血缘图。](assets/rdd-fig03-pagerank-lineage.png)
+![图 3](assets/rdd-fig03-pagerank-lineage.png)
+
+图 3：PageRank 中各数据集的血缘图。
 
 这张图的一个显著特征是血缘随迭代数增长。迭代很多时，可能需要可靠复制某些版本的 `ranks`，以缩短故障恢复时间 [20]；用户可用带 `RELIABLE` 标志的 `persist` 实现。不过，`links` 无须复制，因为它的分区可通过对输入文件块重新运行 `map` 高效重建。`links` 通常远大于 `ranks`，因为每个文档有许多链接，却只有一个排名数值；相较对程序全部内存状态做 checkpoint，使用血缘恢复它能节省时间。
 
@@ -250,7 +256,9 @@ links = spark.textFile(...).map(...)
 
 设计该接口时最重要的问题，是如何表示 RDD 之间的依赖。我们发现，把依赖分成两类既充分又有用：窄依赖（narrow dependency）中，父 RDD 的每个分区最多被一个子 RDD 分区使用；宽依赖（wide dependency）中，多个子分区可能依赖同一个父分区。例如，`map` 产生窄依赖；`join` 通常产生宽依赖，除非两个父 RDD 已按同一方式哈希分区。图 4 给出更多示例。
 
-![图 4：窄依赖与宽依赖示例。每个方框是一个 RDD，阴影矩形表示分区。`map`、`filter`、`union` 和输入已协同分区的 `join` 为窄依赖；`groupByKey` 和输入未协同分区的 `join` 为宽依赖。](assets/rdd-fig04-narrow-wide-dependencies.png)
+![图 4](assets/rdd-fig04-narrow-wide-dependencies.png)
+
+图 4：窄依赖与宽依赖示例。每个方框是一个 RDD，阴影矩形表示分区。`map`、`filter`、`union` 和输入已协同分区的 `join` 为窄依赖；`groupByKey` 和输入未协同分区的 `join` 为宽依赖。
 
 这一区分有两个作用。第一，窄依赖允许在一个集群节点上流水线执行；该节点可计算所有所需父分区。例如，`map` 后接 `filter` 可逐元素执行。宽依赖则要求全部父分区的数据可用，并通过类似 MapReduce 的操作在节点间 shuffle。第二，节点故障后，窄依赖恢复更高效：只需重算丢失的父分区，而且可以在不同节点并行完成。宽依赖血缘中，一台节点故障可能使某个 RDD 的所有祖先都丢失一部分分区，因而需要完整重执行。
 
@@ -274,7 +282,9 @@ Spark 调度器使用 §4 所述的 RDD 表示。总体上它类似 Dryad [19] �
 
 用户在 RDD 上运行动作——如 `count` 或 `save`——时，调度器检查该 RDD 的血缘图，构建待执行 stage 的有向无环图（DAG），如图 5 所示。每个 stage 尽可能包含更多以窄依赖流水线化的转换；需要进行宽依赖 shuffle 的地方构成 stage 边界，已经算出的分区也可形成边界并短路父 RDD 的计算。随后，调度器为各 stage 启动任务来计算缺失分区，直至得到目标 RDD。
 
-![图 5：Spark 计算作业 stage 的示例。实线方框表示 RDD，阴影矩形表示分区，黑色分区已在内存中。为在 RDD G 上运行动作，系统在宽依赖处划分 stage，在每个 stage 内流水线执行窄转换；图中 stage 1 的输出 RDD 已在 RAM，故只需运行 stage 2 和 stage 3。](assets/rdd-fig05-spark-stages.png)
+![图 5](assets/rdd-fig05-spark-stages.png)
+
+图 5：Spark 计算作业 stage 的示例。实线方框表示 RDD，阴影矩形表示分区，黑色分区已在内存中。为在 RDD G 上运行动作，系统在宽依赖处划分 stage，在每个 stage 内流水线执行窄转换；图中 stage 1 的输出 RDD 已在 RAM，故只需运行 stage 2 和 stage 3。
 
 调度器使用延迟调度 [32]，依据数据局部性给机器分配任务。若任务所需分区已在某节点内存中，就把任务发往该节点；否则，如果相应 RDD 给出了分区首选位置——例如 HDFS 文件——便发往这些节点。对宽依赖，即 shuffle 依赖，Spark 当前会在持有父分区的节点上物化中间记录，类似 MapReduce 物化 map 输出，以简化故障恢复。
 
@@ -293,7 +303,9 @@ Scala 解释器通常为用户输入的每一行编译一个类，将其载入 J
 1. **类传送。** 为使工作节点能取得每一行所生成类的字节码，我们让解释器通过 HTTP 提供这些类。
 2. **修改代码生成。** 通常，每行代码创建的单例对象通过相应类的静态方法访问。若序列化一个引用前一行变量的闭包——如图 6 中的 `Line1.x`——Java 不会沿对象图继续跟踪并传送包裹 `x` 的 `Line1` 实例，因此工作节点得不到 `x`。我们修改代码生成逻辑，使之直接引用每个行对象的实例。
 
-![图 6：Spark 解释器如何把用户输入的两行代码翻译成 Java 对象。](assets/rdd-fig06-interpreter-object-graph.png)
+![图 6](assets/rdd-fig06-interpreter-object-graph.png)
+
+图 6：Spark 解释器如何把用户输入的两行代码翻译成 Java 对象。
 
 实践中，Spark 解释器很适合处理研究中得到的大型跟踪数据、探索 HDFS 中的数据集。我们还计划用它交互运行 SQL 等更高层查询语言。
 
@@ -336,7 +348,9 @@ Spark 当前通过 `persist` 的 `REPLICATE` 标志提供 checkpoint API，但�
 
 两个算法都在 100 GB 数据集上运行 10 轮，机器数为 25–100。二者的主要区别是每字节数据所需计算量：k-means 的迭代时间以计算为主；逻辑回归计算密度较低，因此对反序列化和 I/O 更敏感。典型学习算法需几十轮才能收敛，所以我们分别报告第一轮与后续轮次。结果显示，通过 RDD 共享数据显著加速了后续迭代。
 
-![图 7：100 节点集群处理 100 GB 数据时，Hadoop、HadoopBinMem（图中 HadoopBM）和 Spark 的第一轮及后续迭代时长。](assets/rdd-fig07-logistic-regression.png)
+![图 7](assets/rdd-fig07-logistic-regression.png)
+
+图 7：100 节点集群处理 100 GB 数据时，Hadoop、HadoopBinMem（图中 HadoopBM）和 Spark 的第一轮及后续迭代时长。
 
 图 7 的数值如下（单位：秒）：
 
@@ -353,7 +367,9 @@ Spark 当前通过 `persist` 的 `REPLICATE` 标志提供 checkpoint API，但�
 
 **后续轮次。** 图 7 给出后续轮次平均时间，图 8 展示其随集群规模变化的情况。逻辑回归在 100 台机器上，Spark 分别比 Hadoop 和 HadoopBinMem 快 25.3 倍与 20.7 倍。计算更密集的 k-means 中，Spark 仍获得 1.9–3.2 倍加速。
 
-![图 8：第一轮之后，Hadoop、HadoopBinMem 与 Spark 的迭代时间随机器数的变化。所有作业均处理 100 GB。](assets/rdd-fig08-kmeans.png)
+![图 8](assets/rdd-fig08-kmeans.png)
+
+图 8：第一轮之后，Hadoop、HadoopBinMem 与 Spark 的迭代时间随机器数的变化。所有作业均处理 100 GB。
 
 | 应用 | 机器数 | Hadoop（秒） | HadoopBinMem（秒） | Spark（秒） |
 | --- | ---: | ---: | ---: | ---: |
@@ -368,7 +384,9 @@ Spark 当前通过 `persist` 的 `REPLICATE` 标志提供 checkpoint API，但�
 
 为测量第一项，我们运行空操作 Hadoop 作业，仅完成作业设置、任务启动和清理就至少需要 25 秒。对于第二项，HDFS 在提供每个块时会执行多次内存复制和一次校验和。对于第三项，我们在单机上用 256 MB 输入运行逻辑回归微基准，比较来自 HDFS 和内存本地文件的文本、二进制输入：HDFS 路径体现其软件栈开销，本地内存文件则允许内核高效地把数据交给程序。
 
-![图 9：单机以不同输入源处理 256 MB 数据时，逻辑回归的迭代时间。](assets/rdd-fig09-logistic-input-formats.png)
+![图 9](assets/rdd-fig09-logistic-input-formats.png)
+
+图 9：单机以不同输入源处理 256 MB 数据时，逻辑回归的迭代时间。
 
 图 9 中，内存 HDFS 的文本/二进制输入分别为 15.4 秒和 8.4 秒；内存本地文件分别为 13.1 秒和 6.9 秒；Spark RDD 两者均约 2.9 秒。内存 HDFS 与本地文件的差异说明，即使数据就在本机内存中，经 HDFS 读取仍引入约 2 秒开销；文本与二进制之差说明解析开销约 7 秒；即便从内存文件读取，把预解析二进制转换为 Java 对象仍需约 3 秒，几乎与逻辑回归本身同样昂贵。Spark 直接把 RDD 元素作为 Java 对象保存在内存中，避开了全部这些开销。
 
@@ -376,7 +394,9 @@ Spark 当前通过 `persist` 的 `REPLICATE` 标志提供 checkpoint API，但�
 
 我们用 54 GB Wikipedia dump 比较 Spark 与 Hadoop 的 PageRank 性能。算法处理约 400 万篇文章构成的链接图，共运行 10 轮。图 10 表明，仅使用内存存储，Spark 在 30 节点上就比 Hadoop 快 2.4 倍；再按 §3.2.2 控制 RDD 分区，使其跨轮次保持一致，加速提高到 7.4 倍。扩展到 60 节点时结果也近乎线性。
 
-![图 10：PageRank 在 Hadoop 与 Spark 上的性能。](assets/rdd-fig10-pagerank-performance.png)
+![图 10](assets/rdd-fig10-pagerank-performance.png)
+
+图 10：PageRank 在 Hadoop 与 Spark 上的性能。
 
 具体地，30 节点上 Hadoop、基础 Spark、受控分区 Spark 分别需要 171、72、23 秒；60 节点上三者分别为 80、28、14 秒。我们也评估了用 §7.1 所述 Spark 上 Pregel 实现编写的 PageRank，其迭代时间与图 10 接近，但每轮约多 4 秒，因为 Pregel 还运行一个额外操作，让顶点“投票”决定作业是否结束。
 
@@ -384,7 +404,9 @@ Spark 当前通过 `persist` 的 `REPLICATE` 标志提供 checkpoint API，但�
 
 我们在 k-means 应用中评估节点故障后通过血缘重建 RDD 分区的成本。图 11 比较 75 节点集群上 10 轮 k-means 的正常运行与故障运行；正常情况下每轮有 400 个任务处理 100 GB 数据，故障场景则在第 6 轮开始时杀死一台机器。
 
-![图 11：k-means 发生故障时的迭代时间。第 6 轮开始时杀死一台机器，RDD 的一部分通过血缘重建。](assets/rdd-fig11-failure-recovery.png)
+![图 11](assets/rdd-fig11-failure-recovery.png)
+
+图 11：k-means 发生故障时的迭代时间。第 6 轮开始时杀死一台机器，RDD 的一部分通过血缘重建。
 
 前 5 轮结束前，迭代时间约 58 秒。第 6 轮杀死一台机器后，该机器上正在运行的任务及保存的 RDD 分区一同丢失。Spark 在其他机器并行重跑这些任务，重新读取相应输入数据并经血缘重建 RDD，使该轮时间升到 80 秒左右（图中故障运行第 6 轮为 81 秒）；丢失分区重建后，迭代时间又降回约 58 秒。故障曲线各轮标注值依次为 119、57、56、58、58、81、57、59、57、59 秒；第一轮较慢是首次读取输入。
 
@@ -394,7 +416,9 @@ Spark 当前通过 `persist` 的 `REPLICATE` 标志提供 checkpoint API，但�
 
 此前实验保证每台机器都有足够内存存放跨迭代的全部 RDD。本实验限制 Spark 在每台机器上只能使用一定比例的内存存储 RDD，观察数据放不下时的表现。图 12 给出 25 台机器运行 100 GB 逻辑回归的结果：内存分别容纳数据集的 0%、25%、50%、75%、100% 时，每轮用时为 68.8、58.1、40.7、29.7、11.5 秒。存储空间减少时，性能平滑退化。
 
-![图 12：25 台机器处理 100 GB 逻辑回归数据时，内存容纳不同比例数据的性能。](assets/rdd-fig12-insufficient-memory.png)
+![图 12](assets/rdd-fig12-insufficient-memory.png)
+
+图 12：25 台机器处理 100 GB 逻辑回归数据时，内存容纳不同比例数据的性能。
 
 ### 6.5 基于 Spark 构建的用户应用
 
@@ -404,13 +428,17 @@ Spark 当前通过 `persist` 的 `REPLICATE` 标志提供 checkpoint API，但�
 
 **Twitter 垃圾链接分类。** 伯克利 Monarch 项目 [29] 使用 Spark 识别 Twitter 消息中的链接垃圾。它实现了与 §6.1 类似的逻辑回归分类器，但用分布式 `reduceByKey` 并行求梯度向量之和。图 13(b) 给出在 50 GB 数据子集上训练分类器的扩展结果；数据含 250,000 个 URL，每个 URL 有 107 个与页面网络及内容属性有关的特征/维度。在 20、40、80 台机器上，每轮分别为 70.6、38.6、27.6 秒。由于每轮固定通信成本较高，其扩展不如交通建模接近线性。
 
-![图 13：两个 Spark 用户应用的每轮运行时间。(a) 交通建模；(b) 垃圾链接分类。误差条表示标准差。](assets/rdd-fig13-user-apps-scaling.png)
+![图 13](assets/rdd-fig13-user-apps-scaling.png)
+
+图 13：两个 Spark 用户应用的每轮运行时间。(a) 交通建模；(b) 垃圾链接分类。误差条表示标准差。
 
 ### 6.6 交互式数据挖掘
 
 为展示 Spark 交互查询大型数据集的能力，我们用它分析 1 TB Wikipedia 页面浏览日志，即两年数据。实验使用 100 台 `m2.4xlarge` EC2 实例，每台 8 核、68 GB RAM。三个查询分别求：（1）全部页面的总浏览量；（2）标题与给定单词精确匹配的页面浏览量；（3）标题部分匹配给定单词的页面浏览量。每个查询都扫描全部输入数据。
 
-![图 14：Spark 交互查询的响应时间；100 台机器扫描逐渐增大的输入数据集。](assets/rdd-fig14-response-times.png)
+![图 14](assets/rdd-fig14-response-times.png)
+
+图 14：Spark 交互查询的响应时间；100 台机器扫描逐渐增大的输入数据集。
 
 图 14 给出完整数据集、一半数据和十分之一数据的响应时间。输入为 100 GB 时，精确匹配、子串匹配、总浏览量查询分别需 1.7、2.0、2.8 秒；500 GB 时为 3.2、4.5、4.7 秒；1 TB 时为 5.5、7.0、6.6 秒。即使达到 1 TB，Spark 查询仍只需 5–7 秒，比磁盘数据快一个数量级以上；例如从磁盘查询同一 1 TB 文件需要 170 秒。这说明 RDD 使 Spark 成为强大的交互式数据挖掘工具。
 

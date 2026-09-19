@@ -57,7 +57,9 @@ F1 Query 在许多方面重新实现了商业 DBMS 已有的功能，也与针�
 
 F1 Query 是支持 OLTP、OLAP 和 ETL 全部工作负载的联邦查询引擎。图 1 展示单个数据中心内的基本架构和组件间通信。用户通过 F1 客户端库与 F1 Query 交互，该库将请求发送给多台专用服务器中的一台，下文将这些服务器称为 F1 server。F1 Master 是数据中心内的专用节点，负责运行时监控查询执行，并维护该数据中心的所有 F1 server。
 
-![图 1：F1 联邦查询处理平台概览。](assets/f1q-fig01-overview.png)
+![图 1](assets/f1q-fig01-overview.png)
+
+图 1：F1 联邦查询处理平台概览。
 
 小型查询和事务直接在接收请求的 F1 server 上开始执行。对较大的查询，F1 从 worker 池中动态配置 worker 执行线程，调度分布式执行。最大的查询在使用 MapReduce 框架的可靠批处理模式中调度。最终结果在 F1 server 上汇集，再返回给客户端。F1 server 和 worker 通常无状态，客户端每次可与任意 F1 server 通信。由于它们不存储数据，添加 server 或 worker 不会触发数据重分布，因而数据中心内的 F1 Query 部署可通过增加节点轻松水平扩展。
 
@@ -67,7 +69,9 @@ F1 Query 是支持 OLTP、OLAP 和 ETL 全部工作负载的联邦查询引擎�
 
 查询在 F1 server 上以规划阶段开始执行。优化器把分析后的查询抽象语法树转换成关系代数算子的有向无环图（DAG），再在逻辑和物理层面优化。最终执行计划交给执行层。根据客户端指定的执行模式偏好，F1 Query 会在 server 和 worker 上使用交互式模式，或使用 MapReduce 框架的批处理模式，如图 2 所示。
 
-![图 2：F1 中的查询执行阶段。](assets/f1q-fig02-query-execution-phases.png)
+![图 2](assets/f1q-fig02-query-execution-phases.png)
+
+图 2：F1 中的查询执行阶段。
 
 交互式执行时，优化器使用启发式方法在单节点集中式执行与分布式执行之间选择。在集中式模式中，首个收到查询的 server 立即分析、规划并执行查询；在分布式模式中，它只担任查询协调者，将工作调度到多个 worker 并行执行。这两种交互式模式对中小型查询都有较好的性能和资源效率。批处理模式面向处理大量数据的长时间查询，它将执行计划放入独立的执行存储库，由批处理分发与调度逻辑使用 MapReduce 异步运行，因此能容忍 server 重启和故障。
 
@@ -107,7 +111,9 @@ F1 Query 默认以同步在线模式执行查询，称为交互式执行（inter
 
 图 3 给出一条 SQL 查询及其集中式执行计划。F1 Query 在该模式中使用单线程执行内核。图中矩形框是执行计划的算子。单线程执行采用递归拉取模型，每批处理 8 KiB 的元组。执行算子递归调用底层算子的 `GetNext()`，直到叶子算子取得一批元组。
 
-![图 3：F1 server 上的集中式查询执行。](assets/f1q-fig03-central-query-execution.png)
+![图 3](assets/f1q-fig03-central-query-execution.png)
+
+图 3：F1 server 上的集中式查询执行。
 
 叶子通常是从数据源读取数据的扫描算子。每种数据源都有自己的扫描算子实现，功能集随源类型而异：有些只允许全表扫描，有些支持基于键的索引查找，还有些支持下推非键字段上的简单过滤表达式。独立的 `ARRAY` 扫描算子可在需要时将数组类型表达式产生为多行。
 
@@ -121,7 +127,9 @@ F1 Query 支持查找连接（索引嵌套循环连接）、哈希连接、归�
 
 当优化器判断高度并行的分区读更适合输入表时，便生成分布式执行计划。查询执行计划被拆成图 4 所示的查询片段（fragment），每个片段调度到一组 F1 worker 节点。各片段并发执行，同时具备流水线并行和丛林式并行。worker 节点是多线程的，同一 worker 也可执行同一查询的多个独立部分。
 
-![图 4：分布式查询执行中的 fragment。](assets/f1q-fig04-distributed-fragments.png)
+![图 4](assets/f1q-fig04-distributed-fragments.png)
+
+图 4：分布式查询执行中的 fragment。
 
 优化器使用自底向上的策略，按计划中每个算子对输入数据分布的要求来计算片段边界。算子可以要求其输入在 worker 间按某些字段哈希分布，典型例子是聚合的分组键或哈希连接键。若该要求与输入算子元组的当前分布兼容，优化器就将两个算子放在同一片段；否则在两者之间插入交换算子，形成片段边界。
 
@@ -138,7 +146,9 @@ GROUP BY Clicks.Region
 ORDER BY ClickCount DESC;
 ```
 
-![图 5：分布式查询执行示例。](assets/f1q-fig05-distributed-query-example.png)
+![图 5](assets/f1q-fig05-distributed-query-example.png)
+
+图 5：分布式查询执行示例。
 
 图 5 是该查询的一种可能计划。执行时，数据流自底向上经过各算子，直到聚合和排序算子。一千个 worker 分别扫描 `Clicks`，规划器将 `Clicks.OS = 'Chrome OS'` 下推到 Mesa 扫描中，使 Mesa 只向 F1 worker 返回符合过滤条件的行。两百个 worker 扫描 `Ads`，并应用 `Ads.StartDate > '2018-05-14'` 过滤。两个扫描的数据进入哈希连接，随后由同一 F1 worker 对连接结果做局部聚合。最后，F1 server 完成全局聚合，将排序后的输出返回客户端。
 
@@ -188,7 +198,9 @@ F1 Query 算子一般在内存中执行，不将检查点写入磁盘，并尽�
 
 最简单的映射是每个 F1 计划片段对应一个 MapReduce 阶段，但 F1 Query 进行了与 FlumeJava [19] 的 MSCR 融合类似的优化。在该优化中，叶子节点抽象为 map 操作，内部节点抽象为 reduce 操作。但这会产生 map-reduce-reduce 处理，与 MapReduce 框架并不完全对应。F1 Query 在中间插入实现恒等函数的特殊 map 算子，将其拆成 `map-reduce` 与 `map<identity>-reduce` 两个阶段。
 
-![图 6：将物理计划映射为批处理 MapReduce 计划。](assets/f1q-fig06-mapreduce-plan-mapping.png)
+![图 6](assets/f1q-fig06-mapreduce-plan-mapping.png)
+
+图 6：将物理计划映射为批处理 MapReduce 计划。
 
 图 6 展示常规物理执行计划到批处理 MapReduce 计划的映射。图中左侧计划只映射为三个 MapReduce 阶段，而默认的逐片段映射会产生六个阶段。一种还未实现的进一步改进，是使用 Cloud Dataflow [10] 这类原生支持 map-reduce-reduce 处理的框架。
 
@@ -200,7 +212,9 @@ F1 Query 批处理运行规模非常大，而计划中每个交换算子都带�
 
 F1 Query 批处理服务框架编排所有批处理查询，负责注册传入查询、将其分发到不同数据中心，并调度和监控对应的 MapReduce 处理。图 7 展示了该服务框架。当 F1 客户端发出批处理查询时，一台 F1 server 接收查询、生成执行计划，然后在 Query Registry 中注册。Query Registry 是全局分布式 Spanner 数据库，跟踪所有批处理查询的元数据。Query Distributor 再根据负载均衡与执行所需数据源的可用性，为查询分配数据中心。
 
-![图 7：批处理模式服务框架。](assets/f1q-fig07-batch-mode-framework.png)
+![图 7](assets/f1q-fig07-batch-mode-framework.png)
+
+图 7：批处理模式服务框架。
 
 随后，目标数据中心内的框架组件接手查询。每个数据中心的 Query Scheduler 定期从 Query Registry 取得新分配的查询，创建查询执行任务的依赖图。当任务就绪且资源可用时，Scheduler 将任务发送给 Query Executor，后者使用 MapReduce worker 池执行。
 
@@ -210,7 +224,9 @@ F1 Query 批处理服务框架编排所有批处理查询，负责注册传入�
 
 查询优化器开发出名复杂。F1 Query 通过对所有查询复用同一套规划逻辑来缓解这一问题，不论查询使用哪种执行模式。交互式和批处理模式的执行框架差异很大，但使用相同计划和相同执行内核；因而在 F1 Query 优化器中实现的任何规划功能，都会自动应用于两种模式。
 
-![图 8：F1 优化器。](assets/f1q-fig08-optimizer.png)
+![图 8](assets/f1q-fig08-optimizer.png)
+
+图 8：F1 优化器。
 
 图 8 给出优化器的高层结构，其思路受 Cascades [35] 式优化启发。该基础设施与 Spark Catalyst 规划器 [11] 共享一些设计原则和术语，这源于 F1 Query 团队和 Catalyst 团队成员对此早期的讨论。首先调用 Google SQL resolver 解析和分析原始 SQL，生成已解析的抽象语法树（AST）。优化器将 AST 转换成关系代数计划，并在其上执行多项规则，直到达到不动点，得到启发式确定的最优关系代数计划。
 
@@ -298,7 +314,9 @@ WHERE date >= DATE_SUB(
 
 远程 TVF 求值的 RPC 协议使用持久双向流网络连接，向 UDF server 发送输入行并接收输出行，如图 9 所示。对远程数据源，优化器还向 UDF server 发送 RPC，取回 TVF 的分区描述，使多个 worker 能并行扫描数据源。
 
-![图 9：远程 TVF 求值。](assets/f1q-fig09-remote-tvf-evaluation.png)
+![图 9](assets/f1q-fig09-remote-tvf-evaluation.png)
+
+图 9：远程 TVF 求值。
 
 ## 7. 高级功能
 
@@ -306,7 +324,9 @@ WHERE date >= DATE_SUB(
 
 F1 Query 将性能鲁棒性视为数据库查询处理的关键问题，也是效率和可扩展性之外影响用户体验的第三个维度。鲁棒性要求性能在面对意外的输入规模、意外的选择率和其他因素时平滑退化。如果无法平滑退化，用户就会看到性能断崖，即算法或计划代价函数的不连续点。例如，从内存快速排序转向外部归并排序时，一旦整个输入开始溢写到临时文件，端到端排序时间可增加一倍或更多。
 
-![图 10：内部排序转外部排序时的性能断崖。](assets/f1q-fig10-sort-cliff.png)
+![图 10](assets/f1q-fig10-sort-cliff.png)
+
+图 10：内部排序转外部排序时的性能断崖。
 
 图 10 对比了 F1 Query 排序操作在消除断崖前后的表现。断崖会带来多个问题：性能无法预测，用户体验差；优化器选择更易出错，因为很小的基数估计误差可放大为巨大的代价计算误差；在并行执行中，计算节点之间的轻微负载不均也可变成实际运行时间的巨大差距。
 
@@ -326,23 +346,33 @@ Protocol Buffers [9] 在 Google 内部无处不在，既用于数据交换也用
 
 F1 Query 模糊了工作负载间的边界，因此无法报告流量中哪些比例属于 OLTP、OLAP 或 ETL。但不同执行模式的延迟指标表明，无论查询意图如何，F1 Query 都可从极小到巨大的各种规模处理查询。每周有超过 10,000 名 Google 内部用户使用 F1 Query，既包括做即席分析的个人，也包括代表整个产品活动的系统用户。F1 Query 还是数百个生产 F1/Spanner 数据库的 SQL 层。
 
-![图 11：两周内交互式模式的平均每秒查询数。](assets/f1q-fig11-daily-interactive-qps.png)
+![图 11](assets/f1q-fig11-daily-interactive-qps.png)
+
+图 11：两周内交互式模式的平均每秒查询数。
 
 图 11 和图 12 报告交互式执行子系统的总吞吐和延迟。图 11 表明，多天内交互式子系统的平均吞吐约为每秒 450,000 个查询，即每天约 400 亿个查询。我们观察到，系统可轻松处理高达平均吞吐两倍的峰值，而不会不利影响查询延迟。
 
-![图 12：交互式查询延迟（集中式与分布式执行，纵轴为对数刻度）。](assets/f1q-fig12-interactive-latency.png)
+![图 12](assets/f1q-fig12-interactive-latency.png)
+
+图 12：交互式查询延迟（集中式与分布式执行，纵轴为对数刻度）。
 
 图 12 报告集中式和分布式交互查询的延迟。集中式查询的第 50、90 和 99 百分位延迟分别低于 10 ms、50 ms 和 300 ms。分布式执行的延迟更高，三个百分位约为 50 ms、200 ms 和 1,000 ms 以上。由于长时间即席查询的方差很大，分布式执行的第 99 百分位波动也大得多。
 
 图 13 报告批处理模式的查询数和数据处理量。批处理平均每天约 55,000 个查询，明显少于交互式执行；主要原因是只有超大分析查询和 ETL 管道才需要批处理。批处理查询的平均延迟明显低于 500 秒（少于 10 分钟），最大延迟可达 10,000 秒以上（数小时）。它比交互式模式更慢，是因为这些查询更复杂、处理数据更多。批处理每天的总输入数据量约为 8-16 PB，这些数字明确表明 F1 Query 在 Google 内部的运行规模。
 
-![图 13：批处理模式每日指标。](assets/f1q-fig13-batch-daily-metrics.png)
+![图 13](assets/f1q-fig13-batch-daily-metrics.png)
+
+图 13：批处理模式每日指标。
 
 最后看 F1 Query 多季度的长期查询吞吐增长。图 14 以相对值表明，查询吞吐在四个季度中几乎翻倍。F1 Query 的可扩展设计使它能承担增长的吞吐，而图 15 显示集中式与分布式交互查询的延迟没有受到不利影响。
 
-![图 14：长期 QPS 增长。](assets/f1q-fig14-long-term-qps-growth.png)
+![图 14](assets/f1q-fig14-long-term-qps-growth.png)
 
-![图 15：多个季度内交互式查询延迟；纵轴为对数刻度。](assets/f1q-fig15-quarterly-latency.png)
+图 14：长期 QPS 增长。
+
+![图 15](assets/f1q-fig15-quarterly-latency.png)
+
+图 15：多个季度内交互式查询延迟；纵轴为对数刻度。
 
 ## 9. 相关工作
 

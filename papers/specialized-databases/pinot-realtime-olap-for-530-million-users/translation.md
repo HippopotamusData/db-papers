@@ -117,7 +117,9 @@ Pinot 还支持一种特殊的时间戳维度列，称为时间列（time column
 
 表由 segment 构成，每个 segment 是一组记录。典型 Pinot segment 包含数千万条记录，一张表可以包含数万个 segment。segment 通过多副本保证数据可用性。segment 内的数据不可变，但整个 segment 可以用新版本替换，从而允许更新和纠正既有数据。
 
-![图 1：Pinot segment 的列式布局；每列可包含字典、前向索引和倒排索引等结构。](assets/pinot-fig01-segment.png)
+![图 1](assets/pinot-fig01-segment.png)
+
+图 1：Pinot segment 的列式布局；每列可包含字典、前向索引和倒排索引等结构。
 
 Pinot segment 按列组织数据，并用字典编码、数值位压缩等多种编码策略缩小体积，也支持倒排索引。典型 segment 的大小从数百 MB 到数 GB 不等。
 
@@ -129,7 +131,9 @@ Pinot 有四类承担数据存储、数据管理和查询处理的主要组件�
 
 **Server。** Server 是托管 segment 并在其上处理查询的核心组件。一个 segment 在 UNIX 文件系统中对应一个目录，其中包含 segment 元数据文件和索引文件。元数据记录 segment 的列集合，以及各列的类型、基数、编码、统计信息和可用索引。索引文件存放所有列的索引，而且是仅追加文件，因此 server 可以按需创建倒排索引。Server 采用可插拔架构，既能加载不同存储格式的列式索引，也能在运行时生成合成列；它还可以方便地扩展为直接读取 HDFS、S3 等分布式文件系统。我们在每个数据中心内保留同一 segment 的多个副本，以提高可用性和查询吞吐量；所有副本都参与查询处理。
 
-![图 2：Pinot 集群管理。Controller 通过 Helix/ZooKeeper 管理 server 上的 segment；broker 把客户端查询路由给 server；对象存储保存 segment 数据。](assets/pinot-fig02-cluster-management.png)
+![图 2](assets/pinot-fig02-cluster-management.png)
+
+图 2：Pinot 集群管理。Controller 通过 Helix/ZooKeeper 管理 server 上的 segment；broker 把客户端查询路由给 server；对象存储保存 segment 数据。
 
 **Controller。** Controller 按可配置策略维护 segment 到 server 的权威映射。它拥有这份映射，并在运维人员发出请求或 server 可用性变化时触发调整。它还提供列出、添加和删除表或 segment 等管理操作。表可以配置保留期，controller 会垃圾回收超过保留期的 segment。全部元数据和映射都由 Apache Helix 管理。为了容错，我们在每个数据中心运行三个 controller 实例，但只有一个 master；非 leader controller 大部分时间空闲。Master 选举由 Helix 管理。
 
@@ -151,9 +155,13 @@ Pinot 用图 3 所示的简单状态机管理 segment。segment 最初处于 `OF
 
 需要从 Kafka 消费的实时数据则从 `OFFLINE` 转到 `CONSUMING`。Server 处理该转换时，会以给定起始 offset 创建 Kafka consumer；这个 segment 的所有副本都从 Kafka 中同一位置开始消费。第 3.3.6 节的共识协议会确保全部副本最终收敛为完全一致的 segment。
 
-![图 3：Pinot segment 状态机。离线装载进入 ONLINE；实时消费先进入 CONSUMING；删除后进入 DROPPED。](assets/pinot-fig03-segment-state-machine.png)
+![图 3](assets/pinot-fig03-segment-state-machine.png)
 
-![图 4：Pinot segment 装载流程。状态变化驱动 server 从持久存储下载并加载 segment，再向 Helix 报告状态。](assets/pinot-fig04-segment-load.png)
+图 3：Pinot segment 状态机。离线装载进入 ONLINE；实时消费先进入 CONSUMING；删除后进入 DROPPED。
+
+![图 4](assets/pinot-fig04-segment-load.png)
+
+图 4：Pinot segment 装载流程。状态变化驱动 server 从持久存储下载并加载 segment，再向 Helix 报告状态。
 
 #### 3.3.2 路由表更新
 
@@ -172,13 +180,17 @@ segment 装载或卸载时，Helix 更新集群的当前状态。Broker 监听�
 7. Broker 收齐 server 结果后，合并各 server 的部分结果。处理中的错误或超时会把结果标记为“部分结果”，客户端可以选择向用户显示不完整结果，或稍后重新提交查询。
 8. 向客户端返回查询结果。
 
-![图 5：Pinot 查询处理阶段：broker 规划与路由，server 为各 segment 生成并执行计划，broker 汇总部分结果。](assets/pinot-fig05-query-planning-phases.png)
+![图 5](assets/pinot-fig05-query-planning-phases.png)
+
+图 5：Pinot 查询处理阶段：broker 规划与路由，server 为各 segment 生成并执行计划，broker 汇总部分结果。
 
 Pinot 能动态合并来自离线系统和实时系统的数据流。为此，混合表（hybrid table）的离线部分与实时部分在时间上会有重叠。图 6 的假设表每天有两个 segment，8 月 1 日和 2 日存在重叠数据。查询到达 Pinot 后，会透明地改写成两个查询：离线子查询读取时间边界之前的数据，实时子查询读取时间边界及之后的数据。
 
 两个查询都完成后，结果会被合并，使我们能够以很低代价融合离线和实时数据。该方案要求混合表的离线部分与实时部分共享一列时间列。实践中，我们认为这一要求并不苛刻，因为写入流式系统的数据大多本来就具有时间属性。
 
-![图 6：混合查询改写。Broker 依据离线/实时边界拆分查询，再合并两部分结果，以避开重叠时间范围。](assets/pinot-fig06-hybrid-query-rewriting.png)
+![图 6](assets/pinot-fig06-hybrid-query-rewriting.png)
+
+图 6：混合查询改写。Broker 依据离线/实时边界拆分查询，再合并两部分结果，以避开重叠时间范围。
 
 #### 3.3.4 Server 端查询执行
 
@@ -186,13 +198,17 @@ Server 收到查询后，会生成逻辑和物理查询计划。不同 segment �
 
 物理算子根据估算执行代价选择；系统还可依据逐列统计信息重新排列算子顺序，以降低查询的总体处理代价。最终查询计划提交给查询执行调度器，并行处理。
 
-![图 7：Server 端查询计划。逻辑计划被映射为利用具体字典、索引和数据源的物理算子树。](assets/pinot-fig07-query-planning-phases.png)
+![图 7](assets/pinot-fig07-query-planning-phases.png)
+
+图 7：Server 端查询计划。逻辑计划被映射为利用具体字典、索引和数据源的物理算子树。
 
 #### 3.3.5 数据上传
 
 上传数据时，segment 通过 HTTP POST 发给 controller。Controller 收到 segment 后，先解包并检查完整性，再确认其大小不会使表超出配额，然后把 segment 元数据写入 ZooKeeper，并通过把适当数量副本的目标状态设为 `ONLINE` 来更新集群目标状态。目标状态更新后，就会触发前述 segment 装载流程。
 
-![图 8：Pinot 数据上传。Controller 校验 segment、写入对象存储和元数据，并通过 Helix 触发副本装载。](assets/pinot-fig08-data-upload.png)
+![图 8](assets/pinot-fig08-data-upload.png)
+
+图 8：Pinot 数据上传。Controller 校验 segment、写入对象存储和元数据，并通过 Helix 触发副本装载。
 
 #### 3.3.6 实时 Segment 完成协议
 
@@ -249,11 +265,15 @@ Pinot 针对每种数据表示提供专用物理算子，不同数据编码都�
 
 Star-tree 的节点存储预聚合记录。树的每一层都包含满足某一维度冰山条件的节点，以及一个代表该层全部数据的 star 节点。沿树导航即可回答包含多个谓词的查询。图 9 的简单查询计算满足一个谓词的全部 impression 之和：逐层遍历，直到找到保存该查询所需聚合数据的节点。
 
-![图 9：用 star-tree 回答 `select sum(Impressions) from Table where Browser = 'firefox'`。](assets/pinot-fig09-star-tree-and-query.png)
+![图 9](assets/pinot-fig09-star-tree-and-query.png)
+
+图 9：用 star-tree 回答 `select sum(Impressions) from Table where Browser = 'firefox'`。
 
 图 10 的查询包含 `OR` 谓词，需要沿多条路径导航，再组合结果。
 
-![图 10：用 star-tree 回答 `select sum(Impressions) from Table where Browser = 'firefox' or Browser = 'safari' group by Country`。](assets/pinot-fig10-star-tree-or-query.png)
+![图 10](assets/pinot-fig10-star-tree-or-query.png)
+
+图 10：用 star-tree 回答 `select sum(Impressions) from Table where Browser = 'firefox' or Browser = 'safari' group by Country`。
 
 我们已在 Pinot 中实现 star-tree，并经常用它加速我们的内部数据分析工具中的分析查询。Pinot 会根据可用索引决定能够使用哪些物理执行节点；若用户指定的查询可以由 star-tree 优化，我们就透明地使用它返回预聚合值，否则仍在原始未聚合数据上执行查询。
 
@@ -397,15 +417,21 @@ LinkedIn 以服务模式运行 Pinot：开发用户功能的团队像使用其�
 
 该场景的数据规模在 Pinot 中为 **16 GB**，在 Druid 中为 **13.8 GB**。图 11 随查询率增加比较不同索引策略的延迟，曲线分别给出第 50、90、95、99 百分位。Druid 在该数据集上的延迟很快就高到不再适合交互；无索引 Pinot 的性能也很快下降。加入倒排索引后，Pinot 在此数据集上的可扩展性提高 **2 倍**；最大的扩展性收益则来自第 4.3 节的 star-tree。
 
-![图 11：异常检测数据集上的索引技术比较。横轴为每秒查询数，纵轴为毫秒延迟，分别展示 Druid、无索引、倒排索引和 star-tree 的第 50/90/95/99 百分位。](assets/pinot-fig11-anomaly-indexing.png)
+![图 11](assets/pinot-fig11-anomaly-indexing.png)
+
+图 11：异常检测数据集上的索引技术比较。横轴为每秒查询数，纵轴为毫秒延迟，分别展示 Druid、无索引、倒排索引和 star-tree 的第 50/90/95/99 百分位。
 
 图 12 的核密度估计展示连续执行 **10,000 条查询**时，Druid 与 Pinot 各索引方案的查询延迟分布。我们可以看到，所有系统的性能都可满足用户交互。我们还可以看到，Druid 与无索引 Pinot 的单查询性能相当：一部分查询在 Druid 上更快，但 Druid 中高延迟查询也多于无索引 Pinot。我们也可以看到，适配工作负载的索引类型均优于无索引数据。
 
-![图 12：异常检测数据集上顺序执行 10,000 条查询的延迟分布；横轴为毫秒延迟。](assets/pinot-fig12-anomaly-latency-distribution.png)
+![图 12](assets/pinot-fig12-anomaly-latency-distribution.png)
+
+图 12：异常检测数据集上顺序执行 10,000 条查询的延迟分布；横轴为毫秒延迟。
 
 图 13 展示使用 star-tree 时扫描的预聚合记录数与原始未聚合记录数之比。比值接近 **0**，表示回答查询所用的聚合记录远少于扫描原始数据；接近 **1**，表示预聚合收益很小。我们可以看到，大多数查询所处理的记录显著少于在原始未聚合数据上执行时的数量。
 
-![图 13：star-tree 扫描的预聚合记录数与原始未聚合记录数之比，横轴范围为 0.00—1.00。](assets/pinot-fig13-star-tree-scan-ratio.png)
+![图 13](assets/pinot-fig13-star-tree-scan-ratio.png)
+
+图 13：star-tree 扫描的预聚合记录数与原始未聚合记录数之比，横轴范围为 0.00—1.00。
 
 > **译者注：** 源 PDF 中图 12 与图 13 的横轴标题互换了：图 12 的刻度为 0—300，应为延迟（毫秒）；图 13 的刻度为 0.00—1.00，应为聚合记录数与未聚合记录数之比。上方中文图题依据正文、图题和刻度说明指标，图像本身保持原样。
 
@@ -415,11 +441,15 @@ Pinot 还用于回答终端用户发出的高选择性分析查询。例如，�
 
 该场景的数据规模在 Pinot 中为 **300 GB**，在 Druid 中为 **1.2 TB**。图 14 展示查询率上升时两者的性能。这个对比中有两项主要差异：倒排索引的生成方式，以及物理行排序。Druid 为所有维度列建立倒排索引，但过滤谓词并不会使用所有维度，因此 Druid 的磁盘占用大于 Pinot。两者的大部分性能差异来自 Pinot 的物理行排序：数据按分享内容标识符排序。
 
-![图 14：Druid 与 Pinot 在“分享分析”数据集上的比较。Pinot 的最后一个样本约为每秒 4,500 次查询；曲线展示第 50/90/95/99 百分位延迟。](assets/pinot-fig14-share-analytics.png)
+![图 14](assets/pinot-fig14-share-analytics.png)
+
+图 14：Druid 与 Pinot 在“分享分析”数据集上的比较。Pinot 的最后一个样本约为每秒 4,500 次查询；曲线展示第 50/90/95/99 百分位延迟。
 
 第 4.2 节已经说明，记录的物理顺序显著影响可扩展性。图 15 在 WVMP 数据集上比较 Pinot 的物理有序记录与基于 bitmap 的倒排索引。Druid 和 Pinot 的 bitmap 倒排索引都使用 Roaring Bitmap [6, 7]。图中查询率范围达到每秒 **5,000 次**，并给出第 50、90、95、99 百分位延迟。
 
-![图 15：WVMP 数据集上物理排序与倒排索引的可扩展性比较。横轴为每秒查询数，纵轴为毫秒延迟。](assets/pinot-fig15-who-viewed-my-profile.png)
+![图 15](assets/pinot-fig15-who-viewed-my-profile.png)
+
+图 15：WVMP 数据集上物理排序与倒排索引的可扩展性比较。横轴为每秒查询数，纵轴为毫秒延迟。
 
 **Impression discounting 与路由优化。**
 
@@ -429,7 +459,9 @@ Pinot 还用于回答终端用户发出的高选择性分析查询。例如，�
 
 图 16 展示加入第 4.4 节查询路由优化后的结果，并以 Druid 为基线。Druid 在此数据集上的性能显著优于它在其他数据集上的表现，但扩展性仍不及 Pinot。在该场景中，我们可以看到：低查询率时，未分区表与分区表性能相近；查询率升高后，在 broker 中加入分区感知限制了额外开销，使延迟曲线明显更平坦。图中 Druid 的最后一个样本约为每秒 **150 次**查询，无路由优化 Pinot 约为每秒 **3,500 次**，带路由优化 Pinot 约为每秒 **4,000 次**；均展示第 50、90、95、99 百分位延迟。
 
-![图 16：impression discounting 数据集上的路由优化比较，依次为 Druid、无路由优化 Pinot 和带路由优化 Pinot。](assets/pinot-fig16-routing-optimizations.png)
+![图 16](assets/pinot-fig16-routing-optimizations.png)
+
+图 16：impression discounting 数据集上的路由优化比较，依次为 Druid、无路由优化 Pinot 和带路由优化 Pinot。
 
 > **原文图件说明：** 源 PDF 本身把图 16 最右侧横轴刻度 `4000` 的最后一个 `0` 裁在页面边界之外，视觉上只剩 `400`；PDF 文本层仍保留完整的 `4000`，上文据此明确写出该样本约为每秒 4,000 次查询。
 

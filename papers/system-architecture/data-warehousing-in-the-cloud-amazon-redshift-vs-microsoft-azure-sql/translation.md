@@ -104,7 +104,9 @@ Amazon Redshift 引擎是一个符合 SQL 的 MPP 查询处理和数据库管理
 
 Amazon Redshift 数据仓库的核心基础设施是集群，集群由一个 leader node 和一个或多个 compute node 组成。leader node 接受来自客户端应用的连接，并把工作分派给 compute node：它解析并生成数据库操作的执行计划，根据执行计划编译代码，将编译后的代码分发给 compute node，并给每个节点分配一部分数据。
 
-![图 1：Amazon Redshift 系统架构。来源：aws.amazon.com/redshift。](assets/figure-01-redshift-architecture.png)
+![图 1](assets/figure-01-redshift-architecture.png)
+
+图 1：Amazon Redshift 系统架构。来源：aws.amazon.com/redshift。
 
 只有当查询引用存储在 compute node 上的表时，leader node 才会把 SQL 语句分发到 compute node；否则，语句只在 leader node 上运行（“Data Warehouse System Architecture - Amazon Redshift,” n.d.）。
 
@@ -124,7 +126,9 @@ Microsoft Azure SQL Data Warehouse 由 Control Node、Compute Node 和 Storage �
 
 与 Amazon Redshift 的 leader node 类似，Azure Control Node 管理并优化查询，负责协调整个并行查询运行所需的数据移动和计算。当请求发送到 SQL Data Warehouse 时，control node 会把请求转换为分别在各 compute node 上并行运行的查询。
 
-![图 2：Microsoft Azure SQL Data Warehouse 系统架构。来源：“SQL Data Warehouse | Microsoft Azure,” n.d.。](assets/figure-02-azure-sql-dw-architecture.png)
+![图 2](assets/figure-02-azure-sql-dw-architecture.png)
+
+图 2：Microsoft Azure SQL Data Warehouse 系统架构。来源：“SQL Data Warehouse | Microsoft Azure,” n.d.。
 
 compute node 是存储数据并处理查询的 SQL 数据库。添加数据时，数据会分布到 compute node；请求数据时，这些节点作为 worker 并行运行查询。处理完成后，它们把结果传回 control node，由其聚合结果并将最终结果返回给用户。
 
@@ -148,11 +152,15 @@ Redshift 和 Azure SQL Data Warehouse 都支持 PB 级系统。两者都有 lead
 
 比较公有云采用情况，特别是 AWS 和 Azure，可以看到 AWS 是 2017 年 RightScale 调查中多数受访用户采用的首位云方案。
 
-![图 3：2017 年公有云采用率。来源：“RightScale 2017 - State of the cloud report,” 2017。](assets/figure-03-public-cloud-adoption-2017.png)
+![图 3](assets/figure-03-public-cloud-adoption-2017.png)
+
+图 3：2017 年公有云采用率。来源：“RightScale 2017 - State of the cloud report,” 2017。
 
 虽然 AWS 继续领先于公有云采用率，57% 的受访者当前在 AWS 上运行应用，但这一数字与 2016 年相同。相对地，过去一年中，在第二和第三大公有云提供商 Azure 与 Google 上运行应用的受访者比例显著增长。Azure 总体采用率从 20% 增长到 34%，缩小了 AWS 的领先优势；Google 也从 10% 增长到 15%。
 
-![图 4：2017 年与 2016 年公有云采用率对比。来源：“RightScale 2017 - State of the cloud report,” 2017。](assets/figure-04-public-cloud-adoption-2017-vs-2016.png)
+![图 4](assets/figure-04-public-cloud-adoption-2017-vs-2016.png)
+
+图 4：2017 年与 2016 年公有云采用率对比。来源：“RightScale 2017 - State of the cloud report,” 2017。
 
 表 1 展示系统属性比较。Redshift 和 Azure SQL 都基于关系数据库管理系统（RDBMS）数据库模型，并支持关系数据模型。
 

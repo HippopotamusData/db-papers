@@ -49,7 +49,9 @@ Spanner 的主要关注点是管理跨数据中心复制的数据，但我们也
 
 Spanner 被组织成一组 zone，每个 zone 大致相当于一套 Bigtable server [9] 的部署。Zone 是管理部署单位，同时也是数据可以复制到的位置集合。随着新数据中心上线或旧数据中心停用，可以在运行中的系统增删 zone。Zone 还是物理隔离单位：例如，如果同一数据中心内不同应用的数据必须分布在不同服务器集合上，一个数据中心可以包含一个或多个 zone。
 
-![图 1：Spanner server 组织结构。每个 zone 内有 zonemaster、location proxy 与 spanserver；universe master 与 placement driver 在全局层面协调管理。](assets/spanner-fig01-server-organization.png)
+![图 1](assets/spanner-fig01-server-organization.png)
+
+图 1：Spanner server 组织结构。每个 zone 内有 zonemaster、location proxy 与 spanserver；universe master 与 placement driver 在全局层面协调管理。
 
 图 1 展示一个 Spanner universe 内的 server。一个 zone 有一个 zonemaster 和 100 到数千个 spanserver；前者把数据分配给 spanserver，后者向客户端提供数据服务。客户端通过每个 zone 的 location proxy 找到负责其数据的 spanserver。Universe master 和 placement driver 目前都是单例。Universe master 主要是一个控制台，展示所有 zone 的状态信息，供交互式调试使用。Placement driver 以分钟为时间尺度自动跨 zone 移动数据；它定期与 spanserver 通信，寻找因复制约束更新或负载均衡而需要移动的数据。受篇幅所限，下文只详细介绍 spanserver。
 
@@ -63,7 +65,9 @@ $$
 
 与 Bigtable 不同，Spanner 会为数据分配时间戳；这是 Spanner 更像多版本数据库而不只是键值存储的重要原因。Tablet 的状态保存在一组类似 B-tree 的文件和预写日志中，它们都位于名为 Colossus 的分布式文件系统上；Colossus 是 Google File System [15] 的后继系统。
 
-![图 2：Spanserver 软件栈。每个副本由 Paxos、tablet 和 Colossus 组成；leader 额外维护 lock table 与 transaction manager。](assets/spanner-fig02-spanserver-stack.png)
+![图 2](assets/spanner-fig02-spanserver-stack.png)
+
+图 2：Spanserver 软件栈。每个副本由 Paxos、tablet 和 Colossus 组成；leader 额外维护 lock table 与 transaction manager。
 
 为支持复制，每个 spanserver 在每个 tablet 之上实现一台 Paxos 状态机。Spanner 的早期版本允许每个 tablet 有多台 Paxos 状态机，以提供更灵活的复制配置，但其复杂性促使我们放弃该设计。每台状态机把元数据和日志存入对应 tablet。Paxos 实现支持由基于时间的 leader lease 维持的长期 leader，lease 默认长度为 10 秒。当前实现会把每次 Paxos 写记录两遍：一次写 tablet 日志，一次写 Paxos 日志。这是为开发便利作出的选择，我们很可能最终会修正这一点。Paxos 实现采用流水线，以提高存在广域网延迟时的吞吐；但 Paxos 仍按顺序应用写入，第 4 节会依赖这一性质。
 
@@ -79,7 +83,9 @@ Paxos 状态机用来实现一致复制的映射集合。每个副本的键值�
 
 Directory 是数据放置单位。一个 directory 内的全部数据具有相同的复制配置。数据在 Paxos group 间移动时，会以 directory 为单位移动，如图 3 所示。Spanner 可能迁移 directory，以降低某个 Paxos group 的负载；把经常一起访问的 directory 放进同一 group；或把 directory 移到更靠近访问者的 group。在客户端操作持续执行时仍可以移动 directory；一个 50MB 的 directory 通常可在数秒内完成迁移。
 
-![图 3：Directory 是 Paxos group 之间的数据移动单位。一个 Paxos group 可包含多个 directory，directory 可迁移到其它 group。](assets/spanner-fig03-directories-movement.png)
+![图 3](assets/spanner-fig03-directories-movement.png)
+
+图 3：Directory 是 Paxos group 之间的数据移动单位。一个 Paxos group 可包含多个 directory，directory 可迁移到其它 group。
 
 一个 Paxos group 可以包含多个 directory，因此 Spanner tablet 与 Bigtable tablet 不同：前者不一定是行空间中按字典序连续的单个分区，而是可容纳多个行空间分区的容器。这样设计是为了把经常共同访问的多个 directory 放在一起。
 
@@ -113,7 +119,9 @@ CREATE TABLE Albums {
   INTERLEAVE IN PARENT Users ON DELETE CASCADE;
 ```
 
-![图 4：照片元数据 schema 示例，以及 INTERLEAVE IN 所隐含的交错布局。Albums(2,1) 表示用户 2、相册 1 的 Albums 行。](assets/spanner-fig04-schema-interleaving.png)
+![图 4](assets/spanner-fig04-schema-interleaving.png)
+
+图 4：照片元数据 schema 示例，以及 INTERLEAVE IN 所隐含的交错布局。Albums(2,1) 表示用户 2、相册 1 的 Albums 行。
 
 图中也展示了示例数据库的交错布局。例如，Albums(2,1) 表示 Albums 表中用户 ID 为 2、相册 ID 为 1 的行。把表交错组成 directory 很重要，因为它允许客户端描述多张表之间的局部性关系；在分片分布式数据库中，这对良好性能是必要的。若没有这些信息，Spanner 就不知道哪些局部性关系最重要。
 
@@ -340,7 +348,9 @@ Leader 默认每 8 秒推进一次 MinNextTS() 值。因此，在没有 prepared
 
 每次测试开始 5 秒后，杀掉一个 zone 中的全部 server：non-leader 杀掉 $Z_2$；leader-hard 杀掉 $Z_1$；leader-soft 也杀掉 $Z_1$，但先通知其中所有 server 移交 leadership。
 
-![图 5：杀掉 server 对吞吐的影响。non-leader、leader-soft 和 leader-hard 三种情形均在第 5 秒触发。纵轴为累计完成读数，横轴为秒。](assets/spanner-fig05-server-failure-throughput.png)
+![图 5](assets/spanner-fig05-server-failure-throughput.png)
+
+图 5：杀掉 server 对吞吐的影响。non-leader、leader-soft 和 leader-hard 三种情形均在第 5 秒触发。纵轴为累计完成读数，横轴为秒。
 
 杀掉 $Z_2$ 对读吞吐没有影响。杀掉 $Z_1$ 前若给 leader 时间把 leadership 移交到另一个 zone，影响也很小：吞吐下降在图中不可见，约为 3%–4%。相反，无预警杀掉 $Z_1$ 会产生严重影响，完成速率几乎降到 0。随着重新选出 leader，系统吞吐升到约 100K reads/s；它高于稳态速率是实验的两个产物：系统中存在额外容量，而且 leader 不可用时操作会排队。因此吞吐会先上升，随后再回落并稳定于稳态速率。
 
@@ -350,7 +360,9 @@ Leader 默认每 8 秒推进一次 MinNextTS() 值。因此，在没有 prepared
 
 评估 TrueTime 需要回答两个问题： $\epsilon$ 是否真能界定时钟不确定性，以及 $\epsilon$ 最坏会有多大。前一个问题最严重的情形是本地时钟漂移超过每秒 200 微秒，这会破坏 TrueTime 的假设。机器统计显示，坏 CPU 的发生概率是坏时钟的 6 倍；相较更严重的硬件问题，时钟问题极少。因此，我们认为 TrueTime 的实现与 Spanner 所依赖的其他软件一样可信。
 
-![图 6：TrueTime 的 ε 分布，在 timeslave daemon 刚轮询完 time master 后采样。左图绘制第 90、99 和 99.9 百分位；右图展示 4 月 13 日维护造成的尖峰。](assets/spanner-fig06-truetime-epsilon.png)
+![图 6](assets/spanner-fig06-truetime-epsilon.png)
+
+图 6：TrueTime 的 ε 分布，在 timeslave daemon 刚轮询完 time master 后采样。左图绘制第 90、99 和 99.9 百分位；右图展示 4 月 13 日维护造成的尖峰。
 
 图 6 的 TrueTime 数据来自跨多个数据中心、彼此最远 2200km 的数千台 spanserver 机器。图中绘制 timeslave daemon 刚轮询完 time master 时采样的 $\epsilon$ 第 90、99 和 99.9 百分位。该采样排除了本地时钟不确定性造成的锯齿，因此衡量的是 time master 的不确定性（通常为 0）加上与 master 通信的延迟。
 

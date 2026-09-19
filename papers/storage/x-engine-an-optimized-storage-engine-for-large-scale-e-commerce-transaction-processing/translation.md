@@ -45,7 +45,9 @@ DOI：https://doi.org/10.1145/3299869.3314041
 
 图 1 绘制了 2018 年“双十一”期间一个运行 X-Engine 的在线数据库集群的事务响应时间和每秒事务数（TPS）；其中 TPS 以 11 月 11 日午夜前一天的平均 TPS 归一化。午夜后的第一秒，该集群接收到的事务数约为前一秒的 122 倍。借助 X-Engine，系统仍成功维持了稳定的响应时间，平均仅 0.42 ms。
 
-![图 1：2018 年“双十一全球狂欢节”期间，运行 X-Engine 的在线数据库集群观察到每秒事务数骤增 122 倍，而响应时间仍保持稳定。](assets/xengine-fig01-singles-day-spike.png)
+![图 1](assets/xengine-fig01-singles-day-spike.png)
+
+图 1：2018 年“双十一全球狂欢节”期间，运行 X-Engine 的在线数据库集群观察到每秒事务数骤增 122 倍，而响应时间仍保持稳定。
 
 为接住图 1 所示的 122 倍尖峰，阿里巴巴的 OLTP 数据库采用无共享（shared-nothing）架构，通过分片把事务分散到大量数据库实例，并在尖峰到来之前扩容实例数量。这种方法虽然可行，但由于所需实例数量极其庞大，会产生显著的资金和工程成本。本文从提升 OLTP 数据库核心组件——存储引擎——的单机能力入手：在给定尖峰和吞吐目标下减少所需实例数，或者在成本固定时提高可达到的吞吐。
 
@@ -87,7 +89,9 @@ X-Engine 是建立在改进 LSM-tree 之上的分层 OLTP 存储引擎。如第 
 
 热数据层包含一个 active memtable、多个 immutable memtable，以及用于缓冲热点记录的 cache；这些 memtable 都是保存近期插入记录的跳表。温/冷数据层按树形结构组织数据，每一层保存一串有序 extent。一个 extent 把多个记录块及其过滤器和索引打包在一起。我们正在探索用机器学习判断合适的数据温度，附录 C 作简要说明，完整细节不在本文范围内。
 
-![图 2：X-Engine 架构。](assets/xengine-fig02-architecture.png)
+![图 2](assets/xengine-fig02-architecture.png)
+
+图 2：X-Engine 架构。
 
 X-Engine 利用 redo log、metasnapshot 和 index 支持事务处理的多版本并发控制（Multi-version Concurrency Control，MVCC）。每个 metasnapshot 都有一份元数据索引，跟踪该快照中树的所有 level、所有 memtable 和所有 extent。相邻的一个或多个 level 组成一个 tier，分别存放在 NVM、SSD 或 HDD 上。
 
@@ -135,7 +139,9 @@ X-Engine 使用 MVCC 和两阶段锁（two-phase locking，2PL）提供快照隔
 
 图 3 概述 X-Engine 的事务处理。该过程分为读/写阶段和提交阶段。事务的所有读请求都在读/写阶段沿读路径访问 LSM-tree；同一阶段里，待插入或更新的记录写入事务缓冲区。随后进入提交阶段：系统把从事务缓冲区向存储写记录的任务分发到多个写任务队列，再由多阶段流水线处理全部任务，包括记录日志以及把记录插入 LSM-tree。
 
-![图 3：X-Engine 的事务处理详细设计；左侧为数据流与控制流，右侧为四阶段流水线的并行执行。](assets/xengine-fig03-transaction-processing.png)
+![图 3](assets/xengine-fig03-transaction-processing.png)
+
+图 3：X-Engine 的事务处理详细设计；左侧为数据流与控制流，右侧为四阶段流水线的并行执行。
 
 ### 3.1 读路径
 
@@ -145,7 +151,9 @@ X-Engine 使用 MVCC 和两阶段锁（two-phase locking，2PL）提供快照隔
 
 图 4 展示 extent 的布局，由 data block、schema data 和 block index 构成。记录以行式形式存入 data block；schema data 跟踪每列的类型；block index 保存每个 data block 的偏移量。在当前生产部署中，X-Engine 把 LSM-tree 所有 level 中的每个 extent 都调为 2 MB。许多电子商务事务以高度偏斜的方式访问记录，2 MB 的 extent 能让更多 extent 在合并时直接复用，详见第 3.3.2 节；这一尺寸也有利于第 3.1.4 节所述的合并期间增量缓存替换。
 
-![图 4：extent 的布局，包括数据块、带版本的 schema 数据与块索引。](assets/xengine-fig04-extent-layout.png)
+![图 4](assets/xengine-fig04-extent-layout.png)
+
+图 4：extent 的布局，包括数据块、带版本的 schema 数据与块索引。
 
 每个 extent 都保存带版本的 schema data，以加速数据定义语言（DDL）操作。向表中添加新列时，只需让带新版本的新 extent 遵循新 schema，无须修改已有 extent。查询读取使用不同 schema 版本的 extent 时，以最新 schema 为准，并为旧 schema 记录中的空属性填入默认值。这种快速 DDL 能力对在线电子商务业务十分重要，因为业务需求经常变化，数据库 schema 也需要随之调整。
 
@@ -153,7 +161,9 @@ X-Engine 使用 MVCC 和两阶段锁（two-phase locking，2PL）提供快照隔
 
 图 5 展示 X-Engine 的数据库缓存。X-Engine 专门针对阿里巴巴电子商务事务中占多数的点查询优化了 row cache。row cache 使用 LRU 替换策略缓存记录，不受记录位于 LSM-tree 哪一层的限制。因此，只要查询访问，即使最大 level 中的记录也能进入缓存。点查询未命中 memtable 后，系统对查询键做哈希并在 row cache 的相应槽位中匹配，故点查询从 row cache 取记录只需 O(1) 时间。若查询随机访问记录，row cache 的效果会较弱。
 
-![图 5：缓存结构。row cache 服务点查询；table cache、Bloom filter、index block 和 block cache 支撑后续定位。](assets/xengine-fig05-cache-structure.png)
+![图 5](assets/xengine-fig05-cache-structure.png)
+
+图 5：缓存结构。row cache 服务点查询；table cache、Bloom filter、index block 和 block cache 支撑后续定位。
 
 row cache 只保留记录的最新版本，因为时间局部性使它最可能被访问。为此，flush 时会在 row cache 中以新版本替换旧版本，避免 flush 造成额外 cache miss。
 
@@ -165,7 +175,9 @@ block cache 以 data block 为单位缓冲数据，服务未命中 row cache 的
 
 图 6 展示 X-Engine 的多版本元数据索引。每个子表的 LSM-tree 都有一份关联元数据索引，从代表子表的根节点开始。每次修改索引都会创建新的 metasnapshot；新快照指向所有相关 level 和 memtable，但不修改已有 metasnapshot 的节点，即采用写时复制。
 
-![图 6：以写时复制方式更新元数据索引的示例。](assets/xengine-fig06-metadata-index-update.png)
+![图 6](assets/xengine-fig06-metadata-index-update.png)
+
+图 6：以写时复制方式更新元数据索引的示例。
 
 图 6 中，extent i 起初属于 Level 0 且已被缓存（红色）。复用该 extent 的 compaction 完成后，在 MetaSnapshot v 旁创建新的 MetaSnapshot v+1，链接到新合并的 Level 1（深色）。Level 1 的元数据只需指向 extent i，无须在磁盘上实际移动它（紫色），所以 extent i 的全部缓存内容仍然有效。
 
@@ -187,7 +199,9 @@ LSM-tree 的 compaction 会在磁盘上合并大量 extent，往往成批驱逐�
 
 X-Engine 把同一记录的新版本沿竖直方向追加在原节点旁，形成新的链表。图 7 中，蓝色节点保存不同键的记录，黄色节点保存同一记录的多个版本。不同键以跳表组织，而每个键的多个版本放入链表。热点记录持续更新时，其对应链表会增长；新版本通常被新到事务引用，因此靠近唯一键跳表的最底层。图中版本 99 是最新版本。这一设计减少了扫描无关旧版本的开销。
 
-![图 7：多版本 memtable 的结构；不同键进入跳表，同一键的版本形成链表。](assets/xengine-fig07-multiversion-memtables.png)
+![图 7](assets/xengine-fig07-multiversion-memtables.png)
+
+图 7：多版本 memtable 的结构；不同键进入跳表，同一键的版本形成链表。
 
 #### 3.2.2 事务异步写
 
@@ -236,7 +250,9 @@ Compaction 包含昂贵的 merge。X-Engine 使用三项优化：数据复用、
 - Level 1 的 extent [1, 35] 与 Level 2 的 extent [1, 30] 重叠，但前者只有 data block [1, 25] 与后者的 block 重叠，因此 data block [32, 35] 可直接复用。
 - Level 1 的 extent [80, 200] 与 Level 2 的多个 extent 重叠；它的第二个 data block 与 Level 2 的三个 extent 重叠。不过该 block 中键分布稀疏，[135, 180] 之间没有键，因此可将其拆成 [106, 135] 和 [180, 200]，分别与 Level 2 的 [100, 130]、[190, 205] 合并，而 extent [150, 170] 则直接复用。
 
-![图 8：compaction 期间数据复用示例；图例区分 extent、data block、merge、reuse、split 与 copy。](assets/xengine-fig08-data-reuse-compaction.png)
+![图 8](assets/xengine-fig08-data-reuse-compaction.png)
+
+图 8：compaction 期间数据复用示例；图例区分 extent、data block、merge、reuse、split 与 copy。
 
 **异步 I/O。** 在 extent 粒度上，一次 compaction 分成三个互不重叠的阶段：（1）从存储读取两个输入 extent；（2）合并；（3）把一个或多个合并后的 extent 写回存储。第一、三阶段是 I/O 阶段，第二阶段计算密集。X-Engine 在第一、三阶段提交异步 I/O 请求，并把第二阶段实现为第一阶段 I/O 的回调函数。多个 compaction 并行时，一个任务的第二阶段可与其他任务的 I/O 阶段重叠，从而隐藏 I/O。
 
@@ -278,7 +294,9 @@ X-Engine 采用基于规则的 compaction 调度。按操作层级分为四类�
 
 图 9 展示电子商务负载的性能。首先使用 80% 点查询、11% 范围查询、6% 更新和 3% 插入的混合负载，图中记作 80:11:6:3。这最接近没有在线促销影响时阿里巴巴许多数据库的读密集负载。之后逐渐把读取（点查询与范围查询）的占比降到 42% 和 10%，同时保持更新与插入之间的比例，最终得到 42:10:32:16；该混合与“双十一”在线促销期间观察到的负载非常接近。
 
-![图 9：MySQL 使用三种存储引擎处理不同点查询、范围扫描、更新、插入比例时的吞吐；（a）InnoDB，（b）RocksDB，（c）X-Engine；三个子图 y 轴相同。](assets/xengine-fig09-ecommerce-workload-throughput.png)
+![图 9](assets/xengine-fig09-ecommerce-workload-throughput.png)
+
+图 9：MySQL 使用三种存储引擎处理不同点查询、范围扫描、更新、插入比例时的吞吐；（a）InnoDB，（b）RocksDB，（c）X-Engine；三个子图 y 轴相同。
 
 在更偏读的混合负载中，InnoDB 比 RocksDB、X-Engine 更快也更稳定。LSM-tree 系统中的查找若未命中主存里的 memtable 和 cache，就要访问磁盘上的一个或多个 level，拉长响应时间并增加方差。凭借读路径的一系列优化，在这些读密集场景中，X-Engine 只比 InnoDB 慢不到 10%。在代表“双十一”负载的关键 42:10:32:16 场景中，X-Engine 的 QPS 非常稳定，平均分别比 InnoDB 和 RocksDB 高 44% 与 31%。
 
@@ -292,39 +310,55 @@ X-Engine 采用基于规则的 compaction 调度。按操作层级分为四类�
 
 如图 10 所示，软件线程数逐步增加到 128，以压测两个存储引擎的 KV 接口。put 操作中，X-Engine 的最高吞吐达到 RocksDB 的 23 倍，同时响应时间相当。get 操作中，X-Engine 的吞吐最多为 RocksDB 的 1.68 倍，响应速度最多为 RocksDB 的 1.67 倍。
 
-![图 10：通过键值接口访问存储引擎的吞吐和响应时间；put/get 吞吐单位为 Mops/s，响应时间单位为 µs。](assets/xengine-fig10-kv-throughput-response.png)
+![图 10](assets/xengine-fig10-kv-throughput-response.png)
+
+图 10：通过键值接口访问存储引擎的吞吐和响应时间；put/get 吞吐单位为 Mops/s，响应时间单位为 µs。
 
 为解释结果，图 11 进一步展示第 3.2.2 节的异步写、写任务队列和多阶段流水线的影响。在同为 8 个写任务队列时，异步写版本的峰值吞吐是同步写版本的 11 倍；把写任务队列从 1 个增加到 8 个，又让 X-Engine 提速 4 倍。只用 1 个任务队列时，流水线里只有一个线程，多阶段流水线实际上被禁用，没有阶段能并行执行。所有硬件线程都投入使用时吞吐最高，说明 X-Engine 能有效利用线程级并行性。
 
-![图 11：在同步/异步写以及 1、4、8、16 个队列配置下，写路径优化前后的插入吞吐。](assets/xengine-fig11-insert-write-path.png)
+![图 11](assets/xengine-fig11-insert-write-path.png)
+
+图 11：在同步/异步写以及 1、4、8、16 个队列配置下，写路径优化前后的插入吞吐。
 
 #### 4.3.2 通过 MySQL 运行 SQL 查询
 
 图 12 和图 13 分别给出三个存储引擎经 SQL 接口测得的吞吐和响应时间，连接数从 1 扩展到 512。点查询、插入和更新中，X-Engine 的吞吐分别是第二名的 1.60、4.25 和 2.99 倍。随着连接数增加，X-Engine 的吞吐和响应时间扩展性也明显更好，这是图 11 所示线程级效率改善的结果。
 
-![图 12：经 SQL 接口访问时，三种存储引擎在（a）点查询、（b）插入和（c）更新上的吞吐。](assets/xengine-fig12-sql-throughput.png)
+![图 12](assets/xengine-fig12-sql-throughput.png)
 
-![图 13：经 SQL 接口访问时，三种存储引擎在（a）点查询、（b）插入和（c）更新上的响应时间。](assets/xengine-fig13-sql-response-time.png)
+图 12：经 SQL 接口访问时，三种存储引擎在（a）点查询、（b）插入和（c）更新上的吞吐。
+
+![图 13](assets/xengine-fig13-sql-response-time.png)
+
+图 13：经 SQL 接口访问时，三种存储引擎在（a）点查询、（b）插入和（c）更新上的响应时间。
 
 范围查询在阿里巴巴电子商务负载中只占很小比例，但对在线数据库仍不可或缺。图 14 给出扫描记录数从 2 增至 1,024 时三种引擎的范围查询吞吐。X-Engine 和 RocksDB 都比 InnoDB 差，因为 LSM-tree 存储布局对扫描不友好。采用扫描优化是 X-Engine 正在推进的工作。
 
-![图 14：随扫描记录数变化的范围查询吞吐。](assets/xengine-fig14-range-lookup-throughput.png)
+![图 14](assets/xengine-fig14-range-lookup-throughput.png)
+
+图 14：随扫描记录数变化的范围查询吞吐。
 
 ### 4.4 泄洪问题
 
 X-Engine 通过改善 compaction 性能帮助泄洪。图 15 使用 SysBench 的 oltp_insert 比较 compaction 在 CPU 上执行和卸载到 FPGA 时 X-Engine 的吞吐。FPGA 使吞吐提高 27%，并减小方差；附录 A 进一步展示 FPGA 卸载节省的 CPU。
 
-![图 15：compaction 使用 CPU 与 FPGA 时，MySQL（X-Engine）的吞吐。](assets/xengine-fig15-fpga-compaction-throughput.png)
+![图 15](assets/xengine-fig15-fpga-compaction-throughput.png)
+
+图 15：compaction 使用 CPU 与 FPGA 时，MySQL（X-Engine）的吞吐。
 
 为评估 X-Engine 在 compaction 中复用数据的效率，实验准备两批记录，分别包含 5,000 万条和 5 亿条；所有键均匀随机分布。较小批次中不同键的比例从 70% 调到 99%，其余记录由同一键的不同版本构成。图 16 给出 RocksDB 和 X-Engine 合并这两批记录时的吞吐。当 90% 和 99% 的键互不相同时，X-Engine 分别快 2.99 倍和 19.83 倍。
 
 这些情况下，同一键不同版本记录的分布高度偏斜，与具有强热点的电子商务负载类似。把 extent 和 data block 分别保持在 2 MB、16 KB，可增加可复用 extent 的数量，降低 compaction 开销。
 
-![图 16：不同可复用记录百分比下的 compaction 吞吐，单位 GB/s。](assets/xengine-fig16-compaction-distinct-records.png)
+![图 16](assets/xengine-fig16-compaction-distinct-records.png)
+
+图 16：不同可复用记录百分比下的 compaction 吞吐，单位 GB/s。
 
 图 17 比较 X-Engine 在处理写比例较高的 42:10:32:16 电子商务负载时，启用和禁用增量缓存替换的 block cache 命中率。该优化显著降低命中率波动，并避免 QPS 偶发骤降约 36%。不过，compaction、flush 等操作仍会周期性驱逐缓存，损害命中率。
 
-![图 17：处理电子商务负载时，X-Engine 在（a）未启用、（b）启用增量缓存替换情况下的 block cache 命中率和 QPS；两图坐标轴相同。](assets/xengine-fig17-cache-hit-rates.png)
+![图 17](assets/xengine-fig17-cache-hit-rates.png)
+
+图 17：处理电子商务负载时，X-Engine 在（a）未启用、（b）启用增量缓存替换情况下的 block cache 命中率和 QPS；两图坐标轴相同。
 
 ### 4.5 快速洋流问题
 
@@ -332,7 +366,9 @@ X-Engine 通过改善 compaction 性能帮助泄洪。图 15 使用 SysBench 的
 
 访问均匀随机时，几乎所有访问都未命中 row cache，因为后续查询很难再次访问已缓存记录。访问越偏斜，越多记录成为热点并进入 row cache，从而提高 row cache 命中率。结果表明，row cache 在电子商务负载常见的高度偏斜场景中效果良好；对点查询而言，block cache 的影响相对较小。
 
-![图 18：偏斜点查询下 row cache 与 block cache 的影响；横轴为 Zipf 因子，曲线同时给出命中率与 QPS。](assets/xengine-fig18-cache-skewed-lookups.png)
+![图 18](assets/xengine-fig18-cache-skewed-lookups.png)
+
+图 18：偏斜点查询下 row cache 与 block cache 的影响；横轴为 Zipf 因子，曲线同时给出命中率与 QPS。
 
 ## 5. 相关工作
 
@@ -395,11 +431,15 @@ X-Engine 建立在优化的 LSM-tree 上，利用 FPGA 加速 compaction 等硬�
 
 图 19 中，我们调整连接数，使有无 FPGA 卸载的 X-Engine 运行在相同 QPS，然后测量并报告所有处理器的 CPU 利用率。CPU compaction 与 FPGA compaction 的平均 CPU 利用率分别约等于 37、29 个硬件线程。实验机有 32 核并启用超线程，共 64 个硬件线程，因此最大 CPU 利用率是 6,400%。FPGA 卸载把计算开销移到 FPGA，还使 CPU 利用率方差降低约 6 倍。利用节省出的 CPU 资源，X-Engine 得以把总体吞吐提高 27%，与图 15 一致。
 
-![图 19：在吞吐相同的条件下，MySQL（X-Engine）使用 CPU 或 FPGA 执行 compaction 时的 CPU 利用率。](assets/xengine-fig19-cpu-usage-fpga.png)
+![图 19](assets/xengine-fig19-cpu-usage-fpga.png)
+
+图 19：在吞吐相同的条件下，MySQL（X-Engine）使用 CPU 或 FPGA 执行 compaction 时的 CPU 利用率。
 
 图 20 比较两个基于 LSM-tree 的系统 RocksDB 与 X-Engine 在写密集事务中每事务读取和写入的字节数；所有数据均以 X-Engine 结果归一化。两者都使用索引加速点查询，因此 X-Engine 的 extent 只把读放大降低约 9%；但 extent 与索引有助于 compaction 数据复用，使写放大降低 63%。
 
-![图 20：每事务归一化读取/写入 KB 数。](assets/xengine-fig20-normalized-io-per-txn.png)
+![图 20](assets/xengine-fig20-normalized-io-per-txn.png)
+
+图 20：每事务归一化读取/写入 KB 数。
 
 ## 附录 B. 生成电子商务工作负载
 

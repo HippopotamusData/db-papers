@@ -203,7 +203,9 @@ Boncz 等人在 2005 年提出向量化 [7]，最先用于 MonetDB/X100；该系
 
 表 1：TPC-H SF=1、单线程下的 CPU 计数器；各项按该查询处理的元组数归一化。
 
-![图 4：Typer 与 Tectorwise 的 memory stall cycles](assets/precise-manual-figure-04-memory-stalls.png)
+![图 4](assets/precise-manual-figure-04-memory-stalls.png)
+
+图 4：Typer 与 Tectorwise 的 memory stall cycles
 
 图 4 将 TPC-H 单线程的 cycles/tuple 分解为 memory stall cycles 和 other cycles。Tectorwise 在较大数据和 hash table 场景中能隐藏更多 memory latency；Typer 在计算密集或 cache-resident 场景中通常指令更少。
 
@@ -274,7 +276,9 @@ Tectorwise 把操作拆成 primitive，并在其间物化向量，因此最多�
 
 上述结果显示 SIMD selection 的收益从微基准到完整查询会明显缩小：dense input 最高约 8.4 倍，输入 selection vector 的稀疏情形最高约 2.7 倍，完整 TPC-H Q6 中我们只观察到约 1.4 倍加速，尽管 Q6 近 90% 的处理时间都花在 SIMD primitives 中。我们的实验表明，差距来自 selection vector 导致的稀疏加载，以及步长变化造成的 cache miss。
 
-![图 7：稀疏 selection 中 SIMD 与 scalar 的成本](assets/precise-manual-figure-07-sparse-selection.png)
+![图 7](assets/precise-manual-figure-07-sparse-selection.png)
+
+图 7：稀疏 selection 中 SIMD 与 scalar 的成本
 
 图 7 展示 selection vector 输入下，selectivity 与 cache miss 如何影响 SIMD。选择率低于约 50% 后，scalar 与 SIMD 的差距缩小；大量时间消耗在 L1 miss cycles 上，说明内存系统很快成为瓶颈。
 
@@ -284,11 +288,15 @@ Tectorwise 把操作拆成 primitive，并在其间物化向量，因此最多�
 
 接下来，我们考察哈希连接探测；TPC-H 的查询处理时间大多花在这一操作上。SIMD 有两个用武之地：计算哈希值，以及真正的哈希表查找。计算哈希时，我们使用由整数移位、乘法等 AVX-512 可用算术操作构成的 Murmur2；查表则使用 gather、compress store 和 masking。
 
-![图 8：Scalar 与 SIMD hash join probing 对比](assets/precise-manual-figure-08-simd-join-probing.png)
+![图 8](assets/precise-manual-figure-08-simd-join-probing.png)
+
+图 8：Scalar 与 SIMD hash join probing 对比
 
 上述对比将 hash join probing 分成 dense hashing、gather instruction、Tectorwise join primitive 和完整 TPC-H 查询。我们观察到，单独 hashing 能有 2.3x，gather 和完整查询中收益接近 1.1x，说明内存访问和真实查询上下文吞噬了大部分 SIMD 优势。
 
-![图 9：Working set size 对 hash table lookup 成本的影响](assets/precise-manual-figure-09-join-probe-working-set.png)
+![图 9](assets/precise-manual-figure-09-join-probe-working-set.png)
+
+图 9：Working set size 对 hash table lookup 成本的影响
 
 图 9 展示 working set 变大时 hash table lookup 的 cycles/lookup。Scalar 和 SIMD 曲线都随 working set 增长而上升，并在大 working set 处收敛，说明数据不在 cache 中时 SIMD 难以带来稳定收益。
 
@@ -298,7 +306,9 @@ Tectorwise 把操作拆成 primitive，并在其间物化向量，因此最多�
 
 我们手工用 SIMD intrinsics 改写了 Tectorwise primitives，也测试了 GCC 7.2、Clang 5.0 和 ICC 18 能否自动完成这项工作。只有 ICC 能够自动向量化相当一部分 primitives，而且仅限 AVX-512。图 10 显示，ICC 把相关查询路径的每元组指令数减少 20%-60%；代码轨迹确认 hashing、selection 和 projection 被自动向量化，而哈希表探测与聚合没有被转换。把自动与手工 SIMD 结合，对 Q3 和 Q9 还有额外收益。
 
-![图 10：编译器自动向量化带来的指令数与时间变化](assets/precise-manual-figure-10-auto-vectorization.png)
+![图 10](assets/precise-manual-figure-10-auto-vectorization.png)
+
+图 10：编译器自动向量化带来的指令数与时间变化
 
 图 10 报告 ICC 18 自动向量化、手工 SIMD、以及二者结合的效果。自动向量化能降低部分查询的 instruction count，但不稳定改善 wall-clock time；手工 SIMD 更可控，二者结合在 Q3/Q9 上有额外收益。
 
@@ -400,7 +410,9 @@ Knights Landing 有 64-72 个较慢核心，每核两组 512-bit 向量单元。
 
 公平地说，这个平台为大量使用 SIMD 指令而设计，因此我们必须把手工 SIMD 优化后的测量也考虑在内。我们观察到，加入手工 SIMD 后，KNL 的 join 最多比 Skylake 快 50%，Q6 接近 3 倍（但标量版 Q6 的 cache 注意事项仍适用）。不过，退一步看整体性能时，我们还必须考虑每颗处理器的价格；KNL 的价格约为我们的 Intel 和 AMD 处理器的两倍，按每美元执行速度衡量时，商品 CPU 仍然胜出。
 
-![图 12：Skylake 与 Knights Landing 上的多核扩展](assets/precise-manual-figure-12-skylake-knights-landing.png)
+![图 12](assets/precise-manual-figure-12-skylake-knights-landing.png)
+
+图 12：Skylake 与 Knights Landing 上的多核扩展
 
 图 12 比较 Skylake、Knights Landing 以及带手工 SIMD 的 Knights Landing 在 SF=100 下随核心使用比例变化的吞吐。不同查询瓶颈不同：Q6 在高带宽和 SIMD 下收益明显，Q18 则受其他开销限制。
 

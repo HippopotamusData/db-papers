@@ -89,6 +89,8 @@ pygments_lang_class = true
 [project.markdown_extensions.pymdownx.inlinehilite]
 [project.markdown_extensions.pymdownx.magiclink]
 [project.markdown_extensions.pymdownx.smartsymbols]
+copyright = false
+registered = false
 [project.markdown_extensions.pymdownx.superfences]
 [project.markdown_extensions.pymdownx.tasklist]
 custom_checkbox = true

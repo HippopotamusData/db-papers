@@ -117,6 +117,8 @@ Impala 提供 C++ 用户自定义函数（UDF）API。最传统的写法是用 C
 
 表 3 展示随着查询复杂度增加，code generation 带来的端到端收益也增加：
 
+**表 3：启用与禁用代码生成时的查询时间。**
+
 | Query | Code generation disabled | Code generation enabled | Speedup |
 | --- | ---: | ---: | ---: |
 | `select count(*) from lineitem` | 3.554 sec | 2.976 sec | 1.19x |
@@ -143,6 +145,8 @@ group by l_returnflag, l_linestatus
 ```
 
 在表 4 中，我们考察运行时代码生成如何减少执行 TPC-H Q1 时的指令数。表中同时列出分支数：
+
+**表 4：TPC-H Q1 的指令数与分支数。**
 
 | 配置 | # Instructions | # Branches |
 | --- | ---: | ---: |

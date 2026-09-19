@@ -72,7 +72,9 @@ Calcite 包含典型数据库管理系统中的许多部分，但有意省略了
 
 图 1 展示 Calcite 架构的主要组件。Calcite 优化器使用关系运算符树作为内部表示。优化引擎主要由三类组件组成：规则、元数据提供者和规划器引擎；第 6 节将详细讨论这些组件。虚线表示框架可能与外部系统发生交互。
 
-![图 1：Apache Calcite 架构和交互。](assets/figure-01-calcite-architecture.png)
+![图 1](assets/figure-01-calcite-architecture.png)
+
+图 1：Apache Calcite 架构和交互。
 
 Calcite 有多种交互方式。第一，Calcite 包含查询解析器和验证器，可把 SQL 查询转换为关系运算符树。由于 Calcite 不包含存储层，它提供机制，通过适配器在外部存储引擎中定义表模式和视图，因此可运行在这些引擎之上。
 
@@ -121,13 +123,17 @@ Calcite 的主要特性之一是 calling convention trait。本质上，它表�
 
 图 2 给出一个例子：把 MySQL 中的 Products 表与 Splunk 中的 Orders 表连接。初始时，Orders 的扫描在 splunk convention 中，Products 的扫描在 jdbc-mysql convention 中。表必须在各自引擎中被扫描。连接最初处于 logical convention，表示尚未选择具体实现。SQL 查询含有可被适配器特定规则下推到 Splunk 的过滤器。一种实现是使用 Apache Spark 作为外部引擎，把连接转换为 spark convention，并把输入从 jdbc-mysql 和 splunk 转换到 spark convention。另一种更高效实现是利用 Splunk 可通过 ODBC 对 MySQL 执行查找的事实，把连接通过 splunk-to-spark converter 下推，使连接符合 splunk convention 并在 Splunk 引擎内部运行。
 
-![图 2：查询优化过程。](assets/figure-02-query-optimization-process.png)
+![图 2](assets/figure-02-query-optimization-process.png)
+
+图 2：查询优化过程。
 
 ## 5 适配器
 
 适配器是一种架构模式，定义 Calcite 如何纳入多种数据源以支持通用访问。图 3 展示其组件。适配器本质上由 model、schema 和 schema factory 组成。model 描述被访问数据源的物理属性；schema 是 model 中数据定义，即格式和布局；数据本身通过 table 物理访问。Calcite 与适配器中定义的表交互，在查询执行时读取数据。
 
-![图 3：Calcite 数据源适配器设计。](assets/figure-03-adapter-design.png)
+![图 3](assets/figure-03-adapter-design.png)
+
+图 3：Calcite 数据源适配器设计。
 
 适配器可定义一组加入规划器的规则。例如，它通常包含把各种逻辑关系表达式转换为适配器 convention 中对应关系表达式的规则。schema factory 从 model 获取元数据信息并生成 schema。
 
@@ -161,7 +167,9 @@ ORDER BY COUNT(*) DESC;
 
 该查询对应图 4a 的关系代数表达式。由于 WHERE 子句只作用于 sales 表，可把过滤器移动到连接之前，如图 4b 所示。这种优化可显著减少查询执行时间，因为不需要对不满足谓词的行执行连接。如果 sales 和 products 位于不同后端，把过滤器移到连接前还可能让适配器把过滤器下推到后端。Calcite 通过 FilterIntoJoinRule 实现该优化：它匹配以 join 节点为父节点的 filter 节点，并检查该 filter 是否能由 join 执行。
 
-![图 4：FilterIntoJoinRule 应用。](assets/figure-04-filter-into-join-rule.png)
+![图 4](assets/figure-04-filter-into-join-rule.png)
+
+图 4：FilterIntoJoinRule 应用。
 
 这一优化展示了 Calcite 优化方法的灵活性。
 

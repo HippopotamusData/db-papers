@@ -31,7 +31,9 @@ TPC-H 仍然是关系型 OLAP 系统中最广泛使用的基准。它包含一�
 
 TPC-H 对关系数据库系统评估仍然重要。每年都有数百篇论文引用该基准。尽管 TPC-H 有诸多缺点，例如非事实表线性扩展、数据分布较均匀、使用 3NF 而非这类分析负载中更常见的星型模式 [35]、手写查询与真实负载自动生成的查询不完全可比 [56]，但它仍比后继的 TPC-DS 在研究中更常被讨论。
 
-![图 1：Google Scholar 中引用 TPC-H、TPC-DS、TPCx-HS 的论文数量趋势。](./assets/figure-01-publications.png)
+![图 1](./assets/figure-01-publications.png)
+
+图 1：Google Scholar 中引用 TPC-H、TPC-DS、TPCx-HS 的论文数量趋势。
 
 在两者发布后的前九年中，TPC-H（1999–2007）被 1,633 篇论文引用，TPC-DS 在对应九年窗口中被引用 1,094 次，图 1 直观显示了这种研究采用度差异。
 
@@ -79,7 +81,9 @@ Hyrise 的优化既有纯规则优化，例如常量算术表达式的一次性�
 
 算子一次处理一张表。除聚合与投影外，它们输出指向原表的 position list [1]。投影在物化输入上解释执行表达式树；sort 使用 stable sort，多列排序要多次扫描；实验只使用 hash aggregate。Hyrise 遵循 insert-only 原则，更新通过使旧行失效并插入新值实现，MVCC validate 算子负责移除对当前事务不可见的行 [51, 57]。图 2 隐藏耗时不足 1% 的算子，因此单条柱形不一定加总为 100%；UnionPositions 用于合并析取谓词的结果；最右柱是各查询相对成本的算术平均，不按绝对执行时间加权。Q11、Q22 的 table scan 占比被高估，因为其中还计入故意未扁平化子查询的求值成本。
 
-![图 2：Hyrise 执行 TPC-H 时各算子的相对耗时占比。](./assets/figure-02-operator-time.png)
+![图 2](./assets/figure-02-operator-time.png)
+
+图 2：Hyrise 执行 TPC-H 时各算子的相对耗时占比。
 
 ### 3.2 初步评估
 
@@ -87,7 +91,9 @@ Hyrise 的优化既有纯规则优化，例如常量算术表达式的一次性�
 
 结果显示，Hyrise 的 partition pruning 让 Q6 和 Q20 可以跳过超过 80% 数据，因此在这些查询上表现突出；另一方面，Hyrise 的 hash 聚合相对较慢，使其在 Q1 和 Q18 上表现较弱。
 
-![图 3：不同数据库系统在 TPC-H 查询上的单线程执行时间对比。](./assets/figure-03-dbms-comparison.png)
+![图 3](./assets/figure-03-dbms-comparison.png)
+
+图 3：不同数据库系统在 TPC-H 查询上的单线程执行时间对比。
 
 ### 3.3 方法论
 
@@ -113,7 +119,9 @@ Hyrise 的优化既有纯规则优化，例如常量算术表达式的一次性�
 
 先前研究发现 Q5 最坏与最好次序相差超过 100 倍 [37]。Hyrise 使用“反向贪心”、先选两张最大表时，Q5 与 Q7 都会耗尽内存，验证了该风险；其余查询差异不大。对 TPC-H，简单 min/max/count/distinct-count 统计配合 greedy 已足以处理除 Q7 外的查询。我们建议早期 DBMS 先投入其它优化，再实现 DPccp 等复杂连接排序；TPC-DS 等负载才更依赖复杂算法和统计。
 
-![图 4：DPccp（1）与 greedy（2）连接排序相对原 SQL 连接顺序的收益；本图及后续各图省略变化小于 10% 的查询。](./assets/figure-04-join-ordering.png)
+![图 4](./assets/figure-04-join-ordering.png)
+
+图 4：DPccp（1）与 greedy（2）连接排序相对原 SQL 连接顺序的收益；本图及后续各图省略变化小于 10% 的查询。
 
 ### 4.2 谓词下推与排序
 
@@ -123,7 +131,9 @@ Hyrise 的 predicate pushdown 从 LQP 顶部递归向下，遇到谓词先移除
 
 即使编译型系统能把连续谓词融合到一个算子、不物化中间结果 [18]，也会因先执行最严格谓词而受益：短路求值可以跳过其它列的加载。图 5 的基线保留 SQL 原始谓词位置，join 读取未过滤表、aggregate 先计算随后丢弃的组；子查询已经扁平化但不重新排序。第一组柱只启用下推，第二组同时启用下推和排序。多数查询受益，极端情况下基数降低多个数量级；Q14 的 `l_shipdate` 谓词会移除 `lineitem` 超过 98% 的行，再与未过滤 `part` 连接。TPC-H 的谓词下推完全可规则化、无需统计，应是最早实现的优化之一。
 
-![图 5：谓词下推与谓词排序的性能收益。](./assets/figure-05-predicate-placement.png)
+![图 5](./assets/figure-05-predicate-placement.png)
+
+图 5：谓词下推与谓词排序的性能收益。
 
 ### 4.3 BETWEEN 组合
 
@@ -133,7 +143,9 @@ Q19 把 `l_quantity` 范围写成 `>=` 与 `<=`；Q4、Q5、Q6、Q10、Q12、Q14
 
 该优化有两项收益：物化每个算子中间结果的系统可把两个算子合成一个；组合后的谓词也通常比任一单独边界更严格，会在计划中排得更靠下、更早缩减基数。图 6 中只有 Q14、Q15 分别明显提高 13% 与 66%；其它查询的范围谓词在计划中过晚，已无法产生显著影响。
 
-![图 6：将上下界谓词组合为单一范围谓词后，Q14 和 Q15 的收益。](./assets/figure-06-between-composition.png)
+![图 6](./assets/figure-06-between-composition.png)
+
+图 6：将上下界谓词组合为单一范围谓词后，Q14 和 Q15 的收益。
 
 ### 4.4 连接依赖谓词复制
 
@@ -145,7 +157,9 @@ Q7、Q19 含有跨多表但不是连接条件的谓词。例如 Q7 的 `(n1.name
 
 实现上适合把它放进 predicate pushdown：该过程既能同时看到无法下推的跨表谓词和对应 join，新建谓词也能随即进入两侧输入的后续下推。
 
-![图 7：在 Q7 和 Q19 中生成额外谓词后的过滤收益。](./assets/figure-07-predicate-duplication.png)
+![图 7](./assets/figure-07-predicate-duplication.png)
+
+图 7：在 Q7 和 Q19 中生成额外谓词后的过滤收益。
 
 ### 4.5 物理局部性
 
@@ -157,7 +171,9 @@ TPC-H 的数据生成存在排序和相关性。某些列与插入顺序、chunk
 
 仅聚簇却不暴露信息时效果有正有负：Q18 在未过滤的 `GROUP BY l_orderkey` 上失去原有局部性而变慢，按 `l_shipdate` 过滤的查询即便没有显式 pruning，也会因 cache 局部性更好、branch misprediction 更少 [49] 而加速，总体大致抵消。允许访问规避后，收益超过 join/aggregate 局部性损失；Q6 排除 85% 数据，使吞吐提高三倍以上。与类似评估 [26, 30] 相比，Hyrise 在 scan、projection 上相对省时，在 join、aggregate 上花时偏多，原因是后两类算子物化了超过必要量的数据。
 
-![图 8：不同 clustering 属性与 access avoidance 对查询性能的影响。](./assets/figure-08-clustering.png)
+![图 8](./assets/figure-08-clustering.png)
+
+图 8：不同 clustering 属性与 access avoidance 对查询性能的影响。
 
 ### 4.6 相关列
 
@@ -167,7 +183,9 @@ TPC-H 的数据生成存在排序和相关性。某些列与插入顺序、chunk
 
 另一相关性是 `l_shipdate` 与 `l_returnflag`：当 `l_receiptdate <= 1995-06-17` 时 return flag 随机为 `R` 或 `A`，否则为 `N`。因此若一个 chunk 的 `l_shipdate > 1995-06-18`，查询 `l_returnflag='R'` 必无结果。Q10 可借此避免读取一半 `lineitem`。`o_orderstatus`、`l_linestatus` 也与聚簇日期有关，但 TPC-H 查询没有以可获益方式使用它们。图 9 显示，允许这种跨列推导后，Q10、Q12 分别明显提高 13%、10%。
 
-![图 9：利用相关列信息对谓词性能的影响。](./assets/figure-09-correlated-columns.png)
+![图 9](./assets/figure-09-correlated-columns.png)
+
+图 9：利用相关列信息对谓词性能的影响。
 
 **表 1：chunk 大小为 100,000 行时的剪枝比例。** 数值会随随机查询参数略有变化；`n/a` 表示查询不访问相应表。
 
@@ -192,7 +210,9 @@ TPC-H 有 6 条相关子查询：Q2、Q4、Q17、Q20、Q21、Q22。最直接实�
 
 这是影响最大的阻塞点。图 10 中 6 条查询缩短至少两个数量级：Q2、Q17、Q20 来自相关 scalar subquery，Q4、Q21、Q22 来自相关 `(NOT) EXISTS`。Q18 的收益来自把无相关 `IN` 改写为 join；Q15 虽无相关子查询，扁平化 scalar subquery 后允许子计划复用。具体影响取决于外层关系基数。
 
-![图 10：子查询扁平化对相关子查询的性能影响。](./assets/figure-10-subquery-flattening.png)
+![图 10](./assets/figure-10-subquery-flattening.png)
+
+图 10：子查询扁平化对相关子查询的性能影响。
 
 ### 4.8 半连接归约
 
@@ -202,9 +222,13 @@ TPC-H 有 6 条相关子查询：Q2、Q4、Q17、Q20、Q21、Q22。最直接实�
 
 这种做法把同一 join 谓词提前重复应用，以缩小中间结果 [54]；它与执行引擎中的 join bloom filter 正交，二者组合优于任一单独使用，bloom filter 精度选择不在本文范围。Q4 也适用：`l_commitdate < l_receiptdate` 只把 `lineitem` 缩小不到 40%，而日期过滤后不到 5% 的 `orders` 合格；先用 semi join 按 `orders` 过滤，可显著减少昂贵谓词输入。
 
-![图 11：Q17 扁平化查询计划在有/无 semi join reduction 时的对比。](./assets/figure-11-flattened-plan.png)
+![图 11](./assets/figure-11-flattened-plan.png)
 
-![图 12：semi join reduction 对多个查询的性能收益。](./assets/figure-12-semi-join-reduction.png)
+图 11：Q17 扁平化查询计划在有/无 semi join reduction 时的对比。
+
+![图 12](./assets/figure-12-semi-join-reduction.png)
+
+图 12：semi join reduction 对多个查询的性能收益。
 
 图 12 中 Q2、Q17、Q20 通过外部谓词过滤子查询表，Q4、Q21 则提前去掉后续不会匹配的行。如果对所有 join 无条件加入 semi join，9 条查询至少回退 10%；根据输入基数选择后，其中 6 条回退消失，剩余回退来自基数估计不准，而非方法本身。
 
@@ -218,7 +242,9 @@ TPC-H 中子计划语法相同，递归比较 LQP 子树即可发现；真实情
 
 Hyrise 的 column pruning 会过早删除未使用列，反而妨碍复用。Q21 一个子查询需要 `l_receiptdate`、`l_commitdate`，另一个不需要，剪枝后子树不再相同。图 13 因此给出两组实验：当前复用，以及关闭 column pruning 后暴露更多公共子计划；关闭剪枝造成多余投影，因此出现的回退不代表复用本身有害。Boncz 等人还报告 Q20 的机会（CP5.3：Overlap between Outer- and subquery）[11]，可能源于把谓词复制进内层；Hyrise 使用 semi join，因而没有同样子计划。HyPer 报告去相关、selective join pushdown 与复用合计加速 500 倍 [11]；Hyrise 测得可比的 520 倍。
 
-![图 13：逻辑计划中重复 join 或 predicate 对应的 subplan reuse 收益。](./assets/figure-13-subplan-reuse.png)
+![图 13](./assets/figure-13-subplan-reuse.png)
+
+图 13：逻辑计划中重复 join 或 predicate 对应的 subplan reuse 收益。
 
 ### 4.10 结果复用
 
@@ -277,7 +303,9 @@ TPC-H 在 Q12 使用 2 个常量的 `IN`，Q16 使用 8 个，Q19 分别使用 2
 
 落到 TPC-H，只有 Q12、Q19 从析取改写获益。Q19 的 join、aggregate 成本压过 `p_type` 过滤，收益仅 3.5%；Q12 提高 60%，原因是用更高效 scan 替代解释式表达式求值器。Q19 的 `l_shipmode IN ('AIR','AIR REG')` 还能重写为 `l_shipmode='AIR'`：TPC-H 规范只定义七种运输方式，其中有 `REG AIR`、没有 `AIR REG` [55, §4.2.2.13]。拥有准确值域统计的优化器可删掉不可能值，使 Q19 整体吞吐再提高 12%；我们无法判断这是规范有意设置的优化机会，还是笔误。
 
-![图 14：large IN clause 在不同求值策略下的运行时间。](./assets/figure-14-large-in.png)
+![图 14](./assets/figure-14-large-in.png)
+
+图 14：large IN clause 在不同求值策略下的运行时间。
 
 ## 6. 总体影响与实现经验
 

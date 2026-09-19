@@ -69,7 +69,9 @@ LSM-tree 由一组大小指数增长的组件组成，从 `C0` 到 `Ck`。`C0` �
 
 执行查找时，LSM-tree 可能需要搜索多个组件。`C0` 中包含最新数据，随后依次搜索 `C1` 到 `Ck`。因此，为取得一个 key-value pair，LSM-tree 可能需要多次读取。正因为插入和查找都很高效，LSM-tree 最适合写入密集、但查找比率仍然较高的场景 [43]。
 
-![图 1：LSM-tree 与 LevelDB 架构。LevelDB 插入一对 key-value 时依次经过 log file、memtable、immutable memtable、L0 SSTable，以及后续层级 compaction。](assets/figures/figure-01-lsm-leveldb.png)
+![图 1](assets/figures/figure-01-lsm-leveldb.png)
+
+图 1：LSM-tree 与 LevelDB 架构。LevelDB 插入一对 key-value 时依次经过 log file、memtable、immutable memtable、L0 SSTable，以及后续层级 compaction。
 
 ### 2.2 LevelDB
 
@@ -93,7 +95,9 @@ $$
 \text{Read amplification} _ {\text{worst}} = 24 \times 14 = 336
 $$
 
-![图 2：LevelDB 在 1GB 与 100GB 数据库上的写放大与读放大。](assets/figures/figure-02-write-read-amplification.png)
+![图 2](assets/figures/figure-02-write-read-amplification.png)
+
+图 2：LevelDB 在 1GB 与 100GB 数据库上的写放大与读放大。
 
 为测量实际 amplification，原文先加载 1KB key-value pairs，再均匀随机查询 100,000 个条目，并比较 1GB 与 100GB 数据库。图 2 显示，数据库从 1GB 增至 100GB 后，write amplification 从 3.1 增至 14，read amplification 从 8.2 增至 327。写放大随数据库增大，是因为数据更可能沿层级继续向下移动；读放大增加，则因为大库无法把所有 SSTable 的 index block 与 bloom filter 都缓存进内存。
 
@@ -105,7 +109,9 @@ $$
 
 但与 HDD 不同，SSD 上随机读相对于顺序读的性能差距小得多；并发随机读还能利用 SSD 内部并行度，在某些负载上达到接近顺序读的聚合吞吐 [17]。我们在 500GB Samsung 840 EVO SSD 上测得：单线程随机读吞吐随请求大小增加而上升；32 线程并发随机读在请求大于 16KB 时可接近顺序吞吐。更高端的 SSD 上，并发随机读与顺序读之间的差距还会更小 [3, 39]。
 
-![图 3：SSD 上顺序读、单线程随机读和 32 线程随机读在不同请求大小下的吞吐。](assets/figures/figure-03-ssd-random-sequential-reads.png)
+![图 3](assets/figures/figure-03-ssd-random-sequential-reads.png)
+
+图 3：SSD 上顺序读、单线程随机读和 32 线程随机读在不同请求大小下的吞吐。
 
 因此，在高性能 SSD 上使用传统 LSM-tree，可能把大量设备带宽浪费在过度读写上。WiscKey 的目标是改进 SSD 上 LSM-tree 的性能，使其更有效利用设备带宽。
 
@@ -124,17 +130,17 @@ WiscKey 是从 LevelDB 派生的单机持久 key-value store。它既可作为�
 
 WiscKey 的设计目标包括：
 
-- **低 write amplification。** write amplification 会引入不必要写入，消耗 SSD 写带宽并缩短设备寿命。WiscKey 需要尽量降低它。
+- **低 write amplification。** write amplification 会引入不必要写入。即使 SSD 的带宽比硬盘更高，大量 write amplification 仍可能消耗大部分写带宽（超过 90% 并不少见），并因擦除次数有限而缩短 SSD 寿命。因此，需要尽量降低 write amplification，以改善工作负载性能和 SSD 寿命。
 - **低 read amplification。** read amplification 会降低查找吞吐，并把大量无用数据加载进内存，降低 cache 效率。WiscKey 目标是用较小 read amplification 加速查找。
 - **SSD optimized。** WiscKey 的 I/O 模式要匹配 SSD 性能特征，有效利用顺序写和并行随机读。
-- **Feature-rich API。** WiscKey 仍要支持让 LSM-tree 流行的现代特性，例如范围查询和快照。
+- **Feature-rich API。** WiscKey 仍要支持让 LSM-tree 流行的现代特性，例如范围查询和快照。范围查询允许扫描连续的 key-value pair 序列；快照允许捕获数据库在某一时刻的状态，随后在该状态上执行查找。
 - **现实 key-value 大小。** 现代负载中 key 通常较小，例如 16B [7, 8, 11, 22, 35]；value 大小可从 100B 到 4KB 以上不等 [6, 11, 22, 28, 32, 49]。WiscKey 要在这些现实大小范围内保持高性能。
 
 ### 3.2 Key-Value Separation
 
-LSM-tree 的主要性能成本来自 compaction：系统不断排序 SSTable 文件。compaction 会读入多个文件、排序并写回，显著影响前台负载。但排序主要是为了高效检索；对范围查询而言，key 需要有序，value 不一定必须随 key 一起排序。
+LSM-tree 的主要性能成本来自 compaction：系统不断排序 SSTable 文件。compaction 会读入多个文件、排序并写回，可能显著影响前台负载性能。但排序是为了高效检索：排序后，范围查询（即 scan）对多个文件的访问大多是顺序访问，而点查询在每层至多访问一个文件。
 
-WiscKey 的关键洞察是：compaction 只需要排序 key，value 可以单独管理 [42]。由于 key 通常远小于 value，只 compact key 可显著减少排序期间的数据量。WiscKey 在 LSM-tree 中只存 key 和 value location，实际 value 以 SSD-friendly 方式存放在其他位置。这样，在相同数据库大小下，WiscKey 的 LSM-tree 明显小于 LevelDB，从而降低现代负载中的 write amplification。
+WiscKey 的关键洞察是：compaction 只需要排序 key，value 可以单独管理 [42]。由于 key 通常小于 value，只 compact key 可显著减少排序期间的数据量。WiscKey 在 LSM-tree 中只存 key 和 value location，实际 value 以 SSD-friendly 方式存放在其他位置。这样，在相同数据库大小下，WiscKey 的 LSM-tree 明显小于 LevelDB，从而显著降低 value 大小中等偏大的现代负载中的 write amplification。
 
 例如，假设 key 为 16B，value 为 1KB，key 在 LSM-tree 中 write amplification 为 10，value amplification 为 1，则 WiscKey 有效 write amplification 为：
 
@@ -144,7 +150,9 @@ $$
 
 除了提升应用写性能，减少写入也有助于延长 SSD 寿命。查找时，系统先在 LSM-tree 中找到 key 和 value address，再从 vLog 读取 value。虽然这增加了一次 value log 访问，但 WiscKey 的 LSM-tree 比同等数据库上的 LevelDB 小得多，查找可能只需搜索更少的 table-file 层级，而且 LSM-tree 的很大一部分可缓存在内存中。因此，每次查找只需一次用于取得 value 的随机读，性能可以优于 LevelDB。例如，key 为 16B、value 为 1KB、整个数据集为 100GB 时，若 value location 和 size 共占 12B，WiscKey 的 LSM-tree 约为 2GB，很容易缓存在拥有 100GB 以上内存的现代服务器中。
 
-![图 4：WiscKey 在 SSD 上的数据布局。key 和 value 地址存入 LSM-tree，实际 value 追加到独立 value log。](assets/figures/figure-04-wisckey-data-layout.png)
+![图 4](assets/figures/figure-04-wisckey-data-layout.png)
+
+图 4：WiscKey 在 SSD 上的数据布局。key 和 value 地址存入 LSM-tree，实际 value 追加到独立 value log。
 
 图 4 展示了 WiscKey 架构：key 存在 LSM-tree 中，value 存在独立的 value-log file（vLog）中；LSM-tree 中与 key 一起存放的“value”实际是 vLog 中真实 value 的地址。用户插入 key-value pair 时，WiscKey 先把 value 追加到 vLog，再把 key 和 value address `<vLog-offset, value-size>` 插入 LSM-tree。删除 key 时只从 LSM-tree 删除，不改动 vLog；vLog 中不再有对应 LSM-tree key 的 value 随后由垃圾回收器处理。查询时，WiscKey 先在 LSM-tree 中查找 key 并取得 value address，再从 vLog 读取 value；点查询和范围查询都遵循这一过程。
 
@@ -168,7 +176,9 @@ WiscKey 在范围查询中对 vLog value 做预取。当前接口返回 iterator
 
 WiscKey 在 vLog 中维护 head 和 tail。所有新写入追加到 head；垃圾回收线程从 tail 开始顺序扫描一段 vLog，检查其中每个 value 是否仍有效。判断方式是读取该 value 对应 key，在 LSM-tree 中查当前 value address 是否仍指向这个位置。有效 value 被重新追加到 vLog head，并在 LSM-tree 中更新地址；无效 value 被丢弃。随后 tail 前移，旧空间可回收。
 
-![图 5：支持垃圾回收的 WiscKey vLog 布局。head 与 tail 持久保存在 LSM-tree 中，只有垃圾回收线程移动 tail，普通写入追加到 head。](assets/figures/figure-05-garbage-collection-layout.png)
+![图 5](assets/figures/figure-05-garbage-collection-layout.png)
+
+图 5：支持垃圾回收的 WiscKey vLog 布局。head 与 tail 持久保存在 LSM-tree 中，只有垃圾回收线程移动 tail，普通写入追加到 head。
 
 为避免垃圾回收期间崩溃丢数据，WiscKey 先把有效 value 追加到 vLog 并对 vLog 调用 `fsync()`，然后把这些新 value address 和当前 tail 同步写入 LSM-tree。tail 以形如 `<"tail", tail-vLog-offset>` 的条目存储。最后才回收 vLog 空间。垃圾回收可周期触发、阈值触发，也可离线运行。
 
@@ -192,11 +202,13 @@ LSM-tree 实现还会在用户明确请求 synchronous insert 时保证 key-valu
 
 #### 3.4.1 Value-log Write Buffer
 
-每次 `Put()` 都需要通过 `write()` 系统调用把 value 追加到 vLog。对插入密集型负载，大量小写会在文件系统中产生显著开销，在快速存储设备上尤其如此 [15, 44]。图 6 给出了在 ext4（Linux 3.14）上顺序写入 10GB 文件、最后执行一次 `fsync()` 的总耗时；小写入的每次系统调用开销会大量累积，写入单位大于 4KB 后才能充分利用设备吞吐。
+每次 `Put()` 都需要通过 `write()` 系统调用把 value 追加到 vLog。对插入密集型负载，大量小写可能在文件系统中产生显著开销，在快速存储设备上尤其如此 [15, 44]。图 6 给出了在 ext4（Linux 3.14）上顺序写入 10GB 文件、最后执行一次 `fsync()` 的总耗时；小写入的每次系统调用开销会大量累积，当写入单位较大（大于 4KB）时，可充分利用设备吞吐。
 
-![图 6：写入单位大小对写 10GB 文件总耗时的影响。小 `write()` 调用开销会显著拉长运行时间。](assets/figures/figure-06-write-unit-size.png)
+![图 6](assets/figures/figure-06-write-unit-size.png)
 
-为降低开销，WiscKey 把 value 缓存在 userspace buffer 中，只在 buffer 大小超过阈值或用户请求 synchronous insertion 时 flush。因此，它只发出大块写入并减少 `write()` 系统调用次数。lookup 时，WiscKey 先搜索 vLog buffer，若未找到才真正读取 vLog。显然，崩溃时 buffer 中的数据可能丢失；其 crash-consistency guarantee 与 LevelDB 相同。
+图 6：写入单位大小对写 10GB 文件总耗时的影响。小 `write()` 调用开销会显著拉长运行时间。
+
+为降低开销，WiscKey 把 value 缓存在 userspace buffer 中，只在 buffer 大小超过阈值或用户请求 synchronous insertion 时 flush。因此，它只发出大块写入并减少 `write()` 系统调用次数。lookup 时，WiscKey 先搜索 vLog buffer，若未找到才真正读取 vLog。显然，崩溃时 buffer 中的数据可能丢失；其 crash-consistency guarantee 与 LevelDB 相似。
 
 #### 3.4.2 优化 LSM-tree Log
 
@@ -226,27 +238,39 @@ WiscKey 基于 LevelDB 1.18 实现。创建新数据库时，WiscKey 创建 vLog
 
 图 7 给出了不同 value 大小下 LevelDB 与 WiscKey 的顺序加载吞吐。两个系统的吞吐都随 value 增大而提高，但即使 value 达到实验中的最大值 256KB，LevelDB 吞吐仍远低于设备带宽。为进一步分析，图 8 把 LevelDB 每次实验的时间分解为写 log file、插入 memtable，以及等待 memtable flush 到设备等部分。对较小的 key-value pair，写 log file 因图 6 所示的小写开销而占据最大比例；对较大的 pair，log 写入和 memtable 排序效率提高，memtable flush 成为瓶颈。WiscKey 不写 LSM-tree log，并对 vLog append 做缓冲，因此 value 超过 4KB 后可达到全部设备带宽；即使 value 很小也比 LevelDB 快 3 倍。
 
-![图 7：顺序加载吞吐。](assets/figures/figure-07-sequential-load-performance.png)
+![图 7](assets/figures/figure-07-sequential-load-performance.png)
 
-![图 8：LevelDB 顺序加载时间分解。](assets/figures/figure-08-leveldb-load-breakup.png)
+图 7：顺序加载吞吐。
+
+![图 8](assets/figures/figure-08-leveldb-load-breakup.png)
+
+图 8：LevelDB 顺序加载时间分解。
 
 图 9 给出了随机加载吞吐。LevelDB 吞吐仅从 2MB/s（64B value）变化到 4.1MB/s（256KB value）；WiscKey 吞吐随 value 增大，并在 value 超过 4KB 后达到设备写入峰值。对 1KB 和 4KB value，WiscKey 的吞吐分别是 LevelDB 的 46 倍和 111 倍。LevelDB 吞吐低，是因为 compaction 消耗大量设备带宽，同时为了避免第 2.2 节所述的 `L0` 过载而减慢前台写入；WiscKey 的 compaction 开销很小，因而可有效利用全部设备带宽。
 
-![图 9：随机加载吞吐。](assets/figures/figure-09-random-load-performance.png)
+![图 9](assets/figures/figure-09-random-load-performance.png)
+
+图 9：随机加载吞吐。
 
 图 10 进一步给出两个系统的 write amplification。LevelDB 的 write amplification 始终大于 12；WiscKey 的值则迅速下降，在 value 达到 1KB 时接近 1，原因是 WiscKey 的 LSM-tree 显著更小。
 
-![图 10：随机加载时 LevelDB 与 WiscKey 的写放大。](assets/figures/figure-10-random-load-write-amplification.png)
+![图 10](assets/figures/figure-10-random-load-write-amplification.png)
+
+图 10：随机加载时 LevelDB 与 WiscKey 的写放大。
 
 #### 4.1.2 查询性能
 
 我们接下来比较 LevelDB 与 WiscKey 的随机查找（point query）和范围查询性能。图 11 是在 100GB 随机加载数据库上执行 100,000 次随机查找的结果。尽管 WiscKey 的随机查找需要同时检查 LSM-tree 和 vLog，其吞吐仍远高于 LevelDB：value 为 1KB 时约为 LevelDB 的 12 倍。value 较大时，WiscKey 吞吐只受设备随机读吞吐限制；LevelDB 则因第 2.3 节所述的高 read amplification 而吞吐很低。WiscKey 的 read amplification 因 LSM-tree 更小而较低，并且 compaction 强度更小、避免了大量后台读写。
 
-![图 11：随机查找吞吐。](assets/figures/figure-11-random-lookup-performance.png)
+![图 11](assets/figures/figure-11-random-lookup-performance.png)
+
+图 11：随机查找吞吐。
 
 图 12 给出了从 100GB 数据库扫描 4GB 数据的范围查询性能。对随机加载数据库，LevelDB 要读取不同层中的多个文件；WiscKey 则需要随机访问 vLog，但会利用并行随机读。随着 value 增大，两个系统的吞吐起初都会提高；超过 4KB 后，一个 SSTable file 只能容纳少量 key-value pair，打开大量 SSTable file 并读取其中 index block 和 bloom filter 的开销开始主导 LevelDB。较大的 key-value pair 上，WiscKey 可达到设备顺序带宽，最高约为 LevelDB 的 8.4 倍。对于 64B key-value pair，WiscKey 因设备对小请求的并行随机读吞吐有限而比 LevelDB 慢 12 倍；这是数据库随机写入且 vLog 中数据无序的最坏情形。在并行随机读吞吐更高的高端 SSD 上，WiscKey 的相对表现会更好 [3]。
 
-![图 12：范围查询吞吐，比较随机加载与顺序加载数据库。](assets/figures/figure-12-range-query-performance.png)
+![图 12](assets/figures/figure-12-range-query-performance.png)
+
+图 12：范围查询吞吐，比较随机加载与顺序加载数据库。
 
 图 12 还给出了数据有序（即数据库顺序加载）时的范围查询性能；此时 LevelDB 与 WiscKey 都能顺序扫描。其趋势与随机加载数据库相同：64B pair 时，WiscKey 同时从 vLog 读取 key 和 value、浪费部分带宽，因此慢 25%；较大 pair 时，WiscKey 快 2.8 倍。由此可见，对于小 key-value pair，重新组织（排序）随机加载数据库中的 log，可使 WiscKey 的范围查询性能与 LevelDB 相当。
 
@@ -256,7 +280,9 @@ WiscKey 基于 LevelDB 1.18 实现。创建新数据库时，WiscKey 创建 vLog
 
 若垃圾回收器读到的数据 100% 无效，吞吐只降低 10%，因为它从 vLog tail 读取数据、只把有效 key-value pair 写回 head，而此时不需要写回任何 pair。其他空闲比例下吞吐下降约 35%，因为垃圾回收线程会执行额外写入。所有情形下，即使垃圾回收正在运行，WiscKey 仍至少比 LevelDB 快 70 倍。
 
-![图 13：不同空闲空间比例下，后台垃圾回收对 WiscKey 吞吐的影响。](assets/figures/figure-13-garbage-collection.png)
+![图 13](assets/figures/figure-13-garbage-collection.png)
+
+图 13：不同空闲空间比例下，后台垃圾回收对 WiscKey 吞吐的影响。
 
 #### 4.1.4 崩溃一致性
 
@@ -274,7 +300,9 @@ LevelDB 的空间开销来自负载结束时未被垃圾回收的 invalid key-va
 
 系统无法同时最小化 read amplification、write amplification 和 space amplification。LevelDB 把排序和垃圾回收耦合，牺牲较高 write amplification 换取较低 space amplification，但会显著影响负载性能。WiscKey 解耦排序和垃圾回收，运行时用更多空间换取更低 I/O amplification；垃圾回收可在后台或低负载时执行。
 
-![图 14：随机加载 100GB 数据集后，LevelDB 与 WiscKey 的实际数据库大小。](assets/figures/figure-14-space-amplification.png)
+![图 14](assets/figures/figure-14-space-amplification.png)
+
+图 14：随机加载 100GB 数据集后，LevelDB 与 WiscKey 的实际数据库大小。
 
 #### 4.1.6 CPU 使用率
 
@@ -289,7 +317,7 @@ LevelDB 的空间开销来自负载结束时未被垃圾回收的 invalid key-va
 
 ### 4.2 YCSB Benchmarks
 
-YCSB [21] 提供标准六类工作负载，用于评估 key-value stores。我们在 100GB 数据库上比较 LevelDB、RocksDB [25] 和 WiscKey，并额外运行始终开启后台垃圾回收的 WiscKey，以测量最坏情况性能。RocksDB [25] 是 SSD 优化版 LevelDB，包含多个 memtable 和后台 compaction 线程等优化。实验使用 1KB 与 16KB 两种 value 大小，并关闭压缩。
+YCSB [21] 提供标准六类工作负载，用于评估 key-value stores。我们在 100GB 数据库上比较 LevelDB、RocksDB [25] 和 WiscKey，并额外运行始终开启后台垃圾回收的 WiscKey，以测量最坏情况性能。RocksDB [25] 是 SSD 优化版 LevelDB，包含多个 memtable 和后台 compaction 线程等优化。我们使用 RocksDB 的默认配置参数。实验使用 1KB 与 16KB 两种 value 大小，并关闭压缩。
 
 WiscKey 在所有六个 YCSB 工作负载中显著优于 LevelDB 和 RocksDB。加载时，1KB value 下 WiscKey 在通常情况下至少快 50 倍，在始终垃圾回收的最坏情况下至少快 45 倍；16KB value 下即使最坏情况也快 104 倍。
 
@@ -299,7 +327,9 @@ WiscKey 在所有六个 YCSB 工作负载中显著优于 LevelDB 和 RocksDB。�
 
 Workload-E 包含多个小范围查询，每个查询取得 1 到 100 个 key-value pair。与此前扫描 4GB 的 microbenchmark 不同，每个范围的第一个 key 都会变成一次随机查找——这是对 WiscKey 有利的情形；因此即使 value 为 1KB，WiscKey 也快于 RocksDB 和 LevelDB。
 
-![图 15：YCSB macrobenchmark 性能。横轴为工作负载，纵轴为相对 LevelDB 的归一化性能，柱上数字为实际吞吐（K ops/s）；(a) 与 (b) 分别使用 1KB 和 16KB value。Load 构造 100GB 数据库，与 random-load microbenchmark 相似；Workload-A 为 50% read、50% update，Workload-B 为 95% read、5% update，Workload-C 为 100% read，三者的 key 均取自 Zipf 分布且 update 作用于已有 key；Workload-D 为 95% read、5% 插入新 key，使用 temporally weighted distribution；Workload-E 为 95% range query、5% 插入新 key，使用 Zipf 分布；Workload-F 为 50% read、50% read-modify-write，使用 Zipf 分布。](assets/figures/figure-15-ycsb-macrobenchmark.png)
+![图 15](assets/figures/figure-15-ycsb-macrobenchmark.png)
+
+图 15：YCSB macrobenchmark 性能。横轴为工作负载，纵轴为相对 LevelDB 的归一化性能，柱上数字为实际吞吐（K ops/s）；(a) 与 (b) 分别使用 1KB 和 16KB value。Load 构造 100GB 数据库，与 random-load microbenchmark 相似；Workload-A 为 50% read、50% update，Workload-B 为 95% read、5% update，Workload-C 为 100% read，三者的 key 均取自 Zipf 分布且 update 作用于已有 key；Workload-D 为 95% read、5% 插入新 key，使用 temporally weighted distribution；Workload-E 为 95% range query、5% 插入新 key，使用 Zipf 分布；Workload-F 为 50% read、50% read-modify-write，使用 Zipf 分布。
 
 ## 5. 相关工作
 

@@ -10,10 +10,15 @@ from pathlib import Path
 from markdown_visibility import reader_visible_markdown
 
 
-AUTHOR_METADATA = re.compile(r"^(?:[-*]\s*)?(?:\*\*)?作者(?:单位|贡献)?[:：]")
+AUTHOR_METADATA = re.compile(r"^(?:[-*]\s*)?(?:\*\*)?作者(?:单位|贡献|地址)?[:：]")
+AUTHOR_AFFILIATION = re.compile(
+    r"^(?:[一二三四五六七八九十\d]+位)?作者的(?:机构|单位|地址)"
+    r"(?:[、与和及](?:机构|单位|地址))*(?:均)?(?:为|是)[:：]"
+)
 QUALIFIED_AUTHOR = re.compile(
     r"(?:本文|该文|原|第一|第二|第三|通信|通讯|共同|部分|其他|一些|每个|多位|几位|"
-    r"数据源|扩展|演示|所有者或)作者|(?:合|创|工)作者|的作者|作者版本"
+    r"数据源|扩展|演示|所有者或|所有者/)作者|(?:合|创|工)作者|的作者|作者版本|"
+    r"\b[A-Za-z][A-Za-z0-9_-]*(?:[ \t]+[A-Za-z][A-Za-z0-9_-]*)*[ \t]+论文作者"
 )
 
 
@@ -30,9 +35,16 @@ def find_ambiguous_author_narration(
         if line.startswith("```"):
             in_fence = not in_fence
             continue
-        if in_fence or line.startswith("#") or AUTHOR_METADATA.match(line.strip()):
+        if (
+            in_fence
+            or line.startswith("#")
+            or AUTHOR_METADATA.match(line.strip())
+            or AUTHOR_AFFILIATION.match(line.strip())
+        ):
             continue
-        unqualified = QUALIFIED_AUTHOR.sub("", line)
+        # Only the metadata cell is exempt; narration in other cells still counts.
+        prose = re.sub(r"(?<=\|)\s*(?:\*\*)?作者(?:\*\*)?\s*(?=\|)", "", line)
+        unqualified = QUALIFIED_AUTHOR.sub("", prose)
         if "作者" in unqualified:
             findings.append((line_number, line.strip()))
     return findings

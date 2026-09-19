@@ -53,24 +53,201 @@ def source_listing_numbers(text: str) -> set[int]:
     return {int(match.group(1)) for match in matches}
 
 
-def source_listing_windows(text: str) -> dict[int, str]:
-    """Return conservative caption-neighborhood evidence for risk checks.
+def _source_columns(page: str) -> list[list[str]]:
+    """Split a layout-text page only at a recurring inter-column whitespace gap.
 
-    PDF text extraction does not expose a reliable listing boundary. The window is
-    therefore a candidate signal only; callers must treat findings as review risks.
+    Short line-number gutters and indentation inside code are not column evidence:
+    both sides must contain prose-sized text on at least five separate lines.
     """
+    lines = page.splitlines()
+    votes: Counter[int] = Counter()
+    for line in lines:
+        for gap in re.finditer(r"\S([ \t]{3,})(?=\S)", line):
+            left, right = line[:gap.start(1)], line[gap.end(1):]
+            if len(re.findall(r"[A-Za-z]{2,}", left)) < 4:
+                continue
+            if len(re.findall(r"[A-Za-z]{2,}", right)) < 4:
+                continue
+            for column in range(gap.start(1) + 1, gap.end(1)):
+                votes[column] += 1
+    if not votes or max(votes.values()) < 5:
+        return [lines]
+    best = max(votes.values())
+    candidates = sorted(column for column, count in votes.items() if count == best)
+    split = candidates[len(candidates) // 2]
+    return [[line[:split].rstrip() for line in lines],
+            [line[split:].rstrip() for line in lines]]
 
-    lines = text.splitlines()
+
+def _source_caption_matches(line: str) -> list[re.Match[str]]:
+    return list(PUNCTUATED_SOURCE_CAPTION_RE.finditer(line)) + list(
+        BARE_UPPER_SOURCE_CAPTION_RE.finditer(line)
+    )
+
+
+def _code_line(line: str) -> bool:
+    """Recognize payload lines, not prose merely mentioning SQL/code keywords."""
+    value = line.strip()
+    if not value or _source_caption_matches(line):
+        return False
+    if re.match(r"^\d+(?:\s+|$)", value):  # printed source line numbers (also prompts)
+        return True
+    value = re.sub(r"^[OP]\s+(?=SELECT\b)", "", value)
+    if re.match(r"^(?:SELECT|CREATE|INSERT|UPDATE|DELETE|ALTER|DROP|FROM|WHERE|"
+                r"JOIN|LEFT|RIGHT|INNER|OUTER|UNION|GROUP|ORDER|HAVING|LIMIT|"
+                r"VALUES|WITH|WITHOUT|SET|EXPLAIN|PRAGMA|AND|OR|ON|USING|CASE|WHEN|"
+                r"THEN|ELSE|END|INTERSECT|EXCEPT|OFFSET|FETCH|CROSS|NATURAL)\b", value, re.IGNORECASE):
+        return True
+    if re.match(r"^(?://|--|/\*|\*/|#|[{}]|\.\.\.|<\??/?[ \t]*[A-Za-z_])", value):
+        return True
+    if re.match(r"^(?:else|return|template|class|struct|public:|"
+                r"private:|inline|const|static|void|int|long|double|auto)\b", value):
+        return True
+    if re.match(r"^(?:for|while|if)\s*\(", value):
+        return True
+    # Expression/declaration continuations and SQL result comments.
+    return bool(re.search(r"(?:;\s*(?://|--|−−|$)|:=|->|::|\)\s*[{;])", value)
+                or re.match(r"^[A-Za-z_]\w*\s*(?:=|\+=|-=)", value))
+
+
+def _code_start_line(line: str) -> bool:
+    """Clause continuations are code only after a payload start is established."""
+    value = line.strip()
+    if re.match(r"^(?:FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|UNION|GROUP|ORDER|"
+                r"HAVING|LIMIT|VALUES|WITHOUT|AND|OR|ON|USING|WHEN|THEN|ELSE|"
+                r"END|INTERSECT|EXCEPT|OFFSET|FETCH|CROSS|NATURAL)\b", value, re.I):
+        return False
+    return _code_line(line)
+
+
+def _adjacent_source_payload(
+    lines: list[str], index: int, claimed: set[int]
+) -> tuple[int, int]:
+    """Choose the nearest adjacent payload, allowing a wrapped top caption."""
+    before = index - 1
+    while before >= 0 and not lines[before].strip():
+        before -= 1
+    after = index + 1
+    while after < min(len(lines), index + 8):
+        if _source_caption_matches(lines[after]):
+            break
+        if _code_start_line(lines[after]):
+            break
+        after += 1
+    previous_start = before
+    while previous_start >= 0 and lines[previous_start].strip() and not _source_caption_matches(lines[previous_start]):
+        previous_start -= 1
+    previous_start += 1
+    previous_code = sum(_code_line(line) for line in lines[previous_start:before + 1])
+    has_before = (
+        before >= 0 and before not in claimed
+        and previous_start <= before and _code_start_line(lines[previous_start])
+        and (_code_line(lines[before]) or previous_code >= 2)
+    )
+    has_after = after < min(len(lines), index + 8) and _code_start_line(lines[after])
+    if has_before and (not has_after or index - before <= after - index):
+        end = before + 1
+        if not _code_line(lines[before]):
+            return previous_start, end
+        # Numbered listings can wrap onto unnumbered physical lines. Recover the
+        # complete sequence back to line 1, not only the last SQL-bearing line.
+        numbered = re.match(r"^\s*(\d+)(?:\s+|$)", lines[before])
+        if numbered:
+            expected_number = int(numbered.group(1))
+            cursor = before
+            while cursor >= 0 and not _source_caption_matches(lines[cursor]):
+                item = re.match(r"^\s*(\d+)(?:\s+|$)", lines[cursor])
+                if item:
+                    if int(item.group(1)) != expected_number:
+                        break
+                    if expected_number == 1:
+                        return cursor, end
+                    expected_number -= 1
+                cursor -= 1
+        while before >= 0:
+            if _code_line(lines[before]) or not lines[before].strip():
+                before -= 1
+            else:
+                break
+        return before + 1, end
+    if not has_after:
+        return index, index
+    start = after
+    end = start
+    previous_blank = False
+    while end < len(lines):
+        line = lines[end]
+        if _source_caption_matches(line):
+            break
+        if not line.strip():
+            previous_blank = True
+            end += 1
+            continue
+        if _code_line(line):
+            previous_blank = False
+            end += 1
+            continue
+        # Indented wraps are part of the same code line, not a later paragraph.
+        indent = len(line) - len(line.lstrip())
+        base = len(lines[start]) - len(lines[start].lstrip())
+        if not previous_blank and indent > base:
+            end += 1
+            continue
+        break
+    return start, end
+
+
+def source_listing_evidence(text: str) -> tuple[dict[int, str], set[int]]:
+    """Extract local payloads and flag unclaimed code across layout boundaries.
+
+    Cross-page/column reconstruction is intentionally not guessed. A listing
+    ending near the boundary followed by code with no caption of its own needs
+    PDF review before source-relative completeness comparisons are meaningful.
+    """
     windows: dict[int, str] = {}
-    for index, line in enumerate(lines):
-        matches = list(PUNCTUATED_SOURCE_CAPTION_RE.finditer(line))
-        matches.extend(BARE_UPPER_SOURCE_CAPTION_RE.finditer(line))
-        for match in matches:
-            number = int(match.group(1))
-            start = max(0, index - 24)
-            end = min(len(lines), index + 25)
-            windows[number] = "\n".join(lines[start:end])
-    return windows
+    columns = [column for page in text.split("\f") for column in _source_columns(page)]
+    metadata: list[tuple[set[int], list[tuple[int, int]]]] = []
+    for lines in columns:
+        claimed: set[int] = set()
+        endings: list[tuple[int, int]] = []
+        for index, line in enumerate(lines):
+            for match in _source_caption_matches(line):
+                start, end = _adjacent_source_payload(lines, index, claimed)
+                claimed.update(range(start, end))
+                payload = "\n".join(lines[start:end]).strip()
+                # Line numbers are layout metadata, not code literals.
+                payload = re.sub(r"(?m)^[ \t]*\d+(?:[ \t]+|$)", "", payload)
+                number = int(match.group(1))
+                if payload or number not in windows:
+                    windows[number] = payload
+                if payload:
+                    endings.append((number, end))
+        metadata.append((claimed, endings))
+    partial: set[int] = set()
+    for index, (lines, (_claimed, endings)) in enumerate(zip(columns, metadata)):
+        if not endings or index + 1 == len(columns):
+            continue
+        number, end = endings[-1]
+        if sum(bool(line.strip()) for line in lines[end:]) > 3:
+            continue
+        following = columns[index + 1]
+        next_claimed = metadata[index + 1][0]
+        for row, line in enumerate(following[:12]):
+            # Strip a potential printed line number, then require actual code;
+            # a numbered page header containing author names is not evidence.
+            candidate = re.sub(r"^[ \t]*\d+[ \t]+", "", line)
+            if _source_caption_matches(line):
+                break
+            if _code_start_line(candidate):
+                if row not in next_claimed:
+                    partial.add(number)
+                break
+    return windows, partial
+
+
+def source_listing_windows(text: str) -> dict[int, str]:
+    """Compatibility accessor for local caption-adjacent source payloads."""
+    return source_listing_evidence(text)[0]
 
 
 def fenced_blocks(lines: list[str]) -> list[tuple[int, int]]:
@@ -154,7 +331,7 @@ def listing_findings(source_text: str, translation_text: str) -> tuple[list[str]
             errors.append(f"Listing {number} has {formal_count} formal representations")
 
     risks: list[str] = []
-    source_windows = source_listing_windows(source_text)
+    source_windows, partial_boundaries = source_listing_evidence(source_text)
     for number in sorted(source_numbers):
         if len(payloads[number]) != 1:
             continue
@@ -168,6 +345,17 @@ def listing_findings(source_text: str, translation_text: str) -> tuple[list[str]
             continue
 
         source_window = source_windows.get(number, "")
+        if number in partial_boundaries:
+            risks.append(
+                f"Listing {number} source payload may continue across a PDF page/column "
+                "boundary; inspect the complete PDF listing"
+            )
+            continue
+        if not source_window:
+            risks.append(
+                f"Listing {number} source payload boundary could not be identified; inspect the PDF"
+            )
+            continue
         source_tokens = {token.casefold() for token in CODE_TOKEN_RE.findall(source_window)}
         payload_tokens = {token.casefold() for token in CODE_TOKEN_RE.findall(payload)}
         if len(source_tokens) >= 3 and len(source_tokens & payload_tokens) < 2:

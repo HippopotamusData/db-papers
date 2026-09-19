@@ -40,13 +40,17 @@ Johann Schleier-Smith、Vikram Sreekanti、Anurag Khandelwal、Joao Carreira、N
 
 原文用出差交通作类比。去远程会议时，你可以从机场租车，也可以叫出租车去酒店。租车类似 serverful computing：你必须排队、签合同、在整个停留期间保留车辆，不管实际使用多久都要付费，还要自己驾驶、导航、停车并在还车前加油。出租车类似 serverless computing：你只需告诉司机酒店名称并为行程付费；出租车服务提供受训司机、负责导航、按行程收费并自己加油。出租车简化了交通，因为乘客不必知道如何操作汽车就能到酒店。并且，出租车比租车利用率更高，从而降低出租车公司的成本。取决于会议时长、租车成本、停车费、油费等，出租车不仅更简单，也可能更便宜。
 
-![图 1：将 serverful 类比为机场租车，将 serverless 类比为打车。图片：Alexey V Smirnov。](assets/figure-01-rental-vs-taxi.png)
+![图 1](assets/figure-01-rental-vs-taxi.png)
+
+图 1：将 serverful 类比为机场租车，将 serverless 类比为打车。图片：Alexey V Smirnov。
 
 在 serverless computing 中，程序员使用云提供商提供的高层抽象创建应用。例如，他们可以用函数式风格的“无状态”编程，在自己选择的语言中定义 cloud functions[^a]，通常是 JavaScript 或 Python，然后指定函数如何运行，是响应 Web 请求还是触发事件。程序员还可以使用 serverless object storage、message queues、key-value store databases、移动客户端数据同步等服务，这组服务统称 Backend-as-a-Service（BaaS）。托管云函数服务也称 Function-as-a-Service（FaaS）。因此，今天的 Serverless Cloud Computing 可以概括为 FaaS + BaaS。
 
 [^a]: 不同云平台对其产品使用不同名称：Microsoft Azure 的 Azure Functions、Alibaba Cloud 的 Cloud Functions、Amazon Web Services（AWS）的 AWS Lambda、Google Cloud Platform（GCP）的 Google Cloud Functions 和 Google Cloud Run、IBM Cloud 的 IBM Cloud Functions，以及 Oracle Cloud 的 Oracle Functions。
 
-![图 2：serverless 与 serverful 云计算。serverless 在应用和底层服务器之间提供抽象层。](assets/figure-02-serverless-serverful-stack.png)
+![图 2](assets/figure-02-serverless-serverful-stack.png)
+
+图 2：serverless 与 serverful 云计算。serverless 在应用和底层服务器之间提供抽象层。
 
 Serverless 的主要创新是隐藏服务器，而服务器具有天然复杂的编程和运维模型。服务器用户必须为可靠性构建冗余，响应负载变化调整容量，出于安全原因升级系统，等等 [17]。这些工作经常要求用户对分布式系统故障模式和性能进行困难推理。工具可以有所帮助，例如通过启发式调整容量进行 autoscaling，但这类工具本身也需要详细配置和持续监控。相比之下，serverless 将这些责任和其他责任交给云提供商。
 
@@ -56,7 +60,9 @@ Serverless computing 有三个基本特性：
 2. 提供 pay-as-you-go 成本模型，而不是基于预留的模型，因此空闲资源不收费。
 3. 自动、快速、近乎无限地按需求上下扩缩资源，从零扩展到实际意义上的无限。
 
-![图 3：serverless 与 serverful 云计算的计费差异。serverless 用户只为实际消耗资源付费，不为空闲预留容量付费。](assets/figure-03-billing-model.png)
+![图 3](assets/figure-03-billing-model.png)
+
+图 3：serverless 与 serverful 云计算的计费差异。serverless 用户只为实际消耗资源付费，不为空闲预留容量付费。
 
 这些性质在云中的综合体，较此前接近这些性质的环境有实质性提升 [8,17]。回到类比，出租车服务必须提供带持证司机的车辆（隐藏运维）、只在载客时收费（按用量付费）、并调度足够车辆以最小化等待时间（autoscaling）。如果出租车不能可靠提供三者，顾客可能仍会选择租车并自己操作（serverful computing）。
 
@@ -114,7 +120,9 @@ Serverless computing 的美妙之处在于，它提供的不只是服务器，�
 
 能够高性能解决该大数据示例的通用 serverless 抽象尚不存在。Cloud functions 似乎能提供解决方案，因为它们允许用户编写任意代码；对某些负载确实如此 [28]。但由于限制，它们有时比替代方案慢得多 [13,17]。原文图 4 说明，如果用 cloud functions 而不是 Cloud Dataflow 等应用专用框架实现该示例，网络流量可能大得多。应用专用 serverless 方案像 serverful 方案一样，可以在每个 VM 实例上打包 $K$ 个任务，因此对于 $N$ 个任务的作业，通信复杂度为 $O(N/K)$；而基于 cloud function 的替代方案不能影响任务放置，复杂度为 $O(N)$。典型 $K$ 值为 10 到 100，因此总体差异可达一到两个数量级。使用 cloud functions 时，提供商在不同 VM 实例间分配工作，并不考虑应用通信模式；这简化了 autoscaling，但增加了网络流量。
 
-![图 4：聚合和广播模式下的通信增加。应用专用 serverless 框架可采用 serverful 通信模式；直接使用 cloud functions 时通信复杂度更高。](assets/figure-04-communication-patterns.png)
+![图 4](assets/figure-04-communication-patterns.png)
+
+图 4：聚合和广播模式下的通信增加。应用专用 serverless 框架可采用 serverful 通信模式；直接使用 cloud functions 时通信复杂度更高。
 
 我们提出两条增强 cloud functions 的路径，使其能在更广泛应用中运行良好，并可能转化为 general-purpose serverless abstractions。第一，程序员可提供 hints 来指示如何获得更好性能。Hints 可描述应用通信模式，例如 broadcast 或 all-reduce，也可建议任务放置 affinity [25]。这在编译器中已有先例，例如分支预测、对齐和预取 hints。
 
@@ -122,7 +130,9 @@ Serverless computing 的美妙之处在于，它提供的不只是服务器，�
 
 图 5 展示 application-specific 和 general-purpose serverless abstractions 的差异。General-purpose 情况下，云提供商暴露少量基本构件，例如增强版 cloud functions 和某种 serverless storage。各种应用专用用例可以构建在这些基础之上。Application-specific serverless 情况下，云提供商则提供越来越多 BaaS 点解决方案，以满足更多应用需求。
 
-![图 5：serverless 的潜在未来方向。左侧是通用 serverless 抽象，右侧是应用专用 serverless 抽象。](assets/figure-05-future-directions.png)
+![图 5](assets/figure-05-future-directions.png)
+
+图 5：serverless 的潜在未来方向。左侧是通用 serverless 抽象，右侧是应用专用 serverless 抽象。
 
 今天，serverless computing 仍完全属于应用专用品类。即使能执行任意代码的 cloud functions，也主要流行于无状态 API 服务和事件驱动数据处理 [27]。我们预计 application-specific serverless 会增长，但最令人兴奋的是 general-purpose serverless abstractions 的潜在出现，它们可托管服务于各种需求的软件生态。在我们看来，只有通用路径最终能取代服务器，成为云编程默认形式。不过，通用 serverless 技术今天还不存在，发展它带来了研究挑战。
 
