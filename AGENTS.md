@@ -33,7 +33,10 @@ conflicting readings and choose the review scope using `docs/workflows/review.md
 
 ## Task routing
 
-Before acting, read only the document or documents listed for the task:
+Read the listed documents when entering the relevant task or stage. Follow necessary
+cross-references for the decision at hand; do not preload later stages or reread
+unchanged documents already in context. End-to-end work follows the stage routes
+below without stopping for a new approval at each handoff.
 
 | Task | Required documents |
 | --- | --- |
@@ -41,7 +44,7 @@ Before acting, read only the document or documents listed for the task:
 | Classify or enrich reading metadata | `docs/workflows/metadata.md` |
 | Score a paper's reading value | `docs/workflows/rating.md` |
 | Create or repair a translation draft | `docs/workflows/translate.md`, `docs/workflows/metadata.md`, `docs/translation-policy.md` |
-| Complete one newly added paper end to end | `docs/workflows/ingest.md`, `docs/workflows/metadata.md`, `docs/workflows/translate.md`, `docs/workflows/review.md`, `docs/workflows/rating.md`, `docs/translation-policy.md` |
+| Complete one newly added paper end to end | Follow the ingest, translate, review, and rating routes as each stage begins |
 | Record a page-limit exception or a policy skip | `docs/workflows/maintain.md`, `docs/workflows/metadata.md` |
 | Coordinate a Codex translation or authorized historical-repair batch with direct subagents | `docs/workflows/batch-translate.md`, `docs/workflows/review.md`, `docs/translation-policy.md` |
 | Audit/review a translation (read-only by default) | `docs/workflows/review.md`, `docs/translation-policy.md` |
