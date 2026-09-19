@@ -46,8 +46,6 @@ Column store 可以用两种方式花费 CPU 来节省磁盘带宽。第一，�
 
 C-Store 因而物理存储一组列，每列按某些属性排序。按同一属性排序的一组列称为 projection；同一列可出现在多个投影中，并在各处按不同属性排序。激进压缩应能在不造成空间爆炸的情况下支持许多排序顺序，而多种顺序也为优化创造机会。
 
-C-Store 并不是简单地把既有行存逐列拆开。它有意放弃 write-optimized 的 base table 与传统辅助索引组合，把投影本身作为唯一物理数据副本。不同投影可重叠、可按不同键排序，还可跨 n:1 外键关系携带属性。这样，冗余既承担容错职责，也直接为查询提供合适的访问顺序；压缩则使多份冗余仍能维持较低空间开销。
-
 廉价的 blade/grid 计算机集合将成为 DBMS 等计算和存储密集应用最经济的硬件 [DEWI92]。新架构应假设包含 G 个节点的 grid，每节点有私有磁盘和内存，并以 shared-nothing [STON86] 水平划分数据。未来 grid 可能有数十至数百节点，节点既可共置也可组成多个共置集群。DBA 很难手工优化 grid，因此必须自动把数据结构分配到节点。水平划分还便利 intra-query parallelism，C-Store 在这点上沿用 Gamma [DEWI90]。
 
 许多仓库系统（如 Walmart [WEST00]）保留两份数据，因为在 TB 级数据上依靠 DBMS 日志恢复代价太高。磁盘单字节成本下降使复制更具吸引力，grid 可把副本放在不同处理节点上，实现 Tandem 风格的高可用 [TAND89]。副本不必用完全相同的布局：C-Store 允许冗余对象按不同顺序存储，在高可用之外提高检索性能。只要冗余设计确保任一 G 个站点中的一个失效后仍可访问全部数据，重叠投影也能继续提高性能。能容忍 K 个故障的系统称为 K-safe，C-Store 可配置不同 K。
@@ -62,9 +60,9 @@ C-Store 用新视角解决这一矛盾：在同一软件中组合 read-optimized
 
 查询必须同时访问两个存储。插入发往 WS；删除在 RS 中标记，稍后由 tuple mover 清除；更新实现为一次插入加一次删除。为实现高速 tuple mover，C-Store 采用 LSM-tree [ONEI96] 的变体：merge-out 把有序 WS 对象与大型 RS block 高效合并，形成 RS 的新副本，完成后切换安装。
 
-系统必须在大型 ad-hoc 查询、较小更新事务以及可能连续插入的环境中支持事务。盲目使用动态锁会造成严重读写冲突、阻塞和死锁。因此只读查询在 historical mode 下运行：选择一个小于最近已提交事务时间的时间戳 T，语义上保证返回历史时刻 T 的正确答案。快照隔离 [BERE95] 要求插入时给数据元素加时间戳，运行时忽略晚于 T 的元素。
+系统必须在大型 ad-hoc 查询、较小更新事务以及可能连续插入的环境中支持事务。盲目使用动态锁会造成严重读写冲突、阻塞和死锁。因此，我们预期只读查询在 historical mode 下运行：选择一个小于最近已提交事务时间的时间戳 T，语义上保证返回历史时刻 T 的正确答案。快照隔离 [BERE95] 要求插入时给数据元素加时间戳，运行时忽略晚于 T 的元素。
 
-传统优化器和执行器也都面向行存。RS 与 WS 均为列式，因此 C-Store 构建全新的列式优化器和执行器。我们设计的可更新列存同时追求仓库查询的极高性能与 OLTP 事务的合理速度，其创新包括：
+传统优化器和执行器也都面向行存。RS 与 WS 均为列式，因此 C-Store 构建全新的列式优化器和执行器。我们设计的可更新列存同时追求仓库查询的极高性能与 OLTP 事务的合理速度。C-Store 是列式 DBMS，其架构旨在减少每次查询的磁盘访问次数。其创新包括：
 
 1. 混合架构：WS 为频繁插入/更新优化，RS 为查询优化。
 2. 以不同顺序冗余存储多组重叠投影，让查询选择最有利者。
@@ -115,7 +113,7 @@ DEPT1(dname, floor | floor)
 
 为回答任意 SQL 查询，每张表必须有覆盖投影集，使每一列至少出现在一个投影中；同时系统还要从所存 segments 重建完整行。它通过 storage key 与 join index 连接不同投影的 segment。
 
-**Storage key。** 每个 segment 把每列的每个值关联到 storage key（SK）。同 segment 各列中 SK 相同的值属于同一逻辑行。RS 的 SK 编号为 1、2、3……，不物理存储，而由 tuple 在列中的位置推导。WS 则显式保存整数 SK，且大于 RS 任一 segment 的最大整数 SK。
+**Storage key。** 每个 segment 把每列的每个值关联到 storage key（SK）。同 segment 各列中 SK 相同的值属于同一逻辑行。我们把 segment 的一行称为记录（record）或元组（tuple）。RS 的 SK 编号为 1、2、3……，不物理存储，而由 tuple 在列中的位置推导。WS 则显式保存整数 SK，且大于 RS 任一 segment 的最大整数 SK。
 
 **Join index。** 若 T1、T2 是覆盖表 T 的两个投影，从 T1 的 M 个 segment 到 T2 的 N 个 segment 的 join index 在逻辑上是 M 张表，每张对应 T1 的一个 segment S，行格式为：
 
@@ -125,13 +123,13 @@ DEPT1(dname, floor | floor)
 
 T1 某 tuple 的 join-index 项给出 T2 中对应 tuple 的 segment ID 和 storage key。因 join index 只连接锚定于同一表的投影，该映射总是一对一；也可把它看作将顺序 O 的 T1 逻辑重排为 T2 的顺序 O'。
 
-要从 T1…Tk 的 segments 重建 T，必须存在一条 join-index 路径，把 T 的每个属性映射到某共同顺序 O*。路径从某投影 Ti 的排序开始，经过零个或多个中间 join index，终止于按 O* 排序的投影。对示例 2，可选择 age 为共同顺序，分别把 EMP2、EMP3 映到 EMP1；也可把 EMP2 映到 EMP3，再把 EMP3 映到 EMP1。
+要从 T1…Tk 的 segments 重建 T，必须存在一条 join-index 路径，把 T 的每个属性映射到某共同顺序 O*。路径从某投影 Ti 的排序开始，经过零个或多个中间 join index，终止于按 O* 排序的投影。要从示例 2 的投影重建 EMP 表，至少需要两个 join index。可选择 age 为共同顺序，分别把 EMP2、EMP3 映到 EMP1；也可把 EMP2 映到 EMP3，再把 EMP3 映到 EMP1。
 
 ![图 2：EMP3 到 EMP1 的 join index](assets/cstore-fig02-join-index.png)
 
-*图 2：从 EMP3 到 EMP1 的 join index。假设每个投影只有一个 segment；EMP3 第一项 `(Bob,10K)` 对应 EMP1 第二项，因此 join index 第一项的 storage key 为 2。*
+*图 2：从 EMP3 到 EMP1 的 join index。假设每个投影只有一个 segment（SID=1）；EMP3 第一项 `(Bob,10K)` 对应 EMP1 第二项，因此 join index 第一项的 storage key 为 2。*
 
-实际中每列会出现在多个投影，所需 join index 因而较少。Join index 很昂贵：投影每次修改都要求更新所有指入或指出它的 join index。
+在实际使用中，我们预计会把每列存入多个投影，从而只需维护相对较少的 join index。Join index 很昂贵：投影每次修改都要求更新所有指入或指出它的 join index。
 
 数据库投影 segments 及其 join indexes 必须分配到 C-Store 节点。管理员可要求数据库 K-safe：丢失 K 个 grid 节点后仍能重建全部表，也就是剩余站点上仍有覆盖投影集及将其映射到共同排序的 join indexes。故障发生时系统以 K-1 safety 继续运行，直到节点修复并追平；我们目前正在研究实现这种快速恢复的算法。
 
@@ -155,7 +153,7 @@ RS 的列使用四种编码之一。选择取决于列的顺序（按本列值�
 (2, 000010010)
 ```
 
-每个 bitmap 很稀疏，可用 run-length encoding 节省空间。为高效找到 Type 2 列第 i 个值，系统加入 offset indexes，即把列位置映到列值的 B-tree。
+由于每个 bitmap 都很稀疏，因此采用 run-length encoding 来节省空间。为高效找到 Type 2 列第 i 个值，系统加入 offset indexes，即把列位置映到列值的 B-tree。
 
 **Type 3：self-order，distinct value 多。** 每个值编码为相对前一值的 delta。例如 `1,4,7,7,8,12` 表示为 `1,3,3,0,1,4`：第一项为列首值，之后均为 delta。Type 3 是 block-oriented：每个 block 第一项保存实际值及 storage key，后续保存相对前值的 delta，类似 VSAM 对 B-tree key 的编码 [VSAM04]。可在 block 层用 dense-pack B-tree 索引这些对象。
 
@@ -163,7 +161,7 @@ RS 的列使用四种编码之一。选择取决于列的顺序（按本列值�
 
 ### 3.2 Join indexes
 
-Join index 连接锚定在同一表上的各投影，由 `(sid,storage_key)` 对组成，两个字段都可作为普通列存储。它放在哪里会影响物理设计，第 5 节讨论；它还必须打通 RS 与 WS，因此下一节补充其设计。
+Join index 连接锚定在同一表上的各投影，由 `(sid,storage_key)` 对组成，两个字段都可作为普通列存储。它放在哪里会影响物理设计，下一节讨论；它还必须打通 RS 与 WS，因此下一节补充其设计。
 
 ## 4. WS
 
@@ -171,11 +169,9 @@ Join index 连接锚定在同一表上的各投影，由 `(sid,storage_key)` 对
 
 每条记录的 SK 在各 WS segment 中显式存储。插入逻辑表 T 的一个 tuple 时分配唯一 SK，执行引擎确保 T 的每个相关投影都记录相同 SK。它是大于数据库最大 RS segment 记录数的整数。为简化并扩展，WS 与 RS 以同样方式水平划分，因此 RS、WS segments 一一对应；`(sid,storage_key)` 可标识任一容器中的记录。
 
-WS 相对 RS 很小，不压缩数据值，直接表示。每个投影用 B-tree 保持逻辑 sort-key 顺序。每个列表示为 `(v,sk)` 对集合，并在第二字段上用传统 B-tree；投影 sort key 另表示为 `(s,sk)` 对，其中 s 是 sort-key value，sk 指出 s 首次出现位置，也在 sort-key 字段上建 B-tree。按 sort key 搜索时，先用后者找目标 storage keys，再用前一组 B-tree 找记录其他字段。
+由于我们假设 WS 的规模相对 RS 很小，因此不压缩数据值，而是直接表示。每个投影用 B-tree 保持逻辑 sort-key 顺序。每个列表示为 `(v,sk)` 对集合，并在第二字段上用传统 B-tree；投影 sort key 另表示为 `(s,sk)` 对，其中 s 是 sort-key value，sk 指出 s 首次出现位置，也在 sort-key 字段上建 B-tree。按 sort key 搜索时，先用后者找目标 storage keys，再用前一组 B-tree 找记录其他字段。
 
-Join index 现在可以完整描述：每个投影由一对 segments 表示，一个在 WS，一个在 RS。对 sender 中每条记录，保存 receiver 对应记录的 sid 与 storage key。Join index 按 sender 投影相同方式水平划分，并与对应 sender segment 共置；每个 `(sid,storage key)` 都是指向 RS 或 WS 记录的指针。
-
-需要注意，RS 与 WS 共享逻辑 schema，却针对完全不同的数据生命周期使用不同表示：RS 的 ordinal storage key、dense-packed 编码与不可变 block 面向扫描；WS 的显式 storage key、普通值和可更新 B-tree 面向小规模事务写入。Join index 中的 `(sid,storage_key)` 因而必须能跨越两种存储，tuple mover 在记录迁移并重新分配 RS storage key 时还必须同步维护这些映射。
+Join index 现在可以完整描述：每个投影由一组 segment 对表示，每对包含一个 WS segment 和一个 RS segment。对 sender 中每条记录，保存 receiver 对应记录的 sid 与 storage key。Join index 按 sender 投影相同方式水平划分，并与对应 sender segment 共置；每个 `(sid,storage key)` 都是指向 RS 或 WS 记录的指针。
 
 ## 5. 存储管理
 
@@ -189,7 +185,7 @@ Join index 现在可以完整描述：每个投影由一对 segments 表示，�
 
 WS 构建在 BerkeleyDB [SLEE04] 之上，用其 B-tree 支持数据结构。插入一个投影会在不同磁盘页执行多次物理插入，每列每投影一次。为避免性能低下，计划利用主存单字节成本不断下降来配置很大的 buffer pool，使“热”WS 结构大部分常驻内存。
 
-C-Store 对删除的处理受锁策略影响。系统面对大量大读取集 ad-hoc 查询和少量小记录集 OLTP 事务；传统锁会导致严重争用。系统因此用 snapshot isolation 隔离只读事务：只读事务访问近期过去某一时刻的数据库，系统保证此前没有未提交事务，故无需加锁。允许快照读取的最近过去时刻称 high water mark（HWM），C-Store 用低开销机制在多站点跟踪它。若只读事务能任意设置 effective time，就必须支持昂贵的通用 time travel，因此还设 low water mark（LWM），表示只读事务可使用的最早时刻。更新事务仍用读写锁并遵守 strict two-phase locking。
+C-Store 对删除的处理受锁策略影响。系统面对大量大读取集 ad-hoc 查询和少量小记录集 OLTP 事务；如果 C-Store 使用传统锁，很可能出现严重的锁争用，导致性能很差。系统因此用 snapshot isolation 隔离只读事务：只读事务访问近期过去某一时刻的数据库，系统保证此前没有未提交事务，故无需加锁。允许快照读取的最近过去时刻称 high water mark（HWM），C-Store 用低开销机制在多站点跟踪它。若只读事务能任意设置 effective time，就必须支持昂贵的通用 time travel，因此还设 low water mark（LWM），表示只读事务可使用的最早时刻。更新事务仍用读写锁并遵守 strict two-phase locking。
 
 ### 6.1 提供快照隔离
 
@@ -250,6 +246,8 @@ WHERE insertion_epoch > t_lastmove(Sr)
           OR deletion_epoch >= LWM
       AND sort_key in K
 ```
+
+译注：原文先定义 sort key 为 K、key range 为 R，后文及上述 SQL 却使用 K 表示范围；SQL 中的 AND/OR 也未加括号。此处均按原文保留。
 
 只要查询返回 storage key，就能沿合适 join indexes 找到 segment 其他字段。只要存在覆盖 Sr key range 的 segment 集，即可把 Sr 恢复到当前 HWM，再执行排队更新完成恢复。
 
@@ -333,7 +331,7 @@ CREATE TABLE CUSTOMER (
 
 为简化实现，只选择 INTEGER 与 CHAR(1)。TPC-H `scale_10` 的标准数据共 60,000,000 个 lineitems（1.8GB），由 TPC 网站生成器产生。
 
-比较 C-Store、一个流行商业 row store 和一个流行商业 column store，三者都关闭 locking 与 logging。每个系统原则上获得 2.7GB（约原始数据 1.5 倍）的数据加索引预算，并分别针对自身能力优化 schema。行存无法在预算内运行，放宽到它存储表与索引所需的 4.5GB。
+比较 C-Store、一个流行商业 row store 和一个流行商业 column store。在这两种商业系统中，我们关闭了 locking 与 logging。每个系统原则上获得 2.7GB（约原始数据 1.5 倍）的数据加索引预算，并分别针对自身能力优化 schema。行存无法在预算内运行，放宽到它存储表与索引所需的 4.5GB。
 
 | 系统 | 实际磁盘用量 |
 | --- | ---: |
@@ -341,7 +339,7 @@ CREATE TABLE CUSTOMER (
 | Row Store | 4.480GB |
 | Column Store | 2.650GB |
 
-C-Store 即使存储冗余 schema，也只用行存约 40% 空间，主要原因是压缩以及不向 word/block 边界 padding。商业列存比 C-Store 多用 30%，同样说明 C-Store 可凭更好压缩和无 padding 在更少空间中保存冗余 schema。
+尽管 C-Store 使用了冗余而行存没有，C-Store 也只用行存约 40% 的空间，主要原因是压缩以及不向 word/block 边界 padding。商业列存比 C-Store 多用 30%，同样说明 C-Store 可凭更好压缩和无 padding 在更少空间中保存冗余 schema。
 
 在各系统运行以下七个查询：
 
@@ -466,6 +464,8 @@ C-Store 明显更快，主要原因是：列表示避免读取未使用属性（
 | Q7 | 2.54 | 18.47 | 6.28 |
 
 性能差距收窄，但商业系统空间显著增大。七查询空间受限情形下，C-Store 平均比商业行存快 164 倍、比商业列存快 21 倍；空间不受限时，比行存快 6.4 倍，但行存空间为其 6 倍；比列存快 16.5 倍，而列存空间为其 1.83 倍。这些数据仍很初步，WS 和 tuple mover 完成后才能做全面研究。
+
+译注：原文此处写作 1.83 倍，与上表 4.090GB 和 1.987GB 的比值不一致；表格和正文数值均按原文保留。
 
 ## 10. 相关工作
 
