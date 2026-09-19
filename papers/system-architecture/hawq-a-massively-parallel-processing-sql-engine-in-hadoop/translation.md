@@ -88,7 +88,7 @@ segment host 通常有一个 DataNode 和多个 segment，以利用多核资源�
 
 catalog 存在 Unified Catalog Service（UCS）中，外部应用可用标准 SQL 查询。HAWQ 内部用 SQL 子集 Catalog Query Language（CaQL）访问，替代开发者用 C 原语手工组合 cache、heap、index、lock，并自行指定 key comparison 与 type conversion 的繁琐、易错过程。
 
-选择 CaQL 而非完整 SQL，是因为多数内部访问只是使用固定索引的 OLTP-style lookup，不需要复杂计划、join optimization 和 DDL；简化语言更快且更易工程实现和扩展。当前 CaQL 只支持基础单表 SELECT、COUNT()、多行 DELETE、单行 INSERT/UPDATE；原文因篇幅限制省略具体语法。论文版本 UCS 仅在 master，未来计划外部化为服务，方便与其他 Hadoop 组件集成。
+我们经过深入的 catalog 访问行为分析后，决定选择 CaQL 而非完整 SQL。多数内部访问只是使用固定索引的 OLTP-style lookup，不需要复杂计划、join optimization 和 DDL；简化语言更快且更易工程实现和扩展。当前 CaQL 只支持基础单表 SELECT、COUNT()、多行 DELETE、单行 INSERT/UPDATE；原文因篇幅限制省略具体语法。论文版本 UCS 仅在 master，未来计划外部化为服务，方便与其他 Hadoop 组件集成。
 
 ### 2.3 数据分布
 
@@ -144,7 +144,7 @@ planner 自动在生成计划时做 partition elimination，查询只触及部�
 
 ### 2.5 存储
 
-OLTP 通常按行把 tuple 所有列一起存盘；分析数据库多为大而复杂的 read-mostly scan，常只读选定列，偶尔批量 append。HAWQ 在 HDFS 上支持多种存储模型，每个表或 partition 可按访问方式选择存储和压缩。不同模型之间由用户层转换，自动转换列入 roadmap。
+OLTP 通常按行把 tuple 所有列一起存盘。分析数据库的访问模式往往不同于 OLTP：它不是执行大量单行读写的小事务，而是经常处理更大、更复杂、涉及更多数据的查询，即以读取为主的大规模扫描，常只读选定列，偶尔批量 append。HAWQ 在 HDFS 上支持多种存储模型，每个表或 partition 可按访问方式选择存储和压缩。不同模型之间由用户层转换，自动转换列入 roadmap。
 
 - **Row-oriented / Read-optimized AO：** 面向以读为主的全表 scan 与 bulk append load；DDL 可选择从 fast/light 到 gzip、quicklz 等 deep/archival 压缩。
 - **Column-oriented / Read-optimized CO：** 数据垂直分区 [24]，每列保存为一系列大而紧密的 block，可用 gzip、quicklz、RLE；通常比 row table 压缩更高，只扫描查询所需列，列存于独立 segment file。
@@ -154,7 +154,7 @@ OLTP 通常按行把 tuple 所有列一起存盘；分析数据库多为大而�
 
 master 高可用可在独立 host 部署 warm standby。standby 上事务日志复制进程保持同步。master 不含 user data，只需同步不频繁更新的 system catalog table；一旦变更便自动复制。
 
-segment 容错不同于 master mirror。HAWQ segment 无状态，不含失败后必须恢复的私有持久数据，任何活 segment 都可替代失败者。master fault detector 定期检查。失败发生时 in-flight query 失败，由事务机制保持一致性；设计依据是重物化恢复通常不如重启查询快。失败 host 的 segment 在 catalog 标 down，不同 session 随机把它们 failover 到剩余 segment，从而在并发查询下均衡。host 修复后用 recovery utility 恢复 segment，未来查询重新调度；也可把失败 segment 移至新 host。
+segment 容错不同于 master mirror。HAWQ segment 无状态，这简化了 segment 恢复过程，并提高了可用性。无状态意味着不含失败后必须恢复的私有持久数据，任何活 segment 都可替代失败者。master fault detector 定期检查。失败发生时 in-flight query 失败，由事务机制保持一致性；设计依据是重物化恢复通常不如重启查询快。失败 host 的 segment 在 catalog 标 down，不同 session 随机把它们 failover 到剩余 segment，从而在并发查询下均衡。host 修复后用 recovery utility 恢复 segment，未来查询重新调度；也可把失败 segment 移至新 host。
 
 磁盘失败有两级。user data 位于 HDFS，数据盘失败由 HDFS 屏蔽并从有效卷列表移除。大查询 intermediate data 为性能 spill 到本地盘，例如大表 sort 内存不足时 external sort；访问 intermediate data 遇到盘失败，HAWQ 标 down，未来查询不再使用该盘。
 
@@ -178,7 +178,7 @@ segment 容错不同于 master mirror。HAWQ segment 无状态，不含失败后
 
 不同执行阶段使用不同 catalog metadata：parser 语义分析需要 table schema、database、tablespace；planner 需要 statistics；执行需要 table、column、function definition。catalog 只在 master，segment 无状态；QE 执行 QD slice 时却需要 metadata，例如 scan 需 schema/type 解码格式。若每个 QE 连 master 查询，大集群会让并发 QE 把 master 变成瓶颈。
 
-因此，在生成 parallel plan 后，我们把执行期需要的 metadata 装饰进计划，形成 self-described plan。QE 无需再查 UCS。insert 等查询可能让 QE 改 metadata；为记录这些变更，我们将其 piggyback 于 master-segment 连接，最后由 master 批量更新；通常很小。
+因此，在生成 parallel plan 后，我们把执行期需要的 metadata 装饰进计划，形成 self-described plan。QE 无需再查 UCS。insert 等查询可能让 QE 改 metadata；为记录这些变更，我们将其 piggyback 于 master-segment 连接，最后由 master 批量更新；metadata 变更通常很小，因此不会给 master 带来很大开销。
 
 复杂计划可达数 MB，故两项优化：（1）native type/function 等只读、生命周期内不变的常量 metadata，我们在每个 segment bootstrap 一份包含它们的 readonly catalog store，不放入 plan；（2）对生成计划再压缩。
 
@@ -222,6 +222,8 @@ GROUP BY l_orderkey;
 
 packet 有 self-describing header，包含完整 motion node、peer identity、session 和 command-id；字段均匀对齐以提高性能、可移植性。图 5 是发送/接收状态机。sender 完成 stream 后发 End of Stream（EoS）；receiver 在 `LIMIT` 已收够数据等情况下以 Stop 停止 sender。
 
+> 原文此处写作“senders 已收到足够数据”，但同句明确由 receiver 发送 Stop，图 5 也将 Stop Sent 放在 Receiver 一侧；此处按该上下文译为 receiver。
+
 ![互连发送与接收状态机](assets/figure-5-state-machines.png)
 
 **图 5：互连 Sender 与 Receiver 状态机。**
@@ -252,9 +254,9 @@ ACK 有两个重要字段：SC 是 receiver 已消费的 packet sequence number�
 
 ## 5. 事务管理
 
-本节中，我们讨论 HAWQ 的事务管理与并发控制。HAWQ 完整支持事务，把一致性从易错应用代码移入系统。catalog 与 user data 处理不同：catalog 以 WAL、MVCC 实现事务和并发；user data 可 append 但不可原地 update，不写日志也不保多版本，而在 system catalog 记录数据文件 logical length 控制可见性。HDFS 文件 append-only；失败 insert 后 physical length 可能大于 useful-data logical length，下次写前须 truncate 垃圾尾部。
+本节中，我们讨论 HAWQ 的事务管理与并发控制。HAWQ 完整支持事务，把一致性从易错应用代码移入系统。catalog 与 user data 处理不同：catalog 以 WAL、MVCC 实现事务和并发；user data 可 append 但不可 update，不写日志也不保多版本，而在 system catalog 记录数据文件 logical length 控制可见性。HDFS 文件 append-only；失败 insert 后 physical length 可能大于 useful-data logical length，下次写前须 truncate 垃圾尾部。
 
-HAWQ 不像 Greenplum 等系统使用 2PC。事务只在 master 可见，segment 不保事务状态。self-described plan 含控制各表可见性的 snapshot。segment 执行时可能修改 dispatched catalog，结束后回传，由 master 批量更新 UCS；commit 只在 master。abort 时截断已写入 HDFS segment file 的数据。
+与 Greenplum 等分布式系统不同，HAWQ 不使用两阶段提交（2PC）之类的分布式提交协议。事务只在 master 可见，segment 不保事务状态。self-described plan 含控制各表可见性的 snapshot。segment 执行时可能修改 dispatched catalog，结束后回传，由 master 批量更新 UCS；commit 只在 master。abort 时截断已写入 HDFS segment file 的数据。
 
 ### 5.1 隔离级别
 
@@ -271,7 +273,7 @@ HAWQ 用 MVCC，支持 snapshot isolation [14]。用户可请求四种 SQL 标�
 
 ### 5.3 HDFS Truncate
 
-事务中止需撤销底层修改。原 HDFS 不支持与 append 相反的标准 POSIX truncate，上层只能在额外 metadata store 跟踪每文件废弃 byte range，再周期 vacuum 重写 compact file。在 Pivotal Hadoop HDFS 中，我们添加了 truncate 以支持事务：
+事务中止需撤销底层修改。原 HDFS 不支持与 append 相反的标准 POSIX truncate，这使上层应用不得不采用不够理想的变通方法，例如在额外 metadata store 跟踪每文件废弃 byte range，再周期运行 vacuum 重写紧凑文件。在 Pivotal Hadoop HDFS 中，我们添加了 truncate 以支持事务：
 
 ```java
 void truncate(Path src, long length) throws IOException;
@@ -295,7 +297,7 @@ catalog table 用 MVCC 和 locking；HDFS user table append-only。轻量 swimmi
 
 ### 6.1 使用
 
-要连接已有内建 connector 的数据存储，我们需要指定 connector 名与数据源；没有时可按第 6.4 节扩展。举例来说，让我们假设我们想并行访问 HBase 表 `sales`，并假设我们只关注 column family `details` 的 `store`、`price` 两个 qualifier；原文随后的建表示例将前者写作 `details:storeid`：
+HAWQ 和 Pivotal Hadoop 自带一组内建 PXF connector。要连接已有内建 connector 的数据存储，我们需要指定 connector 名与数据源；没有时可按第 6.4 节扩展。举例来说，让我们假设我们想并行访问 HBase 表 `sales`，并假设我们只关注 column family `details` 的 `store`、`price` 两个 qualifier；原文随后的建表示例将前者写作 `details:storeid`：
 
 ```sql
 CREATE EXTERNAL TABLE my_hbase_sales (
@@ -333,7 +335,7 @@ PXF 感知性能并内建优化。data locality awareness 把 parallel unit 分�
 
 filter pushdown API 在数据所在地过滤，而非全读入 HAWQ；还可排除与 filter 不匹配的 partition，例如 Hive connector 忽略相应嵌套目录。两者都由 HAWQ 推出 scan qualifier，PXF 按需使用。
 
-PXF 还收集 planner statistics。对 PXF table 运行 ANALYZE，可把外部数据的 tuple 数、page 数等统计写入 HAWQ catalog，供涉及该表的计划使用。
+PXF 还支持收集 planner statistics。查询 planner 的决策高度依赖对底层数据的了解，因此 PXF 提供了相应的统计收集 API。对 PXF table 运行 ANALYZE，可把外部数据的 tuple 数、page 数及其他高级统计信息写入 HAWQ catalog，供涉及该表的查询计划使用。
 
 ### 6.4 构建 Connector
 
@@ -351,7 +353,7 @@ API 有三个必需 plugin、一个可选 plugin。实现后编译并部署到�
 - **处理框架。** MapReduce [19, 20] 及 Hadoop [1] 面向 batch，在高度可扩展分布式存储上提供高可用服务；Dryad [26] 是 coarse-grained data-parallel 的通用 dataflow engine；Spark [8] 的 RDD [40] 是在大集群容错内存计算的分布式内存抽象。
 - **框架扩展。** MapReduce 上的 Pig [30]、Hive [36, 37]、Tenzing [16]、FlumeJava [15]，Dryad 上的 DryadLINQ [39]，向用户提供 procedural/declarative language；Spark 上 Shark [38] 运行 SQL 和复杂分析函数。
 - **HDFS 原生 SQL 引擎。** HAWQ、Impala [5]、Presto [7]、作为 Dremel [29] 开源实现的 Drill [3]，都用数据库技术提高即席查询并采用 pipeline。HAWQ 的架构差异是事务支持、无状态 segment、UDP 互连；其他系统均无事务。
-- **数据库与 Hadoop 混合。** DB2 [31]、Oracle [35]、Greenplum [4]、Asterdata [2]、Netezza [6]、Vertica [11]、Polybase [22] 把 Hadoop 接入自身数据库；HadoopDB [12]（商业化为 Hadapt [28]）结合 MapReduce 与 DBMS。
+- **数据库与 Hadoop 混合。** DB2 [31]、Oracle [35]、Greenplum [4]、Asterdata [2]、Netezza [6]、Vertica [11]、Polybase [22] 把 Hadoop 接入自身数据库，使其能够访问 Hadoop 数据或运行 MapReduce 作业；HadoopDB [12]（商业化为 Hadapt [28]）结合 MapReduce 与 DBMS。
 
 ## 8. 实验
 
@@ -365,7 +367,7 @@ API 有三个必需 plugin、一个可选 plugin。实现后编译并部署到�
 
 ### 8.2 TPC-H 结果
 
-dbgen 生成 plain text 到 HDFS，再装入系统格式。HAWQ 原生 AO、CO、Parquet，默认表 hash partitioned；Stinger 用默认 ORCFile。系统分别独占集群。规模为 160 GB（10 GB/node，可全入内存，CPU-bound）和 1.6 TB（100 GB/node，I/O-bound）。我们先给出总体查询执行时间，然后聚焦若干具体查询，解释 HAWQ 如何以及为何胜过 Stinger。
+dbgen 生成 plain text 到 HDFS，再装入系统格式。HAWQ 原生 AO、CO、Parquet，默认表 hash partitioned；Stinger 使用当时 Hive 最新且最高效的 ORCFile 格式，并采用该格式的默认配置。系统分别独占集群。规模为 160 GB（10 GB/node，可全入内存，CPU-bound）和 1.6 TB（100 GB/node，I/O-bound）。我们先给出总体查询执行时间，然后聚焦若干具体查询，解释 HAWQ 如何以及为何胜过 Stinger。
 
 #### 8.2.1 总体结果
 
@@ -387,7 +389,7 @@ dbgen 生成 plain text 到 HDFS，再装入系统格式。HAWQ 原生 AO、CO�
 
 根据执行计划的复杂度，我们把 22 个 TPC-H 查询中的 12 个分成简单 selection 和复杂 join 两组。由于篇幅限制，我们这里只考虑 1.6 TB 数据集。
 
-**简单 selection。** Q1、Q6 是单表选择聚合；Q4、Q11、Q13、Q15 是两三表直接 join。这里，我们以 Q6 为例：它估算某年消除给定比例公司折扣带来的收入增加，只涉及 `lineitem`，计划是 sequential scan 后 two-phase aggregation。
+**简单 selection。** Q1、Q6 是单表选择聚合；Q4、Q11、Q13、Q15 是两三表直接 join。这里，我们以 Q6 为例：它计算在给定年份取消处于给定百分比范围内的某些全公司折扣后，收入本会增加多少，只涉及 `lineitem`，计划是 sequential scan 后 two-phase aggregation。
 
 ![简单选择查询](assets/figure-8-selection-queries.png)
 
@@ -401,7 +403,7 @@ HAWQ 对这些查询快 10 倍：HAWQ task startup/coordination 比 YARN 高效�
 
 **图 9：复杂 Join 查询。**
 
-HAWQ 约快 40 倍，除上述流水因素外还来自计划算法。HAWQ 根据统计用 cost-based optimizer 找近优计划；Stinger 以简单 rule-based、很少利用提示，通常只能给次优计划。多表 join 的大数据移动还受益于 HAWQ 互连比 MapReduce HTTP 更高的吞吐。
+HAWQ 约快 40 倍，除上述流水因素外还来自计划算法。HAWQ 根据表统计信息使用 cost-based 查询优化算法，使其能够找出最优计划；Stinger 以简单 rule-based、很少利用提示，通常只能给次优计划。多表 join 的大数据移动还受益于 HAWQ 互连比 MapReduce HTTP 更高的吞吐。
 
 ### 8.3 数据分布
 
@@ -443,7 +445,9 @@ hash distribution 下二者相近；random 下 UDP 比 TCP 快 54%。random 产�
 
 **图 13：可扩展性。**
 
-第一组从 4 到 16 节点，数据从 160 到 640 GB，执行时间仅增约 13%，可处理数据量随集群近线性增长。第二组固定数据，时间从 850 秒降至 236 秒，约为原 28%，执行时间随节点数近线性降低。
+第一组结果见图 13(a)，红色表示实测结果，绿色表示理想的线性期望值。从 4 到 16 节点，数据从 160 到 640 GB，执行时间仅增约 13%，表明可处理数据量随集群近线性增长。第二组结果见图 13(b)：固定数据时，从 4 到 16 节点，时间从 850 秒降至 236 秒，约为原 28%，表明执行时间随节点数近线性降低。
+
+> 原文颜色说明与图不一致：正文将理想期望曲线称为绿色，但图 13 中的 `Expect` 曲线为蓝色。
 
 ## 9. 结论
 

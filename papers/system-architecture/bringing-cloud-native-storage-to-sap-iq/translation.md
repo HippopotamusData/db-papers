@@ -43,9 +43,9 @@ SAP IQ 是一款凝聚三十年研发工作的成熟产品。下列技术使其�
 
 - **压缩。** SAP IQ 中的列数据使用字典编码和 $n$-bit 表示 [47] 压缩，并进一步采用页级压缩，以减少处理大量数据所需的 I/O。
 - **分区。** 用户可创建范围分区表和哈希分区表，两者适用于不同工作负载。
-- **索引。** SAP IQ 支持多种二级索引，包括把 $B^+$-tree [28, 38] 的能力与位图 [27] 的可扩展性和压缩结合起来的分层 High-Group（HG）索引 [21]；使用 zone map [19] 提前剪除查询不需要的页；还支持 DATE/TIME/DTTM、CMP、TEXT 等面向特定用途的索引。
+- **索引。** SAP IQ 支持多种二级索引，包括把 $B^+$-tree [28, 38] 的能力与位图 [27] 的可扩展性和压缩结合起来的分层 High-Group（HG）索引 [21]；使用 zone map [19] 提前剪除查询不需要的页；还支持多种面向特定用途的索引，例如针对日期部分查询的 DATE/TIME/DTTM 索引、用于两列比较的 CMP 索引，以及用于文本索引的 TEXT 索引。
 - **预取。** 查询期间，系统通过预取最大限度并行化 I/O。针对不同列和索引类型进行了专门调优 [42]，远不止顺序块预取。
-- **装载引擎。** 对 OLAP 系统而言，快速高效装载至关重要；SAP IQ 的装载引擎经过长期工程优化，可在装载期间最大化 CPU 利用率。
+- **装载引擎。** 对 OLAP 系统而言，快速高效装载至关重要；我们为 SAP IQ 装载引擎的并行化投入了三十年的工程工作，以在装载期间最大化 CPU 利用率。
 - **弹性。** SAP IQ 在共享存储之上采用分布式计算模型。无需改变底层存储系统或数据分区方式，便可独立增加计算节点以横向扩展。
 
 开发云版本时，我们尽可能复用这些优势。主要挑战来自对象存储的一致性模型。传统 SAP IQ 假定共享存储具有强一致性：事务写入磁盘块并提交后，后续事务读取该块时应得到最新数据。[^consistency-nodes] 继续采用这一假设就需要 NetApp [16] 或 AWS EFS [4] 一类高价方案。
@@ -162,7 +162,7 @@ SAP IQ 使用带快照隔离的 MVCC，修改数据会创建表的新版本；�
 
 ## 4. Object Cache Manager
 
-把用户数据直接存到 S3、Azure Blob Store 等对象存储，可显著降低存储成本并利用其弹性和横向扩展能力；但对象存储单次读写延迟高于 HDD/SSD，可能损害查询性能。通过更激进的预取并行化可以缓解，却会给使用昂贵 RAM 的 buffer manager 增加负担。
+把用户数据直接存到 S3、Azure Blob Store 等对象存储，可显著降低存储成本并利用其弹性和横向扩展能力；但对象存储的 I/O 特征与 HDD/SSD 等传统存储不同：虽然可能获得高得多的吞吐量，单次读写也可能产生更高延迟，进而损害查询性能。引入并行性，例如在读取期间采用更激进的预取，有可能克服这些限制；然而，这类优化会给 buffer manager 增加负担，而它使用的 RAM 在云上价格昂贵。
 
 ![内存层次结构](assets/figure-3-memory-hierarchy.png)
 
@@ -176,7 +176,7 @@ SAP IQ 使用带快照隔离的 MVCC，修改数据会创建表的新版本；�
 
 OCM 是读写缓存（图 4）。读取页时先查 RAM 中的传统 buffer manager；未命中再查 OCM。OCM 命中时从本地存储返回；未命中时从对象存储读取、返回调用方，并异步写入 OCM 磁盘供以后使用，同时也缓存在 RAM。read-through 语义显著降低 OCM 命中页的读取延迟。
 
-写操作有 write-back 和 write-through 两种模式。write-back 同步写 OCM 本地存储、异步写对象存储，延迟由本地存储决定；write-through 同步写对象存储、异步缓存到本地，延迟由对象存储决定。读写都会把页放入 OCM，系统用与 buffer manager 一致的 LRU 策略 [45] 腾出空间，并在读写之间维护统一 LRU 链表。以某对象键读入的页按设计不能再用同一键写出，所以缓存主要有利于读取。write-back 页直到成功写入对象存储才加入 LRU，避免失败或回滚事务的页在缓存中积聚。
+写操作有 write-back 和 write-through 两种模式。write-back 同步写 OCM 本地存储、异步写对象存储，延迟由本地存储决定；write-through 同步写对象存储、异步缓存到本地，延迟由对象存储决定。读写都会把页放入 OCM，系统用与 buffer manager 一致的 LRU 策略 [45] 腾出空间，并在读写之间维护统一 LRU 链表，其假设是最近由 OCM 写出或读取的页更可能再次被读取。以某对象键读入的页按设计不能再用同一键写出，所以缓存主要有利于读取。write-back 页直到成功写入对象存储才加入 LRU，避免失败或回滚事务的页在缓存中积聚。
 
 两种写模式对应事务与缓冲区管理器交互的三个阶段：warm-up、churn、commit。warm-up 期间页填充 RAM 缓存；churn 期间 LRU 页被驱逐以容纳新页；commit 期间提交事务的所有脏页（包括 OCM 中的页）被刷出。OLAP 长事务的 churn 阶段通常最长，因此缓存压力驱逐使用低延迟的 write-back；提交阶段必须确保脏页进入对象存储，因此使用优先落对象存储的 write-through。
 
@@ -232,11 +232,13 @@ OCM 只是一项性能优化，不影响事务一致性。没有 OCM 时，写�
 | AWS EBS | 51.80 |
 | AWS EFS | 155.40 |
 
-成本包含 EC2 运行时间、system dbspace 所需 EBS 卷和 S3 PUT/GET 等额外请求；静态成本按 user dbspace 压缩数据量乘 Amazon 公布月费计算。[^amazon-prices] 结果表明，在 S3 上存储和查询更便宜。S3 的静态存储本就低价；GET 附加成本则由更快的执行摊薄。S3 装载成本因 PUT 请求高于 EBS，但仍低于 EFS。EBS 很难用于弹性共享存储：多实例挂载需额外付费，IOPS 上限取决于卷配置而非节点数；即使单节点，它也不像 S3/EFS 那样跨可用区提供耐久性。
+成本包含 EC2 运行时间、system dbspace 所需 EBS 卷和 S3 PUT/GET 等额外请求；静态成本按 user dbspace 压缩数据量乘 Amazon 公布月费计算。[^amazon-prices] 结果表明，在 S3 上存储和查询更便宜。S3 的静态存储本就低价；GET 附加成本则由更快的执行摊薄。S3 装载成本因 PUT 请求高于 EBS，但仍低于 EFS。从实际使用角度看，EBS 只能作为非弹性部署中的存储卷：虽然它允许同一可用区内的多个实例挂载同一卷，但用户需要为此支付更高费用，而且 IOPS 上限取决于卷配置而非节点数；即使单节点，它也不像 S3/EFS 那样跨可用区提供耐久性。
 
 [^amazon-prices]: 成本依据 Amazon 公开列出的价格计算。
 
-SAP IQ 在 S3 上装载和查询更快，尽管 S3 延迟更高。S3 可提供优于 EBS/EFS 的吞吐，而后两者的 IOPS 可能被显著限流。[^volume-iops] 要发挥 S3，系统需要前缀、并行和本地缓存；SAP IQ 分别采用哈希前缀、激进并行 I/O/预取和 OCM。22 个查询在 S3 上的几何平均为 23.2 秒，EBS 为 52.1 秒，EFS 为 119.3 秒。Q2、Q19 太短，并行和预取不足以掩盖 S3 延迟；Q3 在 EBS 更快，原因是 OCM。关闭 OCM 后，Q3 在 S3 上为 58.0 秒，快于另外两者。
+SAP IQ 在 S3 上装载和查询更快，尽管 S3 延迟更高。S3 可提供优于 EBS/EFS 的吞吐，而后两者的 IOPS 可能被显著限流。[^volume-iops] 要发挥 S3，系统需要前缀、并行和本地缓存；SAP IQ 分别采用哈希前缀、激进并行 I/O/预取和 OCM。这些优化使 SAP IQ 在 S3 上获得更高吞吐，进而缩短装载和查询执行时间。上述两个观察验证了本文的论点：通过增强 SAP IQ 以适应较弱的一致性模型，我们释放了对象存储提供的诸多机会，例如更好的价格和吞吐量。
+
+22 个查询在 S3 上的几何平均为 23.2 秒，EBS 为 52.1 秒，EFS 为 119.3 秒，但也有例外。Q2、Q19 是短查询，并行和预取不足以掩盖 S3 延迟，这指出了一个有待改进的方面。Q3 则是长查询，因此本应预期它在 S3 上最快，实际却在 EBS 上最快。进一步检查后，我们发现这次是 OCM 导致的。关闭 OCM 后，Q3 在 S3 上为 58.0 秒，明显快于 EBS 和 EFS。我们将在下一组实验中更详细地分析这一行为。
 
 [^volume-iops]: EBS 所支持的最大 IOPS 取决于卷类型；标准 EFS 卷的 IOPS 则取决于已使用空间。
 
@@ -254,23 +256,23 @@ SAP IQ 在 S3 上装载和查询更快，尽管 S3 延迟更高。S3 可提供�
 
 **图 6：OCM 对查询执行时间的影响。**
 
-OCM 使 m5ad.4xlarge 和 m5ad.24xlarge 的查询几何平均时间分别改善 25.8% 和 25.6%。两次运行都有 warm-up：对象 read-through 并填充磁盘缓存，前几个查询更慢，随后逐渐改善。m5ad.24xlarge 上 Q3、Q4 明显退化。此时 OCM 较冷，多数对象需要一边从 S3 读、一边异步写 OCM；异步调度开销低于 5%，不足以解释退化；虽然存在 OCM 命中，SSD 读取延迟却高于 S3。结论是大量异步写饱和 SSD 时，缓存命中的读会受损。未来可同时监视 OCM 与对象存储读延迟，并在 OCM 更慢时动态绕过缓存。
+OCM 使 m5ad.4xlarge 和 m5ad.24xlarge 的查询几何平均时间分别改善 25.8% 和 25.6%。两次运行都有 warm-up：对象 read-through 并填充磁盘缓存，前几个查询更慢，随后逐渐改善。m5ad.24xlarge 上 Q3、Q4 明显退化。此时 OCM 较冷，多数对象需要一边从 S3 读、一边异步写 OCM；异步调度开销低于 5%，不足以解释退化；虽然存在 OCM 命中，SSD 读取延迟却高于 S3。根据这些观察，我们得出结论：在重负载下，OCM 以大量异步写入使底层 SSD 饱和时，缓存命中的读取可能受到影响，进而降低整体查询性能。未来可同时监视 OCM 与对象存储读延迟，并在 OCM 更慢时动态绕过缓存。
 
-m5ad.4xlarge 的 warm-up 退化较轻：Q1、Q2 变慢不超过 5%，Q3、Q4 反而改善。它 CPU 更少，对 OCM 的初始压力更低；同时 RAM cache 更小，会改变查询计划（如 sort-merge 与 hash join）以及流经 OCM 的数据方式。较小缓存让压力更均匀，较大缓存压力较小但请求呈突发，可能造成 brownout。持久或分布式缓存（如 Alluxio [37]）或 Redshift 式主动预热 [35] 或可改善，但会增加成本，留作未来研究。OCM 避免了 2,807,368 次 S3 GET，命中率 74.5%，节省 1.12 美元，即 32%。
+m5ad.4xlarge 的 warm-up 退化较轻：Q1、Q2 变慢不超过 5%，Q3、Q4 反而改善。它 CPU 更少，对 OCM 的初始压力更低；同时 RAM cache 更小，会改变查询计划（如 sort-merge 与 hash join）以及流经 OCM 的数据方式。较小缓存对 OCM 施加更大压力，但需求在查询执行期间分布更均匀；较大缓存对 OCM 的压力较小，但请求呈突发，可能因前述原因损害性能。这些因素的共同作用很可能有助于解释两次实验的差异。引入持久或分布式缓存（如 Alluxio [37]），或实现 Amazon Redshift 式主动预热机制 [35]，或许可以缓解其中一些性能暂降（brownout）问题。不过，这些增强会带来额外的存储和/或计算成本，尤其是在节点很少重启时。我们把这些权衡的研究留作未来工作。OCM 避免了 2,807,368 次 S3 GET，命中率 74.5%，节省 1.12 美元，即 32%。
 
-第三组实验比较 m5ad.4xlarge、m5ad.12xlarge、m5ad.24xlarge，在 S3 cloud dbspace 装载 SF1000 并执行 22 个查询。
+第三组实验在 RAM、SSD 和 CPU 容量依次增大的 m5ad.4xlarge、m5ad.12xlarge、m5ad.24xlarge 实例上重复测试，在 S3 cloud dbspace 装载 SF1000 并执行 22 个查询。
 
 ![纵向扩展行为](assets/figure-7-scale-up.png)
 
 **图 7：纵向扩展行为。**
 
-图 7 按 CPU 数绘制装载、顺序查询与总时间（双对数）。扩展近似线性，但从 48 到 96 CPU 的收益略低于从 16 到 48，装载阶段尤为明显。网络在略高于 9 Gbit/s 时饱和（图 8），而 m5ad.24xlarge 支持 20 Gbit/s，因此限制来自 SAP IQ 内部，例如 512 KB 页大小上限。进一步扩展需要增加节点。
+图 7 按 CPU 数绘制装载、顺序查询与总时间（双对数）。扩展近似线性，但从 48 到 96 CPU 的收益略低于从 16 到 48，装载阶段尤为明显。网络在略高于 9 Gbit/s 时饱和（图 8），而 m5ad.24xlarge 支持 20 Gbit/s，因此我们认为限制来自系统内部，例如 SAP IQ 的 512 KB 页大小限制；修改这一限制超出了本文范围。由此我们得出结论，要实现更好的可扩展性，必须开始向系统增加节点，即进行横向扩展，这将在下一组实验中评估。
 
 ![装载期间的网络带宽利用率](assets/figure-8-network-bandwidth.png)
 
 **图 8：装载期间的网络带宽利用率。**
 
-第四组实验以 throughput mode 执行 SF1000：构造 8 条由 TPC-H 查询伪随机排列组成的流并行执行；multiplex 含一个协调节点和 2、4、8 个 secondary node，查询流均匀分配。secondary node 使用 m5ad.4xlarge；协调节点不直接查询，r5.large 即可。system dbspace 需由所有节点访问，所以使用 EFS 而非 EBS。
+第四组实验以 throughput mode 执行 SF1000：构造 8 条由 TPC-H 查询伪随机排列组成的流并行执行；multiplex 含一个协调节点和 2、4、8 个 secondary node，查询流均匀分配；例如，只有 2 个 secondary node 时，每个节点并行执行 4 条查询流。secondary node 使用 m5ad.4xlarge；协调节点不直接查询，r5.large 即可。system dbspace 需由所有节点访问，所以使用 EFS 而非 EBS。
 
 ![横向扩展行为](assets/figure-9-scale-out.png)
 
@@ -288,11 +290,11 @@ Apache Hive 最初面向高度并行 ETL/批处理，在 HDFS [48] 数据上运�
 
 Delta Lake 直接建立在云对象存储上 [24]，表内容与 write-ahead transaction log 都以 Parquet [8] 对象保存，支持 ACID 修改、time travel，以及跨计算节点生命周期缓存数据和日志对象。Snowflake 从零构建为纯云 SaaS 数据仓库 [30, 54]，支持 SQL 和 ACID；在 EC2 上使用 shared-nothing 计算、在 S3 上使用共享存储，二者可独立弹性扩展。其 PAX 布局 [22] 先水平分区，再在分区内按列格式存到 S3 [30]。
 
-Redshift 是 Amazon SaaS OLAP 引擎 [35]，以 EC2、S3、SWF [6] 构建，强调通过自动预配、修补、监视、修复、备份与恢复简化管理。数据跨三层分布和复制：块在主节点本地存储、secondary node 本地存储和 S3 各存一份，查询时三层均可读；leader 把查询编译为机器码 [43] 并分发到执行节点。
+Redshift 是 Amazon SaaS OLAP 引擎 [35]，建立在其他 AWS 服务之上：EC2 提供计算，S3 提供存储，Amazon Simple Workflow（SWF）[6] 用于监控、计量和工具支持。它以简单性为设计目标，力图通过自动预配、修补、监视、修复、备份与恢复，尽可能简化数据库管理与调优。数据跨三层分布和复制：块在主节点本地存储、secondary node 本地存储和 S3 各存一份，查询时三层均可读；leader 把查询编译为机器码 [43] 并分发到执行节点。
 
 Vertica 是面向分析的列式关系数据库 [39]。enterprise mode 采用本地磁盘上的 shared-nothing 存储，适合 MPP，但存储无法独立于计算扩展。云端 EON mode 因而重构存储、元数据与容错子系统，使其使用 S3 共享存储 [52]；查询引擎基本不变，并以本地缓存屏蔽底层变化。
 
-总体而言，Big Data 系统利用云的大规模并行性，却常牺牲 ACID 或完整 SQL，不能算完全关系化；纯云 SaaS 数据仓库仍在成熟并面对各自权衡，例如 Snowflake 分区大小会放大频繁更新与高效查询间的矛盾，Redshift 的查询时编译和激进查询内并行在异构或变化负载上可能适得其反 [51]。Vertica 与 SAP IQ 都是成熟关系 OLAP 系统，但最初都不是为云设计：Vertica 主要把 shared-nothing 改为 S3 共享存储；SAP IQ 从一开始就是共享存储，却必须消除其强一致性依赖才能使用对象存储。
+总体而言，Big Data 系统利用云的大规模并行性，却常牺牲 ACID 或完整 SQL，不能算完全关系化；纯云 SaaS 数据仓库仍在成熟并面对各自权衡，例如 Snowflake 分区大小会放大频繁更新与高效查询间的矛盾，Redshift 在单用户工作负载上显著受益于查询时编译 [43] 和激进的查询内并行；然而，正如 Tan 等人指出的，这些优化在异构或变化的工作负载上可能对系统不利 [51]。Vertica 与 SAP IQ 都是成熟关系 OLAP 系统，但最初都不是为云设计：Vertica 主要把 shared-nothing 改为 S3 共享存储；SAP IQ 从一开始就是共享存储，却必须消除其强一致性依赖才能使用对象存储。
 
 ## 8. 结论与未来工作
 
@@ -354,11 +356,11 @@ Vertica 是面向分析的列式关系数据库 [39]。enterprise mode 采用本
 
 [24] M. Armbrust, T. Das, S. Paranjpye, R. Xin, S. Zhu, A. Ghodsi, B. Yavuz, M. Murthy, J. Torres, L. Sun, P. A. Boncz, M. Mokhtar, H. V. Hovell, A. Ionescu, A. Luszczak, M. Switakowski, T. Ueshin, X. Li, M. Szafranski, P. Senster, and M. Zaharia. Delta lake: High-performance ACID table storage over cloud object stores. Proc. VLDB Endow., 13(12):3411-3424, 2020.
 
-[25] H. Berenson, P. A. Bernstein, J. Gray, J. Melton, E. J. O'Neil, and P. E. O'Neil. A critique of ANSI SQL isolation levels. In Proceedings of SIGMOD, pages 1-10, 1995.
+[25] H. Berenson, P. A. Bernstein, J. Gray, J. Melton, E. J. O'Neil, and P. E. O'Neil. A critique of ANSI SQL isolation levels. In Proceedings of the 1995 ACM International Conference on Management of Data, SIGMOD, pages 1-10, 1995.
 
 [26] J. Camacho-Rodríguez, A. Chauhan, A. Gates, E. Koifman, O. O'Malley, V. Garg, Z. Haindrich, S. Shelukhin, P. Jayachandran, S. Seth, D. Jaiswal, S. Bouguerra, N. Bangarwa, S. Hariappan, A. Agarwal, J. Dere, D. Dai, T. Nair, N. Dembla, G. Vijayaraghavan, and G. Hagleitner. Apache Hive: From MapReduce to enterprise-grade big data warehousing. In Proceedings of the 2019 ACM International Conference on Management of Data, SIGMOD, pages 1773-1786, 2019.
 
-[27] C. Y. Chan and Y. E. Ioannidis. Bitmap index design and evaluation. In Proceedings of SIGMOD, pages 355-366, 1998.
+[27] C. Y. Chan and Y. E. Ioannidis. Bitmap index design and evaluation. In Proceedings of the 1998 ACM International Conference on Management of Data, SIGMOD, pages 355-366, 1998.
 
 [28] D. Comer. The ubiquitous b-tree. ACM Comput. Surv., 11(2):121-137, 1979.
 
@@ -368,13 +370,13 @@ Vertica 是面向分析的列式关系数据库 [39]。enterprise mode 采用本
 
 [31] S. Das, M. Grbic, I. Ilic, I. Jovandic, A. Jovanovic, V. R. Narasayya, M. Radulovic, M. Stikic, G. Xu, and S. Chaudhuri. Automatically indexing millions of databases in Microsoft Azure SQL database. In Proceedings of the 2019 International Conference on Management of Data, SIGMOD, pages 666-679, 2019.
 
-[32] J. Dean and S. Ghemawat. MapReduce: Simplified data processing on large clusters. In Proceedings of OSDI, pages 137-150, 2004.
+[32] J. Dean and S. Ghemawat. MapReduce: Simplified data processing on large clusters. In Proceedings of the 6th Symposium on Operating System Design and Implementation, OSDI, pages 137-150, 2004.
 
 [33] G. DeCandia, D. Hastorun, M. Jampani, G. Kakulapati, A. Lakshman, A. Pilchin, S. Sivasubramanian, P. Vosshall, and W. Vogels. Dynamo: Amazon's highly available key-value store. In Proceedings of the 2007 ACM Symposium on Operating Systems Principles, SOSP, pages 205-220, 2007.
 
 [34] F. Färber, S. K. Cha, J. Primsch, C. Bornhövd, S. Sigg, and W. Lehner. SAP HANA database: data management for modern business applications. SIGMOD Rec., 40(4):45-51, 2011.
 
-[35] A. Gupta, D. Agarwal, D. Tan, J. Kulesza, R. Pathak, S. Stefani, and V. Srinivasan. Amazon Redshift and the case for simpler data warehouses. In Proceedings of SIGMOD, pages 1917-1923, 2015.
+[35] A. Gupta, D. Agarwal, D. Tan, J. Kulesza, R. Pathak, S. Stefani, and V. Srinivasan. Amazon Redshift and the case for simpler data warehouses. In Proceedings of the 2015 ACM International Conference on Management of Data, SIGMOD, pages 1917-1923, 2015.
 
 [36] S. Idreos, F. Groffen, N. Nes, S. Manegold, K. S. Mullender, and M. L. Kersten. MonetDB: Two decades of research in column-oriented database architectures. IEEE Data Eng. Bull., 35(1):40-45, 2012.
 
@@ -400,7 +402,7 @@ Vertica 是面向分析的列式关系数据库 [39]。enterprise mode 采用本
 
 [47] M. Sharique, A. K. Goel, and M. Andrei. Rollover strategies in a n-bit dictionary compressed column store, 2013. US Patent 9489409B2.
 
-[48] K. Shvachko, H. Kuang, S. Radia, and R. Chansler. The Hadoop distributed file system. In Proceedings of MSST, pages 1-10, 2010.
+[48] K. Shvachko, H. Kuang, S. Radia, and R. Chansler. The Hadoop distributed file system. In Proceedings of the 2010 IEEE Conference on Mass Storage Systems and Technologies, MSST, pages 1-10, 2010.
 
 [49] M. Stonebraker, D. J. Abadi, A. Batkin, X. Chen, M. Cherniack, M. Ferreira, E. Lau, A. Lin, S. Madden, E. J. O'Neil, P. E. O'Neil, A. Rasin, N. Tran, and S. B. Zdonik. C-store: A column-oriented DBMS. In Proceedings of 2005 International Conference on Very Large Data Bases, VLDB, pages 553-564, 2005.
 
@@ -412,4 +414,4 @@ Vertica 是面向分析的列式关系数据库 [39]。enterprise mode 采用本
 
 [53] A. Verbitski, A. Gupta, D. Saha, M. Brahmadesam, K. Gupta, R. Mittal, S. Krishnamurthy, S. Maurice, T. Kharatishvili, and X. Bao. Amazon Aurora: Design considerations for high throughput cloud-native relational databases. In Proceedings of the 2017 ACM International Conference on Management of Data, SIGMOD, pages 1041-1052, 2017.
 
-[54] M. Vuppalapati, J. Miron, R. Agarwal, D. Truong, A. Motivala, and T. Cruanes. Building an elastic query engine on disaggregated storage. In Proceedings of USENIX NSDI, pages 449-462, 2020.
+[54] M. Vuppalapati, J. Miron, R. Agarwal, D. Truong, A. Motivala, and T. Cruanes. Building an elastic query engine on disaggregated storage. In Proceedings of the 2020 Symposium on Networked Systems Design and Implementation, USENIX, pages 449-462, 2020.
