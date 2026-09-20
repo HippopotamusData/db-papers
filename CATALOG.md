@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：169
-- 已审阅译文：163
+- 论文记录：172
+- 已审阅译文：166
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -18,9 +18,9 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 6 |
 | 系统架构 (`system-architecture`) | 26 |
-| 查询处理 (`query-processing`) | 58 |
+| 查询处理 (`query-processing`) | 60 |
 | 存储 (`storage`) | 21 |
-| 事务与并发控制 (`transactions`) | 9 |
+| 事务与并发控制 (`transactions`) | 10 |
 | 分布式数据库 (`distributed-databases`) | 8 |
 | 数据集成 (`data-integration`) | 2 |
 | 流处理 (`streaming`) | 8 |
@@ -79,7 +79,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，58 篇)
+### 查询处理 (`query-processing`，60 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -114,6 +114,7 @@
 | [Interleaved Multi-Vectorizing](papers/query-processing/interleaved-multi-vectorizing/translation.md) | 向量化执行 | 2019 | 3.0 | translated | [原文](papers/query-processing/interleaved-multi-vectorizing/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol13/p226-fang.pdf>) |
 | [Learned Cardinalities: Estimating Correlated Joins with Deep Learning](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/translation.md) | 查询优化、基数估计、AI 优化数据库 | 2019 | 4.0 | translated | [原文](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/source.pdf) | [官方链接](<https://vldb.org/cidrdb/2019/learned-cardinalities-estimating-correlated-joins-with-deep-learning.html>) |
 | [Low-Latency Compilation of SQL Queries to Machine Code](papers/query-processing/low-latency-compilation-sql-queries-machine-code/translation.md) | 查询编译 | 2021 | 2.5 | translated | [原文](papers/query-processing/low-latency-compilation-sql-queries-machine-code/source.pdf) | [官方链接](<https://vldb.org/pvldb/vol14/p2691-funke.pdf>) |
+| [Main-Memory Hash Joins on Multi-Core CPUs: Tuning to the Underlying Hardware](papers/query-processing/main-memory-hash-joins-multicore-cpus/translation.md) | 查询执行 | 2013 | 4.0 | translated | [原文](papers/query-processing/main-memory-hash-joins-multicore-cpus/source.pdf) | [官方链接](<https://dbis.cs.tu-dortmund.de/publikationen/2013/main-memory-hash-joins/>) |
 | [MonetDB/X100: Hyper-Pipelining Query Execution](papers/query-processing/monetdb-x100-hyper-pipelining-query-execution/translation.md) | 向量化执行 | 2005 | 5.0 | translated | [原文](papers/query-processing/monetdb-x100-hyper-pipelining-query-execution/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2005/papers/P19.pdf>) |
 | [Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age](papers/query-processing/morsel-driven-parallelism/translation.md) | 查询执行 | 2014 | 4.5 | translated | [原文](papers/query-processing/morsel-driven-parallelism/source.pdf) | [官方链接](<https://doi.org/10.1145/2588555.2610507>) |
 | [Neo: A Learned Query Optimizer](papers/query-processing/neo-a-learned-query-optimizer/translation.md) | 查询优化、AI 优化数据库 | 2019 | 4.0 | translated | [原文](papers/query-processing/neo-a-learned-query-optimizer/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol12/p1705-marcus.pdf>) |
@@ -122,6 +123,7 @@
 | [Optimizing Queries over Partitioned Tables in MPP Systems](papers/query-processing/optimizing-queries-partitioned-tables-mpp/translation.md) | 查询优化 | 2014 | 3.5 | translated | [原文](papers/query-processing/optimizing-queries-partitioned-tables-mpp/source.pdf) | [官方链接](<https://d1fto35gcfffzn.cloudfront.net/big-data/white-paper/OptimizingQueriesOverPartitionedTablesInMPPSystems.pdf>) |
 | [Optimizing Queries Using Materialized Views: A Practical, Scalable Solution](papers/query-processing/optimizing-queries-using-materialized-views/translation.md) | 查询优化 | 2001 | 4.0 | translated | [原文](papers/query-processing/optimizing-queries-using-materialized-views/source.pdf) | [官方链接](<https://doi.org/10.1145/375663.375706>) |
 | [Orca: A Modular Query Optimizer Architecture for Big Data](papers/query-processing/orca-modular-query-optimizer-architecture-big-data/translation.md) | 查询优化 | 2014 | 4.5 | translated | [原文](papers/query-processing/orca-modular-query-optimizer-architecture-big-data/source.pdf) | [官方链接](<https://doi.org/10.1145/2588555.2595637>) |
+| [Orthogonal Optimization of Subqueries and Aggregation](papers/query-processing/orthogonal-optimization-subqueries-aggregation/translation.md) | 查询优化 | 2001 | 4.5 | translated | [原文](papers/query-processing/orthogonal-optimization-subqueries-aggregation/source.pdf) | [官方链接](<https://sigmodrecord.org/publications/sigmodRecord/0106/pdfs/Orthogonal%20Optimization%20of%20Subqueries%20and%20Aggregation.pdf>) |
 | [Permutable Compiled Queries: Dynamically Adapting Compiled Queries without Recompiling](papers/query-processing/permutable-compiled-queries-dynamically-adapting-without-recompiling/translation.md) | 查询编译 | 2021 | 3.0 | translated | [原文](papers/query-processing/permutable-compiled-queries-dynamically-adapting-without-recompiling/source.pdf) | [官方链接](<https://db.cs.cmu.edu/papers/2020/p101-menon.pdf>) |
 | [Photon: A Fast Query Engine for Lakehouse Systems](papers/query-processing/photon-fast-query-engine-lakehouse-systems/translation.md) | 云原生、查询执行、向量化执行、湖仓一体 | 2022 | 4.0 | translated | [原文](papers/query-processing/photon-fast-query-engine-lakehouse-systems/source.pdf) | [官方链接](<https://doi.org/10.1145/3514221.3526054>) |
 | [Presto: SQL on Everything](papers/query-processing/presto-sql-on-everything/translation.md) | 查询执行、数据联邦 | 2019 | 4.5 | translated | [原文](papers/query-processing/presto-sql-on-everything/source.pdf) | [官方链接](<https://trino.io/Presto_SQL_on_Everything.pdf>) |
@@ -168,13 +170,14 @@
 | [WiscKey: Separating Keys from Values in SSD-conscious Storage](papers/storage/wisckey-ssd-conscious-storage/translation.md) | 存储引擎 | 2016 | 4.0 | translated | [原文](papers/storage/wisckey-ssd-conscious-storage/source.pdf) | [官方链接](<https://www.usenix.org/conference/fast16/technical-sessions/presentation/lu>) |
 | [X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing](papers/storage/x-engine-an-optimized-storage-engine-for-large-scale-e-commerce-transaction-processing/translation.md) | 存储引擎、事务处理 | 2019 | 3.5 | translated | [原文](papers/storage/x-engine-an-optimized-storage-engine-for-large-scale-e-commerce-transaction-processing/source.pdf) | [官方链接](<https://www.cs.utah.edu/~lifeifei/papers/sigmod-xengine.pdf>) |
 
-### 事务与并发控制 (`transactions`，9 篇)
+### 事务与并发控制 (`transactions`，10 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
 | [A Critique of ANSI SQL Isolation Levels](papers/transactions/critique-ansi-sql-isolation-levels/translation.md) | 事务处理、并发控制 | 1995 | 5.0 | translated | [原文](papers/transactions/critique-ansi-sql-isolation-levels/source.pdf) | [官方链接](<https://sigmodrecord.org/1995/06/06/a-critique-of-ansi-sql-isolation-levels/>) |
 | [ARIES: A Transaction Recovery Method Supporting Fine-Granularity Locking and Partial Rollbacks Using Write-Ahead Logging](papers/transactions/aries-transaction-recovery-method/source.pdf) | 事务处理 | 1992 | 5.0 | skipped | [原文](papers/transactions/aries-transaction-recovery-method/source.pdf) | [官方链接](<https://research.ibm.com/publications/aries-a-transaction-recovery-method-supporting-fine-granularity-locking-and-partial-rollbacks-using-write-ahead-logging>) |
 | [Calvin: Fast Distributed Transactions for Partitioned Database Systems](papers/transactions/calvin-fast-distributed-transactions-partitioned-database-systems/translation.md) | 事务处理、并发控制 | 2012 | 4.5 | translated | [原文](papers/transactions/calvin-fast-distributed-transactions-partitioned-database-systems/source.pdf) | [官方链接](<https://doi.org/10.1145/2213836.2213838>) |
+| [Fast Serializable Multi-Version Concurrency Control for Main-Memory Database Systems](papers/transactions/fast-serializable-mvcc-main-memory-databases/translation.md) | 事务处理、并发控制 | 2015 | 4.5 | translated | [原文](papers/transactions/fast-serializable-mvcc-main-memory-databases/source.pdf) | [官方链接](<https://db.in.tum.de/~muehlbau/papers/mvcc.pdf>) |
 | [Granularity of Locks and Degrees of Consistency in a Shared Data Base](papers/transactions/granularity-locks-degrees-consistency-shared-database/translation.md) | 事务处理、并发控制 | 1976 | 5.0 | translated | [原文](papers/transactions/granularity-locks-degrees-consistency-shared-database/source.pdf) | [官方链接](<https://www.seas.upenn.edu/~zives/05s/cis650/papers/granularity-locks.pdf>) |
 | [On Optimistic Methods for Concurrency Control](papers/transactions/optimistic-methods-concurrency-control/translation.md) | 事务处理、并发控制 | 1981 | 5.0 | translated | [原文](papers/transactions/optimistic-methods-concurrency-control/source.pdf) | [官方链接](<https://doi.org/10.1145/319566.319567>) |
 | [Sagas](papers/transactions/sagas/translation.md) | 事务处理 | 1987 | 5.0 | translated | [原文](papers/transactions/sagas/source.pdf) | [官方链接](<https://sigmodrecord.org/1987/12/09/sagas/>) |
@@ -263,5 +266,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 169 | 0 |
-| 发表年份 | 169 | 0 |
+| 作者 | 172 | 0 |
+| 发表年份 | 172 | 0 |

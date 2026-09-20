@@ -1,0 +1,19 @@
+title: Fast Serializable Multi-Version Concurrency Control for Main-Memory Database Systems
+title_zh: 面向内存数据库系统的快速可串行化多版本并发控制
+authors:
+  - Thomas Neumann
+  - Tobias Mühlbauer
+  - Alfons Kemper
+year: 2015
+source_url: https://db.in.tum.de/~muehlbau/papers/mvcc.pdf
+topics:
+  - transaction-processing
+  - concurrency-control
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 4
