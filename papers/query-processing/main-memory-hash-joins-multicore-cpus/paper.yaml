@@ -1,0 +1,12 @@
+title: 'Main-Memory Hash Joins on Multi-Core CPUs: Tuning to the Underlying Hardware'
+title_zh: 多核 CPU 上的内存哈希连接：针对底层硬件的调优
+authors:
+  - Cagri Balkesen
+  - Jens Teubner
+  - Gustavo Alonso
+  - M. Tamer Özsu
+year: 2013
+source_url: https://dbis.cs.tu-dortmund.de/publikationen/2013/main-memory-hash-joins/
+topics:
+  - query-execution
+reading_status: source_only

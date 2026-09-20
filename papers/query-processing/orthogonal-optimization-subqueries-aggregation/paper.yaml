@@ -1,0 +1,10 @@
+title: Orthogonal Optimization of Subqueries and Aggregation
+title_zh: 子查询与聚合的正交优化
+authors:
+  - César A. Galindo-Legaria
+  - Milind M. Joshi
+year: 2001
+source_url: https://sigmodrecord.org/publications/sigmodRecord/0106/pdfs/Orthogonal%20Optimization%20of%20Subqueries%20and%20Aggregation.pdf
+topics:
+  - query-optimization
+reading_status: source_only
