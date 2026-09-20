@@ -1,0 +1,15 @@
+title: 'Debunking the Myth of Join Ordering: Toward Robust SQL Analytics'
+title_zh: '破除连接顺序的迷思：迈向鲁棒的 SQL 分析'
+authors:
+  - Junyi Zhao
+  - Kai Su
+  - Yifei Yang
+  - Xiangyao Yu
+  - Paraschos Koutris
+  - Huanchen Zhang
+year: 2025
+source_url: https://people.iiis.tsinghua.edu.cn/~huanchen/publications/rpt-sigmod25.pdf
+topics:
+  - query-optimization
+  - query-execution
+reading_status: source_only

@@ -1,0 +1,10 @@
+title: 'Keep It Simple: Testing Databases via Differential Query Plans'
+title_zh: '保持简单：通过查询计划差分测试数据库'
+authors:
+  - Jinsheng Ba
+  - Manuel Rigger
+year: 2024
+source_url: https://bajinsheng.github.io/assets/pdf/dqp_sigmod24.pdf
+topics:
+  - database-testing
+reading_status: source_only

@@ -1,0 +1,11 @@
+title: 'The Adaptive Radix Tree: ARTful Indexing for Main-Memory Databases'
+title_zh: '自适应基数树：面向内存数据库的 ART 索引'
+authors:
+  - Viktor Leis
+  - Alfons Kemper
+  - Thomas Neumann
+year: 2013
+source_url: https://db.in.tum.de/~leis/papers/ART.pdf
+topics:
+  - indexing
+reading_status: source_only
