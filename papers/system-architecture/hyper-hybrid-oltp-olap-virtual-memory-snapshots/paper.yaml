@@ -1,0 +1,13 @@
+title: 'HyPer: A Hybrid OLTP&OLAP Main Memory Database System Based on Virtual Memory
+  Snapshots'
+title_zh: HyPer：基于虚拟内存快照的 OLTP 与 OLAP 混合内存数据库系统
+authors:
+- Alfons Kemper
+- Thomas Neumann
+year: 2011
+source_url: https://15799.courses.cs.cmu.edu/fall2013/static/papers/hyper.pdf
+topics:
+- database-system-design
+- transaction-processing
+- analytical-database
+reading_status: source_only

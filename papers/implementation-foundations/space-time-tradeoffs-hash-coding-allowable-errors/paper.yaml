@@ -1,0 +1,9 @@
+title: Space/Time Trade-offs in Hash Coding with Allowable Errors
+title_zh: 允许误判的散列编码中的空间与时间权衡
+authors:
+- Burton H. Bloom
+year: 1970
+source_url: https://crystal.uta.edu/~mcguigan/cse6350/papers/Bloom.pdf
+topics:
+- indexing
+reading_status: source_only

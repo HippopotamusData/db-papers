@@ -1,0 +1,11 @@
+title: An Evaluation of Buffer Management Strategies for Relational Database Systems
+title_zh: 关系数据库系统缓冲区管理策略评估
+authors:
+- Hong-Tai Chou
+- David J. DeWitt
+year: 1985
+source_url: https://courses.cs.duke.edu/spring03/cps216/papers/chou-dewitt-1985.pdf
+topics:
+- storage-engine
+- query-execution
+reading_status: source_only
