@@ -9,4 +9,11 @@ year: 2000
 source_url: https://www.cse.iitb.ac.in/~sudarsha/Pubs-dir/mqo-sigmod00.pdf
 topics:
 - query-optimization
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 5
+  reader_payoff: 5

@@ -21,6 +21,66 @@ def columns(*texts: str, width: int = 72) -> str:
 
 
 class ReferenceReviewRegressionTests(unittest.TestCase):
+    def test_damaged_author_prefix_requires_strong_bounded_content(self) -> None:
+        source = [("ilcro76j", "Lcroudicr Poticr Principles Oplimalily "
+                   "Multi-Programming inlet-national Symposium Computer Performance "
+                   "Modeling Measurement Evaluation ACM SIGMETRICS IFIP WG")]
+        target = [("lero76", "Leroudier Potier Principles Optimality "
+                   "Multi-Programming International Symposium Computer Performance "
+                   "Modeling Measurement Evaluation ACM SIGMETRICS IFIP WG")]
+        normalized, risks = resources._normalize_source_author_key_ocr(source, target)
+        self.assertEqual(normalized[0][0], "lero76")
+        self.assertTrue(risks)
+        # An almost identical second bibliography entry remains ambiguous.
+        ambiguous = target + [("other76", target[0][1].replace("Optimality", "Efficiency"))]
+        self.assertEqual(resources._normalize_source_author_key_ocr(source, ambiguous),
+                         (source, []))
+        # Long shared tails outside the bounded identity window do not help.
+        late = [("ilcro76j", "Unreadable " * 20 + target[0][1])]
+        self.assertEqual(resources._normalize_source_author_key_ocr(late, target),
+                         (late, []))
+
+    def test_repeated_authors_need_discriminating_title_content(self) -> None:
+        source = [("saccxs", "Sacco Giovanni Maria Mario Schkolnick Buller Management "
+                   "Relational Database Syslcms Appear ACM Transactions Datahasc Systerns")]
+        target = [
+            ("sacc85", "Sacco Giovanni Maria Mario Schkolnick Buffer Management "
+             "Relational Database Systems Appear ACM Transactions Database Systems"),
+            ("sacc82", "Sacco Giovanni Maria Mario Schkolnick Mechanism Managing "
+             "Buffer Pool Relational Database System Using Hot Set Model"),
+        ]
+        normalized, risks = resources._normalize_source_author_key_ocr(source, target)
+        self.assertEqual(normalized[0][0], "sacc85")
+        self.assertTrue(risks)
+        # Removing the actual matching work must not select its authors' other paper.
+        self.assertEqual(resources._normalize_source_author_key_ocr(source, target[1:]),
+                         (source, []))
+
+    def test_wrapped_decimal_references_beside_left_body(self) -> None:
+        source = columns(
+            "conclusions continue.\nresults are useful.\nthe model is approximate.\n\nmore discussion.\nfurther analysis.\nfinal statement.\n",
+            "REFERENCES\n"
+            "1. Batson, A. The organization of symbol tables. Comm. ACM 8,\n"
+            "   2 (Feb. 1965), 111-112.\n"
+            "2. Maurer, W. D. An improved hash code for scatter storage.\n"
+            "   Comm. ACM 11, 1 (Jan. 1968), 35-38.\n"
+            "3. Morris, R. Scatter storage techniques. Comm. ACM 11, 1\n"
+            "   (Jan. 1968), 38-44.\n",
+        )
+        _, section, _ = resources._review_source_reference_parts(source)
+        entries = dict(resources._reference_entries(section))
+        self.assertEqual(list(entries), ["1", "2", "3"])
+        self.assertNotIn("conclusion", section)
+        self.assertIn("1968", entries["3"])
+        translation = "## 参考文献\n" + "\n".join(
+            f"{key}. {text}" for key, text in entries.items()
+        )
+        self.assertEqual(resources._reference_findings(source, translation), ([], []))
+        errors, _ = resources._reference_findings(
+            source, translation.replace("2. " + entries["2"], "")
+        )
+        self.assertIn("missing numbered references: 2", errors)
+
     def test_right_column_before_heading_and_continuation_are_recovered(self) -> None:
         source = columns(
             "Conclusion.\nOur database is useful.\n\nREFERENCES\n"

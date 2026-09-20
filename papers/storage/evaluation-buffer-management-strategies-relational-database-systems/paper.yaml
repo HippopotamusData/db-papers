@@ -8,4 +8,11 @@ source_url: https://courses.cs.duke.edu/spring03/cps216/papers/chou-dewitt-1985.
 topics:
 - storage-engine
 - query-execution
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 5
+  reader_payoff: 5
