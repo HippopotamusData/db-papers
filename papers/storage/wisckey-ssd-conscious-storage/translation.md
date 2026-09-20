@@ -180,7 +180,7 @@ WiscKey 在 vLog 中维护 head 和 tail。所有新写入追加到 head；垃�
 
 图 5：支持垃圾回收的 WiscKey vLog 布局。head 与 tail 持久保存在 LSM-tree 中，只有垃圾回收线程移动 tail，普通写入追加到 head。
 
-为避免垃圾回收期间崩溃丢数据，WiscKey 先把有效 value 追加到 vLog 并对 vLog 调用 `fsync()`，然后把这些新 value address 和当前 tail 同步写入 LSM-tree。tail 以形如 `<"tail", tail-vLog-offset>` 的条目存储。最后才回收 vLog 空间。垃圾回收可周期触发、阈值触发，也可离线运行。
+为避免垃圾回收期间崩溃丢数据，WiscKey 先把有效 value 追加到 vLog 并对 vLog 调用 `fsync()`，然后把这些新 value address 和当前 tail 同步写入 LSM-tree。tail 以形如 `<"tail", tail-vLog-offset>` 的条目存储。最后才回收 vLog 空间。
 
 WiscKey 可配置为周期性启动垃圾回收，也可在触发后持续运行到达到特定阈值；垃圾回收还可在维护时离线运行。对于删除很少的工作负载以及存储空间充分 overprovisioned 的环境，可以很少触发垃圾回收。
 
