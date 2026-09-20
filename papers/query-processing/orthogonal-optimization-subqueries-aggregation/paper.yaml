@@ -7,4 +7,11 @@ year: 2001
 source_url: https://sigmodrecord.org/publications/sigmodRecord/0106/pdfs/Orthogonal%20Optimization%20of%20Subqueries%20and%20Aggregation.pdf
 topics:
   - query-optimization
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5

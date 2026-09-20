@@ -47,7 +47,7 @@ PORTABLE_COMMANDS = frozenset(
     """
     Big Delta Gamma Join Leftrightarrow Longleftrightarrow Omega Phi Pi Pr
     Rightarrow Theta Vert Xi alpha approx arg ast bar begin beta big bigcup bigl
-    bigr bigwedge bmod bot bowtie cap cdot cdots chi circ coloneqq cup deg
+    bigr bigwedge bmod bot bowtie boxed cap cdot cdots chi circ coloneqq cup deg
     delta div ell emptyset end epsilon equiv exists exp forall frac gamma ge
     geq gg gt hat in infty lVert lambda land langle lbrace lceil ldots le left
     leftarrow leftrightarrow leq lfloor lim ll ln log longrightarrow lor lt

@@ -141,6 +141,20 @@ y &= 2
         self.assertEqual([issue.code for issue in issues], ["GHM013"])
         self.assertIn(r"use \thinspace{}", issues[0].message)
 
+    def test_accepts_boxed_dirty_object_notation(self) -> None:
+        text = r"写入 $w(\boxed{x})$，读取 $r(\boxed{x})$，插入 $i(\boxed{o})$，删除 $d(\boxed{u})$。"
+        self.assertEqual(self.codes(text), [])
+        self.assertEqual(
+            [expression.text for expression in extract_math_expressions(text)],
+            [r"w(\boxed{x})", r"r(\boxed{x})", r"i(\boxed{o})", r"d(\boxed{u})"],
+        )
+
+    def test_rejects_unverified_command_inside_boxed(self) -> None:
+        self.assertEqual(
+            self.codes(r"正文 $\boxed{\notARealCommand{x}}$。"),
+            ["GHM013"],
+        )
+
     def test_rejects_commands_outside_verified_profile(self) -> None:
         self.assertEqual(self.codes(r"正文 $\notARealCommand{x}$。"), ["GHM013"])
 
