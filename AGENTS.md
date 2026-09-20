@@ -56,6 +56,40 @@ below without stopping for a new approval at each handoff.
 | Change AI instructions, workflows, CI, or release flow | `docs/workflows/maintain.md` |
 | Change taxonomy, scripts, generated catalog, or maintainer environment | `docs/workflows/maintain.md` |
 
+## Rule ownership and document updates
+
+Each rule has one authoritative document below. Task routing determines what to
+read; this table determines where to write. The user's current scope and explicit
+instructions take precedence; an owning document cannot expand that authority.
+
+| Rule type | Authoritative document |
+| --- | --- |
+| Task routing, evidence/storage boundaries, autonomy, and repository-wide gate selection | `AGENTS.md` |
+| Translation fidelity, completeness, reader-visible structure, and author-facing math syntax | `docs/translation-policy.md` |
+| Draft creation, frontmatter, pre-review checks, and translation handoff | `docs/workflows/translate.md` |
+| Review scope, finding severity/acceptance, reviewer independence, and post-fix verification | `docs/workflows/review.md` |
+| Metadata fields, classification application, lifecycle states, and transition ownership | `docs/workflows/metadata.md` |
+| Source acquisition and identity/readability verification | `docs/workflows/ingest.md` |
+| Rating evidence, criteria, and calculation | `docs/workflows/rating.md` |
+| Multi-agent coordination, checkpoints, and batch closure/integration | `docs/workflows/batch-translate.md` |
+| Document maintenance procedure, validator design, environment, CI, and release implementation | `docs/workflows/maintain.md` |
+| Math tool profiles, platform diagnostics, safe fixers, and migrations | `docs/portable-math-maintainers.md` |
+
+Before adding guidance, locate the existing rule and its owner. Merge or refine
+that rule there; do not append the same requirement to every role document.
+Other documents may state the local action or gate timing and link to the owning
+section, but must not redefine its criteria or exceptions. Necessary entry-point
+summaries stay short. When several concerns change, split them by ownership and
+update only affected references. Consolidate existing duplicates in the same edit.
+Resolve conflicting copies at the owner, then correct the callers instead of
+adding another exception in each document.
+
+A new finding does not automatically require a new rule: if the rule already
+covers it, keep the incident evidence in the task report/PR. Add a reusable example
+only when it clarifies a distinct decision boundary. Do not create a new document
+when an existing owner fits. Check caller links and representative task scenarios
+using the maintenance workflow before finishing a documentation change.
+
 ## Global invariants
 
 - One paper lives at `papers/<primary-area>/<paper-id>/`; the path supplies the paper ID and primary area.
@@ -105,7 +139,7 @@ make batch-close-check BATCH_MANIFEST=tmp/batches/<id>.yaml  # final clean-HEAD 
 Before finishing an ordinary integrated change, run `make check` and `make diff-check`. Run `make deep-check DEEP_REASON=<reason>` **instead of** `make check` only when a dependency, policy, or workflow change affects paper-content interpretation, publication semantics, or global-validator behavior, or when the user explicitly requests a full audit. Allowed reasons are `content-semantics`, `publication-semantics`, `validator-semantics`, and `full-audit`. Pages, documentation, packaging, and release-flow changes that do not affect those semantics use `make check`. Then run `make diff-check`.
 Changes to the site generator, theme, or Pages workflow also run `make site-check`.
 
-In a Codex translation batch, the translator runs `make paper-check`. An independent reviewer performs the PDF review; after the final review, the root agent sets `reading_status: translated` and reruns the single-paper gate. Review evidence belongs in the PR, commit, or task report, not in a repository ledger. The root agent owns shared state, checkpoints, and integration. Ordinary translation batches do not run `make deep-check`.
+Batch roles, per-paper gate timing, and clean-HEAD closure follow `docs/workflows/batch-translate.md`; ordinary translation batches do not run `make deep-check`.
 
 Complete the required gates for the active workflow and role. Once they pass, add or repeat checks only for new changes, failures, or unresolved concerns. Status-change checks, the final clean-HEAD batch gate, and required CI checks remain mandatory at their specified stages. Do not add tests that merely restate low-impact documentation or configuration edits.
 

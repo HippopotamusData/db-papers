@@ -8,6 +8,9 @@ GitHub 正确解析和渲染是唯一硬平台要求。仓库仍采用 `$...$`�
 
 ## 工具分层
 
+静态公式兼容错误在 `draft` 和 `translated` 状态下都直接失败，不能通过保留
+草稿状态绕过。下述歧义候选仍须回到 PDF 判断；扫描器未报告不证明语义正确。
+
 1. `scripts/validate_github_math.py` 只读解析 Markdown 与公式，执行 GitHub 边界、容器、分隔符、TeX profile 和表格检查。
 2. `scripts/fix_portable_math.py` 只在显式 `fix --safe` 下插入少量 opening `$` 前的 ASCII 空格。
 3. `scripts/verify_math_rendering.py` 使用仓库锁定的 MathJax 做本地 TeX 结构门禁，并负责 GitHub Markdown 公式节点审计；KaTeX 模式仅用于可选的编辑器兼容诊断。
@@ -95,6 +98,9 @@ GitHub Markdown API 审计证明 GitHub 为每个公式创建节点且未改写�
 ## 变更要求
 
 每个解析差异先落最小回归用例，再修改实现。测试至少覆盖：代码与 HTML code、列表/引用 fence、跨行 code span、链接 destination 与文字、斜体/粗体、脚注、图片 alt、带与不带外侧管道的表格、容器边界、安全修复字节范围与幂等性。
+
+修改共享公式加载逻辑时，覆盖首次加载与站内跳转后的实际排版；生成公式节点
+不等于分数线、上下标和对齐正确，呈现判据遵循 [translation policy](translation-policy.md#核源与呈现核验)。
 
 修改 profile、扫描器、修复器或全库公式后运行：
 
