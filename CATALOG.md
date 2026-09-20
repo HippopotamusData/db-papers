@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：175
-- 已审阅译文：169
+- 论文记录：181
+- 已审阅译文：175
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -16,10 +16,10 @@
 | 一级领域 | 数量 |
 | --- | ---: |
 | 基础与综述 (`foundations`) | 2 |
-| 算法与实现基础 (`implementation-foundations`) | 6 |
-| 系统架构 (`system-architecture`) | 26 |
-| 查询处理 (`query-processing`) | 61 |
-| 存储 (`storage`) | 22 |
+| 算法与实现基础 (`implementation-foundations`) | 7 |
+| 系统架构 (`system-architecture`) | 28 |
+| 查询处理 (`query-processing`) | 63 |
+| 存储 (`storage`) | 23 |
 | 事务与并发控制 (`transactions`) | 10 |
 | 分布式数据库 (`distributed-databases`) | 8 |
 | 数据集成 (`data-integration`) | 2 |
@@ -37,7 +37,7 @@
 | [A Relational Model of Data for Large Shared Data Banks](papers/foundations/a-relational-model-of-data-for-large-shared-data-banks/translation.md) | 数据库总览、关系模型 | 1970 | 5.0 | translated | [原文](papers/foundations/a-relational-model-of-data-for-large-shared-data-banks/source.pdf) | [官方链接](<https://research.ibm.com/publications/a-relational-model-of-data-for-large-shared-data-banks>) |
 | [Architecture of a Database System](papers/foundations/architecture-of-a-database-system/source.pdf) | 数据库总览 | 2007 | 4.0 | skipped | [原文](papers/foundations/architecture-of-a-database-system/source.pdf) | [官方链接](<https://dsf.berkeley.edu/papers/fntdb07-architecture.pdf>) |
 
-### 算法与实现基础 (`implementation-foundations`，6 篇)
+### 算法与实现基础 (`implementation-foundations`，7 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -47,8 +47,9 @@
 | [Merge Path - A Visually Intuitive Approach to Parallel Merging](papers/implementation-foundations/merge-path-visually-intuitive-parallel-merging/translation.md) | 排序与归并 | 2014 | 4.0 | translated | [原文](papers/implementation-foundations/merge-path-visually-intuitive-parallel-merging/source.pdf) | [官方链接](<https://arxiv.org/abs/1406.2628>) |
 | [Pattern-defeating Quicksort](papers/implementation-foundations/pattern-defeating-quicksort/translation.md) | 排序与归并 | 2021 | 4.0 | translated | [原文](papers/implementation-foundations/pattern-defeating-quicksort/source.pdf) | [官方链接](<https://arxiv.org/abs/2106.05123>) |
 | [Random Sampling with a Reservoir](papers/implementation-foundations/random-sampling-with-a-reservoir/translation.md) | 流处理 | 1985 | 5.0 | translated | [原文](papers/implementation-foundations/random-sampling-with-a-reservoir/source.pdf) | [官方链接](<https://doi.org/10.1145/3147.3165>) |
+| [Space/Time Trade-offs in Hash Coding with Allowable Errors](papers/implementation-foundations/space-time-tradeoffs-hash-coding-allowable-errors/translation.md) | 索引 | 1970 | 5.0 | translated | [原文](papers/implementation-foundations/space-time-tradeoffs-hash-coding-allowable-errors/source.pdf) | [官方链接](<https://crystal.uta.edu/~mcguigan/cse6350/papers/Bloom.pdf>) |
 
-### 系统架构 (`system-architecture`，26 篇)
+### 系统架构 (`system-architecture`，28 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -59,6 +60,7 @@
 | [Big Metadata: When Metadata is Big Data](papers/system-architecture/big-metadata-when-metadata-is-big-data/translation.md) | 数据库系统设计 | 2021 | 3.5 | translated | [原文](papers/system-architecture/big-metadata-when-metadata-is-big-data/source.pdf) | [官方链接](<http://vldb.org/pvldb/vol14/p3083-edara.pdf>) |
 | [Bringing Cloud-Native Storage to SAP IQ](papers/system-architecture/bringing-cloud-native-storage-to-sap-iq/translation.md) | 云原生 | 2021 | 3.0 | translated | [原文](papers/system-architecture/bringing-cloud-native-storage-to-sap-iq/source.pdf) | [官方链接](<https://dl.acm.org/doi/abs/10.1145/3448016.3457563>) |
 | [Building An Elastic Query Engine on Disaggregated Storage](papers/system-architecture/building-an-elastic-query-engine-on-disaggregated-storage/translation.md) | 数据库系统设计 | 2020 | 4.0 | translated | [原文](papers/system-architecture/building-an-elastic-query-engine-on-disaggregated-storage/source.pdf) | [官方链接](<https://www.usenix.org/system/files/nsdi20-paper-vuppalapati.pdf>) |
+| [ClickHouse - Lightning Fast Analytics for Everyone](papers/system-architecture/clickhouse-lightning-fast-analytics-for-everyone/translation.md) | 数据库系统设计、向量化执行、存储引擎、分析型数据库 | 2024 | 4.5 | translated | [原文](papers/system-architecture/clickhouse-lightning-fast-analytics-for-everyone/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol17/p3731-schulze.pdf>) |
 | [Data Warehousing in the Cloud: Amazon Redshift vs Microsoft Azure SQL](papers/system-architecture/data-warehousing-in-the-cloud-amazon-redshift-vs-microsoft-azure-sql/translation.md) | 数据库系统设计 | 2017 | 1.5 | translated | [原文](papers/system-architecture/data-warehousing-in-the-cloud-amazon-redshift-vs-microsoft-azure-sql/source.pdf) | [官方链接](<https://www.scitepress.org/papers/2017/65871/65871.pdf>) |
 | [DB2 with BLU Acceleration: So Much More than Just a Column Store](papers/system-architecture/db2-with-blu-acceleration-so-much-more-than-just-a-column-store/translation.md) | 数据库系统设计 | 2013 | 4.0 | translated | [原文](papers/system-architecture/db2-with-blu-acceleration-so-much-more-than-just-a-column-store/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol6/p1080-barber.pdf>) |
 | [Dremel: Interactive Analysis of Web-Scale Datasets](papers/system-architecture/dremel-interactive-analysis-of-web-scale-datasets/translation.md) | 数据库系统设计 | 2010 | 5.0 | translated | [原文](papers/system-architecture/dremel-interactive-analysis-of-web-scale-datasets/source.pdf) | [官方链接](<https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/36632.pdf>) |
@@ -66,6 +68,7 @@
 | [F1 Query: Declarative Querying at Scale](papers/system-architecture/f1-query-declarative-querying-at-scale/translation.md) | 数据库系统设计 | 2018 | 3.5 | translated | [原文](papers/system-architecture/f1-query-declarative-querying-at-scale/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol11/p1835-samwel.pdf>) |
 | [GAMMA - A High Performance Dataflow Database Machine](papers/system-architecture/gamma-high-performance-dataflow-database-machine/translation.md) | 数据库系统设计、查询执行 | 1986 | 4.5 | translated | [原文](papers/system-architecture/gamma-high-performance-dataflow-database-machine/source.pdf) | [官方链接](<https://www.vldb.org/conf/1986/P228.PDF>) |
 | [HAWQ: A Massively Parallel Processing SQL Engine in Hadoop](papers/system-architecture/hawq-a-massively-parallel-processing-sql-engine-in-hadoop/translation.md) | 数据库系统设计 | 2014 | 3.0 | translated | [原文](papers/system-architecture/hawq-a-massively-parallel-processing-sql-engine-in-hadoop/source.pdf) | [官方链接](<https://doi.org/10.1145/2588555.2595636>) |
+| [HyPer: A Hybrid OLTP&OLAP Main Memory Database System Based on Virtual Memory Snapshots](papers/system-architecture/hyper-hybrid-oltp-olap-virtual-memory-snapshots/translation.md) | 数据库系统设计、分析型数据库、事务处理 | 2011 | 4.0 | translated | [原文](papers/system-architecture/hyper-hybrid-oltp-olap-virtual-memory-snapshots/source.pdf) | [官方链接](<https://15799.courses.cs.cmu.edu/fall2013/static/papers/hyper.pdf>) |
 | [Lakehouse: A New Generation of Open Platforms that Unify Data Warehousing and Advanced Analytics](papers/system-architecture/lakehouse-new-generation-open-platforms/translation.md) | 数据库系统设计、云原生、面向 AI 的数据系统、湖仓一体 | 2021 | 4.5 | translated | [原文](papers/system-architecture/lakehouse-new-generation-open-platforms/source.pdf) | [官方链接](<https://www.vldb.org/cidrdb/2021/lakehouse-a-new-generation-of-open-platforms-that-unify-data-warehousing-and-advanced-analytics.html>) |
 | [Napa: Powering Scalable Data Warehousing with Robust Query Performance at Google](papers/system-architecture/napa-powering-scalable-data-warehousing-with-robust-query-performance-at-google/translation.md) | 数据库系统设计 | 2021 | 3.5 | translated | [原文](papers/system-architecture/napa-powering-scalable-data-warehousing-with-robust-query-performance-at-google/source.pdf) | [官方链接](<http://vldb.org/pvldb/vol14/p2986-sankaranarayanan.pdf>) |
 | [Procella: Unifying serving and analytical data at YouTube](papers/system-architecture/procella-unifying-serving-and-analytical-data-at-youtube/translation.md) | 数据库系统设计 | 2019 | 3.5 | translated | [原文](papers/system-architecture/procella-unifying-serving-and-analytical-data-at-youtube/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol12/p2022-chattopadhyay.pdf>) |
@@ -79,7 +82,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，61 篇)
+### 查询处理 (`query-processing`，63 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -99,7 +102,9 @@
 | [DeepDB: Learn from Data, not from Queries!](papers/query-processing/deepdb-learn-from-data-not-from-queries/translation.md) | 基数估计、AI 优化数据库 | 2020 | 3.5 | translated | [原文](papers/query-processing/deepdb-learn-from-data-not-from-queries/source.pdf) | [官方链接](<https://doi.org/10.14778/3384345.3384349>) |
 | [Dynamic Programming Strikes Back](papers/query-processing/dynamic-programming-strikes-back/translation.md) | 查询优化 | 2008 | 4.5 | translated | [原文](papers/query-processing/dynamic-programming-strikes-back/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2017/papers/14-optimizer1/p539-moerkotte.pdf>) |
 | [Eager Aggregation and Lazy Aggregation](papers/query-processing/eager-aggregation-and-lazy-aggregation/translation.md) | 查询优化 | 1995 | 4.0 | translated | [原文](papers/query-processing/eager-aggregation-and-lazy-aggregation/source.pdf) | [官方链接](<https://www.vldb.org/conf/1995/P345.PDF>) |
+| [Eddies: Continuously Adaptive Query Processing](papers/query-processing/eddies-continuously-adaptive-query-processing/translation.md) | 查询优化、查询执行 | 2000 | 4.5 | translated | [原文](papers/query-processing/eddies-continuously-adaptive-query-processing/source.pdf) | [官方链接](<https://db.cs.berkeley.edu/papers/sigmod00-eddy.pdf>) |
 | [Efficiency in the Columbia Database Query Optimizer](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | 查询优化 | 1998 | 3.5 | skipped | [原文](papers/query-processing/efficiency-columbia-query-optimizer/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2018/papers/15-optimizer1/xu-columbia-thesis1998.pdf>) |
+| [Efficient and Extensible Algorithms for Multi Query Optimization](papers/query-processing/efficient-extensible-algorithms-multi-query-optimization/translation.md) | 查询优化 | 2000 | 4.0 | translated | [原文](papers/query-processing/efficient-extensible-algorithms-multi-query-optimization/source.pdf) | [官方链接](<https://www.cse.iitb.ac.in/~sudarsha/Pubs-dir/mqo-sigmod00.pdf>) |
 | [Efficient Processing of Window Functions in Analytical SQL Queries](papers/query-processing/efficient-processing-window-functions/translation.md) | 查询执行、分析型数据库 | 2015 | 4.0 | translated | [原文](papers/query-processing/efficient-processing-window-functions/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol8/p1058-leis.pdf>) |
 | [Efficiently Compiling Efficient Query Plans for Modern Hardware](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/translation.md) | 查询编译 | 2011 | 4.5 | translated | [原文](papers/query-processing/efficiently-compiling-efficient-query-plans-modern-hardware/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol4/p539-neumann.pdf>) |
 | [Enhanced Subquery Optimizations in Oracle](papers/query-processing/enhanced-subquery-optimizations-oracle/translation.md) | 查询优化、查询执行 | 2009 | 3.5 | translated | [原文](papers/query-processing/enhanced-subquery-optimizations-oracle/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol2/vldb09-423.pdf>) |
@@ -145,10 +150,11 @@
 | [Volcano—An Extensible and Parallel Query Evaluation System](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/translation.md) | 查询执行 | 1994 | 5.0 | translated | [原文](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/source.pdf) | [官方链接](<https://doi.org/10.1109/69.273032>) |
 | [WinMagic: Subquery Elimination Using Window Aggregation](papers/query-processing/winmagic-subquery-elimination-window-aggregation/translation.md) | 查询优化 | 2003 | 3.0 | translated | [原文](papers/query-processing/winmagic-subquery-elimination-window-aggregation/source.pdf) | [官方链接](<https://doi.org/10.1145/872757.872840>) |
 
-### 存储 (`storage`，22 篇)
+### 存储 (`storage`，23 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
+| [An Evaluation of Buffer Management Strategies for Relational Database Systems](papers/storage/evaluation-buffer-management-strategies-relational-database-systems/translation.md) | 查询执行、存储引擎 | 1985 | 4.0 | translated | [原文](papers/storage/evaluation-buffer-management-strategies-relational-database-systems/source.pdf) | [官方链接](<https://courses.cs.duke.edu/spring03/cps216/papers/chou-dewitt-1985.pdf>) |
 | [Bridging the Archipelago between Row-Stores and Column-Stores for Hybrid Workloads](papers/storage/tile-row-store/translation.md) | 存储引擎 | 2016 | 3.5 | translated | [原文](papers/storage/tile-row-store/source.pdf) | [官方链接](<https://doi.org/10.1145/2882903.2915231>) |
 | [C-Store: A Column-oriented DBMS](papers/storage/c-store-column-oriented-dbms/translation.md) | 存储引擎、分析型数据库 | 2005 | 4.5 | translated | [原文](papers/storage/c-store-column-oriented-dbms/source.pdf) | [官方链接](<https://www.cs.umd.edu/~abadi/papers/vldb.pdf>) |
 | [Ceph: A Scalable, High-Performance Distributed File System](papers/storage/ceph-a-scalable-high-performance-distributed-file-system/translation.md) | 分布式存储、文件系统 | 2006 | 5.0 | translated | [原文](papers/storage/ceph-a-scalable-high-performance-distributed-file-system/source.pdf) | [官方链接](<https://www.usenix.org/legacy/events/osdi06/tech/full_papers/weil/weil.pdf>) |
@@ -269,5 +275,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 175 | 0 |
-| 发表年份 | 175 | 0 |
+| 作者 | 181 | 0 |
+| 发表年份 | 181 | 0 |

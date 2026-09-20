@@ -192,6 +192,12 @@ def _reference_evidence_score(section: str) -> int:
                 if _bibliographic_body_strength(body) >= 2:
                     wrapped_strong_entry_starts += 1
                     continue
+        numbered = NUMBERED_ENTRY_RE.search(line)
+        if numbered is not None:
+            body = " ".join(part for part in (numbered.group(1), window_tail) if part)
+            if _bibliographic_body_strength(body) >= 2:
+                wrapped_strong_entry_starts += 1
+                continue
         # Some old PDFs expose bibliography text but drop the numeric marker
         # entirely.  A wrapped author citation with a later venue/year cue is
         # still stronger evidence than a TOC label or running header.

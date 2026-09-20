@@ -1,0 +1,18 @@
+title: 'Eddies: Continuously Adaptive Query Processing'
+title_zh: Eddies：持续自适应查询处理
+authors:
+- Ron Avnur
+- Joseph M. Hellerstein
+year: 2000
+source_url: https://db.cs.berkeley.edu/papers/sigmod00-eddy.pdf
+topics:
+- query-optimization
+- query-execution
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 5

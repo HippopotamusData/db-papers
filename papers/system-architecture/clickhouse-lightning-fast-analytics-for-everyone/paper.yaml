@@ -1,0 +1,23 @@
+title: ClickHouse - Lightning Fast Analytics for Everyone
+title_zh: ClickHouse：面向所有人的极速分析
+authors:
+- Robert Schulze
+- Tom Schreiber
+- Ilya Yatsishin
+- Ryadh Dahimene
+- Alexey Milovidov
+year: 2024
+source_url: https://www.vldb.org/pvldb/vol17/p3731-schulze.pdf
+topics:
+- database-system-design
+- analytical-database
+- storage-engine
+- vectorized-execution
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 5
+  durability: 4
+  reader_payoff: 5

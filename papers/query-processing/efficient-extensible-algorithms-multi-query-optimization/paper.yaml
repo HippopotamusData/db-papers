@@ -1,0 +1,19 @@
+title: Efficient and Extensible Algorithms for Multi Query Optimization
+title_zh: 高效且可扩展的多查询优化算法
+authors:
+- Prasan Roy
+- S. Seshadri
+- S. Sudarshan
+- Siddhesh Bhobe
+year: 2000
+source_url: https://www.cse.iitb.ac.in/~sudarsha/Pubs-dir/mqo-sigmod00.pdf
+topics:
+- query-optimization
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 5
+  reader_payoff: 5

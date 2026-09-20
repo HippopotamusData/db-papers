@@ -263,6 +263,10 @@ AUTHOR_KEY_OCR_CONTEXT_TOKEN_LIMIT = 16
 AUTHOR_KEY_OCR_MIN_LEADING_MATCHES = 3
 AUTHOR_KEY_OCR_MIN_CONTEXT_MATCHES = 4
 AUTHOR_KEY_OCR_MIN_LEADING_MARGIN = 1
+AUTHOR_KEY_OCR_MIN_LATER_MATCHES = 3
+AUTHOR_KEY_OCR_EXTENDED_MIN_LEADING = 2
+AUTHOR_KEY_OCR_EXTENDED_MIN_CONTEXT = 10
+AUTHOR_KEY_OCR_EXTENDED_CONTEXT_MARGIN = 3
 NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_ENTRIES = 10
 NUMERIC_BIBLIOGRAPHY_RECOVERY_MIN_COLUMN_GAP = 16
 NUMERIC_BIBLIOGRAPHY_RECOVERY_MAX_COLUMN_SPREAD = 8
@@ -2401,8 +2405,10 @@ def _source_author_key_ocr_normalization(
 
     Layout extraction can interleave both bibliography columns in one parsed
     body.  The beginning of that body still belongs to the entry whose marker
-    was parsed, so leading tokens carry more authority than later tokens.  The
-    mapping is deliberately all-or-nothing: weak evidence, a tied best match,
+    was parsed, so leading tokens carry more authority than later tokens. A
+    longer bounded window can resolve damaged or repeated author prefixes
+    only with substantially more exact matches and a unique content margin.
+    The mapping is deliberately all-or-nothing: weak evidence, a tied best match,
     duplicate identifiers, or any target collision leaves every source entry
     unchanged so the ordinary missing-reference gate remains deterministic.
     """
@@ -2484,12 +2490,47 @@ def _source_author_key_ocr_normalization(
         scores.sort(reverse=True)
         best_leading, best_context, best_identifier = scores[0]
         second_leading = scores[1][0] if len(scores) > 1 else 0
-        if (
-            best_leading < AUTHOR_KEY_OCR_MIN_LEADING_MATCHES
-            or best_context < AUTHOR_KEY_OCR_MIN_CONTEXT_MATCHES
-            or best_leading - second_leading
-            < AUTHOR_KEY_OCR_MIN_LEADING_MARGIN
-        ):
+        best_body = next(
+            body for identifier, body in translation_candidates
+            if identifier == best_identifier
+        )
+        best_tokens = set(
+            _reference_token_sequence(best_body)[:AUTHOR_KEY_OCR_CONTEXT_TOKEN_LIMIT]
+        )
+        later_matches = len((context_tokens - leading_tokens) & best_tokens)
+        # A trailing 1 often represents a closing bracket; I/l/1 and O/0
+        # can also damage an otherwise intact key. This corroborates short
+        # citations but never replaces the independent body-match criteria.
+        lookalikes = str.maketrans({"i": "1", "l": "1", "o": "0"})
+        identifier_hint = (
+            source_identifier == best_identifier + "1"
+            or source_identifier.translate(lookalikes)
+            == best_identifier.translate(lookalikes)
+        )
+        # Shared authors alone must not substitute one of their other works.
+        has_title_evidence = (
+            len(source_tokens) <= AUTHOR_KEY_OCR_LEADING_TOKEN_LIMIT
+            or later_matches >= AUTHOR_KEY_OCR_MIN_LATER_MATCHES
+            or (identifier_hint and later_matches >= 1)
+        )
+        leading_match = (
+            has_title_evidence
+            and best_leading >= AUTHOR_KEY_OCR_MIN_LEADING_MATCHES
+            and best_context >= AUTHOR_KEY_OCR_MIN_CONTEXT_MATCHES
+            and best_leading - second_leading
+            >= AUTHOR_KEY_OCR_MIN_LEADING_MARGIN
+        )
+        # A damaged surname can consume most of the short leading window;
+        # conversely, two papers can have exactly the same authors.  Accept
+        # those cases only when a much longer, bounded content window gives
+        # a unique match.  Do not search later interleaved reference bodies.
+        other_context = max((score[1] for score in scores[1:]), default=0)
+        extended_match = (
+            best_leading >= AUTHOR_KEY_OCR_EXTENDED_MIN_LEADING
+            and best_context >= AUTHOR_KEY_OCR_EXTENDED_MIN_CONTEXT
+            and best_context - other_context >= AUTHOR_KEY_OCR_EXTENDED_CONTEXT_MARGIN
+        )
+        if not (leading_match or extended_match):
             return source_entries, [], {}
         mappings[source_identifier] = best_identifier
 
