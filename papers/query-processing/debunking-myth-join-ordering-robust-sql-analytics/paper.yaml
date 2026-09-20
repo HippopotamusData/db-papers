@@ -12,4 +12,11 @@ source_url: https://people.iiis.tsinghua.edu.cn/~huanchen/publications/rpt-sigmo
 topics:
   - query-optimization
   - query-execution
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 2
+  technical_value: 4
+  practical_diffusion: 2
+  durability: 3
+  reader_payoff: 5
