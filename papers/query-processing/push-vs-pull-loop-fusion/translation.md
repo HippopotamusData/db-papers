@@ -530,7 +530,7 @@ PL 社区也有类似并行 collection program 的工作。例如 morsel-driven 
 
 我们还把三种编程语言中的基本 loop fusion 方法与 query engine 联系起来：fold、unfold 和 stream fusion。Pull engine 与 unfold fusion 对应，push engine 与 fold fusion 对应。
 
-最后，我们把对各方法弱点的经验应用到 query engine 构建中，提出一种受 stream fusion 启发的新方法。它结合 push 与 pull engine 的各自优点，并避免二者弱点：粗粒度上保持 pull 的 demand-driven 能力，支持 break/limit/merge-like 操作；细粒度上用 `Skip` 和 Visitor/Church encoding 风格把 tuple push 下去，避免 selection 造成的嵌套循环和不必要对象。
+最后，我们把对各方法弱点的经验应用到 query engine 构建中，提出一种受 stream fusion 启发的新方法。它结合 push 与 pull engine 的各自优点，并避免二者弱点。
 
 ## 9. 参考文献
 

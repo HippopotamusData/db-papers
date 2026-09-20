@@ -1,5 +1,31 @@
 const { test, expect } = require('@playwright/test');
 
+test('reader fractions stay stacked on load and after catalog navigation', async ({ page }) => {
+  const paper = 'papers/implementation-foundations/data-prefetch-mechanisms/';
+  async function expectFractionLayout() {
+    const fraction = page.locator('.md-content__inner mjx-mfrac').first();
+    await expect(fraction).toBeVisible();
+    // Valid TeX and CHTML nodes alone do not prove readable output. A cleared
+    // adaptive stylesheet left l and s side by side with a zero-width bar.
+    await expect.poll(() => fraction.evaluate((element) => {
+      const numerator = element.querySelector('mjx-num').getBoundingClientRect();
+      const denominator = element.querySelector('mjx-den').getBoundingClientRect();
+      const bar = element.querySelector('mjx-line').getBoundingClientRect();
+      return numerator.bottom <= bar.top && bar.bottom <= denominator.top && bar.width > 5;
+    })).toBeTruthy();
+  }
+
+  await page.goto(paper);
+  await page.evaluate(() => window.MathJax.startup.promise);
+  await expectFractionLayout();
+  await page.getByRole('link', { name: '论文目录', exact: true }).first().click();
+  await expect(page.locator('#paper-grid')).toHaveAttribute('data-filters-ready', 'true');
+  await page.locator('#catalog-search').fill('data prefetch mechanisms');
+  await page.locator('.paper-card:visible a').first().click();
+  await expect(page).toHaveURL(new RegExp(`${paper}$`));
+  await expectFractionLayout();
+});
+
 // Match the production path prefix and exercise the built HTML and real scripts.
 test('catalog search click survives blur and back restores filters', async ({ page, request }) => {
   await page.goto('catalog/');

@@ -215,8 +215,8 @@ Raft 首先选举一位特殊的领导者，然后让领导者全权负责管理
 - 当选后，立即向每台服务器发送初始的空 AppendEntries RPC（心跳）；空闲期间重复发送，以防止选举超时（§5.2）。
 - 收到客户端命令后，把条目追加到本地日志；该条目应用到状态机后再响应（§5.3）。
 - 如果对某个跟随者而言，最后一个日志索引不小于其 `nextIndex`，则发送从 `nextIndex` 开始的日志条目：
-  - 成功时，更新该跟随者的 `nextIndex` 和 `matchIndex`（§5.3）。
-  - 如果 AppendEntries 因日志不一致而失败，则递减 `nextIndex` 并重试（§5.3）。
+    - 成功时，更新该跟随者的 `nextIndex` 和 `matchIndex`（§5.3）。
+    - 如果 AppendEntries 因日志不一致而失败，则递减 `nextIndex` 并重试（§5.3）。
 - 如果存在某个 $N$，满足 $N \gt \mathit{commitIndex}$，多数 `matchIndex[i]` 均不小于 $N$，且 `log[N].term` 等于 `currentTerm`，则把 `commitIndex` 设为 $N$（§5.3、§5.4）。
 
 ![Raft 的五项安全性质](assets/figure-03-safety-properties.png)
