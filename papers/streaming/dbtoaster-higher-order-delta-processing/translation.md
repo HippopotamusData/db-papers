@@ -362,7 +362,7 @@ foreach u do Δ_{-S(y,u)} Q[y,u] -= {<> -> x * u}
 
 **图 2：部分物化的重写规则。双向箭头表示以启发式方式或使用第 5.1 节代价模型来应用的规则。下方公式为同一图的中文可读转写。**
 
-1. 查询分解
+1\. 查询分解
 
 $$
 \mathcal M(\mathrm{Sum} _ {\vec A\vec B;f_1\ast f_2}(Q_1\bowtie Q_2))
@@ -374,7 +374,7 @@ $$
 
    条件： $Q_1$ 与 $Q_2$ 没有公共列； $\vec A$、 $\vec B$ 分别是两侧的分组项。
 
-2. 因式分解与多项式展开
+2\. 因式分解与多项式展开
 
 $$
 \mathcal M(Q_L\bowtie(Q_1+Q_2+\cdots)\bowtie Q_R)
@@ -384,7 +384,7 @@ $$
 \qquad \text{(2)}
 $$
 
-3. 输入变量
+3\. 输入变量
 
 $$
 \mathcal M(\mathrm{Sum} _ {\vec A;f(\vec B,\vec C)}
@@ -398,7 +398,7 @@ $$
 
    条件： $f,\theta$ 是项上的函数； $\vec A$ 是 $Q$ 上聚合的分组变量； $\vec B$ 是 $Q$ 中被 $f,\theta$ 使用的输出变量； $\vec C$ 是不出现在 $Q$ 中的输入变量。
 
-4. 嵌套聚合与去相关
+4\. 嵌套聚合与去相关
 
 $$
 \mathcal M(\mathrm{Sum} _ {\vec A;f}
