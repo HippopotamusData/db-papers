@@ -2498,10 +2498,20 @@ def _source_author_key_ocr_normalization(
             _reference_token_sequence(best_body)[:AUTHOR_KEY_OCR_CONTEXT_TOKEN_LIMIT]
         )
         later_matches = len((context_tokens - leading_tokens) & best_tokens)
+        # A trailing 1 often represents a closing bracket; I/l/1 and O/0
+        # can also damage an otherwise intact key. This corroborates short
+        # citations but never replaces the independent body-match criteria.
+        lookalikes = str.maketrans({"i": "1", "l": "1", "o": "0"})
+        identifier_hint = (
+            source_identifier == best_identifier + "1"
+            or source_identifier.translate(lookalikes)
+            == best_identifier.translate(lookalikes)
+        )
         # Shared authors alone must not substitute one of their other works.
         has_title_evidence = (
             len(source_tokens) <= AUTHOR_KEY_OCR_LEADING_TOKEN_LIMIT
             or later_matches >= AUTHOR_KEY_OCR_MIN_LATER_MATCHES
+            or (identifier_hint and later_matches >= 1)
         )
         leading_match = (
             has_title_evidence
