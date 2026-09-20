@@ -429,7 +429,9 @@ X-Engine 建立在优化的 LSM-tree 上，利用 FPGA 加速 compaction 等硬�
 
 ## 附录 A. 更多评估
 
-图 19 中，我们调整连接数，使有无 FPGA 卸载的 X-Engine 运行在相同 QPS，然后测量并报告所有处理器的 CPU 利用率。CPU compaction 与 FPGA compaction 的平均 CPU 利用率分别约等于 37、29 个硬件线程。实验机有 32 核并启用超线程，共 64 个硬件线程，因此最大 CPU 利用率是 6,400%。FPGA 卸载把计算开销移到 FPGA，还使 CPU 利用率方差降低约 6 倍。利用节省出的 CPU 资源，X-Engine 得以把总体吞吐提高 27%，与图 15 一致。
+图 19 中，我们调整连接数，使有无 FPGA 卸载的 X-Engine 运行在相同 QPS，然后测量并报告所有处理器的 CPU 利用率。使用和不使用 FPGA 卸载时，平均 CPU 利用率分别约等于 37、29 个硬件线程。实验机有 32 核并启用超线程，共 64 个硬件线程，因此最大 CPU 利用率是 6,400%。FPGA 卸载把计算开销移到 FPGA，还使 CPU 利用率方差降低约 6 倍。利用节省出的 CPU 资源，X-Engine 得以把总体吞吐提高 27%，与图 15 一致。
+
+> **译注：**原文正文按“使用／不使用 FPGA 卸载”的顺序列出 37／29；但图 19 中 CPU compaction 约为 37 个硬件线程，FPGA compaction 约为 29 个，与正文顺序相反。此处保留原文正文和图中的各自对应关系。
 
 ![图 19](assets/xengine-fig19-cpu-usage-fpga.png)
 

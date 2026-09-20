@@ -240,8 +240,8 @@ WHERE v3.p < w1.p + w2.p;
 1. 不考虑 CTE 表达式，优化主查询。
 2. 分别优化每个 CTE 表达式。
 3. 对查询中的每个 CTE，按依赖顺序执行：
-   - 按执行顺序遍历主查询执行计划；
-   - 把该 CTEProducer 对应的树挂到遍历中遇到的第一个对应 consumer 下面。
+    - 按执行顺序遍历主查询执行计划；
+    - 把该 CTEProducer 对应的树挂到遍历中遇到的第一个对应 consumer 下面。
 
 该方法的一个明显缺点是，第一步没有考虑 CTEProducer 执行代价。于是，主查询原本选择的计划在插入较小的 CTE 子计划之后可能不再最优。
 
@@ -326,8 +326,8 @@ Output: List of CTESpecs
 
 - `ComputeCTESpec()` 是算子相关函数，用于为不同算子计算局部 `CTESpec` 表示。大多数算子的实现返回空列表，例外是 CTEProducer 和 CTEConsumer：它们各自返回一个包含自身 CTE id 的 `CTESpec`。
 - `Request()` 为给定子节点计算新的 requirement 列表，同时考虑父节点 requirement 和前序子节点返回的 `CTESpec`。新的 requirement 包括：
-  - 父节点不要求、但由前序子节点引入的 `CTESpec`。例如，图 8(d) 中作为根节点的 Sequence 收到空 requirement 列表；它的第一个子节点报告 `(0, p)`，因此第二个子节点的 requirement 是 `(0, c)`。
-  - 父节点要求、但前序子节点尚未解析的 `CTESpec`。例如，图 8(d) 中的 join 从父节点收到 `(0, c)`；第一个子节点没有满足该 requirement，因此该 requirement 被继续传给第二个子节点。
+    - 父节点不要求、但由前序子节点引入的 `CTESpec`。例如，图 8(d) 中作为根节点的 Sequence 收到空 requirement 列表；它的第一个子节点报告 `(0, p)`，因此第二个子节点的 requirement 是 `(0, c)`。
+    - 父节点要求、但前序子节点尚未解析的 `CTESpec`。例如，图 8(d) 中的 join 从父节点收到 `(0, c)`；第一个子节点没有满足该 requirement，因此该 requirement 被继续传给第二个子节点。
 - `Combine()` 合并来自当前节点及其子节点的 `CTESpec` 列表。如果存在相同 id 但不同类型的 `CTESpec`，它们互相抵消，不出现在合并列表中。其余 `CTESpec` 被复制到合并列表。
 - `Satisfies()` 检查整个子计划的 CTE 表示是否满足父节点向下传递的 requirement。它通过比较两个列表中的 `CTESpec` 是否匹配来完成。
 - `SignalInvalidPlan()` 标记当前处理计划非法，因此不能作为给定查询的可选执行计划。
