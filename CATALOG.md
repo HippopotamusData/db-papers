@@ -5,9 +5,9 @@
 ## 总览
 
 - 论文记录：184
-- 已审阅译文：176
+- 已审阅译文：178
 - 译文草稿：0
-- 仅有原文：2
+- 仅有原文：0
 - 已跳过：6
 - 原文不可用：0
 
@@ -114,7 +114,7 @@
 | [Handling Data Skew in Parallel Joins in Shared-Nothing Systems](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/translation.md) | 查询执行 | 2008 | 4.0 | translated | [原文](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/source.pdf) | [官方链接](<https://doi.org/10.1145/1376616.1376720>) |
 | [How Good are Learned Cost Models, Really? Insights from Query Optimization Tasks](papers/query-processing/how-good-are-learned-cost-models-really/translation.md) | 查询优化、AI 优化数据库 | 2025 | 3.0 | translated | [原文](papers/query-processing/how-good-are-learned-cost-models-really/source.pdf) | [官方链接](<https://doi.org/10.1145/3725309>) |
 | [How Good Are Query Optimizers, Really?](papers/query-processing/how-good-are-query-optimizers-really/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](papers/query-processing/how-good-are-query-optimizers-really/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol9/p204-leis.pdf>) |
-| [HyperLogLog in Practice: Algorithmic Engineering of a State of The Art Cardinality Estimation Algorithm](papers/query-processing/hyperloglog-in-practice/source.pdf) | 查询执行、基数估计 | 2013 | — | source_only | [原文](papers/query-processing/hyperloglog-in-practice/source.pdf) | [官方链接](<https://research.google.com/pubs/archive/40671.pdf>) |
+| [HyperLogLog in Practice: Algorithmic Engineering of a State of The Art Cardinality Estimation Algorithm](papers/query-processing/hyperloglog-in-practice/translation.md) | 查询执行、基数估计 | 2013 | 4.5 | translated | [原文](papers/query-processing/hyperloglog-in-practice/source.pdf) | [官方链接](<https://research.google.com/pubs/archive/40671.pdf>) |
 | [Impala: A Modern, Open-Source SQL Engine for Hadoop](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/translation.md) | 查询执行 | 2015 | 4.0 | translated | [原文](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/source.pdf) | [官方链接](<http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf>) |
 | [Improving Hash Join Performance through Prefetching](papers/query-processing/improving-hash-join-performance-prefetching/translation.md) | 查询执行 | 2007 | 4.0 | translated | [原文](papers/query-processing/improving-hash-join-performance-prefetching/source.pdf) | [官方链接](<https://www.shimin-chen.com/papers/hashjoin_tods_preliminary.pdf>) |
 | [Improving Unnesting of Complex Queries](papers/query-processing/improving-unnesting-of-complex-queries/translation.md) | 查询优化 | 2025 | 3.5 | translated | [原文](papers/query-processing/improving-unnesting-of-complex-queries/source.pdf) | [官方链接](<https://portal.fis.tum.de/en/publications/improving-unnesting-of-complex-queries/>) |
@@ -199,7 +199,7 @@
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
-| [A Fast, Minimal Memory, Consistent Hash Algorithm](papers/distributed-databases/fast-minimal-memory-consistent-hash-algorithm/source.pdf) | 分布式存储 | 2014 | — | source_only | [原文](papers/distributed-databases/fast-minimal-memory-consistent-hash-algorithm/source.pdf) | [官方链接](<https://arxiv.org/abs/1406.2294>) |
+| [A Fast, Minimal Memory, Consistent Hash Algorithm](papers/distributed-databases/fast-minimal-memory-consistent-hash-algorithm/translation.md) | 分布式存储 | 2014 | 4.5 | translated | [原文](papers/distributed-databases/fast-minimal-memory-consistent-hash-algorithm/source.pdf) | [官方链接](<https://arxiv.org/abs/1406.2294>) |
 | [Bigtable: A Distributed Storage System for Structured Data](papers/distributed-databases/bigtable-distributed-storage-system-structured-data/translation.md) | 存储引擎、分布式存储 | 2006 | 5.0 | translated | [原文](papers/distributed-databases/bigtable-distributed-storage-system-structured-data/source.pdf) | [官方链接](<https://research.google/pubs/bigtable-a-distributed-storage-system-for-structured-data/>) |
 | [CockroachDB: The Resilient Geo-Distributed SQL Database](papers/distributed-databases/cockroachdb-the-resilient-geo-distributed-sql-database/translation.md) | 分布式 SQL、事务处理 | 2020 | 3.5 | translated | [原文](papers/distributed-databases/cockroachdb-the-resilient-geo-distributed-sql-database/source.pdf) | [官方链接](<https://cdn2.hubspot.net/hubfs/1753393/guides/White%20Paper%20%7C%20CockroachDB%20The%20Resilient%20Geo-Distributed%20SQL%20Database%20%28SIGMOD%202020%29.pdf>) |
 | [Dynamo: Amazon’s Highly Available Key-value Store](papers/distributed-databases/dynamo-amazon-highly-available-key-value-store/translation.md) | 分布式存储 | 2007 | 5.0 | translated | [原文](papers/distributed-databases/dynamo-amazon-highly-available-key-value-store/source.pdf) | [官方链接](<https://doi.org/10.1145/1294261.1294281>) |

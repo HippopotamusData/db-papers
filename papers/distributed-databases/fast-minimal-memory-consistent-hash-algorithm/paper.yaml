@@ -7,4 +7,11 @@ year: 2014
 source_url: https://arxiv.org/abs/1406.2294
 topics:
   - distributed-storage
-reading_status: source_only
+reading_status: translated
+rating:
+  score: 4.5
+  influence_breadth: 4
+  technical_value: 5
+  practical_diffusion: 4
+  durability: 5
+  reader_payoff: 5
