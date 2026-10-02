@@ -251,6 +251,20 @@ def _reference_evidence_score(section: str) -> int:
     return 0
 
 
+def _same_column_evidence_score(text: str, match: re.Match[str]) -> int:
+    """Read entry evidence below a heading in the right PDF column."""
+
+    if "heading" not in match.re.groupindex:
+        return 0
+    line_start = text.rfind("\n", 0, match.start("heading")) + 1
+    column = match.start("heading") - line_start
+    if column < 8:
+        return 0
+    lines = text[match.end() :].splitlines()[:40]
+    same_column = "\n".join(line[column:] for line in lines if len(line) > column)
+    return _reference_evidence_score(same_column)
+
+
 def select_reference_heading(
     text: str,
     heading_pattern: Pattern[str],
@@ -276,6 +290,8 @@ def select_reference_heading(
     for index, match in enumerate(matches):
         section_end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
         score = _reference_evidence_score(text[match.end() : section_end])
+        if not score:
+            score = _same_column_evidence_score(text[:section_end], match)
         if score:
             scored.append((score, match))
     if scored:
