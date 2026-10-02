@@ -35,7 +35,9 @@ EDBT/ICDT ’13，2013 年 3 月 18—22 日，意大利热那亚。
 
 Google 此前在 [13, 15, 9] 所述系统中实现的是 MinCount，即 [2] 的算法 1。其精度为 $1.0/\sqrt m$，其中 $m$ 是维护的哈希值最大数量，因而与所需内存成线性关系。在 $(\epsilon,\delta)$ 模型下，该算法需要 $O(\epsilon^{-2}\log n)$ 空间；对于不超过 $m$ 的基数，它近乎精确（哈希冲突除外）。[8] 给出了统计分析以及提高算法计算效率的建议。
 
-Kane 等人的算法 [11] 达到了 $(\epsilon,\delta)$ 模型中空间复杂度的下界 $\Omega(\epsilon^{-2}+\log n)$ [10]，因此在这个意义上是最优的。然而，该算法很复杂，在实际系统中实现和维护它似乎并不现实。
+Kane 等人的算法 [11] 达到了 $(\epsilon,\delta)$ 模型中空间复杂度的下界 $\Omega(e^{-2}+\log n)$ [10]，因此在这个意义上是最优的。然而，该算法很复杂，在实际系统中实现和维护它似乎并不现实。
+
+**译注：** 原文下界中的字母印作 $e$；同页上下文的误差参数写作 $\epsilon$，按上下文此处应指 $\epsilon$。
 
 [1] 比较了六种基数估计算法，包括 MinCount，以及针对小基数结合了 LinearCounting [16] 的 LogLog [4]；后一种算法在该比较中胜出。[14] 从理论上比较了 12 种算法，并在一个含 $1.9\cdot10^6$ 个不同元素的数据集上实验比较了其中最有希望的 8 种，包括 LogLog、LinearCounting 和 MultiresolutionBitmap [5]；最后一种是 LinearCounting 的多尺度版本。针对所测试的基数，研究推荐选择 LinearCounting。在其输入数据上，LogLog 的精度优于除 LinearCounting 和 MultiresolutionBitmap 之外的所有算法。我们关心的是对基数远大于 $10^9$ 的多重集进行良好估计；对于这类基数，LinearCounting 若要保持精度，就需要过多内存，因而不再有吸引力。MultiresolutionBitmap 有类似问题，在 $(\epsilon,\delta)$ 模型中需要 $O(\epsilon^{-2}\log n)$ 空间，增长快于 LogLog 的内存用量。该研究的作者也遇到过无法以给定固定内存运行 MultiresolutionBitmap 的问题。
 
@@ -436,18 +438,33 @@ $$
 ## 8. 参考文献
 
 [1] K. Aouiche and D. Lemire. A comparison of five probabilistic view-size estimation techniques in OLAP. In *Workshop on Data Warehousing and OLAP (DOLAP)*, pages 17–24, 2007.
+
 [2] Z. Bar-Yossef, T. S. Jayram, R. Kumar, D. Sivakumar, and L. Trevisan. Counting distinct elements in a data stream. In *Workshop on Randomization and Approximation Techniques (RANDOM)*, pages 1–10, London, UK, UK, 2002. Springer-Verlag.
+
 [3] P. Clifford and I. A. Cosma. A statistical analysis of probabilistic counting algorithms. *Scandinavian Journal of Statistics*, pages 1–14, 2011.
+
 [4] M. Durand and P. Flajolet. Loglog counting of large cardinalities. In G. D. Battista and U. Zwick, editors, *European Symposium on Algorithms (ESA)*, volume 2832, pages 605–617, 2003.
+
 [5] C. Estan, G. Varghese, and M. Fisk. Bitmap algorithms for counting active flows on high-speed links. *IEEE/ACM Transactions on Networking*, pages 925–937, 2006.
+
 [6] P. Flajolet and G. N. Martin. Probabilistic counting algorithms for data base applications. *Journal of Computer and System Sciences*, 31(2):182–209, 1985.
+
 [7] P. Flajolet, Éric Fusy, O. Gandouet, and F. Meunier. Hyperloglog: The analysis of a near-optimal cardinality estimation algorithm. In *Analysis of Algorithms (AOFA)*, pages 127–146, 2007.
+
 [8] F. Giroire. Order statistics and estimating cardinalities of massive data sets. *Discrete Applied Mathematics*, 157(2):406–427, 2009.
+
 [9] A. Hall, O. Bachmann, R. Büssow, S. Gănceanu, and M. Nunkesser. Processing a trillion cells per mouse click. In *Very Large Databases (VLDB)*, 2012.
+
 [10] P. Indyk. Tight lower bounds for the distinct elements problem. In *Foundations of Computer Science (FOCS)*, pages 283–288, 2003.
+
 [11] D. M. Kane, J. Nelson, and D. P. Woodruff. An optimal algorithm for the distinct elements problem. In *Principles of database systems (PODS)*, pages 41–52. ACM, 2010.
+
 [12] J. Lumbroso. An optimal cardinality estimation algorithm based on order statistics and its full analysis. In *Analysis of Algorithms (AOFA)*, pages 489–504, 2010.
+
 [13] S. Melnik, A. Gubarev, J. J. Long, G. Romer, S. Shivakumar, M. Tolton, T. Vassilakis, and G. Inc. Dremel: Interactive analysis of web-scale datasets. In *Very Large Databases (VLDB)*, pages 330–339, 2010.
+
 [14] A. Metwally, D. Agrawal, and A. E. Abbadi. Why go logarithmic if we can go linear? Towards effective distinct counting of search traffic. In *Extending database technology (EDBT)*, pages 618–629, 2008.
+
 [15] R. Pike, S. Dorward, R. Griesemer, and S. Quinlan. Interpreting the data, parallel analysis with Sawzall. *Journal on Scientific Programming*, pages 277–298, 2005.
+
 [16] K.-Y. Whang, B. T. Vander-Zanden, and H. M. Taylor. A linear-time probabilistic counting algorithm for database applications. *ACM Transactions on Database Systems*, 15:208–229, 1990.
