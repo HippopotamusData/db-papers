@@ -439,7 +439,7 @@ $$
 3. 按文档中的渠道组分类标准编写条件语句，主要使用正则表达式判断每条数据所属渠道。例如，当 `source` 包含 `badoo`、`facebook`、`fb`、`instagram`、`linkedin`、`pinterest`、`tiktok`、`twitter` 或 `whatsapp`，且 `medium` 包含 `cp`、`ppc` 或以 `paid` 开头时，归类为 `Paid Social`。
 4. 按渠道分组计算会话数和百分比。
 
-以下两段 SQL 忠实保留论文原文中的语法异常：`prep` CTE 后缺少分隔逗号，且若干 `CASE` 分支的 `THEN` 结果后多出逗号。
+以下两段 SQL 忠实保留论文原文中的语法异常：`prep` CTE 后缺少分隔逗号，且若干 `CASE` 分支的 `THEN` 结果后多出逗号；原始 SQL 的 `grouped_data` CTE 后也多出逗号。
 
 **重写后的标准 SQL：**
 
@@ -685,7 +685,7 @@ grouped_data AS (
     COUNT(DISTINCT CONCAT(user_pseudo_id, session_id)) AS session_count
   FROM prep
   GROUP BY channel_grouping_session
-)
+),
 ORDER BY COUNT(DISTINCT CONCAT(user_pseudo_id, session_id)) DESC
 LIMIT 1;
 ```
@@ -893,6 +893,8 @@ SELECT publication_number
 FROM max_originality;
 ```
 
+原文原始 SQL 的 `chosen_ipc4_view` CTE 后多出逗号；以下按原文保留。
+
 **原始 SQL：**
 
 ```sql
@@ -929,7 +931,7 @@ chosen_ipc4_view AS (
     GROUP BY publication_number
   )
   ORDER BY ipc4_count DESC
-)
+),
 SELECT
   t1.publication_number,
   t3.ipc4,
@@ -1589,9 +1591,11 @@ ST_INTERSECTS(geography_1, geography_2)
 
 对枚举类型（见 PostgreSQL 文档第 8.7 节），下列函数可以避免把具体枚举值硬编码到程序中。示例假定创建了如下枚举：
 
+译注：原文此处的枚举值使用双引号；以下定义及函数示例按原文保留引号。
+
 ```sql
 CREATE TYPE rainbow AS ENUM (
-  'red', 'orange', 'yellow', 'green', 'blue', 'purple'
+  "red", "orange", "yellow", "green", "blue", "purple"
 );
 ```
 
@@ -1602,7 +1606,7 @@ CREATE TYPE rainbow AS ENUM (
 | enum\_first | anyenum | anyenum | 返回输入枚举类型的第一个值。 | enum\_first(null::rainbow) | red |
 | enum\_last | anyenum | anyenum | 返回输入枚举类型的最后一个值。 | enum\_last(null::rainbow) | purple |
 | enum\_range | anyenum | anyarray | 按顺序返回该枚举类型的所有值。 | enum\_range(null::rainbow) | red, orange, yellow, green, blue, purple |
-| enum\_range | anyenum, anyenum | anyarray | 按顺序返回两个给定枚举值之间的范围；两个值必须来自同一枚举类型。第一个参数为 null 时从首值开始，第二个参数为 null 时到末值结束。 | enum\_range('orange'::rainbow, 'green'::rainbow)；enum\_range(NULL, 'green'::rainbow)；enum\_range('orange'::rainbow, NULL) | orange, yellow, green；red, orange, yellow, green；orange, yellow, green, blue, purple |
+| enum\_range | anyenum, anyenum | anyarray | 按顺序返回两个给定枚举值之间的范围；两个值必须来自同一枚举类型。第一个参数为 null 时从首值开始，第二个参数为 null 时到末值结束。 | enum\_range("orange"::rainbow, "green"::rainbow)；enum\_range(NULL, "green"::rainbow)；enum\_range("orange"::rainbow, NULL) | orange, yellow, green；red, orange, yellow, green；orange, yellow, green, blue, purple |
 
 除双参数形式的 `enum_range` 外，这些函数不考虑传入的具体值，只关心其声明类型；传入 `null` 或该类型的具体值结果相同。实际使用中，更常把这些函数应用于表列或函数参数，而不是示例中的硬编码类型名。
 

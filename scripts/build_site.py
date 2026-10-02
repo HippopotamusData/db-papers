@@ -319,9 +319,14 @@ def paper_card(
         ]
     ).casefold()
     pdf_target = f"{translated_prefix}{paper.paper_id}/source.pdf"
+    translation_action = ""
     if paper.reading_status == "translated":
         target = f"{translated_prefix}{paper.paper_id}/"
         target_attributes = ""
+        translation_action = (
+            f'<a href="{html.escape(target, quote=True)}" '
+            f'aria-label="阅读译文：{html.escape(paper.title, quote=True)}">阅读译文</a>'
+        )
     else:
         target = pdf_target
         target_attributes = ' target="_blank" rel="noopener noreferrer"'
@@ -344,6 +349,7 @@ def paper_card(
   <footer>
     <span>{year}</span>
     {rating}
+    {translation_action}
     <a href="{html.escape(pdf_target, quote=True)}" target="_blank" rel="noopener noreferrer"
       aria-label="阅读原文：{html.escape(paper.title, quote=True)}">阅读原文</a>
   </footer>
@@ -554,7 +560,9 @@ description: 按领域、主题、状态和关键词浏览数据库论文
   </div>
 </div>
 
-<p class="catalog-result"><strong id="catalog-count">{len(papers)}</strong> 篇论文</p>
+<div class="catalog-result"><span><strong id="catalog-count">{len(papers)}</strong> 篇论文</span>
+  <button id="catalog-clear" type="button" hidden>清除全部筛选和排序</button>
+</div>
 
 <div class="paper-grid" id="paper-grid">
 {cards}

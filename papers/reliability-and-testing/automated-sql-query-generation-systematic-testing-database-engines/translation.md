@@ -207,10 +207,10 @@ fact unique_select_terms {
 
 | 案例 | SQL 文法 |
 | --- | --- |
-| 1 | `QUERY ::= SELECT FROM`<br>`SELECT ::= 'SELECT' selectTerm+`<br>`FROM ::= 'FROM' (table \| table JOIN table)` |
-| 2 | `QUERY ::= SELECT FROM WHERE`<br>`SELECT ::= 'SELECT' selectTerm+`<br>`FROM ::= 'FROM' (table \| table JOIN table)`<br>`WHERE ::= 'WHERE' term operator (term \| value)` |
-| 3 | `QUERY ::= SELECT FROM GROUP_BY HAVING`<br>`SELECT ::= 'SELECT' selectTerm+`<br>`FROM ::= 'FROM' (table \| table JOIN table)`<br>`GROUP_BY ::= 'GROUP BY' term`<br>`HAVING ::= 'HAVING' term operator value` |
-| * | `selectTerm ::= term \| agg(term)`<br>`term ::= 'id' \| 'name' \| 'studentID' \| 'courseID' \| 'grade'`<br>`agg ::= 'MAX' \| 'MIN'`<br>`table ::= 'students' \| 'grades'` |
+| 1 | `QUERY ::= SELECT FROM`<br>`SELECT ::= 'SELECT' selectTerm+`<br><code>FROM ::= 'FROM' (table &#124; table JOIN table)</code> |
+| 2 | `QUERY ::= SELECT FROM WHERE`<br>`SELECT ::= 'SELECT' selectTerm+`<br><code>FROM ::= 'FROM' (table &#124; table JOIN table)</code><br><code>WHERE ::= 'WHERE' term operator (term &#124; value)</code> |
+| 3 | `QUERY ::= SELECT FROM GROUP_BY HAVING`<br>`SELECT ::= 'SELECT' selectTerm+`<br><code>FROM ::= 'FROM' (table &#124; table JOIN table)</code><br>`GROUP_BY ::= 'GROUP BY' term`<br>`HAVING ::= 'HAVING' term operator value` |
+| * | <code>selectTerm ::= term &#124; agg(term)</code><br><code>term ::= 'id' &#124; 'name' &#124; 'studentID' &#124; 'courseID' &#124; 'grade'</code><br><code>agg ::= 'MAX' &#124; 'MIN'</code><br><code>table ::= 'students' &#124; 'grades'</code> |
 
 表 2 给出了结果。案例 2 的查询总数急剧增长，原因在于 `WHERE` 子句可以包含来自表、且不受 `SELECT` 语句约束的项，而每个项又可以与另一项或一个值建立关系，所以可能的查询数量增加。案例 3 在 `FROM` 部分最多使用一个表时生成的查询最少，因为所有生成的查询都必须满足 `GROUP BY` 和 `HAVING` 两项约束。在案例 3 的文法中，`GROUP BY` 和 `HAVING` 子句都是必选项，这限制了输出空间。
 

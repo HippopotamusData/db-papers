@@ -10,6 +10,7 @@ function setupCatalogFilters() {
   const count = document.querySelector("#catalog-count");
   const empty = document.querySelector("#catalog-empty");
   const activeFilters = document.querySelector("#catalog-active-filters");
+  const clear = document.querySelector("#catalog-clear");
   const advancedToggle = document.querySelector(
     ".catalog-advanced__toggle",
   );
@@ -118,6 +119,10 @@ function setupCatalogFilters() {
 
     count.textContent = String(visible);
     empty.hidden = visible !== 0;
+    if (clear) {
+      clear.hidden = !query && !area.value && !topic.value && !status.value &&
+        sort.value === "default";
+    }
     if (activeFilters) {
       const activeCount =
         Number(Boolean(area.value)) +
@@ -137,6 +142,13 @@ function setupCatalogFilters() {
     control.addEventListener("input", update);
     control.addEventListener("change", update);
   }
+  clear?.addEventListener("click", () => {
+    for (const [name, control] of Object.entries(controls)) {
+      control.value = name === "sort" ? "default" : "";
+    }
+    update();
+    search.focus();
+  });
   advancedToggle?.addEventListener("click", () => {
     const expanded =
       advancedToggle.getAttribute("aria-expanded") !== "true";

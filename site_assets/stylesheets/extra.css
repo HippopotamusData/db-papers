@@ -479,7 +479,7 @@
 
 .paper-card footer {
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: auto auto;
   align-items: center;
   gap: 0.7rem;
   margin-top: auto;
@@ -488,6 +488,27 @@
   color: var(--dbp-muted);
   font-size: 0.67rem;
 }
+
+.catalog-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+#catalog-clear {
+  border: 1px solid var(--dbp-line);
+  border-radius: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  color: var(--md-accent-fg-color);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.7rem;
+}
+
+#catalog-clear[hidden] { display: none; }
 
 .paper-card footer a {
   justify-self: end;
@@ -930,6 +951,7 @@ mjx-mtd[extra] {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
+    flex-wrap: wrap;
     margin: 0.75rem 0 0;
     padding: 0.75rem 0 0;
     border-top: 1px solid var(--dbp-line);
@@ -937,7 +959,7 @@ mjx-mtd[extra] {
   }
 
   #paper-grid .paper-card footer a {
-    margin: 0 0 0 auto;
+    margin: 0;
   }
 
 }
