@@ -28,6 +28,27 @@ def save_nonuniform_image(path: Path, size: tuple[int, int] = (32, 16)) -> None:
 
 
 class ResourceValidationTests(unittest.TestCase):
+    def test_bibliography_heading_beside_table_uses_its_own_column(self) -> None:
+        left = 'Maps  500  4.8  0.03'
+        heading = left + " " * (74 - len(left)) + "6. References\n"
+        for entries, expected in (
+            (' ' * 74 + '[1] J. Gray & G. F. Putzolu, "Storage", Proceedings 1987.\n', True),
+            (' ' * 74 + '[1] We discuss storage in 1987.\n', False),
+            ('', False),
+        ):
+            with self.subTest(entries=entries):
+                source = heading + entries
+                if expected:
+                    selected = validate_resources.select_reference_heading(
+                        source, validate_resources.REVIEW_SOURCE_REFERENCE_HEADING_RE
+                    )
+                    self.assertIsNotNone(selected)
+                else:
+                    with self.assertRaises(ValueError):
+                        validate_resources.select_reference_heading(
+                            source, validate_resources.REVIEW_SOURCE_REFERENCE_HEADING_RE
+                        )
+
     def test_alt_only_caption_candidates_cover_numbered_resource_kinds(self) -> None:
         for label in ("图 1：吞吐量（千次/秒）", "Table 1: Results", "算法 1：合并"):
             with self.subTest(label=label):

@@ -4,10 +4,10 @@
 
 ## 总览
 
-- 论文记录：181
-- 已审阅译文：175
+- 论文记录：184
+- 已审阅译文：176
 - 译文草稿：0
-- 仅有原文：0
+- 仅有原文：2
 - 已跳过：6
 - 原文不可用：0
 
@@ -18,10 +18,10 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 7 |
 | 系统架构 (`system-architecture`) | 28 |
-| 查询处理 (`query-processing`) | 63 |
-| 存储 (`storage`) | 23 |
+| 查询处理 (`query-processing`) | 64 |
+| 存储 (`storage`) | 24 |
 | 事务与并发控制 (`transactions`) | 10 |
-| 分布式数据库 (`distributed-databases`) | 8 |
+| 分布式数据库 (`distributed-databases`) | 9 |
 | 数据集成 (`data-integration`) | 2 |
 | 流处理 (`streaming`) | 8 |
 | 可靠性与测试 (`reliability-and-testing`) | 7 |
@@ -82,7 +82,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，63 篇)
+### 查询处理 (`query-processing`，64 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -114,6 +114,7 @@
 | [Handling Data Skew in Parallel Joins in Shared-Nothing Systems](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/translation.md) | 查询执行 | 2008 | 4.0 | translated | [原文](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/source.pdf) | [官方链接](<https://doi.org/10.1145/1376616.1376720>) |
 | [How Good are Learned Cost Models, Really? Insights from Query Optimization Tasks](papers/query-processing/how-good-are-learned-cost-models-really/translation.md) | 查询优化、AI 优化数据库 | 2025 | 3.0 | translated | [原文](papers/query-processing/how-good-are-learned-cost-models-really/source.pdf) | [官方链接](<https://doi.org/10.1145/3725309>) |
 | [How Good Are Query Optimizers, Really?](papers/query-processing/how-good-are-query-optimizers-really/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](papers/query-processing/how-good-are-query-optimizers-really/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol9/p204-leis.pdf>) |
+| [HyperLogLog in Practice: Algorithmic Engineering of a State of The Art Cardinality Estimation Algorithm](papers/query-processing/hyperloglog-in-practice/source.pdf) | 查询执行、基数估计 | 2013 | — | source_only | [原文](papers/query-processing/hyperloglog-in-practice/source.pdf) | [官方链接](<https://research.google.com/pubs/archive/40671.pdf>) |
 | [Impala: A Modern, Open-Source SQL Engine for Hadoop](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/translation.md) | 查询执行 | 2015 | 4.0 | translated | [原文](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/source.pdf) | [官方链接](<http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf>) |
 | [Improving Hash Join Performance through Prefetching](papers/query-processing/improving-hash-join-performance-prefetching/translation.md) | 查询执行 | 2007 | 4.0 | translated | [原文](papers/query-processing/improving-hash-join-performance-prefetching/source.pdf) | [官方链接](<https://www.shimin-chen.com/papers/hashjoin_tods_preliminary.pdf>) |
 | [Improving Unnesting of Complex Queries](papers/query-processing/improving-unnesting-of-complex-queries/translation.md) | 查询优化 | 2025 | 3.5 | translated | [原文](papers/query-processing/improving-unnesting-of-complex-queries/source.pdf) | [官方链接](<https://portal.fis.tum.de/en/publications/improving-unnesting-of-complex-queries/>) |
@@ -150,7 +151,7 @@
 | [Volcano—An Extensible and Parallel Query Evaluation System](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/translation.md) | 查询执行 | 1994 | 5.0 | translated | [原文](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/source.pdf) | [官方链接](<https://doi.org/10.1109/69.273032>) |
 | [WinMagic: Subquery Elimination Using Window Aggregation](papers/query-processing/winmagic-subquery-elimination-window-aggregation/translation.md) | 查询优化 | 2003 | 3.0 | translated | [原文](papers/query-processing/winmagic-subquery-elimination-window-aggregation/source.pdf) | [官方链接](<https://doi.org/10.1145/872757.872840>) |
 
-### 存储 (`storage`，23 篇)
+### 存储 (`storage`，24 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -170,6 +171,7 @@
 | [The Bw-Tree: A B-tree for New Hardware Platforms](papers/storage/bw-tree-new-hardware-platforms/translation.md) | 存储引擎、索引 | 2013 | 4.5 | translated | [原文](papers/storage/bw-tree-new-hardware-platforms/source.pdf) | [官方链接](<https://www.microsoft.com/en-us/research/publication/the-bw-tree-a-b-tree-for-new-hardware/>) |
 | [The Case for Learned Index Structures](papers/storage/case-for-learned-index-structures/translation.md) | 索引、AI 优化数据库 | 2018 | 4.0 | translated | [原文](papers/storage/case-for-learned-index-structures/source.pdf) | [官方链接](<https://research.google/pubs/the-case-for-learned-index-structures/>) |
 | [The Design and Implementation of Modern Column-Oriented Database Systems](papers/storage/design-implementation-modern-column-oriented-database-systems/source.pdf) | 存储引擎 | 2012 | 4.0 | skipped | [原文](papers/storage/design-implementation-modern-column-oriented-database-systems/source.pdf) | [官方链接](<https://stratos.seas.harvard.edu/files/stratos/files/columnstoresfntdbs.pdf>) |
+| [The Five-Minute Rule Ten Years Later, and Other Computer Storage Rules of Thumb](papers/storage/five-minute-rule-ten-years-later/translation.md) | 存储引擎 | 1997 | 4.0 | translated | [原文](papers/storage/five-minute-rule-ten-years-later/source.pdf) | [官方链接](<https://sigmodrecord.org/1997/12/15/the-five-minute-rule-ten-years-later-and-other-computer-storage-rules-of-thumb/>) |
 | [The Google File System](papers/storage/google-file-system/translation.md) | 分布式存储、文件系统 | 2003 | 5.0 | translated | [原文](papers/storage/google-file-system/source.pdf) | [官方链接](<https://research.google/pubs/the-google-file-system/>) |
 | [The Log-Structured Merge-Tree (LSM-Tree)](papers/storage/log-structured-merge-tree/translation.md) | 存储引擎、索引 | 1996 | 5.0 | translated | [原文](papers/storage/log-structured-merge-tree/source.pdf) | [官方链接](<https://doi.org/10.1007/s002360050048>) |
 | [The Ubiquitous B-Tree](papers/storage/ubiquitous-b-tree/translation.md) | 存储引擎、索引 | 1979 | 4.5 | translated | [原文](papers/storage/ubiquitous-b-tree/source.pdf) | [官方链接](<https://doi.org/10.1145/356770.356776>) |
@@ -193,10 +195,11 @@
 | [Speedy Transactions in Multicore In-Memory Databases](papers/transactions/speedy-transactions-multicore-in-memory-databases/translation.md) | 事务处理、并发控制 | 2013 | 4.5 | translated | [原文](papers/transactions/speedy-transactions-multicore-in-memory-databases/source.pdf) | [官方链接](<https://people.csail.mit.edu/stephentu/papers/silo.pdf>) |
 | [The Notions of Consistency and Predicate Locks in a Database System](papers/transactions/notions-consistency-predicate-locks-database-system/translation.md) | 事务处理、并发控制 | 1976 | 4.5 | translated | [原文](papers/transactions/notions-consistency-predicate-locks-database-system/source.pdf) | [官方链接](<https://research.ibm.com/publications/the-notions-of-consistency-and-predicate-locks-in-a-database-system>) |
 
-### 分布式数据库 (`distributed-databases`，8 篇)
+### 分布式数据库 (`distributed-databases`，9 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
+| [A Fast, Minimal Memory, Consistent Hash Algorithm](papers/distributed-databases/fast-minimal-memory-consistent-hash-algorithm/source.pdf) | 分布式存储 | 2014 | — | source_only | [原文](papers/distributed-databases/fast-minimal-memory-consistent-hash-algorithm/source.pdf) | [官方链接](<https://arxiv.org/abs/1406.2294>) |
 | [Bigtable: A Distributed Storage System for Structured Data](papers/distributed-databases/bigtable-distributed-storage-system-structured-data/translation.md) | 存储引擎、分布式存储 | 2006 | 5.0 | translated | [原文](papers/distributed-databases/bigtable-distributed-storage-system-structured-data/source.pdf) | [官方链接](<https://research.google/pubs/bigtable-a-distributed-storage-system-for-structured-data/>) |
 | [CockroachDB: The Resilient Geo-Distributed SQL Database](papers/distributed-databases/cockroachdb-the-resilient-geo-distributed-sql-database/translation.md) | 分布式 SQL、事务处理 | 2020 | 3.5 | translated | [原文](papers/distributed-databases/cockroachdb-the-resilient-geo-distributed-sql-database/source.pdf) | [官方链接](<https://cdn2.hubspot.net/hubfs/1753393/guides/White%20Paper%20%7C%20CockroachDB%20The%20Resilient%20Geo-Distributed%20SQL%20Database%20%28SIGMOD%202020%29.pdf>) |
 | [Dynamo: Amazon’s Highly Available Key-value Store](papers/distributed-databases/dynamo-amazon-highly-available-key-value-store/translation.md) | 分布式存储 | 2007 | 5.0 | translated | [原文](papers/distributed-databases/dynamo-amazon-highly-available-key-value-store/source.pdf) | [官方链接](<https://doi.org/10.1145/1294261.1294281>) |
@@ -275,5 +278,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 181 | 0 |
-| 发表年份 | 181 | 0 |
+| 作者 | 184 | 0 |
+| 发表年份 | 184 | 0 |

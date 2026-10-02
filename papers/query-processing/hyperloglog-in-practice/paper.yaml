@@ -1,0 +1,12 @@
+title: 'HyperLogLog in Practice: Algorithmic Engineering of a State of The Art Cardinality Estimation Algorithm'
+title_zh: HyperLogLog 的工程实践：先进基数估计算法的工程化改进
+authors:
+  - Stefan Heule
+  - Marc Nunkesser
+  - Alexander Hall
+year: 2013
+source_url: https://research.google.com/pubs/archive/40671.pdf
+topics:
+  - query-execution
+  - cardinality-estimation
+reading_status: source_only
