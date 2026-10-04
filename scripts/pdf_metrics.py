@@ -32,6 +32,25 @@ TRANSLATION_REFERENCE_HEADING_RE = re.compile(
 CJK_RE = re.compile(r"[\u3400-\u9fff]")
 
 
+class UnsupportedPdfEncoding(ValueError):
+    """The optional coverage metric cannot trust the extractor's fallback."""
+
+
+class _EncodingDiagnostics(logging.Filter):
+    def __init__(self) -> None:
+        super().__init__()
+        self.messages: set[str] = set()
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        message = record.getMessage()
+        if record.levelno == logging.ERROR and re.fullmatch(
+            r"Advanced encoding .+ not implemented yet", message
+        ):
+            self.messages.add(message)
+            return False
+        return True
+
+
 def _require_pinned_pypdf() -> None:
     if pypdf.__version__ != PYPDF_VERSION:
         raise ValueError(
@@ -55,11 +74,19 @@ def source_word_count_from_text(text: str) -> int:
 def source_word_count(source_pdf: Path) -> int:
     _require_pinned_pypdf()
     logging.getLogger("pypdf").setLevel(logging.ERROR)
-    reader = PdfReader(source_pdf, strict=False)
-    text = "\n".join((page.extract_text() or "") for page in reader.pages)
+    diagnostics = _EncodingDiagnostics()
+    cmap_logger = logging.getLogger("pypdf._cmap")
+    cmap_logger.addFilter(diagnostics)
+    try:
+        reader = PdfReader(source_pdf, strict=False)
+        text = "\n".join((page.extract_text() or "") for page in reader.pages)
+    finally:
+        cmap_logger.removeFilter(diagnostics)
     count = source_word_count_from_text(text)
     if count < 1:
         raise ValueError(f"{source_pdf} produced no source words")
+    if diagnostics.messages:
+        raise UnsupportedPdfEncoding("; ".join(sorted(diagnostics.messages)))
     return count
 
 
@@ -121,6 +148,13 @@ def main() -> int:
 
     try:
         candidate = abridgement_candidate(args.source_pdf, args.translation)
+    except UnsupportedPdfEncoding as exc:
+        print(
+            f"unavailable mechanical abridgement metric: pypdf-{PYPDF_VERSION} "
+            f"reported unsupported PDF encoding ({exc}); "
+            "source/translation coverage requires direct PDF review"
+        )
+        return 0
     except (OSError, PdfReadError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2

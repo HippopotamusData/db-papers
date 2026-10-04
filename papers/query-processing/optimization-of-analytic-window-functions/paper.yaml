@@ -1,0 +1,20 @@
+title: Optimization of Analytic Window Functions
+title_zh: 分析型窗口函数的优化
+authors:
+- Yu Cao
+- Chee-Yong Chan
+- Jie Li
+- Kian-Lee Tan
+year: 2012
+source_url: https://www.vldb.org/pvldb/vol5/p1244_yucao_vldb2012.pdf
+topics:
+- query-optimization
+- query-execution
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 4

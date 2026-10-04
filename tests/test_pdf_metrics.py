@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import contextlib
+import io
+import logging
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -282,6 +285,80 @@ class PdfMetricsTests(unittest.TestCase):
         with patch.object(pdf_metrics.pypdf, "__version__", "0.0.0"):
             with self.assertRaisesRegex(ValueError, "pypdf 6.14.2 is required"):
                 pdf_metrics._require_pinned_pypdf()
+
+    def test_supported_pdf_keeps_deterministic_count(self) -> None:
+        reader = Mock(pages=[Mock(extract_text=Mock(return_value="Database systems."))])
+        with patch.object(pdf_metrics, "PdfReader", return_value=reader):
+            self.assertEqual(pdf_metrics.source_word_count(Path("source.pdf")), 2)
+
+    def test_unsupported_encoding_does_not_return_fallback_count(self) -> None:
+        logger = logging.getLogger("pypdf._cmap")
+        filters = list(logger.filters)
+
+        def extract() -> str:
+            logger.error("Advanced encoding [] not implemented yet")
+            return "Fallback database words."
+
+        reader = Mock(pages=[Mock(extract_text=Mock(side_effect=extract))])
+        stderr = io.StringIO()
+        with patch.object(pdf_metrics, "PdfReader", return_value=reader):
+            with contextlib.redirect_stderr(stderr):
+                with self.assertRaises(pdf_metrics.UnsupportedPdfEncoding):
+                    pdf_metrics.source_word_count(Path("source.pdf"))
+        self.assertEqual(stderr.getvalue(), "")
+        self.assertEqual(logger.filters, filters)
+
+    def test_unrecognized_pdf_diagnostic_is_not_consumed(self) -> None:
+        logger = logging.getLogger("pypdf._cmap")
+
+        def extract() -> str:
+            logger.error("Unexpected damaged font")
+            return "Database words."
+
+        reader = Mock(pages=[Mock(extract_text=Mock(side_effect=extract))])
+        with patch.object(pdf_metrics, "PdfReader", return_value=reader):
+            with self.assertLogs(logger, level="ERROR") as captured:
+                pdf_metrics.source_word_count(Path("source.pdf"))
+        self.assertIn("Unexpected damaged font", captured.output[0])
+
+    def test_empty_text_is_hard_failure_even_with_encoding_diagnostic(self) -> None:
+        def extract() -> str:
+            logging.getLogger("pypdf._cmap").error(
+                "Advanced encoding [] not implemented yet"
+            )
+            return ""
+
+        reader = Mock(pages=[Mock(extract_text=Mock(side_effect=extract))])
+        with patch.object(pdf_metrics, "PdfReader", return_value=reader):
+            with self.assertRaisesRegex(ValueError, "produced no source words"):
+                pdf_metrics.source_word_count(Path("source.pdf"))
+
+    def test_reader_failure_removes_temporary_diagnostic_filter(self) -> None:
+        logger = logging.getLogger("pypdf._cmap")
+        filters = list(logger.filters)
+        with patch.object(pdf_metrics, "PdfReader", side_effect=OSError("unreadable")):
+            with self.assertRaises(OSError):
+                pdf_metrics.source_word_count(Path("source.pdf"))
+        self.assertEqual(logger.filters, filters)
+
+    def test_cli_reports_unavailable_metric_as_visible_review_candidate(self) -> None:
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with patch.object(sys, "argv", ["pdf_metrics.py", "abridgement", "a.pdf", "b.md"]):
+            with patch.object(pdf_metrics, "abridgement_candidate", side_effect=pdf_metrics.UnsupportedPdfEncoding("Advanced encoding [] not implemented yet")):
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    self.assertEqual(pdf_metrics.main(), 0)
+        self.assertIn("unavailable mechanical abridgement metric", stdout.getvalue())
+        self.assertIn("requires direct PDF review", stdout.getvalue())
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_cli_keeps_unreadable_pdf_a_hard_failure(self) -> None:
+        stdout, stderr = io.StringIO(), io.StringIO()
+        with patch.object(sys, "argv", ["pdf_metrics.py", "abridgement", "a.pdf", "b.md"]):
+            with patch.object(pdf_metrics, "abridgement_candidate", side_effect=OSError("unreadable")):
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    self.assertEqual(pdf_metrics.main(), 2)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertIn("unreadable", stderr.getvalue())
 
 
 if __name__ == "__main__":
