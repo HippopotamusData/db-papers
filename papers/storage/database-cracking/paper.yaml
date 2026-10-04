@@ -1,0 +1,12 @@
+title: Database Cracking
+title_zh: 数据库裂解
+authors:
+- Stratos Idreos
+- Martin L. Kersten
+- Stefan Manegold
+year: 2007
+source_url: https://www.cidrdb.org/cidr2007/papers/cidr07p07.pdf
+topics:
+- indexing
+- storage-engine
+reading_status: source_only

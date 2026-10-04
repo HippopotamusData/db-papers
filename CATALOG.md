@@ -4,10 +4,10 @@
 
 ## 总览
 
-- 论文记录：184
+- 论文记录：187
 - 已审阅译文：178
 - 译文草稿：0
-- 仅有原文：0
+- 仅有原文：3
 - 已跳过：6
 - 原文不可用：0
 
@@ -18,8 +18,8 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 7 |
 | 系统架构 (`system-architecture`) | 28 |
-| 查询处理 (`query-processing`) | 64 |
-| 存储 (`storage`) | 24 |
+| 查询处理 (`query-processing`) | 65 |
+| 存储 (`storage`) | 26 |
 | 事务与并发控制 (`transactions`) | 10 |
 | 分布式数据库 (`distributed-databases`) | 9 |
 | 数据集成 (`data-integration`) | 2 |
@@ -82,7 +82,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，64 篇)
+### 查询处理 (`query-processing`，65 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -126,6 +126,7 @@
 | [Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age](papers/query-processing/morsel-driven-parallelism/translation.md) | 查询执行 | 2014 | 4.5 | translated | [原文](papers/query-processing/morsel-driven-parallelism/source.pdf) | [官方链接](<https://doi.org/10.1145/2588555.2610507>) |
 | [Neo: A Learned Query Optimizer](papers/query-processing/neo-a-learned-query-optimizer/translation.md) | 查询优化、AI 优化数据库 | 2019 | 4.0 | translated | [原文](papers/query-processing/neo-a-learned-query-optimizer/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol12/p1705-marcus.pdf>) |
 | [NeuroCard: One Cardinality Estimator for All Tables](papers/query-processing/neurocard-one-cardinality-estimator-for-all-tables/translation.md) | 基数估计、AI 优化数据库 | 2021 | 3.5 | translated | [原文](papers/query-processing/neurocard-one-cardinality-estimator-for-all-tables/source.pdf) | [官方链接](<https://doi.org/10.14778/3421424.3421432>) |
+| [Optimization of Analytic Window Functions](papers/query-processing/optimization-of-analytic-window-functions/source.pdf) | 查询优化、查询执行 | 2012 | — | source_only | [原文](papers/query-processing/optimization-of-analytic-window-functions/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol5/p1244_yucao_vldb2012.pdf>) |
 | [Optimization of Common Table Expressions in MPP Database Systems](papers/query-processing/optimization-common-table-expressions-mpp/translation.md) | 查询优化 | 2015 | 3.5 | translated | [原文](papers/query-processing/optimization-common-table-expressions-mpp/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol8/p1704-elhelw.pdf>) |
 | [Optimizing Queries over Partitioned Tables in MPP Systems](papers/query-processing/optimizing-queries-partitioned-tables-mpp/translation.md) | 查询优化 | 2014 | 3.5 | translated | [原文](papers/query-processing/optimizing-queries-partitioned-tables-mpp/source.pdf) | [官方链接](<https://d1fto35gcfffzn.cloudfront.net/big-data/white-paper/OptimizingQueriesOverPartitionedTablesInMPPSystems.pdf>) |
 | [Optimizing Queries Using Materialized Views: A Practical, Scalable Solution](papers/query-processing/optimizing-queries-using-materialized-views/translation.md) | 查询优化 | 2001 | 4.0 | translated | [原文](papers/query-processing/optimizing-queries-using-materialized-views/source.pdf) | [官方链接](<https://doi.org/10.1145/375663.375706>) |
@@ -151,7 +152,7 @@
 | [Volcano—An Extensible and Parallel Query Evaluation System](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/translation.md) | 查询执行 | 1994 | 5.0 | translated | [原文](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/source.pdf) | [官方链接](<https://doi.org/10.1109/69.273032>) |
 | [WinMagic: Subquery Elimination Using Window Aggregation](papers/query-processing/winmagic-subquery-elimination-window-aggregation/translation.md) | 查询优化 | 2003 | 3.0 | translated | [原文](papers/query-processing/winmagic-subquery-elimination-window-aggregation/source.pdf) | [官方链接](<https://doi.org/10.1145/872757.872840>) |
 
-### 存储 (`storage`，24 篇)
+### 存储 (`storage`，26 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -161,10 +162,12 @@
 | [Ceph: A Scalable, High-Performance Distributed File System](papers/storage/ceph-a-scalable-high-performance-distributed-file-system/translation.md) | 分布式存储、文件系统 | 2006 | 5.0 | translated | [原文](papers/storage/ceph-a-scalable-high-performance-distributed-file-system/source.pdf) | [官方链接](<https://www.usenix.org/legacy/events/osdi06/tech/full_papers/weil/weil.pdf>) |
 | [CFS: A Distributed File System for Large Scale Container Platforms](papers/storage/cfs-a-distributed-file-system-for-large-scale-container-platforms/translation.md) | 分布式存储、文件系统 | 2019 | 2.5 | translated | [原文](papers/storage/cfs-a-distributed-file-system-for-large-scale-container-platforms/source.pdf) | [官方链接](<https://arxiv.org/pdf/1911.03001.pdf>) |
 | [Data Blocks: Hybrid OLTP and OLAP on Compressed Storage using both Vectorization and Compilation](papers/storage/data-blocks-hybrid-oltp-olap-compressed-storage-vectorization-compilation/translation.md) | 存储引擎 | 2016 | 3.5 | translated | [原文](papers/storage/data-blocks-hybrid-oltp-olap-compressed-storage-vectorization-compilation/source.pdf) | [官方链接](<https://db.in.tum.de/downloads/publications/datablocks.pdf>) |
+| [Database Cracking](papers/storage/database-cracking/source.pdf) | 存储引擎、索引 | 2007 | — | source_only | [原文](papers/storage/database-cracking/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2007/papers/cidr07p07.pdf>) |
 | [Delta Lake: High-Performance ACID Table Storage over Cloud Object Stores](papers/storage/delta-lake-high-performance-acid-table-storage-cloud-object-stores/translation.md) | 云原生、存储引擎、湖仓一体 | 2020 | 4.5 | translated | [原文](papers/storage/delta-lake-high-performance-acid-table-storage-cloud-object-stores/source.pdf) | [官方链接](<https://doi.org/10.14778/3415478.3415560>) |
 | [Facebook's Tectonic Filesystem: Efficiency from Exascale](papers/storage/facebook-tectonic-filesystem-efficiency-from-exascale/translation.md) | 存储引擎 | 2021 | 3.5 | translated | [原文](papers/storage/facebook-tectonic-filesystem-efficiency-from-exascale/source.pdf) | [官方链接](<https://www.usenix.org/system/files/fast21-pan.pdf>) |
 | [Generalized Search Trees for Database Systems](papers/storage/generalized-search-trees-database-systems/translation.md) | 索引 | 1995 | 5.0 | translated | [原文](papers/storage/generalized-search-trees-database-systems/source.pdf) | [官方链接](<https://www.vldb.org/conf/1995/P562.PDF>) |
 | [Kudu: Storage for Fast Analytics on Fast Data](papers/storage/kudu-storage-for-fast-analytics-on-fast-data/translation.md) | 存储引擎、分布式存储 | 2015 | 3.5 | translated | [原文](papers/storage/kudu-storage-for-fast-analytics-on-fast-data/source.pdf) | [官方链接](<https://kudu.apache.org/kudu.pdf>) |
+| [LeanStore: In-Memory Data Management Beyond Main Memory](papers/storage/leanstore-in-memory-data-management-beyond-main-memory/source.pdf) | 存储引擎、并发控制 | 2018 | — | source_only | [原文](papers/storage/leanstore-in-memory-data-management-beyond-main-memory/source.pdf) | [官方链接](<https://db.in.tum.de/~leis/papers/leanstore.pdf>) |
 | [Main Memory Database Systems](papers/storage/main-memory-database-systems/source.pdf) | 存储引擎 | 2016 | 3.5 | skipped | [原文](papers/storage/main-memory-database-systems/source.pdf) | [官方链接](<https://justinlevandoski.io/papers/fnt-mmdb.pdf>) |
 | [Mainlining Databases: Supporting Fast Transactional Workloads on Universal Columnar Data File Formats](papers/storage/mainlining-databases-fast-transactional-workloads-universal-columnar-data-file-formats/translation.md) | 存储引擎 | 2021 | 2.5 | translated | [原文](papers/storage/mainlining-databases-fast-transactional-workloads-universal-columnar-data-file-formats/source.pdf) | [官方链接](<https://db.cs.cmu.edu/papers/2020/p534-li.pdf>) |
 | [The Adaptive Radix Tree: ARTful Indexing for Main-Memory Databases](papers/storage/adaptive-radix-tree-artful-indexing-main-memory-databases/translation.md) | 索引 | 2013 | 4.5 | translated | [原文](papers/storage/adaptive-radix-tree-artful-indexing-main-memory-databases/source.pdf) | [官方链接](<https://db.in.tum.de/~leis/papers/ART.pdf>) |
@@ -278,5 +281,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 184 | 0 |
-| 发表年份 | 184 | 0 |
+| 作者 | 187 | 0 |
+| 发表年份 | 187 | 0 |

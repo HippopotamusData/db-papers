@@ -1,0 +1,13 @@
+title: 'LeanStore: In-Memory Data Management Beyond Main Memory'
+title_zh: LeanStore：超越主存容量的内存式数据管理
+authors:
+- Viktor Leis
+- Michael Haubenschild
+- Alfons Kemper
+- Thomas Neumann
+year: 2018
+source_url: https://db.in.tum.de/~leis/papers/leanstore.pdf
+topics:
+- storage-engine
+- concurrency-control
+reading_status: source_only
