@@ -113,7 +113,7 @@ Push engine 解决了 pull engine 在 selection operator 上的问题。若产�
 
 ### 2.3 Compiled Engines
 
-一般而言，查询运行时成本取决于两类因素：数据在存储和计算组件之间传输的时间，以及实际计算所需时间。在磁盘型 DBMS 中，主导成本通常是从/到二级存储的数据传输。因此，只要 pipelining 算法不打断 pipeline，pull 与 push 的差异不明显；pull engine 中 selection 的控制流问题会被数据传输成本掩盖。
+一般而言，查询运行时成本取决于两类因素：数据在存储和计算组件之间传输的时间，以及实际计算所需时间。在磁盘型 DBMS 中，主导成本通常是从/到二级存储的数据传输。因此，只要 pipelining 算法不打断 pipeline，pull 与 push 没有差别；pull engine 中 selection 的控制流问题会被数据传输成本掩盖。
 
 随着 in-memory DBMS 出现，指令布局变得非常重要。Query compilation 使用代码生成和编译技术来内联虚函数，并进一步专门化代码以改善缓存局部性 [20, 2, 32, 35, 42, 33, 34, 30, 53, 12, 41, 29, 3, 48, 28]。因此，每种 pipelining algorithm 生成的代码形状很重要，需要针对不同 workload 研究其性能。
 
@@ -147,7 +147,7 @@ class SelectOp[R](p: R => Boolean) {
 
 Collection programming API 越来越流行。Ferry [21, 20] 和 LINQ [39] 使用这类 API 把应用与数据库后端无缝集成；Spark RDD [57] 使用同样的 collection 操作；Scala、Haskell、Java 8 等主流语言也提供函数式 collection 抽象。这类 API 的理论基础包括 Monad Calculus 和 Monoid Comprehensions [7, 8, 56, 22, 52, 15]。
 
-与 query engine 类似，collection programming 的声明性有代价。每个 collection operation 对一个集合执行计算并产生转换后的集合。串接多次调用会创建不必要的中间集合。Loop fusion 或 deforestation [55] 消除 collection program 中的中间集合。由于该转换非局部且脆弱，很难应用到包含 imperative features 的非纯函数式程序中，因此主流编译器通常缺少它。
+与 query engine 类似，collection programming 的声明性有代价。每个 collection operation 对一个集合执行计算并产生转换后的集合。串接多次调用会创建不必要的中间集合。Loop fusion 或 deforestation [55] 消除 collection program 中的中间集合。由于该转换非局部且脆弱，很难应用到包含 imperative features 的非纯函数式程序中，因此这类语言的主流编译器中没有这一变换。
 
 为提供实用实现，可以把语言限制为纯函数式 DSL，使 fusion rule 可局部应用。这类方法称为 short-cut deforestation：用局部转换而不是全局转换移除中间集合，更容易集成到真实编译器。Haskell [50, 11, 18] 和 Scala DSL [27, 48] 中已有成功实现。接下来，我们按提出时间介绍两种 short-cut deforestation 方法；每种方法都用两种 collection “微指令”表示大量 collection operation，因此只需很少的微指令级 rewrite rule 即可实现 fusion。
 
@@ -166,7 +166,7 @@ class List[T] {
 }
 ```
 
-`foreach` 通过遍历 collection 元素并对每个元素应用给定函数来消费 collection。`build` 是 `foreach` 的对应 producer：
+`foreach` 通过遍历 collection 元素并对每个元素应用给定函数来消费 collection。`build` 是 `foreach` 的对应 producer。它产生一个 collection，其 `foreach` 方法将消费者高阶函数应用到函数 `f`。`build` 的签名如下：
 
 ```scala
 def build[T](consumer: (T => Unit) => Unit): List[T]
@@ -267,9 +267,9 @@ Query engine 中的 pipelining 类似 collection programming 中的 loop fusion�
 | Pull engine | Iterator | Unfold fusion [50]；Stream fusion [11] |
 | Push engine | Visitor | Fold fusion [18] |
 
-**Push Engine = Fold Fusion**。Visitor pattern 与 fold fusion 存在相似性。一方面，Visitor design pattern 被证明对应 Church encoding [6] 的数据类型 [9]；另一方面，list 上的 `foldr` 对应 lambda calculus 中 list 的 Church encoding [45, 49]。二者都通过把底层数据结构转为 Church encoding 来消除中间结果。前者的 specialization 通过内联移除虚函数调用；后者通过 fold-fusion rule 和 beta-reduction 移除物化点。图 5(a)/(b) 还显示，push engine 调用 destination operator 的 `consume`，对应 fold fusion 调用传给 `build` 的 `consume` 函数。
+**Push Engine = Fold Fusion**。Visitor pattern 与 fold fusion 存在相似性。一方面，Visitor design pattern 被证明对应 Church encoding [6] 的数据类型 [9]；另一方面，list 上的 `foldr` 对应 lambda calculus 中 list 的 Church encoding [45, 49]。二者都通过把底层数据结构转为 Church encoding 来消除中间结果。前者的 specialization 通过内联移除虚函数调用；后者通过 fold-fusion rule 和 beta-reduction 移除物化点，并内联 λ 表达式。图 5(a)/(b) 还显示，push engine 调用 destination operator 的 `consume`，对应 fold fusion 调用传给 `build` 的 `consume` 函数。
 
-**Pull Engine = Unfold Fusion**。Iterator pattern 与 unfold fusion 对应。Iterator model 的 category-theoretic 本质此前已有研究 [17]，但此前没有文献直接建立 `unfold` 函数与 Iterator pattern 的对应；据我们所知，图 5(e)/(f) 首次展示这种联系。Pull engine 调用 source operator 的 `next`，对应 unfold fusion 调用传给 `destroy` 的 `next`；`generate` 提供元素，`destroy` 消费该 generator。Pull engine 中 `next` 返回 `null` 用于表示完成，类似 unfold fusion 的终止条件。
+**Pull Engine = Unfold Fusion**。Iterator pattern 与 unfold fusion 对应。Iterator model 的 category-theoretic 本质此前已有研究 [17]，但此前没有文献直接建立 `unfold` 函数与 Iterator pattern 的对应；据我们所知，图 5(e)/(f) 首次展示这种联系。Pull engine 调用 source operator 的 `next`，对应 unfold fusion 调用传给 `destroy` 的 `next`。
 
 ## 4. 一种改进的 Pull-Based Engine
 
@@ -435,10 +435,30 @@ trait Step[T] { self =>
           def done(): Unit = v.done()
         })
     }
+
+  def map[S](f: T => S): Step[S] =
+    new Step[S] {
+      def __match(v: StepVisitor[S]): Unit =
+        self.__match(new StepVisitor[T] {
+          def yld(e: T): Unit = v.yld(f(e))
+          def skip(): Unit = v.skip()
+          def done(): Unit = v.done()
+        })
+    }
+}
+
+case class Yield[T](e: T) extends Step[T] {
+  def __match(v: StepVisitor[T]): Unit = v.yld(e)
+}
+case object Skip extends Step[Nothing] {
+  def __match(v: StepVisitor[Nothing]): Unit = v.skip()
+}
+case object Done extends Step[Nothing] {
+  def __match(v: StepVisitor[Nothing]): Unit = v.done()
 }
 ```
 
-对我们的示例查询应用该增强后，生成代码如图 7b 所示。把这段代码与 push engine 生成的代码比较后，我们可以看到二者非常相似：不再有 `Step` 操作的额外虚函数调用，不再物化中间 `Step` 对象，也不再因为 selection 产生额外嵌套 `while`。这使底层编译器更容易理解和优化。另一种实现可把 `Step` 写成 sum type 并使用 Scala pattern matching；Visitor pattern 可编码面向对象语言中的 sum type [9]，而 Scala pattern matching 可表达 Visitor pattern [14]，因此两种实现在概念上没有差异 [25]。
+对我们的示例查询应用该增强后，生成代码如图 7b 所示。把这段代码与 push engine 生成的代码比较后，我们可以看到二者非常相似：不再有 `Step` 操作的额外虚函数调用，不再物化中间 `Step` 对象，也不再因为 selection 产生额外嵌套 `while`。这使底层编译器更容易理解和优化。另一种实现可把 `Step` 写成 sum type，即包含若干互不相同情形、每个对象只能属于其中一种情形的类型。因此，`Step` 方法的实现可以使用 Scala 的 pattern matching 功能；Visitor pattern 可编码面向对象语言中的 sum type [9]，而 Scala pattern matching 可表达 Visitor pattern [14]，因此两种实现在概念上没有差异 [25]。
 
 ## 6. 实验结果
 
@@ -474,7 +494,7 @@ Microbenchmark 分三类：
 
 图 12. 产生聚合结果的简单查询。
 
-**单 pipeline 列表结果。** 图 13 展示不包含 aggregation、产生元素列表的查询。在该实验中，我们使用 1 GB 生成数据。selection 后接 projection 时，各 engine 类似。但如果查询过滤后返回 top-k，push engine 更差，因为 limit operator 会打断 push pipeline。selection-projection-limit 的情况更明显，pull engine 和 stream-fusion engine 更好；Java 8 streaming API 的 pull/push fusion 技术中也观察到类似现象 [4]。
+**单 pipeline 列表结果。** 图 13 展示不包含 aggregation、产生元素列表的查询。在该实验中，我们使用 1 GB 生成数据。selection 后接 projection 时，各 engine 类似。但如果查询过滤后返回 top-k，push engine 更差，因为 limit operator 会打断 push pipeline。selection-projection-limit 的情况更明显，pull engine 和 stream-fusion engine 更好。此时，pull engine 不必遍历所有元素，达到 limit 后即可立即停止；push engine 则必须等所有元素都产生后才能结束执行。Java 8 streaming API 的 pull/push fusion 技术中也观察到类似现象 [4]。
 
 ![图 13](assets/image-p11-02-xref119.png)
 
@@ -492,7 +512,9 @@ Microbenchmark 分三类：
 
 本节中，我们研究实践中更常见的场景。为此，我们使用 TPC-H 中定义的更大、更复杂的分析查询。首先，我们展示细粒度优化以及我们的 inline-aware pull engine 实现对一个 TPC-H 查询的影响；然后，我们研究 12 个 TPC-H 查询上的不同 engine。所有实验使用 8 GB TPC-H 数据。
 
-**Inline-aware pull engine 实现。** 朴素 pull engine 的 selection operator 会调用 source `next` 两次。在 selection 链中，这可能指数级增加代码大小。该情况实践中不频繁，因为 selection 通常紧跟 scan；但 TPC-H Q19 在 join 后使用 selection。图 15 显示，inline-aware selection 实现使 pull engine 性能提升约 15%。主要原因是它为这些查询生成的查询处理代码减少约 40%，改善 instruction cache locality。
+**Inline-aware pull engine 实现。** 朴素 pull engine 的 selection operator 会调用 source `next` 两次。在 selection 链中，这可能指数级增加代码大小。该情况实践中不频繁，因为 selection 通常紧跟 scan；但 TPC-H Q19 在 join 后使用 selection。图 15 显示，inline-aware selection 实现使 pull engine 性能提升约 15%。主要原因之一是它为这两个查询生成的查询处理代码减少约 40%，改善 instruction cache locality。
+
+> 译注：原文此处写“这两个查询”，但前文及图 15 只明确讨论 TPC-H Q19；此处保留原文表述。
 
 > **原文脚注 5：**另一种实现可以把 join 后发生的 selection 融入 join 算子本身。文献 [47] 的 join 实验采用这一假设，此时 join 不再是纯 join 算子，而是包含 join 后接 selection 的 super operator；在本文中，我们不考虑这种情况。
 

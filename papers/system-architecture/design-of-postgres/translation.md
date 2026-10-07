@@ -508,31 +508,31 @@ POSTGRES 预计把全部二级索引和最近的数据库元组放在磁盘，�
 
 #### 5.3.1 数据格式
 
-每个元组包含如下系统字段：
+每个元组都有一个不可变的唯一标识符 `IID`，它由 POSTGRES 在元组创建时分配，是一个永不改变的 64 位量。事务标识 `XACTID` 也是系统分配的唯一 64 位量；系统时钟可按需返回近似当前时刻的时间戳。物理记录把所有非空字段相邻存放，并在元组前缀中包含如下附加字段：
 
 ```text
-IID       : immutable id
-tmin
-BXID
-tmax
-EXID
-v-IID
-descriptor
+IID        : 本元组的不可变标识符
+tmin       : 元组开始有效的时间戳
+BXID       : 赋予 tmin 的事务标识符
+tmax       : 元组停止有效的时间戳
+EXID       : 赋予 tmax 的事务标识符
+v-IID      : 本版本或某个其他版本中一个元组的不可变标识符
+descriptor : 元组前端的描述符
 ```
 
-`IID` 是在元组创建时由 POSTGRES 分配、永不改变的 64 位标识符。事务标识 `XACTID` 也是系统分配的唯一 64 位量；系统时钟可按需返回近似当前时刻的时间戳。`tmin` 是该版本开始有效的时间，`BXID` 是创建该版本的事务标识；`tmax` 是该版本停止有效的时间，`EXID` 是使它失效的事务标识。`v-IID` 把同一逻辑对象在本版本或其他版本中的元组连接起来。物理记录把所有非空字段相邻存放，`descriptor` 保存每个非空字段的起始偏移，类似 System R 元组上的结构 [ASTR76]。
+`descriptor` 保存每个非空字段的起始偏移，类似 System R 元组上的结构 [ASTR76]。
 
 这种格式让版本信息与普通元组一起保存。创建元组的事务填入第一组时间戳和事务标识。更新不会就地覆盖旧版本，而是在旧元组的第二组槽中填入更新事务的标识和时间戳，并在数据库中建立一个新元组。
 
 #### 5.3.2 更新与访问规则
 
-插入元组时，`tmin` 记为插入事务的时间戳，`BXID` 记为其标识；删除时，`tmax` 和 `EXID` 分别记为删除事务的时间戳和标识；更新被建模为先插入后删除。在时间 `T` 访问关系时，若元组满足查询条件 `QUAL`，且符合下列任一条件，就应返回它：
+插入元组时，`tmin` 记为插入事务的时间戳，`BXID` 记为其标识；删除时，`tmax` 和 `EXID` 分别记为删除事务的时间戳和标识；更新被建模为先插入后删除。为了在时间 `T` 找到所有满足查询条件 `QUAL` 的记录，运行时系统必须找到满足 `QUAL` 且符合下列任一条件的所有磁盘记录：
 
 1. `tmin < T < tmax`，并且 `BXID` 和 `EXID` 都已提交；
 2. `tmin < T`、`tmax = null`，并且 `BXID` 已提交；
 3. `tmin < T`，`BXID` 已提交，而 `EXID` 尚未提交。
 
-光盘上的归档元组只需满足第一种条件，因为它们已经形成封闭的历史区间。磁盘上的当前元组则可能处于后两种状态。访问方法把这些版本与事务状态规则结合起来，向查询提供一致的时间切片。
+然后，还必须找到满足第一项条件的所有光盘记录。下文介绍用于快速判断事务是否已提交的特殊事务日志。
 
 #### 5.3.3 POSTGRES 日志与 Accelerator
 
@@ -547,24 +547,30 @@ descriptor
 逻辑 `LOG` 关系可以表示为：
 
 ```text
-line-id
-bit-1[1000]
-bit-2[1000]
+line-id     : 访问方法提供的排序字段
+bit-1[1000] : 一个位向量
+bit-2[1000] : 第二个位向量
 ```
 
-事务号 `i` 存在 `line-id = floor(i/1000)` 的记录中，数组位置为 `i` 除以 1000 的余数；两组位共同编码事务状态。`T1`、`T2`、`T3` 和最近的日志块放在“安全主存”中；估计只需 1K 至 10K 字节，即 10 至 100 个块。安全主存可由带不间断电源的双份或三份普通内存构成。
+事务号 `i` 存在 `line-id = floor(i/1000)` 的记录中，数组位置为 `i` 除以 1000 的余数；两组位共同编码事务状态。`T1`、`T2`、`T3` 和最近的日志块放在“安全主存”中；我们假定有数千位（例如 1K 至 10K 字节）的安全主存，可用于容纳日志尾部的 10 至 100 个块。安全主存可由带不间断电源的双份或三份普通内存构成。
+
+> 译注：原文同时给出“数千位”、1K 至 10K 字节、10 至 100 个块及下文每块 2000 位，这些容量估计并不严格对应；这里保留原数字。
 
 物理上，系统把日志组织为由 `n` 个块组成的循环池，每块含 2000 位。high-water 指向当前最大事务号 `T1` 及其将使用的位，low-water 指向缓冲区中最老事务及其位。每启动一个事务就推进 high-water；当 high-water 接近 low-water 时，必须可靠地把最老日志块推到磁盘，并把 low-water 推进 1000。硬件结构提供四项操作：推进 high-water（开始事务）、推送块并更新 low-water、abort 事务、commit 事务。
 
-理想情况下，块池足够大，块内全部事务在该块被推送前就已提交或中止，于是该块永远无需在磁盘上再次更新。长事务可能迫使含未结束事务的块提前写盘；它后来 commit 或 abort 时就必须较慢地更新磁盘块。此类 `LOG` 关系磁盘操作使用特殊的事务零执行，并遵循普通更新规则，以免日志更新本身再要求日志记录。
+理想情况下，块池足够大，块内全部事务在该块被推送前就已提交或中止，于是该块永远无需在磁盘上再次更新。长事务可能迫使含未结束事务的块提前写盘；它后来 commit 或 abort 时就必须较慢地更新磁盘块。此类 `LOG` 关系磁盘操作必须使用特殊的事务（事务零）执行，并遵循上述普通更新规则。
 
-当 `T2` 推进时，trigger 会把已经无需双位表示的事务压缩成单个位。按每秒 5 个事务计算，完整 `LOG` 每年约增长 20 MB。
+一个 trigger 会周期性推进 `T2`，并把对应于现在早于 `T2` 的事务的日志记录中的 `bit-2` 替换为 `null`；这些 `null` 不占用空间。按每秒 5 个事务计算，完整 `LOG` 每年约增长 20 MB。
 
-为了进一步减小内存和访问开销，POSTGRES 引入称为 accelerator 的 `XACT` 关系。它使用 Bloom-filter 风格的位图 [SEVR76]：
+虽然我们预计会有相当多的缓冲空间可用，但高事务率系统无法把 `XACT` 关系的所有相关部分保留在主存中。在这种情况下，运行时检查单个事务是否已提交的代价会高得难以承受。因此，可选的事务 accelerator 会很有用。
+
+> 译注：原文此处使用 `XACT` 这一名称，下文才引入作为 accelerator 的第二个 `XACT` 关系；这里保留原文名称。
+
+我们预计 `T2` 与 `T3` 之间几乎所有事务都已提交。因此，将使用第二个 `XACT` 关系作为 Bloom filter [SEVR76]，来检测已中止的事务。该关系具有以下形式：
 
 ```text
-line-id
-bitmap[M]
+line-id   : 访问方法提供的排序字段
+bitmap[M] : 大小为 M 的位图
 ```
 
 对 `T2` 与 `T3` 之间的任一已中止事务，可用下面的更新设置相应位。令每条 `XACT` 记录覆盖 `N` 个事务，并令 `LOW = T3 - remainder(T3/N)`：
@@ -581,7 +587,7 @@ and i = hash(remainder((XACTID - LOW) / N))
 bitmap[hash(remainder((C-XACTID - LOW) / N))]
 ```
 
-Vacuum 会周期性推进 `T3`，并删除对应于更老事务的 `XACT` 元组；另一个 trigger 周期性推进 `T2`，为刚刚落到该边界之后的所有中止事务执行上述更新。位为 0 可以确定事务已经提交；位为 1 则可能是目标事务中止，也可能是哈希冲突，需要回到 `LOG` 确认。这样，较小的 `XACT` 缓存可以过滤大部分日志访问。
+Vacuum 会周期性推进 `T3`，并删除对应于更老事务的 `XACT` 元组；另一个 trigger 周期性推进 `T2`，为现在早于 `T2` 的所有已中止事务执行上述更新。位为 0 可以确定事务已经提交；位为 1 则可能是目标事务中止，也可能是哈希冲突，需要回到 `LOG` 确认。这样，较小的 `XACT` 缓存可以过滤大部分日志访问。
 
 #### 5.3.4 Accelerator 分析
 
@@ -689,6 +695,8 @@ where relation[T].key = value
 
 当前时刻的谓词只需搜索磁盘索引；一般历史查询要同时搜索磁盘和归档索引。两个索引都先按用户键筛选，归档索引还可用 `tmin` 与 `tmax` 进一步缩小搜索。Replace 要依次插入带适当 `BXID`、`tmin` 的新数据记录，在所有已定义键索引中插入记录，最后修改被更新旧记录的 `tmax`。Append 只执行第一步和第三步，Delete 只执行第二步。若从旧元组保留指向新元组的指针，POSTGRES 就只需更新键值实际改变的索引；我们计划实现这一以运行时复杂性换磁盘写入量的优化。
 
+> 译注：原文对 Append/Delete 给出的步骤编号与前述三步的动作描述不一致；这里保留原编号。
+
 新访问方法的实现者只需遵守两项强制顺序：新数据记录必须先于任何指向它的索引记录被强制刷出主存，否则索引会指向垃圾；一次操作中的多个索引更新，例如 page split，必须按正确顺序从叶到根刷出。缓冲管理器用一个低层命令表达顺序：
 
 ```text
@@ -709,6 +717,8 @@ OB-tree 的每个 inserter 或 deleter 在更新 `counter-1` 时都设置 danger
 #### 5.3.7 磁盘 Vacuum
 
 Vacuum daemon 扫描磁盘上的关系。`BXID` 与 `EXID` 都已提交的记录可以写到光盘或其他长期存储；任何 `BXID` 或 `EXID` 对应已中止事务的记录都可以丢弃。Vacuum 还回收前述 dangling page、dangling tuple 和无用索引项，并把足够老的历史移到光盘。
+
+> 译注：本段把 `EXID` 对应中止事务的记录也列为可丢弃对象，而 §5.3.2 第三项读取条件保留 `BXID` 已提交、`EXID` 未提交的记录；两处表述不一致，这里按原文保留。
 
 对可归档的历史记录，vacuum 严格按以下顺序执行：先把记录写入归档存储；再把记录插入归档 `IID` 索引；然后插入所有归档键索引；随后从磁盘存储删除该记录；最后从所有磁盘索引删除它。若中途崩溃，vacuum 可以从序列开头重新开始。经过持续 vacuum，磁盘上主要保留 `EXID = null` 的当前数据和很少量尚未归档的版本；归档层则只含有效记录，所以运行时永远无需再验证归档记录。如果 vacuum 进程及时归档历史记录，磁盘空间只需容纳当前有效记录及少量历史记录，或许约为当前有效数据库大小的 1.2 倍。持续的记录更替也有助于维持磁盘数据在目标属性上的物理聚簇。
 
@@ -764,11 +774,11 @@ POSTGRES 通过可扩展类型系统定义关系的新列、列上的新运算�
 
 [BUNE79] Buneman, P. and Clemons, E., “Efficiently Monitoring Relational Data Bases,” ACM Transactions on Database Systems, September 1979.
 
-[CL0C81] Clocksin, W. and Mellish, C., *Programming in Prolog*, Springer-Verlag, Berlin, Germany, 1981.
+[CLOC81] Clocksin, W. and Mellish, C., *Programming in Prolog*, Springer-Verlag, Berlin, Germany, 1981.
 
 [CODD70] Codd, E., “A Relational Model of Data for Large Shared Data Bases,” Communications of the ACM, June 1970.
 
-[C0PE84] Copeland, G. and Maier, D., “Making Smalltalk a Database System,” Proceedings of the 1984 ACM-SIGMOD Conference on Management of Data, Boston, Massachusetts, June 1984.
+[COPE84] Copeland, G. and Maier, D., “Making Smalltalk a Database System,” Proceedings of the 1984 ACM-SIGMOD Conference on Management of Data, Boston, Massachusetts, June 1984.
 
 [DERR85] Derritt, N., personal communication, HP Laboratories, October 1985.
 
@@ -792,7 +802,7 @@ POSTGRES 通过可扩展类型系统定义关系的新列、列上的新运算�
 
 [LUM85] Lum, V., et al., “Design of an Integrated DBMS to Support Advanced Applications,” Proceedings of the International Conference on Foundations of Data Organization, Kyoto University, Japan, May 1985.
 
-[R0BI81] Robinson, J., “The K-D-B Tree: A Search Structure for Large Multidimensional Indexes,” Proceedings of the 1981 ACM-SIGMOD Conference on Management of Data, Ann Arbor, Michigan, May 1981.
+[ROBI81] Robinson, J., “The K-D-B Tree: A Search Structure for Large Multidimensional Indexes,” Proceedings of the 1981 ACM-SIGMOD Conference on Management of Data, Ann Arbor, Michigan, May 1981.
 
 [ROWE79] Rowe, L. A. and Shoens, K., “Data Abstraction, Views, and Updates in Rigel,” Proceedings of the 1979 ACM-SIGMOD Conference on Management of Data, Boston, Massachusetts, May 1979.
 
@@ -808,7 +818,7 @@ POSTGRES 通过可扩展类型系统定义关系的新列、列上的新运算�
 
 [STON76] Stonebraker, M., et al., “The Design and Implementation of INGRES,” ACM Transactions on Database Systems, September 1976.
 
-[ST0N81] Stonebraker, M., “Operating System Support for Database Management,” Communications of the ACM, July 1981.
+[STON81] Stonebraker, M., “Operating System Support for Database Management,” Communications of the ACM, July 1981.
 
 [STON83a] Stonebraker, M., et al., “Performance Analysis of a Distributed Data Base System,” Proceedings of the 3rd Symposium on Reliability in Distributed Software and Data Base Systems, Clearwater, Florida, October 1983.
 

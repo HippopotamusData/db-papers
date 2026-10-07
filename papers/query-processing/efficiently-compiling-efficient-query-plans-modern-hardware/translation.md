@@ -37,7 +37,7 @@ Thomas Neumann，慕尼黑工业大学（Technische Universität München），�
 
 **图 1：TPC-H Query 1 的手写代码与执行引擎性能对比（原文引自文献 [16] 的图 3）。**
 
-图 1 对比了手写 C 程序、tuple-at-a-time 引擎、vector-at-a-time 引擎和 column-at-a-time 引擎在 TPC-H Q1 上的表现。随着批量变大，解释开销下降，但过大的物化批量会让 vector 超出 CPU cache，重新受到内存流量限制；手写程序仍显著更快。
+**译者说明（根据图 1 图中文字）：** 图 1 对比了手写 C 程序、tuple-at-a-time 引擎、vector-at-a-time 引擎和 column-at-a-time 引擎在 TPC-H Q1 上的表现。随着批量变大，解释开销下降，但过大的物化批量会让 vector 超出 CPU cache，重新受到内存流量限制；手写程序仍显著更快。
 
 因此，我们在本文中提出的查询编译策略与这些方案在三方面不同。第一，处理是以数据为中心而不是以算子为中心：我们在处理数据时，让它尽可能长时间留在 CPU 寄存器中，算子边界尽量淡化。第二，数据不是由算子向下拉取，而是向 consumer 方向推送，从而得到更紧凑的代码和更好的数据局部性。第三，查询通过优化型 LLVM 编译框架 [7] 直接编译为本机机器码。整个框架生成对现代 CPU 友好的代码，在某些场景中，我们甚至可以胜过手写查询计划；借助 LLVM 汇编，还能采用一些在 C++ 等高级语言中很难表达的技巧。通过使用成熟的编译框架，我们能持续受益于未来的编译器、代码优化和硬件改进，而不必在查询引擎中手工重写这些优化。我们把这些技术集成到 HyPer 主内存数据库系统 [5]，以展示它们的影响，并与其他系统进行多种比较。本文其余部分组织如下：我们先在第 2 节讨论相关工作；随后，我们在第 3 节解释我们的编译框架的整体架构；第 4 节更详细地讨论代数算子的实际代码生成；我们在第 5 节说明如何把不同的高级处理技术集成到该框架；然后，我们在第 6 节对我们的技术进行广泛评估，并在第 7 节给出结论。
 
@@ -81,29 +81,29 @@ where R1.x = 7
 
 **图 3：图 2 示例查询的原始执行计划及其 pipeline 边界。**
 
-图 3 展示该查询的传统执行计划和 pipeline boundary。查询先过滤 R2、按 $z$ 分组，再把结果与 R3 连接，最后与 R1 中选出的 tuple 连接。经典算子模型中，最上层 join 会反复向左输入取 tuple 并放入 hash table，再向右输入取 tuple 并逐一 probe；两侧输入递归地采用同样方式。更仔细地观察数据流时，我们会发现，tuple 实际上总是在物化点之间传递： $a=b$ join 从已物化的 R1 scan 接收左输入，又把它们物化进 hash table；中间 selection 只流水传递而不物化。由于我们最终总得在这些点物化 tuple，我们因此提出以数据为中心的编译方式，尽量让元组从一个 breaker 推送到下一个 breaker，中间算子保留在寄存器中执行。
+图 3 展示该查询的传统执行计划和 pipeline boundary，其中 $\Gamma$ 表示 group by 算子。查询先过滤 R2、按 $z$ 分组，再把结果与 R3 连接，最后与 R1 中选出的 tuple 连接。经典算子模型中，最上层 join 会反复向左输入取 tuple 并放入 hash table，再向右输入取 tuple 并逐一 probe；两侧输入递归地采用同样方式。更仔细地观察数据流时，我们会发现，tuple 实际上总是在物化点之间传递： $a=b$ join 从已物化的 R1 scan 接收左输入，又把它们物化进 hash table；中间 selection 只流水传递而不物化。由于我们最终总得在这些点物化 tuple，我们因此提出以数据为中心的编译方式，尽量让元组从一个 breaker 推送到下一个 breaker，中间算子保留在寄存器中执行。
 
-对应于我们的贯穿示例，图 4 的四段代码分别处理：过滤 R1 并建 $B _ {a=b}$ 哈希表；过滤 R2 并更新 $\Gamma _ z$；把 $\Gamma _ z$ 结果建成 $B _ {z=c}$；扫描 R3、依次 probe 两张表并输出。每段都在新 tuple 输入和最终物化之间保持强 pipeline，既有数据局部性，也让小段代码在大量数据上循环，形成代码局部性。我们具有很好的代码局部性，因为小段代码在 tight loop 中处理大量数据。因此，我们可以期待这种求值方案取得很好的性能；正如我们将在第 6 节看到的，它确实大幅胜过基于 iterator 的求值。
+对应于我们的贯穿示例，图 4 的四段代码分别处理：过滤 R1 并建 $\bowtie _ {a=b}$ 哈希表；过滤 R2 并更新 $\Gamma _ z$；把 $\Gamma _ z$ 结果建成 $\bowtie _ {z=c}$；扫描 R3、依次 probe 两张表并输出。每段都在新 tuple 输入和最终物化之间保持强 pipeline，既有数据局部性，也让小段代码在大量数据上循环，形成代码局部性。我们具有很好的代码局部性，因为小段代码在 tight loop 中处理大量数据。因此，我们可以期待这种求值方案取得很好的性能；正如我们将在第 6 节看到的，它确实大幅胜过基于 iterator 的求值。
 
 **图 4：图 3 执行计划编译得到的查询伪代码。**
 
 ```text
-initialize memory of B_a=b, B_c=z, and Γ_z
+initialize memory of ⋈_a=b, ⋈_c=z, and Γ_z
 
 for each tuple t in R1
   if t.x = 7
-    materialize t in hash table of B_a=b
+    materialize t in hash table of ⋈_a=b
 
 for each tuple t in R2
   if t.y = 3
     aggregate t in hash table of Γ_z
 
 for each tuple t in Γ_z
-  materialize t in hash table of B_z=c
+  materialize t in hash table of ⋈_z=c
 
 for each tuple t3 in R3
-  for each match t2 in B_z=c[t3.c]
-    for each match t1 in B_a=b[t3.b]
+  for each match t2 in ⋈_z=c[t3.c]
+    for each match t1 in ⋈_a=b[t3.b]
       output t1 ◦ t2 ◦ t3
 ```
 
@@ -111,9 +111,15 @@ for each tuple t3 in R3
 
 我们将先在下一小节讨论高层翻译，再在第 4 节解释实际代码生成。
 
-**译者注：** 原文图 4 的初始化行写作 $B _ {c=z}$，后续却使用 $B _ {z=c}$；第 3.2 节相邻正文也把第一段的建表对象写成 $B _ {c=z}$，而图 3、图 4 的其余内容均指向 $B _ {a=b}$。这些符号并不一致；这里按原文各处的可见内容保留，没有静默统一。
+**译者注：** 原文图 4 的初始化行写作 $\bowtie _ {c=z}$，后续却使用 $\bowtie _ {z=c}$；第 3.2 节相邻正文也把第一段的建表对象写成 $\bowtie _ {c=z}$，而图 3、图 4 的其余内容均指向 $\bowtie _ {a=b}$。这些符号并不一致；这里按原文各处的可见内容保留，没有静默统一。
 
 ### 3.2 编译代数表达式
+
+观察图 4 的查询代码时，我们会注意到算子边界变得模糊。例如，第一个片段把 R1 的扫描、选择 $\sigma _ {x=7}$ 和 $\bowtie _ {c=z}$ 的建表部分组合成一个代码片段。查询执行代码不再以算子为中心，而是以数据为中心：每个代码片段先执行当前执行 pipeline 片段内能够完成的全部动作，再把结果物化到下一个 pipeline breaker。单个算子的逻辑可以、而且很可能会分散在多个代码片段中，这使查询编译比通常更加困难。
+
+此外，这些代码片段的结构很不规则。例如，对二元 pipeline breaker 而言，物化左侧输入 tuple 和物化右侧输入 tuple 的动作会很不相同。在 iterator 模型中，一切都是简单的 `next` 调用；而在这里，复杂的算子逻辑直接影响代码生成。需要指出，这是一项优势，而不是该方法的局限！iterator 模型具有漂亮、简单的接口，却要为此付出虚函数调用和频繁内存访问的成本。通过暴露算子结构，我们可以生成近乎最优的汇编代码，因为我们恰好只生成当前情境所需的指令，并能把所有相关值保存在 CPU 寄存器中。
+
+正如我们将在下文看到的，保持代码可维护、可理解所需的抽象仍然存在，即所有算子都提供统一接口，但这些抽象只存在于查询编译器内部。为提高效率，生成的代码会暴露全部细节；这没有问题，因为代码本来就是自动生成的。
 
 #### Produce/Consume 接口
 
@@ -122,17 +128,17 @@ for each tuple t3 in R3
 - `produce()`：请求子算子产生数据。
 - `consume(attributes, source)`：接收子算子产生的一条元组或一组属性，并依据来源输入生成本算子逻辑。
 
-这种接口只存在于编译器内部，不是运行时虚函数。SQL 仍照常解析、转为代数并优化；最终计划不再转成可解释物理算子，而是由 produce/consume 遍历生成命令式程序。在我们的贯穿示例中，只有到这一步，我们才偏离标准流程。以 $B _ {a=b}$ 的 `produce()` 为例，它先要求左侧 selection 产生 tuple；selection 再要求 R1 scan。Scan 每载入一条所需属性，就调用 selection 的编译期 `consume()` 生成谓词；满足时再调用 join 的 `consume()` 生成建表代码。左侧完成后，join 请求右侧 produce。真实实现还需跟踪已加载属性、operator state 和相关子查询依赖，但接口保持统一。
+这种接口只存在于编译器内部，不是运行时虚函数。SQL 仍照常解析、转为代数并优化；最终计划不再转成可解释物理算子，而是由 produce/consume 遍历生成命令式程序。在我们的贯穿示例中，只有到这一步，我们才偏离标准流程。以 $\bowtie _ {a=b}$ 的 `produce()` 为例，它先要求左侧 selection 产生 tuple；selection 再要求 R1 scan。Scan 每载入一条所需属性，就调用 selection 的编译期 `consume()` 生成谓词；满足时再调用 join 的 `consume()` 生成建表代码。左侧完成后，join 请求右侧 produce。真实实现还需跟踪已加载属性、operator state 和相关子查询依赖，但接口保持统一。
 
 **图 5：说明 produce/consume 交互的简化翻译方案。**
 
 ```text
-B.produce       B.left.produce; B.right.produce;
-B.consume(a,s)  if (s == B.left)
+⋈.produce       ⋈.left.produce; ⋈.right.produce;
+⋈.consume(a,s)  if (s == ⋈.left)
                   print "materialize tuple in hash table";
                 else
                   print "for each match in hashtable[" + a.joinattr + "]";
-                  B.parent.consume(a + new attributes)
+                  ⋈.parent.consume(a + new attributes)
 
 σ.produce       σ.input.produce
 σ.consume(a,s)  print "if " + σ.condition;
@@ -141,8 +147,6 @@ B.consume(a,s)  if (s == B.left)
 scan.produce    print "for each tuple in relation"
                 scan.parent.consume(attributes, scan)
 ```
-
-观察图 4 的查询代码时，我们会注意到，同一个算子的逻辑可能分散在多段代码中：binary breaker 从左右输入消费 tuple 时动作完全不同。这种“暴露不规则性”是优点。通过把这些不规则性暴露给代码生成器，我们可以只发射当前情境需要的指令；因为我们只生成当前情境所需的指令，而且我们可以把属性留在寄存器中，易维护的抽象便停留在编译器，最终机器码不必维护算子边界。正如我们将在下文看到的，这会产生非常紧凑、性能很好的代码。
 
 把图 5 的规则应用到图 3 的算子树，除变量名和内存初始化差异外，就会得到图 4 的伪代码。真实翻译器还明显更复杂，因为我们必须跟踪算子状态、已载入属性以及相关子查询的属性依赖；图 5 展示了我们如何把代数表达式翻译成命令式代码，我们则在附录 A 给出更详细的算子翻译。由于生成的代码片段每次都处理局部的一块数据，这一方式在实际实现中表现高效。
 
@@ -160,11 +164,11 @@ scan.produce    print "for each tuple in relation"
 
 图 6 用齿轮和链条表示 HyPer 的混合执行模型：复杂数据结构和运行时逻辑保留在预编译 C++ 中，热点 tuple-processing 片段用 LLVM 生成并串联这些 C++ 组件。这样避免把完整数据库内核重写为 LLVM IR，同时让热点路径保持紧凑。
 
-复杂扫描定位、索引结构、磁盘 spill 等留在 C++“齿轮”中，LLVM“链条”负责把它们连接为针对查询的路径。C++ 可驱动 fragment，LLVM 处理 tuple access、filter 和 materialization；sort 等复杂阶段可把控制权交回 C++，批量 tuple 再可处理时回到 LLVM。99% tuple 经过的 hot path 应为纯 LLVM；偶尔切页或扩容调用 C++ 代价可忽略。只要留在 LLVM 中，我们就能始终把 tuple 保存在 CPU 寄存器中，这大致已达到我们可期待的速度。每次调用外部函数都必须把全部寄存器 spill 到内存；单次写入通常落在 cache 中，绝对成本很低，但若每个 tuple 都跨函数边界，数百万次累积后就会成为可见开销。
+复杂扫描定位、索引结构、磁盘 spill 等留在 C++“齿轮”中，LLVM“链条”负责把它们连接为针对查询的路径。C++ 可驱动 fragment，LLVM 处理 tuple access、filter 和 materialization；sort 等复杂阶段可把控制权交回 C++，批量 tuple 再可处理时回到 LLVM。99% tuple 经过的 hot path 应为纯 LLVM；偶尔切页或扩容调用 C++ 代价可忽略。只要留在 LLVM 中，我们就能始终把 tuple 保存在 CPU 寄存器中，这大致已达到我们可期待的速度。每次调用外部函数都必须把全部寄存器 spill 到内存；寄存器会 spill 到栈上，而栈通常在 cache 中，因此单次操作的绝对成本很低，但数百万次累积后就会成为可见开销。
 
 ### 4.2 复杂算子
 
-复杂查询不应内联成单一巨型函数。外部排序的 merge 适合由 C++ 控制；outer join 会从“匹配”和“产生 NULL”两处调用 consumer，若逐层内联，级联 outer join 将造成指数代码增长。生成器因此可在 LLVM 内定义辅助函数，但仍保证单个 pipeline fragment 的 hot path 紧凑。
+与前面的简单示例不同，把复杂查询编译成单一函数既不可能，也不可取。首先，LLVM 代码很可能在某个时刻调用 C++ 代码，由后者接管控制流。例如，外部排序算子会用 LLVM 生成初始有序段（runs），但可能由 C++ 控制归并阶段，并按需调用 LLVM 函数。其次，把完整查询逻辑内联到单一函数中可能导致代码量指数增长。outer join 会从“找到匹配”和“产生 NULL”两处调用 consumer；若在两处直接包含 consumer 代码，级联 outer join 就会造成指数代码增长。因此，在 LLVM 内定义可从 LLVM 代码不同位置调用的辅助函数是合理的。不过，仍须确保 hot path 不跨越函数边界；代数表达式中的一个 pipeline 片段应生成一个紧凑的 LLVM 代码片段。
 
 这种多函数需求影响我们生成代码的方式。具体而言，我们必须追踪所有属性，并记住它们当前是否位于寄存器中。把属性物化到内存是显式决策，类似于把 tuple spool 到磁盘。虽然从性能角度看内存物化相对较快，但从代码生成角度看它是非常复杂、应尽可能避免的步骤。
 
@@ -172,7 +176,7 @@ scan.produce    print "for each tuple in relation"
 
 ![图 7：LLVM IR 片段及编号标注](assets/manual-figure-07-llvm-ir-annotations.png)
 
-图 7：LLVM IR 片段及右侧编号标注，展示扫描、过滤、hash、查表和满表时调用 C++ 分配或 spill 的路径。
+图 7：查询 $\Gamma _ {z;\mathrm{count}(\ast)}(\sigma _ {y=3}(R_2))$ 最初几个步骤的 LLVM 片段。
 
 ```llvm
 define internal void @scanConsumer(%8* %executionState, %Fragment_R2* %data) {
@@ -213,7 +217,7 @@ else47:
 
 **译者注：** 原文先定义 `%cond2` 和 `%cond3`，但紧接着的两条分支指令仍分别使用 `%cond`；这里按原文可见代码保留，没有静默改为 `%cond2` 或 `%cond3`。
 
-这段 LLVM 代码由 C++ 针对每个 data fragment（即连续存放的一系列 tuple）调用。它先载入处理所需列的指针，再遍历 fragment 中的 tuple：读取 $y$ 并检查谓词，不满足时继续循环；满足时读取 $z$、计算哈希、查找对应哈希项并遍历候选。未找到匹配 group 时，代码先检查是否有足够空间；若没有，则直接调用 C++ 方法申请内存，并在需要时 spill。这样，热点路径主要停留在 LLVM 中。LLVM 的调用直接以修饰后的符号名调用原生 C++ 方法，不需要额外 wrapper，因此二者可以直接交互而不引入额外封装开销。
+这段 LLVM 代码由 C++ 针对每个 data fragment（即连续存放的一系列 tuple）调用。它先载入处理所需列的指针，再遍历 fragment 中的 tuple：读取 $y$ 并检查谓词，不满足时继续循环；满足时读取 $z$、计算哈希、查找对应哈希项并遍历候选。未找到匹配 group 时，代码先检查是否有足够空间；若没有，则直接调用 C++ 方法申请内存，并在需要时 spill。这样，热点代码路径完全留在 LLVM 中，主要由 `%then` 块内的代码和相应的哈希表迭代组成。LLVM 的调用直接以修饰后的符号名调用原生 C++ 方法，不需要额外 wrapper，因此二者可以直接交互而不引入额外封装开销。
 
 ### 4.3 性能调优
 
@@ -247,13 +251,13 @@ if (iter) do {
 
 前几节中，我们已经讨论了如何把查询编译成以数据为中心的执行程序。通过组织数据流和控制流，让 tuple 从一个 pipeline breaker 直接推送到下一个，并尽可能长时间地把数据保存在寄存器中，我们得到了出色的数据局部性。然而，这并不意味着我们必须逐个、线性地处理 tuple。我们的初始实现推送单个 tuple，并且已经表现很好；现在我们来考察几种可自然集成到通用框架中的高级处理技术。传统 block-wise processing [11] 的主要缺点是额外内存访问；不过，只要我们能把整个 block 保存在寄存器中，一次处理多个 tuple 确实是个好主意。这样的 block 一方面可用 SIMD 指令一次处理多个 tuple [15]，另一方面可先求值并合并谓词、延迟实际分支 [12, 14]；文献 [14] 的技术对单 tuple 已有效，对 tuple block 的收益还可能更大。这种把值打包进大型寄存器的 block processing 很自然地契合我们的框架，因为算子总是把寄存器值传给 consumer。LLVM 原生支持 vector type，因此对整体代码生成框架只需做有限扩展。与传统 block model 不同，它不把中间块写入内存。
 
-多核是另一维度。数据库普遍会利用多核做查询间并行；随着核心数增加，查询内并行也更重要。经典方法 [10, 3] 把算子输入分区，独立处理各分区，再合并结果。对我们的代码生成框架而言，这种并行性几乎不需要改代码即可支持：代码本来就在 tight loop 中处理 storage fragment，因此 fragment 也可由并行调度产生。真正困难的是优化器何时引入 split/merge：它们并非免费，过度并行反而有害；论文把这一决策留作后续工作。
+多核是另一维度。数据库普遍会利用多核做查询间并行；随着核心数增加，查询内并行也更重要。经典方法 [10, 3] 把算子输入分区，独立处理各分区，再合并结果。对我们的代码生成框架而言，这种并行性几乎不需要改代码即可支持：代码本来就在 tight loop 中处理 storage fragment，因此 fragment 也可由并行调度产生。不过，仍需要一些额外逻辑来合并各个结果。真正困难的是优化器何时引入 split/merge：它们并非免费，过度并行反而有害；论文把这一决策留作后续工作。
 
 ## 6. 实验
 
 ### 6.1 系统比较
 
-我们已经把本文技术同时实现于 HyPer 主存系统 [5] 和一个磁盘系统，均可在内存运行或按需 spill。我们发现，这些技术在纯内存运行和必要时 spill 到磁盘时都表现出色。由于存储系统差异等因素也会显著影响查询性能，很难精确衡量我们的编译技术相对于其他方法的影响；因此，我们在正文纳入完整的系统比较和生成代码分析，附录 B 再用微基准隔离具体算子行为。在系统比较中，我们纳入了 MonetDB 1.36.5、Ingres VectorWise 1.0 和一个我们称为 DB X 的匿名商业系统；实验使用双路 Intel X5570 四核、64 GB 内存、RHEL 5.4。我们的 C++ 代码使用 GCC 4.5.2 编译，机器码使用 LLVM 2.8 生成；优化级别见附录 C。我们将我们提出的查询编译技术集成到 HyPer 中；HyPer 是同时处理两类负载的混合 OLTP/OLAP 系统。因此，我们使用 TPC-CH [5]：它结合 TPC-C 事务与适配到同一 schema 的 22 条 TPC-H 查询。由于我们主要关注原始查询处理速度，我们采用无并发的实验配置：我们装载 12 个 warehouse，随后单线程、无 client wait、无并发 update 地执行 TPC-C 和 OLAP 查询。HyPer 原先用手写代码片段把查询编译为 C++，这使我们能直接估计 LLVM 相对于 C++ 代码的影响。
+我们已经把本文技术同时实现于 HyPer 主存系统 [5] 和一个磁盘系统，均可在内存运行或按需 spill。我们发现，这些技术在纯内存运行和必要时 spill 到磁盘时都表现出色。由于存储系统差异等因素也会显著影响查询性能，很难精确衡量我们的编译技术相对于其他方法的影响；因此，我们在正文纳入完整的系统比较和生成代码分析，附录 B 再用微基准隔离具体算子行为。在系统比较中，我们纳入了 MonetDB 1.36.5、Ingres VectorWise 1.0 和一个我们称为 DB X 的匿名商业系统；实验使用双路 Intel X5570 四核、64 GB 内存、RHEL 5.4。我们的 C++ 代码使用 GCC 4.5.2 编译，机器码使用 LLVM 2.8 生成；优化级别见附录 C。我们将我们提出的查询编译技术集成到 HyPer 中；HyPer 是同时处理两类负载的混合 OLTP/OLAP 系统。因此，我们使用 TPC-CH [5]：它结合 TPC-C 事务与适配到略作扩展的 TPC-C schema 的 22 条 TPC-H 查询。由于我们主要关注原始查询处理速度，我们采用无并发的实验配置：我们装载 12 个 warehouse，随后单线程、无 client wait、无并发 update 地执行 TPC-C 和 OLAP 查询。HyPer 原先用手写代码片段把查询编译为 C++，这使我们能直接估计 LLVM 相对于 C++ 代码的影响。
 
 表 1 给出 HyPer 的 OLTP 侧性能和总编译时间：
 
@@ -264,7 +268,7 @@ if (iter) do {
 | TPC-C [tps] | 161,794 | 169,491 |
 | total compile time [s] | 16.53 | 0.81 |
 
-我们只在 HyPer 中运行 OLTP 部分，因为其他系统并非为 OLTP 负载设计。OLTP 事务通常只访问不到 30 条 tuple，因此 LLVM 的 169,491 tps 仅略高于 C++ 的 161,794；但编译全部脚本从 16.53 秒降至 0.81 秒，且执行不退化，这有力支持了我们的查询编译技术。
+我们只在 HyPer 中运行 OLTP 部分，因为其他系统并非为 OLTP 负载设计。OLTP 事务通常只访问不到 30 条 tuple，因此 LLVM 的 169,491 tps 仅略高于 C++ 的 161,794；但编译全部 TPC-C 脚本（使用 PL/SQL 风格的脚本语言）从 16.53 秒降至 0.81 秒，且执行不退化，这有力支持了我们的查询编译技术。
 
 表 2 给出前五个 TPC-CH OLAP 查询的执行时间和编译时间：
 
@@ -288,6 +292,8 @@ if (iter) do {
 
 表 3 给出 LLVM 版本 HyPer 与 MonetDB 在分支和 cache locality 上的对比：
 
+第一组指标是分支数（branches）、分支误预测数（mispredicts）和一级指令 cache 未命中数（I1 misses），用于反映查询代码的控制流和代码局部性。第二组指标是一级数据 cache 未命中数（D1 misses）和二级数据 cache 未命中数（L2d misses）。最后一组是执行指令数（I refs）。
+
 **表 3：分支行为与 Cache 局部性。**
 
 | Metric | Q1 LLVM | Q1 MonetDB | Q2 LLVM | Q2 MonetDB | Q3 LLVM | Q3 MonetDB | Q4 LLVM | Q4 MonetDB | Q5 LLVM | Q5 MonetDB |
@@ -299,7 +305,7 @@ if (iter) do {
 | L2d misses | 1,689,163 | 7,341,140 | 7,539,400 | 4,012,969 | 1,420,628 | 5,947,845 | 3,424,857 | 17,072,319 | 776,229 | 7,552,794 |
 | I refs | 132 mil | 1,184 mil | 313 mil | 760 mil | 208 mil | 944 mil | 282 mil | 3,140 mil | 159 mil | 2,089 mil |
 
-我们生成的 LLVM 代码在所有查询上分支数显著更少，除 Q2 外误预测绝对数也更低；这是因为我们尽量把直到下一个 pipeline breaker 的所有代码生成在一个线性代码片段中。Q2 的例外来自 HyPer 当时过度保守的磁盘 spill 和字符串复制，超过 60% 误预测落在该路径，不是 LLVM 固有限制，而 MonetDB 避免了这些字符串复制。MonetDB 的相对误预测率其实相当好，这与其体系结构相符；但它执行的分支总数过多，因此绝对误预测次数仍然很多。多数查询 D1 与 L2 miss 接近，表明大哈希表 miss L1 后通常也 miss L2；LLVM 除同一 Q2 字符串处理问题外，cache miss 最多低一个数量级，而原文明确说明该问题计划在后续 HyPer 版本中修复。执行指令数与表 2 时间一致，LLVM 代码比基于 BAT、反复触碰 tuple 的 MonetDB 紧凑得多。
+我们生成的 LLVM 代码在所有查询上分支数显著更少，除 Q2 外误预测绝对数也更低；这是因为我们尽量把直到下一个 pipeline breaker 的所有代码生成在一个线性代码片段中。Q2 的例外来自 HyPer 当时过度保守的磁盘 spill 和字符串复制，超过 60% 误预测落在该路径，不是 LLVM 固有限制，而 MonetDB 避免了这些字符串复制。MonetDB 的相对误预测率其实相当好，这与其体系结构相符；但它执行的分支总数过多，因此绝对误预测次数仍然很多。多数查询 D1 与 L2 miss 接近，表明大哈希表 miss L1 后通常也 miss L2；LLVM 除同一 Q2 字符串处理问题外，cache miss 最多低一个数量级，而原文明确说明该问题计划在后续 HyPer 版本中修复。执行指令数大致与表 2 的绝对执行时间相符。这些数字清楚地表明，生成的 LLVM 代码比 MonetDB 代码紧凑得多。这可能源于 MonetDB 的体系结构：它始终在二元关联表（Binary Association Tables，BATs）上操作，因此需要多次访问 tuple。
 
 ## 7. 结论
 
@@ -776,7 +782,7 @@ from orderline;
 -O3 -fgcse-las -funsafe-loop-optimizations
 ```
 
-需要注意的是，在 GCC 4.5 中，这组参数已经包含许多系统会显式指定的优化，例如 `-ftree-vectorize`。这些选项是为了最大化查询性能手工调优的；例如为 Q4 指定 `-funroll-loops` 反而会让性能下降 23%，因为它同时启用 `-fweb` 并影响 register allocator。优化选项之间存在非常微妙的交互，因此很难预测单个优化开关的效果。
+需要注意的是，在 GCC 4.5 中，这组参数已经包含许多系统会显式指定的优化，例如 `-ftree-vectorize`。这些选项是为了最大化查询性能手工调优的；例如为 Q4 指定 `-funroll-loops` 反而会让性能下降 23%。优化选项之间存在非常微妙的交互。例如，启用 `-funroll-loops` 也会启用 `-fweb`，后者会影响寄存器分配器。因此，很难预测单个优化开关的效果。
 
 对于 LLVM 编译器，我们使用手工安排 pass 的自定义优化级别，主要优化控制流。原文给出的 pass 顺序如下：
 
@@ -793,7 +799,7 @@ llvm::createCFGSimplificationPass()
 
 ## 附录 D. 查询
 
-我们在下文给出 Q1-Q5 的完整 SQL。它们源自 TPC-H 查询，但适配到组合后的 TPC-C/TPC-H schema。
+我们在下文给出 Q1-Q5 的完整 SQL。如文献 [5] 所述，它们源自 TPC-H 查询，但适配到组合后的 TPC-C/TPC-H schema。
 
 ```sql
 -- Q1
