@@ -321,7 +321,7 @@ Leader 默认每 8 秒推进一次 MinNextTS() 值。因此，在没有 prepared
 
 表 3：操作微基准。数据为 10 次运行的均值与标准差；1D 表示单副本且关闭 commit wait。
 
-表 3 给出 Spanner 的部分微基准。测量在共享机器上进行：每个 spanserver 运行于配有 4GB RAM 和 4 个 CPU 核（AMD Barcelona 2200MHz）的调度单元上，客户端运行在独立机器上。每个 zone 包含一个 spanserver。客户端与 zone 分布在网络距离小于 1ms 的若干数据中心中；这种布局应当很常见，因为多数应用不必把全部数据分布到全球。测试数据库包含 50 个 Paxos group 和 2500 个 directory。操作是独立的 4KB 读写。压缩后全部读都由内存服务，因此测量的只是 Spanner 调用栈开销。正式测量前还额外执行了一轮未计入结果的读，用来预热 location cache。
+表 3 给出 Spanner 的部分微基准。测量在共享机器上进行：每个 spanserver 运行于配有 4GB RAM 和 4 个 CPU 核（AMD Barcelona 2200MHz）的调度单元上，客户端运行在独立机器上。每个 zone 包含一个 spanserver。客户端与 zone 分布在网络距离小于 1ms 的若干数据中心中；这种布局应当很常见，因为多数应用不必把全部数据分布到全球。测试数据库包含 50 个 Paxos group 和 2500 个 directory。操作是独立的 4KB 读写。整合（compaction）后全部读都由内存服务，因此测量的只是 Spanner 调用栈开销。正式测量前还额外执行了一轮未计入结果的读，用来预热 location cache。
 
 在延迟实验中，客户端只发出足够少的操作，避免 server 排队。单副本实验显示 commit wait 约为 5ms，Paxos 延迟约为 9ms。随着副本数量增加，延迟大体不变而标准差变小，这是因为 Paxos 在 group 的各副本上并行执行；取得 quorum 的延迟也不那么容易受单个 slave 变慢影响。
 
