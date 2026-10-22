@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：187
-- 已审阅译文：181
+- 论文记录：188
+- 已审阅译文：182
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -18,7 +18,7 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 7 |
 | 系统架构 (`system-architecture`) | 28 |
-| 查询处理 (`query-processing`) | 65 |
+| 查询处理 (`query-processing`) | 66 |
 | 存储 (`storage`) | 26 |
 | 事务与并发控制 (`transactions`) | 10 |
 | 分布式数据库 (`distributed-databases`) | 9 |
@@ -82,7 +82,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，65 篇)
+### 查询处理 (`query-processing`，66 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -126,6 +126,7 @@
 | [Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age](papers/query-processing/morsel-driven-parallelism/translation.md) | 查询执行 | 2014 | 4.5 | translated | [原文](papers/query-processing/morsel-driven-parallelism/source.pdf) | [官方链接](<https://doi.org/10.1145/2588555.2610507>) |
 | [Neo: A Learned Query Optimizer](papers/query-processing/neo-a-learned-query-optimizer/translation.md) | 查询优化、AI 优化数据库 | 2019 | 4.0 | translated | [原文](papers/query-processing/neo-a-learned-query-optimizer/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol12/p1705-marcus.pdf>) |
 | [NeuroCard: One Cardinality Estimator for All Tables](papers/query-processing/neurocard-one-cardinality-estimator-for-all-tables/translation.md) | 基数估计、AI 优化数据库 | 2021 | 3.5 | translated | [原文](papers/query-processing/neurocard-one-cardinality-estimator-for-all-tables/source.pdf) | [官方链接](<https://doi.org/10.14778/3421424.3421432>) |
+| [On the Vexing Difficulty of Evaluating IN Predicates](papers/query-processing/on-the-vexing-difficulty-of-evaluating-in-predicates/translation.md) | 查询优化、查询执行 | 2026 | 3.0 | translated | [原文](papers/query-processing/on-the-vexing-difficulty-of-evaluating-in-predicates/source.pdf) | [官方链接](<https://vldb.org/cidrdb/papers/2026/p3-birler.pdf>) |
 | [Optimization of Analytic Window Functions](papers/query-processing/optimization-of-analytic-window-functions/translation.md) | 查询优化、查询执行 | 2012 | 3.5 | translated | [原文](papers/query-processing/optimization-of-analytic-window-functions/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol5/p1244_yucao_vldb2012.pdf>) |
 | [Optimization of Common Table Expressions in MPP Database Systems](papers/query-processing/optimization-common-table-expressions-mpp/translation.md) | 查询优化 | 2015 | 3.5 | translated | [原文](papers/query-processing/optimization-common-table-expressions-mpp/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol8/p1704-elhelw.pdf>) |
 | [Optimizing Queries over Partitioned Tables in MPP Systems](papers/query-processing/optimizing-queries-partitioned-tables-mpp/translation.md) | 查询优化 | 2014 | 3.5 | translated | [原文](papers/query-processing/optimizing-queries-partitioned-tables-mpp/source.pdf) | [官方链接](<https://d1fto35gcfffzn.cloudfront.net/big-data/white-paper/OptimizingQueriesOverPartitionedTablesInMPPSystems.pdf>) |
@@ -281,5 +282,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 187 | 0 |
-| 发表年份 | 187 | 0 |
+| 作者 | 188 | 0 |
+| 发表年份 | 188 | 0 |
