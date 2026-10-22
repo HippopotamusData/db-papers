@@ -1,0 +1,18 @@
+title: On the Vexing Difficulty of Evaluating IN Predicates
+title_zh: IN 谓词求值为何如此棘手
+authors:
+  - Altan Birler
+  - Thomas Neumann
+year: 2026
+source_url: https://vldb.org/cidrdb/papers/2026/p3-birler.pdf
+topics:
+  - query-optimization
+  - query-execution
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 1
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 3
+  reader_payoff: 4
