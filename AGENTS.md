@@ -114,6 +114,12 @@ For change, build, fix, translate, rate, or archive requests, make in-scope loca
 
 Explicit authorization remains valid within its stated scope across workflow stages and turns. Do not request it again or require a separate Issue to repeat it. Ask before external publication, destructive cleanup, paid acquisition, or material scope expansion only when that action is not already authorized. Before requesting a missing approval, complete the independent work already authorized so the user can review a concrete result. Missing source evidence, page-limit exceptions, and repository or CI access restrictions remain real boundaries; do not infer permission or paper facts to bypass them.
 
+For every repository change, authorization to integrate or publish also covers
+routine cleanup of that task's obsolete branches and worktrees after integration.
+Complete the [post-merge cleanup](docs/workflows/maintain.md#合并后自动收尾)
+autonomously as part of delivery; do not request cleanup approval again. Explicit
+retention instructions and other tasks' ongoing work take precedence.
+
 Apply the user's explicit scope and authorization before generic workflow or skill guidance. If a document would require a pause, first check whether its condition applies and whether authorization already exists. When a pause is still necessary, identify the exact file and instruction, explain the unresolved blocker, and continue independent in-scope work where possible.
 
 ## Commands
@@ -150,5 +156,8 @@ A full mechanical check does not authorize a repository-wide content review or r
 ## Completion report
 
 Lead with the outcome. Include applicable changed paper IDs or project files, final ratings, validation results, and unresolved evidence gaps. Use `translated` only when the current revision has completed review and passes the required gates; choose every other status from the lifecycle table in `docs/workflows/metadata.md`.
+
+For integrated changes, include the cleanup result and any retained resources with
+their concrete reason; distinguish publication success from incomplete cleanup.
 
 Keep progress updates, task reports, and maintenance explanations concise and concrete. Use lists or tables when they clarify parallel items; avoid stock phrases and repeated summaries. These communication preferences do not apply to paper translation: preserve the source's structure, voice, detail, and qualifications under `docs/translation-policy.md`.

@@ -119,22 +119,18 @@ make batch-state \
      停止并报告，不重置或强制覆盖。
    - **PR 发布**：推送批次分支并创建 PR，不预先把批次分支合入本地 `main`。
      等待 PR head 检查、按仓库规则合并、默认分支 merge SHA 的 `check`、同一
-     SHA 的 Pages 部署，并验证生产页面。全部成功后才能报告“已发布”；随后
-     fetch，在干净的本地 `main` 工作树执行 `git merge --ff-only origin/main`。
-     同步遇到分叉时保留现状并报告，不通过 reset 或强推解决。
+     SHA 的 Pages 部署，并验证生产页面。全部成功后才能报告“已发布”。
    仅获推送授权时交付远端批次分支，不据此合并 PR 或发布。已有对应授权不重复确认。
+6. 已集成批次按维护流程的[合并后自动收尾](maintain.md#合并后自动收尾)同步
+   本地 `main` 并清理本批临时资源，报告实际收尾结果；不重复运行内容门禁。
 
 普通批次不运行全库 deep-check。全库机械扫描不授权扩大历史复审范围。
 
-## 恢复与清理
+## 恢复
 
 根据 checkpoint、临时 manifest、论文文件和工作区差异恢复，再运行
 `make batch-check`。不存在共享发布事务 marker 或恢复协议；普通 Git 状态和门禁
 足以暴露部分完成的工作。
-
-只有全部子代理停止、工作区干净、分支已按授权集成且用户授权清理时，才从工作树
-外执行 `git worktree remove`。不得使用 `--force` 或 `git branch -D`；删除分支
-前用 `git merge-base --is-ancestor` 证明已集成。
 
 ## 完成报告
 
