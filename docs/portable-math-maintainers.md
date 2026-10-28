@@ -42,7 +42,7 @@ GitHub 正确解析和渲染是唯一硬平台要求。仓库仍采用 `$...$`�
 
 改写 TeX 载荷的批量迁移不属于 `fix-math --safe`。对于 `\tag{N}` 迁移，迁移投影中允许的唯一变化是 `\tag{N}` 到 `\qquad \text{(N)}`。写入前冻结固定基线及 paper ID、公式位置和原编号清单；写入后逐文件重建固定基线的仅迁移投影，并要求其与仅迁移候选逐字节一致，同时核对公式数量、顺序、inline/display 类型、编号集合和正文引用未变。若完整 PDF 复核又发现当前授权范围内的独立非公式缺陷，应把这些修复另列清单；最终候选仍须按提取顺序逐项匹配仅迁移投影中的全部公式载荷，不得借附带修复改变公式。该证明只界定修改范围，不能替代逐篇 PDF 语义复核。
 
-新规则、回归测试、文档和全部受影响论文必须出现在同一最终候选中。最终全库扫描不得残留旧语法，并运行不限定 `FILES` 的 GitHub 审计、完整全库门禁，以及推送后固定 commit 文件页的逐公式检查。
+新规则、回归测试、文档和全部受影响论文必须出现在同一最终候选中。最终全库扫描不得残留旧语法，并按下述执行时机完成一次全库 GitHub 审计、完整全库门禁，以及推送后固定 commit 文件页的逐公式检查。
 
 ## GitHub profile
 
@@ -70,7 +70,7 @@ npm ci
 make math-check-files FILES='papers/<area>/<paper-id>/translation.md'
 make fix-math FILES='papers/<area>/<paper-id>/translation.md'
 
-# 需要已登录 gh 和网络；单篇或一批变更必须限定 FILES
+# 无 PR 的本地交付或直接推送 main 时使用；需要已登录 gh 和网络
 make math-audit-github FILES='papers/<area>/<paper-id>/translation.md'
 
 # 全库 profile/迁移才运行全量本地与 GitHub 门禁
@@ -89,7 +89,12 @@ make math-audit-katex KATEX_MODULE='/path/to/katex'
 命令参数、`\left`/`\right` 与环境配对等错误，但不代替 GitHub 自身的
 Markdown 解析。
 
-GitHub 的链接化和 Markdown 规则会随上下文组合，无法靠静态规则穷举。变更译文在提交前必须运行限定 `FILES` 的 GitHub Markdown API 审计，CI 再根据 Git diff 对同一内容重复检查。公式 profile、扫描器、审计器、MathJax 锁或工作流发生变化时，CI 自动升级为全库审计；全库迁移也运行不带 `FILES` 的审计。
+GitHub 的链接化和 Markdown 规则会随上下文组合，无法靠静态规则穷举。
+PR 路径由受保护的 `github-math-audit` 按差异执行一次 API 审计，本地和
+合并后不重复调用。更新受保护的解析实现并获准管理员合并时，改由维护者在
+合并前用候选实现完成一次相应 API 审计。无 PR 的本地交付或直接推送 `main` 时，在交付前对最终
+变更译文运行限定 `FILES` 的审计。公式解析、审计实现或全库公式迁移实际改变
+解析行为时升级为全库审计；仅调整触发时机、下载方式或流程文案不因此扫描全库。
 
 普通 `pull_request` 检查不接收 API token。带只读 token 的外部审计由默认分支上的受信任脚本运行；PR worktree 只作为 Markdown 数据读取，禁止执行其中的脚本、依赖或配置，并拒绝符号链接和非普通输入。该审计只信任仓库既定的 `$`/`$$` 边界提取，不信任 PR 自己修改的 TeX allowlist；PR 内的新静态规则仍由无 token 的普通 CI 验证。
 
@@ -112,5 +117,5 @@ node --check scripts/render_mathjax.cjs
 node --check scripts/render_katex.cjs
 make deep-check DEEP_REASON=validator-semantics  # 替代 make check
 make diff-check
-make math-audit-github
+# GitHub API 审计按上述执行时机完成一次；PR 路径复用 CI
 ```

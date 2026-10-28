@@ -76,8 +76,9 @@ schema reader；旧规则和旧证据从 Git 历史读取，不作为当前运�
 ## Git 与发布模型
 
 `reading_status: translated` 表示当前 Git revision 中的译文已经人工审阅并通过
-当前确定性门禁。站点只按该状态选择译文；`main` 的 `check` 成功表示同一 SHA
-已经通过归档检查和 push-side GitHub 公式审计。站点构建与归档检查并行，
+当前确定性门禁。站点只按该状态选择译文；GitHub API 公式审计按
+[公式维护指南](../portable-math-maintainers.md#命令与审计)执行一次。
+`main` 的 `check` 对合并 SHA 执行归档检查。站点构建与归档检查并行，
 部署等待两者成功，随后核验线上页面和静态资源与同 SHA 的构建产物一致。
 
 内容变化不依赖额外摘要锁来确认发布状态。PR 或 push 的 Git diff 直接定位受影响
@@ -85,9 +86,10 @@ paper ID，并运行 `paper-check`；严格的独立身份要求应由 GitHub re
 实现，而不是由提交者可同时填写的元数据模拟。
 
 `pull_request_target` 公式审计及其受保护运行时代码属于 CI 信任边界。普通 PR
-会拒绝这些文件的差异；只有用户明确授权信任边界更新时，维护者才可在完成本地
-全库门禁后使用管理员 bypass 直接落地主分支，并继续等待同 SHA 的 `check` 和
-Pages 部署。不得在同一 PR 中放宽保护来让自身通过。
+会拒绝这些文件的差异；用户明确授权更新时，按实际改动完成必要验证，并由
+管理员 bypass 合并该 PR，再等待同 SHA 的 `check` 和 Pages 部署。仅调整
+工作流触发或下载方式不要求全库论文扫描；解析或校验行为变化仍按顶层规则深检。
+不得在同一 PR 中放宽保护来让自身通过。
 
 批次 manifest 只允许放在 gitignored 的 `tmp/batches/`，仅用于当前任务分派和
 恢复，不参与论文状态、校验或发布判断。
@@ -159,11 +161,13 @@ make site-test    # site-check + 读者交互回归
 预览的源文件、生成配置、构建缓存和输出均位于 `.preview/`，与验收用的
 `site_src/`、`site.generated.toml`、`site/` 隔离。刷新保留被监听的源目录，只同步
 变化文件，避免删除目录导致持续预览停止响应。编辑迭代时使用预览刷新；
-提交前再按变更范围运行最终门禁。预览不替代验收，也不保存跨提交的验收结果。
+提交前按 [AGENTS.md](../../AGENTS.md#commands) 运行一次最终门禁。
+`make site-test` 已包含构建与链接验收，无需先运行 `make site-check`。
 
 `check` workflow 的 `archive-check` 与 `site-build` 并行，PR 只构建不部署。
-主分支每次推送都重新完整构建本站，不复用 PR artifact。`deploy` 只在主分支
-且这两个 job 成功后运行。独立的 `pull_request_target` 公式审计保持受信任边界。
+主分支每次推送重新完整构建，使被取消或失败的前次发布由最新提交接续；
+不复用 PR artifact。`deploy` 只在主分支且这两个 job 成功后运行。
+独立的 `pull_request_target` 公式审计保持受信任边界。
 站点实现、前端依赖或浏览器测试变化时，PR 和主分支运行 Chromium 回归，覆盖筛选后直接点击、返回保留条件、PDF 链接和窄屏布局。
 
 部署后，`scripts/site_smoke.py` 核验首页、目录、代表论文页及其本地 CSS/JS
@@ -172,8 +176,19 @@ make site-test    # site-check + 读者交互回归
 后在 Actions summary 记录 SHA 和核验数量。外部 CDN 依赖不属于本站 artifact。
 站点故障优先 revert 导致故障的仓库提交，不直接修改 artifact。
 
-仓库可启用 auto-merge；仅对已获发布授权的具体 PR 设置，等待 required checks
-与分支规则满足后合并。合并后仍须等待该 SHA 的检查、部署和线上核验。
+### 最小发布流程
+
+1. 本地最终门禁通过后推送，使用已定稿的说明向 `main` 创建 PR；按已有授权启用
+   auto-merge，交由 required checks 和分支规则决定合并。
+2. 每阶段只使用一个等待入口，例如 PR 的 `gh pr checks <n> --watch`、
+   合并后该 SHA 对应运行的 `gh run watch <run-id> --exit-status`。等待期间
+   不另行轮询同一 PR、run 列表或 jobs；失败时再读取相关日志。
+3. 默认分支该 SHA 的 `check` 成功即包含所需的部署与线上核验，直接复用其结果
+   并完成收尾。仅补查本次变更中 CI 未覆盖的页面或资源；不重复核验已覆盖内容，
+   不为再次比对而下载整个站点 artifact，也不在本地重新执行已通过的门禁。
+
+提交变化自动触发检查，描述编辑不触发公式审计；更换目标分支后重开 PR，
+按新基线检查。不同阶段的必需门禁由 CI 执行，不在阶段之间加设人工确认或额外检查清单。
 
 ## CI 范围
 
@@ -190,20 +205,9 @@ make site-test    # site-check + 读者交互回归
 
 ## 验证
 
-```bash
-make doctor
-make python-compile
-node --check scripts/render_mathjax.cjs
-make check
-# 改变内容解释、发布语义或全局校验器时改用：
-# make deep-check DEEP_REASON=<content-semantics|publication-semantics|validator-semantics|full-audit>
-make diff-check
-# 站点生成器、主题或 Pages workflow 变化时：
-make site-check
-```
-
-深检是 `make check` 的替代项，不叠加运行。机械全库检查不授权全库内容复审；
-报告实际检查范围和发现；是否扩大历史内容复审仍由用户授权决定。
+最终门禁按 [AGENTS.md](../../AGENTS.md#commands) 选择，不叠加其子集。
+`doctor` 用于环境准备或环境故障；编译、语法检查和定向测试按实际改动选用，
+不作为每次发布的附加步骤。机械全库检查不授权全库内容复审。
 
 ## 行为验收案例
 

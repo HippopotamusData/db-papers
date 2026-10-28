@@ -13,7 +13,6 @@ audit_all=${AUDIT_ALL:-false}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 files=()
 profile_paths=(
-  .github/workflows/github-math-audit.yml
   scripts/audit_changed_math.sh
   scripts/validate_github_math.py
   scripts/verify_math_rendering.py

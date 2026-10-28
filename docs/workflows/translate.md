@@ -41,8 +41,10 @@ paper_whitespace=$(git diff --no-index --check /dev/null papers/<area>/<paper-id
 test -z "$paper_whitespace" || { printf '%s\n' "$paper_whitespace"; exit 1; }
 make paper-check PAPER_ID=<paper-id>
 make math-check-files FILES='papers/<area>/<paper-id>/translation.md'
-make math-audit-github FILES='papers/<area>/<paper-id>/translation.md'
 ```
+
+GitHub API 审计的执行时机统一见[公式维护指南](../portable-math-maintainers.md#命令与审计)；
+PR 路径由 CI 执行一次，不在交审前另跑。
 
 首条检查也会检查 EOF 空行；目前报错可能统称 header 不规范，先查看实际差异。
 空白检查沿用 `scripts/check_diff.sh` 对未跟踪文件的处理：检查诊断输出，不把

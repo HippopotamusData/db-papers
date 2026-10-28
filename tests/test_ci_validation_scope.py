@@ -248,26 +248,15 @@ class CiValidationScopeTests(unittest.TestCase):
             workflow,
         )
         self.assertIn("run: make test _deep-validate-check _catalog-check", workflow)
-        self.assertIn("Audit changed GitHub math", workflow)
+        self.assertNotIn("Audit changed GitHub math", workflow)
         self.assertIn(
             'git merge-base --is-ancestor "$BEFORE_SHA" "$CURRENT_SHA"',
             workflow,
         )
-        self.assertIn(
-            'scripts/audit_changed_math.sh "$DIFF_BASE"',
-            workflow,
-        )
-        self.assertIn(
-            "AUDIT_ALL: ${{ steps.scope.outputs.math_all }}",
-            workflow,
-        )
+        self.assertNotIn("GH_TOKEN", workflow)
         self.assertIn("run: make bootstrap", workflow)
         self.assertIn(
             ".venv/bin/python scripts/ci_validation_scope.py",
-            workflow,
-        )
-        self.assertIn(
-            "PYTHON=.venv/bin/python scripts/audit_changed_math.sh",
             workflow,
         )
         self.assertNotIn("name: Install Python dependencies", workflow)

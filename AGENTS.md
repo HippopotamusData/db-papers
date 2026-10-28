@@ -147,9 +147,9 @@ Changes to the site generator, theme, or Pages workflow also run `make site-chec
 
 Batch roles, per-paper gate timing, and clean-HEAD closure follow `docs/workflows/batch-translate.md`; ordinary translation batches do not run `make deep-check`.
 
-Complete the required gates for the active workflow and role. Once they pass, add or repeat checks only for new changes, failures, or unresolved concerns. Status-change checks, the final clean-HEAD batch gate, and required CI checks remain mandatory at their specified stages. Do not add tests that merely restate low-impact documentation or configuration edits.
+Run the required gates once on the final candidate. During editing, use scoped checks for the affected behavior; repeat a passed gate only when its inputs change, it fails, or concrete evidence requires it. `site-test` includes `site-check`; `deep-check` includes `check` coverage; batch closure supplies its final repository gates. Status-change checks and required CI checks remain mandatory. Do not add tests that merely restate low-impact documentation or configuration edits.
 
-For a requested publication, do not report success at push or merge. Wait for the default-branch check on the merge SHA, the Pages deployment for that same SHA, and a production-page verification.
+For publication, follow the minimal release procedure in `docs/workflows/maintain.md`. Report success after the merge SHA's default-branch check, Pages deployment, and CI production verification pass; reuse those results instead of rerunning them locally.
 
 A full mechanical check does not authorize a repository-wide content review or rewrite. Report the affected paper IDs and keep repairs within the authorized scope. If a required tool or source is unavailable, state exactly which check was not run and why.
 

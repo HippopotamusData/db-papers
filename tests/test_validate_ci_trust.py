@@ -62,7 +62,8 @@ class ValidateCiTrustTests(unittest.TestCase):
         text = (REPO_ROOT / MATH_WORKFLOW).read_text(encoding="utf-8")
         self.assertIn("  pull_request_target:\n", text)
         self.assertNotIn("  push:\n", text)
-        self.assertIn("edited", text)
+        self.assertIn("branches: [main]", text)
+        self.assertIn("types: [opened, reopened, synchronize]", text)
         self.assertNotIn("ready_for_review", text)
         self.assertIn("permissions:\n  contents: read\n", text)
         self.assertIn("persist-credentials: false", text)
@@ -102,13 +103,13 @@ class ValidateCiTrustTests(unittest.TestCase):
             encoding="utf-8"
         )
         for path in (
-            ".github/workflows/github-math-audit.yml",
             "scripts/audit_changed_math.sh",
             "scripts/validate_github_math.py",
             "scripts/verify_math_rendering.py",
         ):
             self.assertIn(f"  {path}\n", text)
         for path in (
+            ".github/workflows/github-math-audit.yml",
             ".github/workflows/check.yml",
             "Makefile",
             "docs/portable-math-maintainers.md",

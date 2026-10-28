@@ -42,4 +42,6 @@ make site-check
 站点日常迭代可用 `make site-serve` 启动 `.preview/` 中的独立预览，修改后运行
 `make site-refresh` 刷新生成内容。提交前仍运行上述验收；涉及读者交互时安装
 Chromium（`npm ci && npx playwright install chromium`），并用 `make site-test`
-完成构建与浏览器回归。预览和验收互不覆盖。
+一次完成构建与浏览器回归，无需再运行 `make site-check`。预览和验收互不覆盖。
+
+发布与合并后清理遵循[最小发布流程](docs/workflows/maintain.md#最小发布流程)。
