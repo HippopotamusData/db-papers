@@ -22,10 +22,12 @@ extra_javascript = [
 
 [project.theme]
 language = "zh"
+favicon = "images/favicon.svg"
 features = [
   "content.code.copy",
   "content.footnote.tooltips",
   "navigation.footer",
+  "navigation.expand",
   "navigation.instant",
   "navigation.instant.prefetch",
   "navigation.instant.progress",
@@ -45,24 +47,24 @@ repo = "fontawesome/brands/github"
 
 [[project.theme.palette]]
 media = "(prefers-color-scheme)"
-primary = "teal"
-accent = "teal"
+primary = "red"
+accent = "red"
 toggle.icon = "lucide/monitor"
 toggle.name = "切换到浅色模式"
 
 [[project.theme.palette]]
 media = "(prefers-color-scheme: light)"
 scheme = "default"
-primary = "teal"
-accent = "teal"
+primary = "red"
+accent = "red"
 toggle.icon = "lucide/sun"
 toggle.name = "切换到深色模式"
 
 [[project.theme.palette]]
 media = "(prefers-color-scheme: dark)"
 scheme = "slate"
-primary = "teal"
-accent = "teal"
+primary = "red"
+accent = "red"
 toggle.icon = "lucide/moon"
 toggle.name = "跟随系统主题"
 

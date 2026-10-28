@@ -319,14 +319,9 @@ def paper_card(
         ]
     ).casefold()
     pdf_target = f"{translated_prefix}{paper.paper_id}/source.pdf"
-    translation_action = ""
     if paper.reading_status == "translated":
         target = f"{translated_prefix}{paper.paper_id}/"
         target_attributes = ""
-        translation_action = (
-            f'<a href="{html.escape(target, quote=True)}" '
-            f'aria-label="阅读译文：{html.escape(paper.title, quote=True)}">阅读译文</a>'
-        )
     else:
         target = pdf_target
         target_attributes = ' target="_blank" rel="noopener noreferrer"'
@@ -349,9 +344,6 @@ def paper_card(
   <footer>
     <span>{year}</span>
     {rating}
-    {translation_action}
-    <a href="{html.escape(pdf_target, quote=True)}" target="_blank" rel="noopener noreferrer"
-      aria-label="阅读原文：{html.escape(paper.title, quote=True)}">阅读原文</a>
   </footer>
 </article>
 """.strip()
@@ -398,13 +390,11 @@ def render_recent(papers: list[Paper], taxonomy: dict[str, Any], dates: dict[str
             target += "source.pdf"
         date = dates[paper.paper_id]
         area = taxonomy["areas"][paper.area]["label_zh"]
-        action = "阅读译文" if paper.reading_status == "translated" else "阅读原文"
         rows.append(f"""<a class="recent-paper" href="{html.escape(target, quote=True)}">
   <time datetime="{date}">{date}</time>
   <div class="recent-paper__body"><strong>{html.escape(paper.title)}</strong>
     <p>{html.escape(paper.title_zh)}</p>
     <span>{html.escape(area)} · {PAPER_STATUS_LABELS[paper.reading_status]}</span></div>
-  <span class="recent-paper__action">{action} <span aria-hidden="true">↗</span></span>
 </a>""")
     return '<div class="recent-list" markdown="0">' + "\n".join(rows) + '</div>'
 
@@ -505,17 +495,18 @@ description: 按领域、主题、状态和关键词浏览数据库论文
 
 # 论文目录
 
-可按关键词、领域、主题和状态筛选。已完成的译文可直接阅读，其他论文提供原文入口。
-
 <div class="catalog-controls" role="search" aria-label="筛选和排序论文">
   <label class="catalog-search-field">
     <span>关键词</span>
-    <input id="catalog-search" type="search" placeholder="中英文标题、作者、论文 ID…" autocomplete="off">
+    <svg class="catalog-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4 4"></path>
+    </svg>
+    <input id="catalog-search" type="search" placeholder="搜索标题、作者、论文 ID" autocomplete="off">
   </label>
   <div class="catalog-advanced">
     <button class="catalog-advanced__toggle" type="button"
-      aria-expanded="false" aria-controls="catalog-advanced-fields">
-      <span class="catalog-advanced__label">更多筛选与排序</span>
+      aria-label="筛选与排序" aria-expanded="false" aria-controls="catalog-advanced-fields">
+      <span class="catalog-advanced__label">筛选</span>
       <span class="catalog-advanced__meta">
         <span class="catalog-active-filters" id="catalog-active-filters" hidden></span>
         <svg class="catalog-advanced__chevron" viewBox="0 0 24 24"
