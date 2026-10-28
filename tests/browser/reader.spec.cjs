@@ -71,8 +71,13 @@ test('catalog search click survives blur and back restores filters', async ({ pa
 });
 
 test('native back navigation restores the catalog filters and scroll position', async ({ page }) => {
+  // Network fonts can reflow the long catalog during navigation. Use stable
+  // fallback metrics here so the exact-pixel assertion isolates history restoration.
+  await page.route('**/*', route => route.request().resourceType() === 'font'
+    ? route.abort() : route.continue());
   await page.goto('catalog/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#paper-grid')).toHaveAttribute('data-filters-ready', 'true');
+  await page.evaluate(() => document.fonts.ready);
   await page.locator('#catalog-area').selectOption('query-processing');
   const card = page.locator('.paper-card:visible').nth(12);
   await card.scrollIntoViewIfNeeded();
@@ -88,6 +93,7 @@ test('native back navigation restores the catalog filters and scroll position', 
   expect(scroll).toBeGreaterThan(500);
   await page.goBack();
   await expect(page.locator('#catalog-area')).toHaveValue('query-processing');
+  await page.evaluate(() => document.fonts.ready);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scroll, 0);
 });
 
