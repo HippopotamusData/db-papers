@@ -34,7 +34,9 @@ for (const width of [390, 834, 1440]) {
             }).map(e => ({ tag: e.className, text: e.textContent.trim().slice(0, 70) }));
           return { outside, overflow: document.documentElement.scrollWidth - viewportWidth };
         });
-        expect(layout).toEqual({ outside: [], overflow: 0 });
+        expect(layout.outside).toEqual([]);
+        // A negative difference is unused space, not horizontal overflow.
+        expect(layout.overflow).toBeLessThanOrEqual(0);
         if (kind === 'catalog' || kind === 'area') {
           // Every paper has one unambiguous title entry after removing actions.
           const cards = await page.locator('.paper-card').evaluateAll(es => es.map(e => ({
