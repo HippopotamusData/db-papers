@@ -23,13 +23,16 @@ for (const width of [390, 834, 1440]) {
           await expect(page.locator('.md-content__inner mjx-container').first()).toBeAttached();
         }
         const layout = await page.locator('.md-content__inner').evaluate(root => {
+          // Classic scrollbars consume viewport width on Linux. Compare with
+          // the available content area, rather than treating that gutter as overflow.
+          const viewportWidth = document.documentElement.clientWidth;
           const outside = Array.from(root.querySelectorAll('.paper-card, .area-card, .recent-paper, .catalog-controls, .paper-meta, .paper-actions .md-button'))
             .filter(e => e.getClientRects().length)
             .filter(e => {
               const r = e.getBoundingClientRect();
-              return r.left < -1 || r.right > innerWidth + 1;
+              return r.left < -1 || r.right > viewportWidth + 1;
             }).map(e => ({ tag: e.className, text: e.textContent.trim().slice(0, 70) }));
-          return { outside, overflow: document.documentElement.scrollWidth - innerWidth };
+          return { outside, overflow: document.documentElement.scrollWidth - viewportWidth };
         });
         expect(layout).toEqual({ outside: [], overflow: 0 });
         if (kind === 'catalog' || kind === 'area') {

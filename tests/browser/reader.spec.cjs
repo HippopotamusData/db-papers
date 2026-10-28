@@ -76,10 +76,16 @@ test('native back navigation restores the catalog filters and scroll position', 
   await page.locator('#catalog-area').selectOption('query-processing');
   const card = page.locator('.paper-card:visible').nth(12);
   await card.scrollIntoViewIfNeeded();
-  const scroll = await page.evaluate(() => window.scrollY);
-  expect(scroll).toBeGreaterThan(500);
-  await card.locator('h3 a').click();
+  const link = card.locator('h3 a');
+  await link.evaluate(element => element.addEventListener('click', () => {
+    // The click may scroll its link into view. Record the actual departure
+    // position that native history should restore, after that automatic scroll.
+    sessionStorage.setItem('dbp:test:departure-scroll', String(window.scrollY));
+  }, { capture: true, once: true }));
+  await link.click();
   await expect(page.locator('.paper-meta')).toBeVisible();
+  const scroll = Number(await page.evaluate(() => sessionStorage.getItem('dbp:test:departure-scroll')));
+  expect(scroll).toBeGreaterThan(500);
   await page.goBack();
   await expect(page.locator('#catalog-area')).toHaveValue('query-processing');
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scroll, 0);
