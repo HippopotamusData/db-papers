@@ -301,15 +301,12 @@ source: source.pdf
             )
             self.assertIn('aria-controls="catalog-advanced-fields"', catalog)
             self.assertIn('class="catalog-advanced__chevron"', catalog)
-            self.assertIn("更多筛选与排序", catalog)
+            self.assertIn('aria-label="筛选与排序"', catalog)
             self.assertIn('id="catalog-active-filters"', catalog)
             self.assertIn("accepted paper 已验收论文 ada example", catalog)
             self.assertIn("Draft Paper", catalog)
-            self.assertEqual(catalog.count(">阅读原文</a>"), 2)
-            self.assertIn(
-                'href="papers/query-processing/accepted-paper/source.pdf"',
-                catalog,
-            )
+            self.assertNotIn(">阅读原文</a>", catalog)
+            self.assertNotIn(">阅读译文</a>", catalog)
             self.assertIn(
                 'href="papers/query-processing/draft-paper/source.pdf"',
                 catalog,
@@ -411,7 +408,9 @@ class SiteAssetTests(unittest.TestCase):
         navigation = (
             ROOT / "site_assets/javascripts/navigation.js"
         ).read_text(encoding="utf-8")
-        self.assertIn("expandPrimaryNavigation", navigation)
+        self.assertIn("navigation.expand", tomllib.loads(
+            (ROOT / "zensical.toml").read_text(encoding="utf-8")
+        )["project"]["theme"]["features"])
         self.assertNotIn(".md-header__title", navigation)
         self.assertNotIn("window.scrollTo", navigation)
         self.assertNotIn("dbpHeaderLink", navigation)
@@ -428,8 +427,6 @@ class SiteAssetTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("搜索论文标题或正文", search)
-        self.assertIn("当前显示", search)
-        self.assertIn("dbp-search-group-toggle", search)
 
 
 if __name__ == "__main__":

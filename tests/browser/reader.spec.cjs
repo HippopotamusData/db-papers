@@ -15,7 +15,7 @@ test('reader fractions stay stacked on load and after catalog navigation', async
     })).toBeTruthy();
   }
 
-  await page.goto(paper);
+  await page.goto(paper, { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => window.MathJax.startup.promise);
   await expectFractionLayout();
   await page.getByRole('link', { name: '论文目录', exact: true }).first().click();
@@ -27,8 +27,31 @@ test('reader fractions stay stacked on load and after catalog navigation', async
 });
 
 // Match the production path prefix and exercise the built HTML and real scripts.
+test('reader formulas survive native highlighted search navigation and reload', async ({ page }) => {
+  await page.goto('', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /查找/ }).click();
+  const search = page.getByRole('combobox', { name: '搜索论文标题或正文' });
+  await search.fill('连接');
+  const result = page.getByRole('option').first();
+  await expect(result).toHaveAttribute('href', /h=%E8%BF%9E%E6%8E%A5/);
+  const target = await result.getAttribute('href');
+  await search.press('ArrowDown');
+  await search.press('ArrowUp');
+  await search.press('Enter');
+  await expect(page).toHaveURL(target);
+  async function expectRenderedMath() {
+    await expect(page.locator('.md-content__inner mjx-container').first()).toBeVisible();
+    await expect(page.locator('.arithmatex').filter({ hasNot: page.locator('mjx-container') })).toHaveCount(0);
+    await expect(page.locator('.md-content__inner mark[data-md-highlight]').first()).toBeVisible();
+    await expect(page.locator('mjx-merror')).toHaveCount(0);
+  }
+  await expectRenderedMath();
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expectRenderedMath();
+});
+
 test('catalog search click survives blur and back restores filters', async ({ page, request }) => {
-  await page.goto('catalog/');
+  await page.goto('catalog/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#paper-grid')).toHaveAttribute('data-filters-ready', 'true');
   const search = page.locator('#catalog-search');
   await search.fill('access path selection');
@@ -47,9 +70,24 @@ test('catalog search click survives blur and back restores filters', async ({ pa
   await expect(page.locator('.paper-card:visible')).toHaveCount(1);
 });
 
+test('native back navigation restores the catalog filters and scroll position', async ({ page }) => {
+  await page.goto('catalog/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#paper-grid')).toHaveAttribute('data-filters-ready', 'true');
+  await page.locator('#catalog-area').selectOption('query-processing');
+  const card = page.locator('.paper-card:visible').nth(12);
+  await card.scrollIntoViewIfNeeded();
+  const scroll = await page.evaluate(() => window.scrollY);
+  expect(scroll).toBeGreaterThan(500);
+  await card.locator('h3 a').click();
+  await expect(page.locator('.paper-meta')).toBeVisible();
+  await page.goBack();
+  await expect(page.locator('#catalog-area')).toHaveValue('query-processing');
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(scroll, 0);
+});
+
 test('narrow catalog has working controls and no horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('catalog/');
+  await page.goto('catalog/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('#paper-grid')).toHaveAttribute('data-filters-ready', 'true');
   await page.locator('.catalog-advanced__toggle').click();
   await expect(page.locator('#catalog-area')).toBeVisible();
@@ -65,68 +103,98 @@ test('narrow catalog has working controls and no horizontal overflow', async ({ 
   await expect(page.locator('#catalog-empty')).toBeHidden();
   const total = await page.locator('.paper-card').count();
   await expect(page.locator('#catalog-count')).toHaveText(String(total));
-  await page.reload();
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.locator('#catalog-count')).toHaveText(String(total));
   await expect(page.locator('#catalog-clear')).toBeHidden();
 });
 
-test('search totals follow queries, filters and lazy loading without stale counts', async ({ page }) => {
-  await page.goto('');
+for (const width of [320, 1168]) {
+  test(`compact catalog combines every filter and preserves sorting at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('catalog/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#paper-grid')).toHaveAttribute('data-filters-ready', 'true');
+    const toggle = page.getByRole('button', { name: '筛选与排序', exact: true });
+    if (width < 832) await toggle.click();
+    const expected = await page.locator('.paper-card').evaluateAll(cards => cards
+      .filter(e => e.dataset.area === 'query-processing' &&
+        e.dataset.topics.split(/\s+/).includes('query-optimization') &&
+        e.dataset.status === 'translated' && e.dataset.search.includes('join'))
+      .sort((a, b) => Number(b.dataset.year) - Number(a.dataset.year))
+      .map(e => e.querySelector('h3 a').getAttribute('href')));
+    expect(expected.length).toBeGreaterThan(1);
+    await page.getByRole('searchbox', { name: '关键词', exact: true }).fill('join');
+    await page.getByRole('combobox', { name: '领域', exact: true }).selectOption('query-processing');
+    await page.getByRole('combobox', { name: '主题', exact: true }).selectOption('query-optimization');
+    await page.getByRole('combobox', { name: '状态', exact: true }).selectOption('translated');
+    await page.getByRole('combobox', { name: '排序', exact: true }).selectOption('year-desc');
+    await expect(page.locator('#catalog-count')).toHaveText(String(expected.length));
+    expect(await page.locator('.paper-card:visible h3 a').evaluateAll(es => es.map(e => e.getAttribute('href')))).toEqual(expected);
+    if (width < 832) {
+      await expect(page.locator('#catalog-active-filters')).toHaveText('4');
+      await toggle.click();
+      await expect(page.getByRole('combobox', { name: '领域', exact: true })).toBeHidden();
+      await expect(page.locator('#catalog-active-filters')).toBeVisible();
+    }
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#catalog-count')).toHaveText(String(expected.length));
+    if (width < 832) await toggle.click();
+    await expect(page.getByRole('combobox', { name: '排序', exact: true })).toHaveValue('year-desc');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+    await page.getByRole('button', { name: '清除全部筛选和排序' }).click();
+    await expect(page.locator('.paper-card:visible')).toHaveCount(await page.locator('.paper-card').count());
+    await expect(page.locator('#catalog-clear')).toBeHidden();
+  });
+}
+
+test('native search totals follow queries, filters and lazy loading', async ({ page }) => {
+  await page.goto('', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /查找/ }).click();
   const search = page.getByRole('combobox', { name: '搜索论文标题或正文' });
   const count = page.locator('[data-dbp-search-count]');
-  const nativeCount = page.locator('[data-dbp-search-source-count]');
+  const items = page.getByRole('option');
   async function expectCurrentCount(query) {
     await search.fill(query);
-    await expect.poll(() => page.locator('li > a[href*="?h="]').first().evaluate(
+    await expect.poll(() => items.first().evaluate(
       (link) => new URL(link.href).searchParams.get('h'),
     )).toBe(query);
-    await expect(nativeCount).toHaveText(/^\d+ results?$/);
-    await expect.poll(async () => {
-      const raw = await nativeCount.textContent();
-      return (await count.textContent()).endsWith(`共 ${raw.split(' ')[0]} 个匹配段落`);
-    }).toBeTruthy();
-    return (await nativeCount.textContent()).split(' ')[0];
+    const total = await items.first().getAttribute('aria-setsize');
+    await expect(count).toHaveText(`共 ${total} 个匹配段落`);
+    return Number(total);
   }
   const first = await expectCurrentCount('ClickHouse');
-  await expect(count).toContainText('当前显示 1 个页面');
+  const loaded = await items.count();
+  await items.last().scrollIntoViewIfNeeded();
+  await expect.poll(() => items.count()).toBeGreaterThan(loaded);
+  await expect(count).toHaveText(`共 ${first} 个匹配段落`);
   const second = await expectCurrentCount('连接');
   expect(second).not.toBe(first);
   expect(await expectCurrentCount('ClickHouse')).toBe(first);
-  // Loading more passages changes the rendered count, never the total.
-  await page.locator('.dbp-search-group-toggle').click();
-  await page.locator('li:has(> a[href*="clickhouse-lightning-fast"])').last().scrollIntoViewIfNeeded();
-  await expect.poll(() => page.locator('li:has(> a[href*="clickhouse-lightning-fast"])').count()).toBeGreaterThan(10);
-  await expect(count).toContainText(`共 ${first} 个匹配段落`);
   await search.fill('no-paper-matches-this-query');
-  await expect(page.locator('[data-dbp-search-dialog] li:has(> a[href*="/papers/"])')).toHaveCount(0);
-  await expect(count).toBeHidden();
+  await expect(items).toHaveCount(0);
+  await expect(count).toHaveText('没有匹配结果');
   await search.fill('');
-  await expect(count).toBeHidden();
+  await expect(count).toBeEmpty();
   await expectCurrentCount('ClickHouse');
   await page.getByRole('button', { name: '关闭搜索' }).click();
   await page.getByRole('button', { name: /查找/ }).click();
   expect(await expectCurrentCount('ClickHouse')).toBe(first);
-  // Tags are native toggles; their count should still drive our own label.
-  const beforeFilter = Number(await expectCurrentCount('连接'));
+  const beforeFilter = await expectCurrentCount('连接');
   const tag = page.locator('[data-dbp-search-filters]').getByRole('button', { name: /^云原生/ });
   await tag.focus();
   await page.keyboard.press('Enter');
   await expect(tag).toHaveAttribute('aria-pressed', 'true');
-  await expect.poll(async () => Number((await nativeCount.textContent()).split(' ')[0])).toBeLessThan(beforeFilter);
-  await expect.poll(async () => {
-    const raw = await nativeCount.textContent();
-    return (await count.textContent()).endsWith(`共 ${raw.split(' ')[0]} 个匹配段落`);
-  }).toBeTruthy();
+  await expect.poll(async () => Number(await items.first().getAttribute('aria-setsize'))).toBeLessThan(beforeFilter);
+  const filtered = await items.first().getAttribute('aria-setsize');
+  await expect(count).toHaveText(`共 ${filtered} 个匹配段落`);
   await tag.focus();
   await page.keyboard.press('Space');
   await expect(tag).toHaveAttribute('aria-pressed', 'false');
-  await expect.poll(async () => Number((await nativeCount.textContent()).split(' ')[0])).toBe(beforeFilter);
+  await expect(count).toHaveText(`共 ${beforeFilter} 个匹配段落`);
 });
 
 test('mobile search filters stay below results and can be reopened', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('');
+  await page.goto('', { waitUntil: 'domcontentloaded' });
   await page.locator('label[for="__search"]').click();
   await page.getByRole('combobox').fill('连接');
   const filters = page.locator('[data-dbp-search-filters]');
@@ -144,7 +212,7 @@ test('mobile search filters stay below results and can be reopened', async ({ pa
 
 test('mobile TOC closes after section selection and Escape', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('papers/system-architecture/clickhouse-lightning-fast-analytics-for-everyone/');
+  await page.goto('papers/system-architecture/clickhouse-lightning-fast-analytics-for-everyone/', { waitUntil: 'domcontentloaded' });
   const toggle = page.locator('#__toc');
   await page.locator('.md-sidebar-button[for="__toc"]').click();
   await expect(toggle).toBeChecked();
@@ -158,7 +226,7 @@ test('mobile TOC closes after section selection and Escape', async ({ page }) =>
 });
 
 test('search math renders with highlights and survives updates and lazy loading', async ({ page }) => {
-  await page.goto('');
+  await page.goto('', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /查找/ }).click();
   const search = page.getByRole('combobox', { name: '搜索论文标题或正文' });
   await search.fill('连接');
@@ -169,11 +237,16 @@ test('search math renders with highlights and survives updates and lazy loading'
   await expect(page.locator('style[data-dbp-search-math-styles]')).toHaveCount(1);
   await expect(page.locator('[data-dbp-search-dialog] mjx-merror')).toHaveCount(0);
   await search.fill('ClickHouse');
-  await expect(page.locator('[data-dbp-search-count]')).toContainText('共 44 个匹配段落');
+  // Wait for the new query's results, independent of archive size or math content.
+  const firstResult = page.locator('li > a[href*="?h="]').first();
+  await expect.poll(() => firstResult.evaluate(
+    (link) => new URL(link.href).searchParams.get('h'),
+  )).toBe('ClickHouse');
   await search.fill('连接');
+  await expect.poll(() => firstResult.evaluate(
+    (link) => new URL(link.href).searchParams.get('h'),
+  )).toBe('连接');
   await expect(snippets.locator('mjx-container').first()).toBeVisible();
-  const toggle = page.locator('.dbp-search-group-toggle').first();
-  await toggle.click();
   const items = page.locator('[data-dbp-search-dialog] ol > li:has(> a[href])');
   const loaded = await items.count();
   await items.filter({ visible: true }).last().scrollIntoViewIfNeeded();

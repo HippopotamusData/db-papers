@@ -61,7 +61,6 @@ function setupCatalogFilters() {
         ...Object.fromEntries(Object.entries(controls).map(
           ([name, control]) => [name, control.value])),
         expanded: advancedToggle?.getAttribute("aria-expanded") === "true",
-        scroll: window.scrollY,
       }));
     } catch {
       // Storage can be unavailable or full; do not interrupt navigation.
@@ -129,7 +128,8 @@ function setupCatalogFilters() {
         Number(Boolean(topic.value)) +
         Number(Boolean(status.value)) +
         Number(sort.value !== "default");
-      activeFilters.textContent = `${activeCount} 项已启用`;
+      activeFilters.textContent = String(activeCount);
+      activeFilters.setAttribute("aria-label", `已启用 ${activeCount} 项筛选或排序`);
       activeFilters.hidden = activeCount === 0;
     }
   };
@@ -159,16 +159,7 @@ function setupCatalogFilters() {
   // Capture before instant navigation detaches the current catalog.
   document.addEventListener("click", save, true);
   window.addEventListener("pagehide", save);
-  let frame = requestAnimationFrame(() => {
-    frame = requestAnimationFrame(() => {
-      if (grid.isConnected && !window.location.hash &&
-          Number.isFinite(saved?.scroll) && saved.scroll >= 0) {
-        window.scrollTo(0, saved.scroll);
-      }
-    });
-  });
   cleanupCatalogState = () => {
-    cancelAnimationFrame(frame);
     document.removeEventListener("click", save, true);
     window.removeEventListener("pagehide", save);
   };

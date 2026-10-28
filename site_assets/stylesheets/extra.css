@@ -4,10 +4,10 @@
   --dbp-line: rgba(67, 85, 116, 0.18);
   --dbp-surface: #ffffff;
   --dbp-surface-soft: #f6f8fb;
-  --dbp-accent: #007f78;
-  --dbp-accent-strong: #005f5a;
-  --dbp-action-bg: #007f78;
-  --dbp-action-bg-hover: #005f5a;
+  --dbp-accent: #c62828;
+  --dbp-accent-strong: #9f1d1d;
+  --dbp-action-bg: #c62828;
+  --dbp-action-bg-hover: #9f1d1d;
   --dbp-action-ink: #ffffff;
   --dbp-browse-width: 52rem;
   --dbp-reader-width: 44rem;
@@ -19,16 +19,21 @@
   --dbp-line: rgba(194, 210, 231, 0.18);
   --dbp-surface: #1b2433;
   --dbp-surface-soft: #131b27;
-  --dbp-accent: #45c9bf;
-  --dbp-accent-strong: #72ddd5;
-  --dbp-action-bg: #53d3c9;
-  --dbp-action-bg-hover: #7ce2da;
-  --dbp-action-ink: #10282a;
+  --dbp-accent: #ff8a80;
+  --dbp-accent-strong: #ffb4ab;
+  --dbp-action-bg: #ff9b93;
+  --dbp-action-bg-hover: #ffb4ab;
+  --dbp-action-ink: #321515;
 }
 
-/* Override the theme palette on the element where it is applied, including
-   browsers that still have the previous accent saved in local storage. */
-[data-md-color-accent] {
+/* Override both theme colors, including cached palettes. Match the specificity
+   of the theme's dark-mode link rule so old palettes cannot restore green. */
+[data-md-color-primary][data-md-color-accent] {
+  --md-primary-fg-color: var(--dbp-accent);
+  --md-primary-fg-color--light: var(--dbp-accent);
+  --md-primary-fg-color--dark: var(--dbp-accent-strong);
+  --md-primary-bg-color: var(--dbp-action-ink);
+  --md-primary-bg-color--light: color-mix(in srgb, var(--dbp-action-ink) 70%, transparent);
   --md-accent-fg-color: var(--dbp-accent);
   --md-accent-fg-color--transparent: color-mix(in srgb, var(--dbp-accent) 10%, transparent);
   --md-accent-bg-color: var(--dbp-action-ink);
@@ -145,7 +150,7 @@
 .recent-list { border-top: 1px solid var(--dbp-line); margin-top: 1.2rem; }
 .recent-paper {
   display: grid;
-  grid-template-columns: 5.6rem minmax(0, 1fr) auto;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
   padding: 1.1rem 0.3rem;
@@ -158,7 +163,6 @@
 .recent-paper__body > strong { display: block; margin: 0; font-size: 0.88rem; font-weight: 650; line-height: 1.5; }
 .recent-paper__body p { margin: 0.25rem 0; font-size: 0.7rem; line-height: 1.5; color: var(--dbp-muted); }
 .recent-paper__body > span { font-size: 0.62rem; color: var(--dbp-muted); }
-.recent-paper__action { padding-top: 0.2rem; font-size: 0.65rem; white-space: nowrap; color: var(--dbp-accent); }
 
 .md-header__source,
 .md-header__source .md-source {
@@ -297,30 +301,48 @@
 }
 
 .catalog-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
   width: 100%;
   box-sizing: border-box;
-  margin: 1.5rem 0 0.9rem;
-  padding: 1rem;
-  border: 1px solid var(--dbp-line);
-  border-radius: 1rem;
-  background: var(--dbp-surface-soft);
+  margin: 1.1rem 0 0.75rem;
 }
 
 .catalog-controls label {
-  display: flex;
+  position: relative;
   min-width: 0;
-  flex-direction: column;
-  gap: 0.35rem;
 }
 
 .catalog-controls label > span {
-  color: var(--dbp-muted);
-  font-size: 0.67rem;
-  font-weight: 700;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.catalog-search-field {
+  grid-column: 1 / -1;
+}
+
+.catalog-search-icon {
+  position: absolute;
+  left: 0.65rem;
+  top: 50%;
+  width: 0.9rem;
+  height: 0.9rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  fill: none;
+  stroke: var(--dbp-muted);
+  stroke-width: 1.8;
+  stroke-linecap: round;
 }
 
 .catalog-advanced {
-  margin-top: 0.75rem;
+  display: contents;
 }
 
 .catalog-advanced__toggle {
@@ -330,7 +352,7 @@
 .catalog-advanced__meta {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .catalog-advanced__chevron {
@@ -352,39 +374,46 @@
 
 .catalog-advanced__fields {
   display: grid;
+  grid-column: 1 / -1;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .catalog-active-filters {
-  padding: 0.15rem 0.42rem;
+  min-width: 1rem;
+  padding: 0.05rem 0.25rem;
   border-radius: 999px;
   color: var(--dbp-accent-strong);
   background: color-mix(in srgb, var(--dbp-accent) 14%, transparent);
   font-size: 0.61rem;
   font-weight: 750;
+  text-align: center;
 }
 
 .catalog-controls input,
 .catalog-controls select {
   min-width: 0;
   width: 100%;
-  height: 2.45rem;
-  padding: 0 0.7rem;
+  height: 2.1rem;
+  padding: 0 0.65rem;
   border: 1px solid var(--dbp-line);
-  border-radius: 0.55rem;
+  border-radius: 0.45rem;
   color: var(--dbp-ink);
   background: var(--dbp-surface);
   font: inherit;
   font-size: 0.75rem;
 }
 
+.catalog-controls input {
+  padding-left: 2rem;
+}
+
 .catalog-controls select {
-  padding-right: 2.25rem;
+  padding-right: 1.7rem;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23657087' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 0.85rem center;
+  background-position: right 0.6rem center;
   background-size: 0.75rem;
 }
 
@@ -479,7 +508,7 @@
 
 .paper-card footer {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 0.7rem;
   margin-top: auto;
@@ -509,11 +538,6 @@
 }
 
 #catalog-clear[hidden] { display: none; }
-
-.paper-card footer a {
-  justify-self: end;
-  font-weight: 700;
-}
 
 #paper-grid {
   grid-template-columns: 1fr;
@@ -564,20 +588,16 @@
 
 #paper-grid .paper-card footer {
   display: flex;
-  min-width: 8.5rem;
+  min-width: 3.5rem;
   grid-area: footer;
+  align-self: center;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   gap: 0.35rem;
   margin: 0 0 0 1rem;
-  padding: 0 0 0 1rem;
+  padding: 0;
   border-top: 0;
-  border-left: 1px solid var(--dbp-line);
-}
-
-#paper-grid .paper-card footer a {
-  margin-top: 0.2rem;
 }
 
 .paper-score {
@@ -604,8 +624,8 @@
 }
 
 .status-pill--translated {
-  color: #00635d;
-  background: #dff6f3;
+  color: #922020;
+  background: #fde8e7;
 }
 
 .status-pill--draft {
@@ -619,8 +639,8 @@
 }
 
 [data-md-color-scheme="slate"] .status-pill--translated {
-  color: #8be2db;
-  background: #183f3d;
+  color: #ffb4ab;
+  background: #4a2427;
 }
 
 [data-md-color-scheme="slate"] .status-pill--draft {
@@ -651,10 +671,14 @@
   padding: 1.2rem;
   border: 1px solid var(--dbp-line);
   border-radius: 0.9rem;
+  background: var(--dbp-surface);
+  box-shadow: 0 0.35rem 1.2rem rgba(0, 0, 0, 0.04);
+}
+
+[data-md-color-scheme="slate"] .paper-meta {
   background: linear-gradient(135deg,
     color-mix(in srgb, var(--dbp-accent) 5%, var(--dbp-surface)),
     var(--dbp-surface) 65%);
-  box-shadow: 0 0.35rem 1.2rem rgba(0, 0, 0, 0.04);
 }
 
 .paper-title-zh--page {
@@ -882,37 +906,32 @@ mjx-mtd[extra] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .catalog-advanced__fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 52rem) {
   .site-hero { padding: 1rem 0 1.5rem; }
   .recent-paper { grid-template-columns: minmax(0, 1fr); gap: 0.4rem; }
   .recent-paper time { grid-column: 1 / -1; }
-  .recent-paper__action { font-size: 0.6rem; }
 
   .area-grid,
   .paper-grid {
     grid-template-columns: 1fr;
   }
 
-  .catalog-controls {
-    padding: 0.85rem;
+  .catalog-search-field {
+    grid-column: auto;
   }
 
   .catalog-advanced__toggle {
     display: flex;
-    width: 100%;
-    min-height: 2.4rem;
+    min-height: 2.2rem;
     box-sizing: border-box;
     align-items: center;
     justify-content: space-between;
-    gap: 0.7rem;
-    padding: 0.55rem 0.7rem;
+    gap: 0.35rem;
+    padding: 0 0.6rem;
     border: 1px solid var(--dbp-line);
-    border-radius: 0.55rem;
+    border-radius: 0.45rem;
     color: var(--dbp-ink);
     background: var(--dbp-surface);
     cursor: pointer;
@@ -924,10 +943,13 @@ mjx-mtd[extra] {
   }
 
   .catalog-advanced__fields {
-    grid-template-columns: 1fr;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--dbp-line);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .catalog-controls input,
+  .catalog-controls select {
+    height: 2.2rem;
+    font-size: max(16px, 0.75rem);
   }
 
   .catalog-advanced__toggle[aria-expanded="false"]
@@ -956,10 +978,6 @@ mjx-mtd[extra] {
     padding: 0.75rem 0 0;
     border-top: 1px solid var(--dbp-line);
     border-left: 0;
-  }
-
-  #paper-grid .paper-card footer a {
-    margin: 0;
   }
 
 }
