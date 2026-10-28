@@ -10,6 +10,7 @@
 - 不手工编辑 `CATALOG.md`；元数据变化后运行 `make catalog`。
 - `reading_status: translated` 论文的原文、译文或资源如需实质修改，先明确修复范围，再遵循 `docs/workflows/review.md` 的独立审阅与修复流程。Issue 或当前任务中的明确授权均可确定范围，不必重复确认。
 - 保留无关文件和其他贡献者的修改。
+- 合并后按[维护流程](docs/workflows/maintain.md#合并后自动收尾)自动完成分支和工作树收尾。
 
 提交前至少运行：
 
