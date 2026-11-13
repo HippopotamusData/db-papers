@@ -4,10 +4,10 @@
 
 ## 总览
 
-- 论文记录：189
+- 论文记录：192
 - 已审阅译文：183
 - 译文草稿：0
-- 仅有原文：0
+- 仅有原文：3
 - 已跳过：6
 - 原文不可用：0
 
@@ -18,7 +18,7 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 7 |
 | 系统架构 (`system-architecture`) | 28 |
-| 查询处理 (`query-processing`) | 67 |
+| 查询处理 (`query-processing`) | 70 |
 | 存储 (`storage`) | 26 |
 | 事务与并发控制 (`transactions`) | 10 |
 | 分布式数据库 (`distributed-databases`) | 9 |
@@ -82,12 +82,13 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，67 篇)
+### 查询处理 (`query-processing`，70 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
 | [Access Path Selection in a Relational Database Management System](papers/query-processing/access-path-selection-relational-database-management-system/translation.md) | 查询优化 | 1979 | 5.0 | translated | [原文](papers/query-processing/access-path-selection-relational-database-management-system/source.pdf) | [官方链接](<https://research.ibm.com/publications/access-path-selection-in-a-relational-database-management-system>) |
 | [Adaptive Execution of Compiled Queries](papers/query-processing/adaptive-execution-compiled-queries/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](papers/query-processing/adaptive-execution-compiled-queries/source.pdf) | [官方链接](<https://db.in.tum.de/~leis/papers/adaptiveexecution.pdf>) |
+| [Adaptive Factorization Using Linear-Chained Hash Tables](papers/query-processing/adaptive-factorization-linear-chained-hash-tables/source.pdf) | 查询优化、查询执行、分析型数据库 | 2025 | — | source_only | [原文](papers/query-processing/adaptive-factorization-linear-chained-hash-tables/source.pdf) | [官方链接](<https://ir.cwi.nl/pub/34790/34790.pdf>) |
 | [Adaptive Optimization of Very Large Join Queries](papers/query-processing/adaptive-optimization-very-large-join-queries/translation.md) | 查询优化 | 2018 | 3.5 | translated | [原文](papers/query-processing/adaptive-optimization-very-large-join-queries/source.pdf) | [官方链接](<https://db.in.tum.de/~radke/papers/hugejoins.pdf>) |
 | [Advanced Join Strategies for Large-Scale Distributed Computation](papers/query-processing/advanced-join-strategies-large-scale-distributed-computation/translation.md) | 查询执行 | 2014 | 3.5 | translated | [原文](papers/query-processing/advanced-join-strategies-large-scale-distributed-computation/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol7/p1484-bruno.pdf>) |
 | [An Overview of Query Optimization in Relational Systems](papers/query-processing/overview-query-optimization-relational-systems/translation.md) | 查询优化 | 1998 | 4.0 | translated | [原文](papers/query-processing/overview-query-optimization-relational-systems/source.pdf) | [官方链接](<https://www.microsoft.com/en-us/research/publication/an-overview-of-query-optimization-in-relational-systems-paper/>) |
@@ -119,6 +120,7 @@
 | [Impala: A Modern, Open-Source SQL Engine for Hadoop](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/translation.md) | 查询执行 | 2015 | 4.0 | translated | [原文](papers/query-processing/impala-a-modern-open-source-sql-engine-for-hadoop/source.pdf) | [官方链接](<http://cidrdb.org/cidr2015/Papers/CIDR15_Paper28.pdf>) |
 | [Improving Hash Join Performance through Prefetching](papers/query-processing/improving-hash-join-performance-prefetching/translation.md) | 查询执行 | 2007 | 4.0 | translated | [原文](papers/query-processing/improving-hash-join-performance-prefetching/source.pdf) | [官方链接](<https://www.shimin-chen.com/papers/hashjoin_tods_preliminary.pdf>) |
 | [Improving Unnesting of Complex Queries](papers/query-processing/improving-unnesting-of-complex-queries/translation.md) | 查询优化 | 2025 | 3.5 | translated | [原文](papers/query-processing/improving-unnesting-of-complex-queries/source.pdf) | [官方链接](<https://portal.fis.tum.de/en/publications/improving-unnesting-of-complex-queries/>) |
+| [Including Bloom Filters in Bottom-up Optimization](papers/query-processing/including-bloom-filters-bottom-up-optimization/source.pdf) | 查询优化、基数估计 | 2025 | — | source_only | [原文](papers/query-processing/including-bloom-filters-bottom-up-optimization/source.pdf) | [官方链接](<https://arxiv.org/pdf/2505.02994>) |
 | [Interleaved Multi-Vectorizing](papers/query-processing/interleaved-multi-vectorizing/translation.md) | 向量化执行 | 2019 | 3.0 | translated | [原文](papers/query-processing/interleaved-multi-vectorizing/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol13/p226-fang.pdf>) |
 | [Learned Cardinalities: Estimating Correlated Joins with Deep Learning](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/translation.md) | 查询优化、基数估计、AI 优化数据库 | 2019 | 4.0 | translated | [原文](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/source.pdf) | [官方链接](<https://vldb.org/cidrdb/2019/learned-cardinalities-estimating-correlated-joins-with-deep-learning.html>) |
 | [Low-Latency Compilation of SQL Queries to Machine Code](papers/query-processing/low-latency-compilation-sql-queries-machine-code/translation.md) | 查询编译 | 2021 | 2.5 | translated | [原文](papers/query-processing/low-latency-compilation-sql-queries-machine-code/source.pdf) | [官方链接](<https://vldb.org/pvldb/vol14/p2691-funke.pdf>) |
@@ -140,6 +142,7 @@
 | [Push vs. Pull-Based Loop Fusion in Query Engines](papers/query-processing/push-vs-pull-loop-fusion/translation.md) | 查询执行 | 2016 | 3.5 | translated | [原文](papers/query-processing/push-vs-pull-loop-fusion/source.pdf) | [官方链接](<https://arxiv.org/abs/1610.09166>) |
 | [Relaxed Operator Fusion for In-Memory Databases: Making Compilation, Vectorization, and Prefetching Work Together At Last](papers/query-processing/relaxed-operator-fusion-in-memory-databases/translation.md) | 查询编译 | 2017 | 3.5 | translated | [原文](papers/query-processing/relaxed-operator-fusion-in-memory-databases/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol11/p1-menon.pdf>) |
 | [Rethinking SIMD Vectorization for In-Memory Databases](papers/query-processing/rethinking-simd-vectorization-in-memory-databases/translation.md) | 向量化执行 | 2015 | 4.0 | translated | [原文](papers/query-processing/rethinking-simd-vectorization-in-memory-databases/source.pdf) | [官方链接](<http://www.cs.columbia.edu/~orestis/sigmod15.pdf>) |
+| [Robust External Hash Aggregation in the Solid State Age](papers/query-processing/robust-external-hash-aggregation-solid-state-age/source.pdf) | 查询执行、分析型数据库 | 2024 | — | source_only | [原文](papers/query-processing/robust-external-hash-aggregation-solid-state-age/source.pdf) | [官方链接](<https://duckdb.org/pdf/ICDE2024-kuiper-boncz-muehleisen-out-of-core.pdf>) |
 | [Runtime Code Generation in Cloudera Impala](papers/query-processing/runtime-code-generation-cloudera-impala/translation.md) | 查询编译 | 2014 | 3.5 | translated | [原文](papers/query-processing/runtime-code-generation-cloudera-impala/source.pdf) | [官方链接](<http://sites.computer.org/debull/A14mar/p31.pdf>) |
 | [SAHA: A String Adaptive Hash Table for Analytical Databases](papers/query-processing/saha-string-adaptive-hash-table-analytical-databases/translation.md) | 向量化执行 | 2020 | 3.0 | translated | [原文](papers/query-processing/saha-string-adaptive-hash-table-analytical-databases/source.pdf) | [官方链接](<https://www.mdpi.com/2076-3417/10/6/1915>) |
 | [Spark SQL: Relational Data Processing in Spark](papers/query-processing/spark-sql-relational-data-processing-in-spark/translation.md) | 查询执行 | 2015 | 5.0 | translated | [原文](papers/query-processing/spark-sql-relational-data-processing-in-spark/source.pdf) | [官方链接](<https://cs.stanford.edu/~matei/papers/2015/sigmod_spark_sql.pdf>) |
@@ -283,5 +286,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 189 | 0 |
-| 发表年份 | 189 | 0 |
+| 作者 | 192 | 0 |
+| 发表年份 | 192 | 0 |

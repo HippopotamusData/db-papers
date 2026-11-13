@@ -1,0 +1,12 @@
+title: Robust External Hash Aggregation in the Solid State Age
+title_zh: 固态存储时代的稳健外存哈希聚合
+authors:
+  - Laurens Kuiper
+  - Peter Boncz
+  - Hannes Mühleisen
+year: 2024
+source_url: https://duckdb.org/pdf/ICDE2024-kuiper-boncz-muehleisen-out-of-core.pdf
+topics:
+  - query-execution
+  - analytical-database
+reading_status: source_only
