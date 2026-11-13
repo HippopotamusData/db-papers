@@ -95,7 +95,7 @@
 
 .site-hero {
   margin: 0;
-  padding: 2.2rem 0 1.8rem;
+  padding: 0 0 1.8rem;
   color: var(--dbp-ink);
 }
 
@@ -878,6 +878,12 @@ mjx-mtd[extra] {
     max-width: var(--dbp-reader-width);
     /* Override the theme's asymmetric sidebar margins only with wide sidebars. */
     margin-inline: auto !important;
+  }
+}
+
+@media (min-width: 76.25em) {
+  .md-sidebar--primary .md-nav--primary > .md-nav__list > .md-nav__item:first-child {
+    margin-top: 0;
   }
 }
 
