@@ -1,0 +1,24 @@
+title: Including Bloom Filters in Bottom-up Optimization
+title_zh: 将 Bloom 过滤器纳入自底向上的查询优化
+authors:
+  - Tim Zeyl
+  - Qi Cheng
+  - Reza Pournaghi
+  - Jason Lam
+  - Weicheng Wang
+  - Calvin Wong
+  - Chong Chen
+  - Per-Ake Larson
+year: 2025
+source_url: https://arxiv.org/pdf/2505.02994
+topics:
+  - query-optimization
+  - cardinality-estimation
+reading_status: translated
+rating:
+  score: 3.0
+  influence_breadth: 2
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 3
+  reader_payoff: 4
