@@ -272,7 +272,7 @@ source: source.pdf
             self.assertIn('"查询处理" = "papers/query-processing/index.md"', generated_config)
             home = (output / "index.md").read_text(encoding="utf-8")
             self.assertIn("title: 数据库系统论文档案馆", home)
-            self.assertIn(
+            self.assertNotIn(
                 "按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文",
                 home,
             )

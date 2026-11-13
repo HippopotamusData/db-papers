@@ -402,7 +402,6 @@ def render_recent(papers: list[Paper], taxonomy: dict[str, Any], dates: dict[str
 def render_home(
     taxonomy: dict[str, Any], papers: list[Paper], dates: dict[str, str] | None = None,
 ) -> str:
-    statuses = Counter(paper.reading_status for paper in papers)
     areas = Counter(paper.area for paper in papers)
     area_cards = []
     for area, details in taxonomy["areas"].items():
@@ -426,16 +425,9 @@ description: 数据库系统论文中文全文翻译集
 <section class="site-hero">
   <p class="site-hero__kicker">DB PAPERS / DATABASE SYSTEMS</p>
   <h1>数据库系统论文档案馆</h1>
-  <p>按领域和主题整理数据库系统论文，提供原文与经过审校的中文译文</p>
   <div class="site-hero__actions">
     <a class="md-button md-button--primary" href="catalog/">浏览论文目录</a>
   </div>
-</section>
-
-<section class="stat-grid" aria-label="收录统计">
-  <div><strong>{len(papers)}</strong><span>论文记录</span></div>
-  <div><strong>{statuses["translated"]}</strong><span>已审阅译文</span></div>
-  <div><strong>{len(taxonomy["areas"])}</strong><span>研究领域</span></div>
 </section>
 
 <section class="home-recent" aria-labelledby="recent-papers" markdown="1">
