@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：192
-- 已审阅译文：186
+- 论文记录：193
+- 已审阅译文：187
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -18,7 +18,7 @@
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 7 |
 | 系统架构 (`system-architecture`) | 28 |
-| 查询处理 (`query-processing`) | 70 |
+| 查询处理 (`query-processing`) | 71 |
 | 存储 (`storage`) | 26 |
 | 事务与并发控制 (`transactions`) | 10 |
 | 分布式数据库 (`distributed-databases`) | 9 |
@@ -82,7 +82,7 @@
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
 
-### 查询处理 (`query-processing`，70 篇)
+### 查询处理 (`query-processing`，71 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -113,6 +113,7 @@
 | [Everything You Always Wanted to Know About Compiled and Vectorized Queries But Were Afraid to Ask](papers/query-processing/compiled-and-vectorized-queries-afraid-to-ask/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](papers/query-processing/compiled-and-vectorized-queries-afraid-to-ask/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol11/p2209-kersten.pdf>) |
 | [Exploiting Upper and Lower Bounds in Top-Down Query Optimization](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/translation.md) | 查询优化 | 2001 | 3.0 | translated | [原文](papers/query-processing/exploiting-upper-lower-bounds-top-down-query-optimization/source.pdf) | [官方链接](<https://doi.org/10.1109/IDEAS.2001.938068>) |
 | [Generating code for holistic query evaluation](papers/query-processing/generating-code-holistic-query-evaluation/translation.md) | 查询编译 | 2010 | 3.5 | translated | [原文](papers/query-processing/generating-code-holistic-query-evaluation/source.pdf) | [官方链接](<https://doi.org/10.1109/ICDE.2010.5447892>) |
+| [Grouping, Subsumption, and Disjunctive Join Optimizations in Oracle](papers/query-processing/grouping-subsumption-disjunctive-join-optimizations-oracle/translation.md) | 查询优化、查询执行 | 2024 | 3.0 | translated | [原文](papers/query-processing/grouping-subsumption-disjunctive-join-optimizations-oracle/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol17/p4200-pasupuleti.pdf>) |
 | [Handling Data Skew in Parallel Joins in Shared-Nothing Systems](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/translation.md) | 查询执行 | 2008 | 4.0 | translated | [原文](papers/query-processing/handling-data-skew-parallel-joins-shared-nothing-systems/source.pdf) | [官方链接](<https://doi.org/10.1145/1376616.1376720>) |
 | [How Good are Learned Cost Models, Really? Insights from Query Optimization Tasks](papers/query-processing/how-good-are-learned-cost-models-really/translation.md) | 查询优化、AI 优化数据库 | 2025 | 3.0 | translated | [原文](papers/query-processing/how-good-are-learned-cost-models-really/source.pdf) | [官方链接](<https://doi.org/10.1145/3725309>) |
 | [How Good Are Query Optimizers, Really?](papers/query-processing/how-good-are-query-optimizers-really/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](papers/query-processing/how-good-are-query-optimizers-really/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol9/p204-leis.pdf>) |
@@ -286,5 +287,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 192 | 0 |
-| 发表年份 | 192 | 0 |
+| 作者 | 193 | 0 |
+| 发表年份 | 193 | 0 |
