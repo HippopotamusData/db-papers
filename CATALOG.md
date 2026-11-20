@@ -4,8 +4,8 @@
 
 ## 总览
 
-- 论文记录：193
-- 已审阅译文：187
+- 论文记录：199
+- 已审阅译文：193
 - 译文草稿：0
 - 仅有原文：0
 - 已跳过：6
@@ -17,9 +17,9 @@
 | --- | ---: |
 | 基础与综述 (`foundations`) | 2 |
 | 算法与实现基础 (`implementation-foundations`) | 7 |
-| 系统架构 (`system-architecture`) | 28 |
-| 查询处理 (`query-processing`) | 71 |
-| 存储 (`storage`) | 26 |
+| 系统架构 (`system-architecture`) | 29 |
+| 查询处理 (`query-processing`) | 75 |
+| 存储 (`storage`) | 27 |
 | 事务与并发控制 (`transactions`) | 10 |
 | 分布式数据库 (`distributed-databases`) | 9 |
 | 数据集成 (`data-integration`) | 2 |
@@ -49,7 +49,7 @@
 | [Random Sampling with a Reservoir](papers/implementation-foundations/random-sampling-with-a-reservoir/translation.md) | 流处理 | 1985 | 5.0 | translated | [原文](papers/implementation-foundations/random-sampling-with-a-reservoir/source.pdf) | [官方链接](<https://doi.org/10.1145/3147.3165>) |
 | [Space/Time Trade-offs in Hash Coding with Allowable Errors](papers/implementation-foundations/space-time-tradeoffs-hash-coding-allowable-errors/translation.md) | 索引 | 1970 | 5.0 | translated | [原文](papers/implementation-foundations/space-time-tradeoffs-hash-coding-allowable-errors/source.pdf) | [官方链接](<https://crystal.uta.edu/~mcguigan/cse6350/papers/Bloom.pdf>) |
 
-### 系统架构 (`system-architecture`，28 篇)
+### 系统架构 (`system-architecture`，29 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -81,8 +81,9 @@
 | [The Vertica Analytic Database: C-Store 7 Years Later](papers/system-architecture/the-vertica-analytic-database-c-store-7-years-later/translation.md) | 数据库系统设计 | 2012 | 4.0 | translated | [原文](papers/system-architecture/the-vertica-analytic-database-c-store-7-years-later/source.pdf) | [官方链接](<https://vldb.org/pvldb/vol5/p1790_andrewlamb_vldb2012.pdf>) |
 | [Umbra: A Disk-Based System with In-Memory Performance](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/translation.md) | 数据库系统设计、查询执行、存储引擎 | 2020 | 4.0 | translated | [原文](papers/system-architecture/umbra-disk-based-system-with-in-memory-performance/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2020/papers/p29-neumann-cidr20.pdf>) |
 | [What Serverless Computing Is and Should Become: The Next Phase of Cloud Computing](papers/system-architecture/what-serverless-computing-is-and-should-become/translation.md) | 云原生 | 2021 | 4.0 | translated | [原文](papers/system-architecture/what-serverless-computing-is-and-should-become/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3406011>) |
+| [Why We Created Yet Another Memory Framework: Understanding MGA’s Role in Next-Gen Database Systems](papers/system-architecture/managed-global-area-memory-framework-oracle/translation.md) | 数据库系统设计、查询执行 | 2026 | 3.0 | translated | [原文](papers/system-architecture/managed-global-area-memory-framework-oracle/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol19/p4413-sitpal.pdf>) |
 
-### 查询处理 (`query-processing`，71 篇)
+### 查询处理 (`query-processing`，75 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
@@ -91,6 +92,7 @@
 | [Adaptive Factorization Using Linear-Chained Hash Tables](papers/query-processing/adaptive-factorization-linear-chained-hash-tables/translation.md) | 查询优化、查询执行、分析型数据库 | 2025 | 3.0 | translated | [原文](papers/query-processing/adaptive-factorization-linear-chained-hash-tables/source.pdf) | [官方链接](<https://ir.cwi.nl/pub/34790/34790.pdf>) |
 | [Adaptive Optimization of Very Large Join Queries](papers/query-processing/adaptive-optimization-very-large-join-queries/translation.md) | 查询优化 | 2018 | 3.5 | translated | [原文](papers/query-processing/adaptive-optimization-very-large-join-queries/source.pdf) | [官方链接](<https://db.in.tum.de/~radke/papers/hugejoins.pdf>) |
 | [Advanced Join Strategies for Large-Scale Distributed Computation](papers/query-processing/advanced-join-strategies-large-scale-distributed-computation/translation.md) | 查询执行 | 2014 | 3.5 | translated | [原文](papers/query-processing/advanced-join-strategies-large-scale-distributed-computation/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol7/p1484-bruno.pdf>) |
+| [An Experimental Comparison of Thirteen Relational Equi-Joins in Main Memory](papers/query-processing/experimental-comparison-thirteen-relational-equi-joins/translation.md) | 查询执行 | 2016 | 4.0 | translated | [原文](papers/query-processing/experimental-comparison-thirteen-relational-equi-joins/source.pdf) | [官方链接](<https://15721.courses.cs.cmu.edu/spring2020/papers/17-hashjoins/schuh-sigmod2016.pdf>) |
 | [An Overview of Query Optimization in Relational Systems](papers/query-processing/overview-query-optimization-relational-systems/translation.md) | 查询优化 | 1998 | 4.0 | translated | [原文](papers/query-processing/overview-query-optimization-relational-systems/source.pdf) | [官方链接](<https://www.microsoft.com/en-us/research/publication/an-overview-of-query-optimization-in-relational-systems-paper/>) |
 | [Apache Calcite: A Foundational Framework for Optimized Query Processing Over Heterogeneous Data Sources](papers/query-processing/apache-calcite-a-foundational-framework-for-optimized-query-processing-over-heterogeneous-data-sources/translation.md) | 查询优化、数据联邦 | 2018 | 5.0 | translated | [原文](papers/query-processing/apache-calcite-a-foundational-framework-for-optimized-query-processing-over-heterogeneous-data-sources/source.pdf) | [官方链接](<https://arxiv.org/pdf/1802.10233.pdf>) |
 | [Are We Ready For Learned Cardinality Estimation?](papers/query-processing/are-we-ready-for-learned-cardinality-estimation/translation.md) | 基数估计、AI 优化数据库 | 2021 | 3.5 | translated | [原文](papers/query-processing/are-we-ready-for-learned-cardinality-estimation/source.pdf) | [官方链接](<https://doi.org/10.14778/3461535.3461552>) |
@@ -126,6 +128,7 @@
 | [Learned Cardinalities: Estimating Correlated Joins with Deep Learning](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/translation.md) | 查询优化、基数估计、AI 优化数据库 | 2019 | 4.0 | translated | [原文](papers/query-processing/learned-cardinalities-estimating-correlated-joins-deep-learning/source.pdf) | [官方链接](<https://vldb.org/cidrdb/2019/learned-cardinalities-estimating-correlated-joins-with-deep-learning.html>) |
 | [Low-Latency Compilation of SQL Queries to Machine Code](papers/query-processing/low-latency-compilation-sql-queries-machine-code/translation.md) | 查询编译 | 2021 | 2.5 | translated | [原文](papers/query-processing/low-latency-compilation-sql-queries-machine-code/source.pdf) | [官方链接](<https://vldb.org/pvldb/vol14/p2691-funke.pdf>) |
 | [Main-Memory Hash Joins on Multi-Core CPUs: Tuning to the Underlying Hardware](papers/query-processing/main-memory-hash-joins-multicore-cpus/translation.md) | 查询执行 | 2013 | 4.0 | translated | [原文](papers/query-processing/main-memory-hash-joins-multicore-cpus/source.pdf) | [官方链接](<https://dbis.cs.tu-dortmund.de/publikationen/2013/main-memory-hash-joins/>) |
+| [Massively Parallel NUMA-aware Hash Joins](papers/query-processing/massively-parallel-numa-aware-hash-joins/translation.md) | 查询执行 | 2013 | 3.5 | translated | [原文](papers/query-processing/massively-parallel-numa-aware-hash-joins/source.pdf) | [官方链接](<https://db.in.tum.de/other/imdm2013/papers/Lang.pdf>) |
 | [MonetDB/X100: Hyper-Pipelining Query Execution](papers/query-processing/monetdb-x100-hyper-pipelining-query-execution/translation.md) | 向量化执行 | 2005 | 5.0 | translated | [原文](papers/query-processing/monetdb-x100-hyper-pipelining-query-execution/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2005/papers/P19.pdf>) |
 | [Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age](papers/query-processing/morsel-driven-parallelism/translation.md) | 查询执行 | 2014 | 4.5 | translated | [原文](papers/query-processing/morsel-driven-parallelism/source.pdf) | [官方链接](<https://doi.org/10.1145/2588555.2610507>) |
 | [Neo: A Learned Query Optimizer](papers/query-processing/neo-a-learned-query-optimizer/translation.md) | 查询优化、AI 优化数据库 | 2019 | 4.0 | translated | [原文](papers/query-processing/neo-a-learned-query-optimizer/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol12/p1705-marcus.pdf>) |
@@ -141,6 +144,7 @@
 | [Photon: A Fast Query Engine for Lakehouse Systems](papers/query-processing/photon-fast-query-engine-lakehouse-systems/translation.md) | 云原生、查询执行、向量化执行、湖仓一体 | 2022 | 4.0 | translated | [原文](papers/query-processing/photon-fast-query-engine-lakehouse-systems/source.pdf) | [官方链接](<https://doi.org/10.1145/3514221.3526054>) |
 | [Presto: SQL on Everything](papers/query-processing/presto-sql-on-everything/translation.md) | 查询执行、数据联邦 | 2019 | 4.5 | translated | [原文](papers/query-processing/presto-sql-on-everything/source.pdf) | [官方链接](<https://trino.io/Presto_SQL_on_Everything.pdf>) |
 | [Push vs. Pull-Based Loop Fusion in Query Engines](papers/query-processing/push-vs-pull-loop-fusion/translation.md) | 查询执行 | 2016 | 3.5 | translated | [原文](papers/query-processing/push-vs-pull-loop-fusion/source.pdf) | [官方链接](<https://arxiv.org/abs/1610.09166>) |
+| [Real-time SQL Plan Management in Oracle](papers/query-processing/real-time-sql-plan-management-oracle/translation.md) | 查询优化、查询执行 | 2026 | 3.0 | translated | [原文](papers/query-processing/real-time-sql-plan-management-oracle/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol19/p4169-kunjibettu.pdf>) |
 | [Relaxed Operator Fusion for In-Memory Databases: Making Compilation, Vectorization, and Prefetching Work Together At Last](papers/query-processing/relaxed-operator-fusion-in-memory-databases/translation.md) | 查询编译 | 2017 | 3.5 | translated | [原文](papers/query-processing/relaxed-operator-fusion-in-memory-databases/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol11/p1-menon.pdf>) |
 | [Rethinking SIMD Vectorization for In-Memory Databases](papers/query-processing/rethinking-simd-vectorization-in-memory-databases/translation.md) | 向量化执行 | 2015 | 4.0 | translated | [原文](papers/query-processing/rethinking-simd-vectorization-in-memory-databases/source.pdf) | [官方链接](<http://www.cs.columbia.edu/~orestis/sigmod15.pdf>) |
 | [Robust External Hash Aggregation in the Solid State Age](papers/query-processing/robust-external-hash-aggregation-solid-state-age/translation.md) | 查询执行、分析型数据库 | 2024 | 3.5 | translated | [原文](papers/query-processing/robust-external-hash-aggregation-solid-state-age/source.pdf) | [官方链接](<https://duckdb.org/pdf/ICDE2024-kuiper-boncz-muehleisen-out-of-core.pdf>) |
@@ -151,6 +155,7 @@
 | [The Complete Story of Joins (in HyPer)](papers/query-processing/complete-story-of-joins-hyper/translation.md) | 查询优化 | 2017 | 3.5 | translated | [原文](papers/query-processing/complete-story-of-joins-hyper/source.pdf) | [官方链接](<http://btw2017.informatik.uni-stuttgart.de/slidesandpapers/F1-10-37/paper_web.pdf>) |
 | [The MemSQL Query Optimizer: A modern optimizer for real-time analytics in a distributed database](papers/query-processing/memsql-query-optimizer/translation.md) | 查询优化 | 2016 | 3.5 | translated | [原文](papers/query-processing/memsql-query-optimizer/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol9/p1401-chen.pdf>) |
 | [The Volcano Optimizer Generator: Extensibility and Efficient Search](papers/query-processing/volcano-optimizer-generator/translation.md) | 查询优化 | 1993 | 4.5 | translated | [原文](papers/query-processing/volcano-optimizer-generator/source.pdf) | [官方链接](<https://doi.org/10.1109/ICDE.1993.344061>) |
+| [To Partition, or Not to Partition, That is the Join Question in a Real System](papers/query-processing/partition-or-not-join-question-real-system/translation.md) | 查询执行、查询编译 | 2021 | 4.0 | translated | [原文](papers/query-processing/partition-or-not-join-question-real-system/source.pdf) | [官方链接](<https://db.cit.tum.de/~bandle/papers/bandle-partitionVsNonPartition.pdf>) |
 | [Towards Practical Vectorized Analytical Query Engines](papers/query-processing/towards-practical-vectorized-analytical-query-engines/translation.md) | 向量化执行 | 2019 | 3.0 | translated | [原文](papers/query-processing/towards-practical-vectorized-analytical-query-engines/source.pdf) | [官方链接](<https://dl.acm.org/doi/pdf/10.1145/3329785.3329928>) |
 | [Unnesting Arbitrary Queries](papers/query-processing/unnesting-arbitrary-queries/translation.md) | 查询优化 | 2015 | 4.5 | translated | [原文](papers/query-processing/unnesting-arbitrary-queries/source.pdf) | [官方链接](<https://portal.fis.tum.de/en/publications/unnesting-arbitrary-queries/>) |
 | [Vectorization vs. Compilation in Query Execution](papers/query-processing/vectorization-vs-compilation-query-execution/translation.md) | 向量化执行 | 2011 | 4.0 | translated | [原文](papers/query-processing/vectorization-vs-compilation-query-execution/source.pdf) | [官方链接](<https://ir.cwi.nl/pub/18550>) |
@@ -158,11 +163,12 @@
 | [Volcano—An Extensible and Parallel Query Evaluation System](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/translation.md) | 查询执行 | 1994 | 5.0 | translated | [原文](papers/query-processing/volcano-extensible-parallel-query-evaluation-system/source.pdf) | [官方链接](<https://doi.org/10.1109/69.273032>) |
 | [WinMagic: Subquery Elimination Using Window Aggregation](papers/query-processing/winmagic-subquery-elimination-window-aggregation/translation.md) | 查询优化 | 2003 | 3.0 | translated | [原文](papers/query-processing/winmagic-subquery-elimination-window-aggregation/source.pdf) | [官方链接](<https://doi.org/10.1145/872757.872840>) |
 
-### 存储 (`storage`，26 篇)
+### 存储 (`storage`，27 篇)
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
 | [An Evaluation of Buffer Management Strategies for Relational Database Systems](papers/storage/evaluation-buffer-management-strategies-relational-database-systems/translation.md) | 查询执行、存储引擎 | 1985 | 4.0 | translated | [原文](papers/storage/evaluation-buffer-management-strategies-relational-database-systems/source.pdf) | [官方链接](<https://courses.cs.duke.edu/spring03/cps216/papers/chou-dewitt-1985.pdf>) |
+| [Automated Clustering Recommendation With Database Zone Maps](papers/storage/automated-clustering-zone-maps-oracle/translation.md) | 存储引擎、索引 | 2024 | 3.0 | translated | [原文](papers/storage/automated-clustering-zone-maps-oracle/source.pdf) | [官方链接](<https://doi.org/10.1145/3626246.3653397>) |
 | [Bridging the Archipelago between Row-Stores and Column-Stores for Hybrid Workloads](papers/storage/tile-row-store/translation.md) | 存储引擎 | 2016 | 3.5 | translated | [原文](papers/storage/tile-row-store/source.pdf) | [官方链接](<https://doi.org/10.1145/2882903.2915231>) |
 | [C-Store: A Column-oriented DBMS](papers/storage/c-store-column-oriented-dbms/translation.md) | 存储引擎、分析型数据库 | 2005 | 4.5 | translated | [原文](papers/storage/c-store-column-oriented-dbms/source.pdf) | [官方链接](<https://www.cs.umd.edu/~abadi/papers/vldb.pdf>) |
 | [Ceph: A Scalable, High-Performance Distributed File System](papers/storage/ceph-a-scalable-high-performance-distributed-file-system/translation.md) | 分布式存储、文件系统 | 2006 | 5.0 | translated | [原文](papers/storage/ceph-a-scalable-high-performance-distributed-file-system/source.pdf) | [官方链接](<https://www.usenix.org/legacy/events/osdi06/tech/full_papers/weil/weil.pdf>) |
@@ -287,5 +293,5 @@
 
 | 字段 | 已确认 | 待补证据 |
 | --- | ---: | ---: |
-| 作者 | 193 | 0 |
-| 发表年份 | 193 | 0 |
+| 作者 | 199 | 0 |
+| 发表年份 | 199 | 0 |
