@@ -214,8 +214,7 @@ $$
 
 $$
 \mathrm{cost}(\mathrm{eplan}(Q)) =
-\sum _ {R _ i \in \mathcal{R}} (\mathrm{scanCost}(R _ i)\times g _ i)
-+ \mathrm{matCost}(\mathcal{M})
+\sum _ {R _ i \in \mathcal{R}} (\mathrm{scanCost}(R _ i)\times g _ i) + \mathrm{matCost}(\mathcal{M})
 \qquad \text{(2)}
 $$
 
