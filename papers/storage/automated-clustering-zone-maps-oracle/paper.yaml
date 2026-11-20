@@ -1,0 +1,15 @@
+title: Automated Clustering Recommendation With Database Zone Maps
+title_zh: 利用数据库 Zone Map 自动推荐数据聚簇方案
+authors:
+- Suratna Budalakoti
+- Mohamed Ziauddin
+- Andrew Witkowski
+- You Jung Kim
+- Ramarajan Krishnamachari
+- Alan Wood
+year: 2024
+source_url: https://doi.org/10.1145/3626246.3653397
+topics:
+- storage-engine
+- indexing
+reading_status: source_only

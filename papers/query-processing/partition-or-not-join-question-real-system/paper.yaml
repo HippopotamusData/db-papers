@@ -1,0 +1,12 @@
+title: To Partition, or Not to Partition, That is the Join Question in a Real System
+title_zh: 分区还是不分区：真实系统中的连接选择问题
+authors:
+- Maximilian Bandle
+- Jana Giceva
+- Thomas Neumann
+year: 2021
+source_url: https://db.cit.tum.de/~bandle/papers/bandle-partitionVsNonPartition.pdf
+topics:
+- query-execution
+- query-compilation
+reading_status: source_only

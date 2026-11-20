@@ -1,0 +1,14 @@
+title: Real-time SQL Plan Management in Oracle
+title_zh: Oracle 中的实时 SQL 计划管理
+authors:
+- Sunil Chakkappen
+- Mohamed Ziauddin
+- Hong Su
+- Shreya Kunjibettu
+- Nigel Bayliss
+year: 2026
+source_url: https://www.vldb.org/pvldb/vol19/p4169-kunjibettu.pdf
+topics:
+- query-optimization
+- query-execution
+reading_status: source_only

@@ -1,0 +1,16 @@
+title: 'Why We Created Yet Another Memory Framework: Understanding MGA’s Role in Next-Gen
+  Database Systems'
+title_zh: 为何再建一个内存框架：理解 MGA 在新一代数据库系统中的作用
+authors:
+- Vikramraj Sitpal
+- Pei Li
+- Shubham Kumar
+- Somansh Reddy Satish
+- Ravi Thammaiah
+- Nagarajan Muthukrishnan
+year: 2026
+source_url: https://www.vldb.org/pvldb/vol19/p4413-sitpal.pdf
+topics:
+- database-system-design
+- query-execution
+reading_status: source_only
