@@ -5,9 +5,9 @@
 ## 总览
 
 - 论文记录：202
-- 已审阅译文：193
+- 已审阅译文：196
 - 译文草稿：0
-- 仅有原文：3
+- 仅有原文：0
 - 已跳过：6
 - 原文不可用：0
 
@@ -87,7 +87,7 @@
 
 | 论文 | 主题 | 年份 | 评分 | 阅读状态 | 原文 | 官方链接 |
 | --- | --- | ---: | ---: | --- | --- | --- |
-| [Accelerating Python UDFs in Vectorized Query Execution](papers/query-processing/accelerating-python-udfs-in-vectorized-query-execution/source.pdf) | 查询执行、查询编译、向量化执行 | 2022 | — | source_only | [原文](papers/query-processing/accelerating-python-udfs-in-vectorized-query-execution/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2022/papers/p33-klaebe.pdf>) |
+| [Accelerating Python UDFs in Vectorized Query Execution](papers/query-processing/accelerating-python-udfs-in-vectorized-query-execution/translation.md) | 查询执行、查询编译、向量化执行 | 2022 | 3.0 | translated | [原文](papers/query-processing/accelerating-python-udfs-in-vectorized-query-execution/source.pdf) | [官方链接](<https://www.cidrdb.org/cidr2022/papers/p33-klaebe.pdf>) |
 | [Access Path Selection in a Relational Database Management System](papers/query-processing/access-path-selection-relational-database-management-system/translation.md) | 查询优化 | 1979 | 5.0 | translated | [原文](papers/query-processing/access-path-selection-relational-database-management-system/source.pdf) | [官方链接](<https://research.ibm.com/publications/access-path-selection-in-a-relational-database-management-system>) |
 | [Adaptive Execution of Compiled Queries](papers/query-processing/adaptive-execution-compiled-queries/translation.md) | 查询编译 | 2018 | 3.5 | translated | [原文](papers/query-processing/adaptive-execution-compiled-queries/source.pdf) | [官方链接](<https://db.in.tum.de/~leis/papers/adaptiveexecution.pdf>) |
 | [Adaptive Factorization Using Linear-Chained Hash Tables](papers/query-processing/adaptive-factorization-linear-chained-hash-tables/translation.md) | 查询优化、查询执行、分析型数据库 | 2025 | 3.0 | translated | [原文](papers/query-processing/adaptive-factorization-linear-chained-hash-tables/source.pdf) | [官方链接](<https://ir.cwi.nl/pub/34790/34790.pdf>) |
@@ -137,7 +137,7 @@
 | [On the Vexing Difficulty of Evaluating IN Predicates](papers/query-processing/on-the-vexing-difficulty-of-evaluating-in-predicates/translation.md) | 查询优化、查询执行 | 2026 | 3.0 | translated | [原文](papers/query-processing/on-the-vexing-difficulty-of-evaluating-in-predicates/source.pdf) | [官方链接](<https://vldb.org/cidrdb/papers/2026/p3-birler.pdf>) |
 | [Optimization of Analytic Window Functions](papers/query-processing/optimization-of-analytic-window-functions/translation.md) | 查询优化、查询执行 | 2012 | 3.5 | translated | [原文](papers/query-processing/optimization-of-analytic-window-functions/source.pdf) | [官方链接](<https://www.vldb.org/pvldb/vol5/p1244_yucao_vldb2012.pdf>) |
 | [Optimization of Common Table Expressions in MPP Database Systems](papers/query-processing/optimization-common-table-expressions-mpp/translation.md) | 查询优化 | 2015 | 3.5 | translated | [原文](papers/query-processing/optimization-common-table-expressions-mpp/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol8/p1704-elhelw.pdf>) |
-| [Optimizing Complex Queries with Multiple Relation Instances](papers/query-processing/optimizing-complex-queries-with-multiple-relation-instances/source.pdf) | 查询优化、查询执行 | 2008 | — | source_only | [原文](papers/query-processing/optimizing-complex-queries-with-multiple-relation-instances/source.pdf) | [官方链接](<https://www.comp.nus.edu.sg/~chancy/sigmod08-maple.pdf>) |
+| [Optimizing Complex Queries with Multiple Relation Instances](papers/query-processing/optimizing-complex-queries-with-multiple-relation-instances/translation.md) | 查询优化、查询执行 | 2008 | 3.5 | translated | [原文](papers/query-processing/optimizing-complex-queries-with-multiple-relation-instances/source.pdf) | [官方链接](<https://www.comp.nus.edu.sg/~chancy/sigmod08-maple.pdf>) |
 | [Optimizing Queries over Partitioned Tables in MPP Systems](papers/query-processing/optimizing-queries-partitioned-tables-mpp/translation.md) | 查询优化 | 2014 | 3.5 | translated | [原文](papers/query-processing/optimizing-queries-partitioned-tables-mpp/source.pdf) | [官方链接](<https://d1fto35gcfffzn.cloudfront.net/big-data/white-paper/OptimizingQueriesOverPartitionedTablesInMPPSystems.pdf>) |
 | [Optimizing Queries Using Materialized Views: A Practical, Scalable Solution](papers/query-processing/optimizing-queries-using-materialized-views/translation.md) | 查询优化 | 2001 | 4.0 | translated | [原文](papers/query-processing/optimizing-queries-using-materialized-views/source.pdf) | [官方链接](<https://doi.org/10.1145/375663.375706>) |
 | [Orca: A Modular Query Optimizer Architecture for Big Data](papers/query-processing/orca-modular-query-optimizer-architecture-big-data/translation.md) | 查询优化 | 2014 | 4.5 | translated | [原文](papers/query-processing/orca-modular-query-optimizer-architecture-big-data/source.pdf) | [官方链接](<https://doi.org/10.1145/2588555.2595637>) |
@@ -257,7 +257,7 @@
 | [QAGen: Generating Query-Aware Test Databases](papers/reliability-and-testing/qagen-generating-query-aware-test-databases/translation.md) | 数据库测试 | 2007 | 3.0 | translated | [原文](papers/reliability-and-testing/qagen-generating-query-aware-test-databases/source.pdf) | [官方链接](<https://cs.uwaterloo.ca/~tozsu/publications/other/sigmod07-final.pdf>) |
 | [Quantifying TPC-H Choke Points and Their Optimizations](papers/reliability-and-testing/quantifying-tpch-choke-points/translation.md) | 数据库测试 | 2020 | 3.5 | translated | [原文](papers/reliability-and-testing/quantifying-tpch-choke-points/source.pdf) | [官方链接](<http://www.vldb.org/pvldb/vol13/p1206-dreseler.pdf>) |
 | [Testing Database Engines via Pivoted Query Synthesis](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/translation.md) | 数据库测试 | 2020 | 4.0 | translated | [原文](papers/reliability-and-testing/pivoted-query-synthesis-testing-database-engines/source.pdf) | [官方链接](<https://www.usenix.org/conference/osdi20/presentation/rigger>) |
-| [Testing Database Engines via Query Plan Guidance](papers/reliability-and-testing/testing-database-engines-via-query-plan-guidance/source.pdf) | 数据库测试 | 2023 | — | source_only | [原文](papers/reliability-and-testing/testing-database-engines-via-query-plan-guidance/source.pdf) | [官方链接](<https://bajinsheng.github.io/assets/pdf/qpg_icse23.pdf>) |
+| [Testing Database Engines via Query Plan Guidance](papers/reliability-and-testing/testing-database-engines-via-query-plan-guidance/translation.md) | 数据库测试 | 2023 | 3.5 | translated | [原文](papers/reliability-and-testing/testing-database-engines-via-query-plan-guidance/source.pdf) | [官方链接](<https://bajinsheng.github.io/assets/pdf/qpg_icse23.pdf>) |
 
 ### 专用数据库 (`specialized-databases`，12 篇)
 
