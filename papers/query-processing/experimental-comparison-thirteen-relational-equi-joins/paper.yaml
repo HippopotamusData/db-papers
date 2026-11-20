@@ -1,0 +1,18 @@
+title: An Experimental Comparison of Thirteen Relational Equi-Joins in Main Memory
+title_zh: 十三种内存关系等值连接算法的实验比较
+authors:
+- Stefan Schuh
+- Xiao Chen
+- Jens Dittrich
+year: 2016
+source_url: https://15721.courses.cs.cmu.edu/spring2020/papers/17-hashjoins/schuh-sigmod2016.pdf
+topics:
+- query-execution
+reading_status: translated
+rating:
+  score: 4.0
+  influence_breadth: 4
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 5
+  reader_payoff: 5
