@@ -1,0 +1,17 @@
+title: Testing Database Engines via Query Plan Guidance
+title_zh: 以查询计划引导数据库引擎测试
+authors:
+- Jinsheng Ba
+- Manuel Rigger
+year: 2023
+source_url: https://bajinsheng.github.io/assets/pdf/qpg_icse23.pdf
+topics:
+- database-testing
+reading_status: translated
+rating:
+  score: 3.5
+  influence_breadth: 3
+  technical_value: 4
+  practical_diffusion: 3
+  durability: 3
+  reader_payoff: 4
