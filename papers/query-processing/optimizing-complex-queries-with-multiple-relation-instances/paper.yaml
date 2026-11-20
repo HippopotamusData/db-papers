@@ -1,0 +1,13 @@
+title: Optimizing Complex Queries with Multiple Relation Instances
+title_zh: 同一关系多次引用时的复杂查询优化
+authors:
+- Yu Cao
+- Gopal C. Das
+- Chee-Yong Chan
+- Kian-Lee Tan
+year: 2008
+source_url: https://www.comp.nus.edu.sg/~chancy/sigmod08-maple.pdf
+topics:
+- query-optimization
+- query-execution
+reading_status: source_only

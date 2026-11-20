@@ -1,0 +1,14 @@
+title: Accelerating Python UDFs in Vectorized Query Execution
+title_zh: 加速向量化查询执行中的 Python UDF
+authors:
+- Steffen Kläbe
+- Bobby DeSantis
+- Stefan Hagedorn
+- Kai-Uwe Sattler
+year: 2022
+source_url: https://www.cidrdb.org/cidr2022/papers/p33-klaebe.pdf
+topics:
+- query-execution
+- query-compilation
+- vectorized-execution
+reading_status: source_only
