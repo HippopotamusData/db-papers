@@ -231,8 +231,8 @@ make site-test    # site-check + 读者交互回归
 
 ### 设计参考
 
-本组提示词依据 OpenAI 官方 [GPT-6 Astra：Prompting best practices](https://developers.openai.com/api/docs/guides/latest-model#prompting-best-practices)
-和 [Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra)
-（2026-09-19 核验）。官方建议审查指令冲突、按任务加载资料、明确分工与完成边界，
+维护本组提示词时，参阅 OpenAI 的[当前模型提示词指南](https://developers.openai.com/api/docs/guides/latest-model#prompting-best-practices)。
+工作手册的设计背景见 OpenAI 的[技能与项目指令设计文章](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra)。
+官方建议审查指令冲突、按任务加载资料、明确分工与完成边界，
 并让验证规模匹配实际风险。项目的 PDF 核源和复核划分是本项目的工程决策，
 不是 OpenAI 对论文翻译的专门规定，也不保证模型不再误读。
